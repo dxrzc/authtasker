@@ -2,6 +2,9 @@
   "name": "authtasker",
   "version": "1.0.0",
   "main": "app.js",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "type-check": "tspc --noEmit src/app.ts",
     "dev": "npm run type-check && dotenvx run -f envs/.env.dev -- tsx watch -r tsconfig-paths/register src/app.ts",
