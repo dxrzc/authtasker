@@ -17,7 +17,7 @@ export class JwtService {
 
         const token = jwt.sign(payload,
             this.privateKey,
-            { expiresIn: expirationTime }
+            { expiresIn: expirationTime as `${number}${'h' | 'd' | 'm'}` }
         );
         return token;
     }
