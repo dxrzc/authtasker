@@ -1,4 +1,3 @@
-import "dotenv/config";
 import * as env from "env-var";
 
 export class ConfigService {
