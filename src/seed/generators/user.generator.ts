@@ -47,4 +47,12 @@ export class UserDataGenerator {
                 length: CONSTS.MAX_PASSWORD_LENGTH
             });
     }
+
+    fullUser() {
+        return {
+            name: this.name(),
+            email: this.email(),
+            password: this.password()
+        }
+    }
 }
