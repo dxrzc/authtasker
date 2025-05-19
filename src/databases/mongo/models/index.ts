@@ -1,3 +1,3 @@
 
-export * from "./user.model.load";
-export * from "./tasks.model.load";
+export { loadUserModel } from './user.model.load';
+export { loadTasksModel } from './tasks.model.load';
