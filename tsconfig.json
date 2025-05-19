@@ -9,6 +9,10 @@
       "@root/*": [
         "./src/*"
       ],
+
+      "@integration/*": [
+        "./test/integration/*"
+      ]
     },
     "plugins": [
       {
