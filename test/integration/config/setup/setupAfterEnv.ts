@@ -2,13 +2,13 @@ import { AsyncLocalStorage } from "async_hooks";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { mock } from "jest-mock-extended";
 
-import { ConfigService, LoggerService, RedisService, SystemLoggerService } from "@root/services";
+import { ConfigService, HashingService, LoggerService, RedisService, SystemLoggerService } from "@root/services";
 import { MongoDatabase } from "@root/databases/mongo/mongo.database";
 import { TasksDataGenerator, UserDataGenerator } from "@root/seed/generators";
 import { AppRoutes } from "@root/routes";
 import { Server } from "@root/server/server.init";
 import * as ModelLoader from "@root/databases/mongo/models";
-import { testKit } from "@integration/utils/testKit";
+import { testKit } from "@integration/utils/testKit.util";
 import { type IntegrationConfigService } from "./types/config.service.type";
 
 let mongoMemoryServer: MongoMemoryServer;
@@ -71,6 +71,9 @@ beforeAll(async () => {
     );
     const server = new Server(0, await appRoutes.buildApp());
     testKit.server = server['app'];
+
+    // hashing service
+    testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);
 
     // endpoints
     testKit.endpoints.usersAPI = '/api/users';
