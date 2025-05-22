@@ -2,8 +2,8 @@ import request from 'supertest';
 import { faker } from '@faker-js/faker/.';
 import { status2xx, testKit } from '@integration/utils';
 
-describe('POST api/users/register', () => {
-    describe('Database', () => {
+describe('POST /api/users/register', () => {
+    describe('Database Operations', () => {
         test('create user with correct data in db', async () => {
             // Create user            
             const user = testKit.userDataGenerator.fullUser();
@@ -32,7 +32,7 @@ describe('POST api/users/register', () => {
         });
     });
 
-    describe('Response', () => {
+    describe('Response - Success', () => {
         test('return safe and correct data in response (201 CREATED)', async () => {
             const expectedStatus = 201;
 
@@ -59,7 +59,7 @@ describe('POST api/users/register', () => {
         });
     });
 
-    describe('Request', () => {
+    describe('Response - Failure', () => {
         test.each(['name', 'email'])
             ('return 409 CONFLICT when user %s already exists', async (property: string) => {
                 // Create original user
@@ -97,7 +97,6 @@ describe('POST api/users/register', () => {
 
         test('return 400 BAD REQUEST when an unexpected property is provided', async () => {
             const expectedStatus = 400;
-
             const unexpectedPropertyName = faker.food.vegetable()
 
             const response = await request(testKit.server)
