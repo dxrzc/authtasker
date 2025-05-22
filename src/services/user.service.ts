@@ -59,7 +59,7 @@ export class UserService {
             const keyValue = Object.values(error.keyValue);
             const message = `User with ${duplicatedKey} "${keyValue}" already exists`;
             this.loggerService.error(message);
-            throw HttpError.badRequest(message);
+            throw HttpError.conflict(message);
         } else {
             // rethrowing        
             throw error;
