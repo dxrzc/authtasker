@@ -1,7 +1,7 @@
 import { HydratedDocument, Model, Types } from "mongoose";
 import { CreateUserValidator, LoginUserValidator, UpdateUserValidator } from "@root/rules/validators/models/user";
 import { EmailService, HashingService, JwtBlackListService, JwtService, LoggerService, SystemLoggerService } from ".";
-import { FORBIDDEN_MESSAGE } from "@root/rules/errors/messages/error.messages";import { ConfigService } from "./config.service";
+import { FORBIDDEN_MESSAGE } from "@root/rules/errors/messages/error.messages"; import { ConfigService } from "./config.service";
 import { HttpError } from "../rules/errors/http.error";
 import { ITasks, IUser, UserFromRequest } from "@root/interfaces";
 import { TOKEN_PURPOSES } from "@root/rules/constants";
@@ -223,7 +223,7 @@ export class UserService {
             userDb = await this.userModel.findById(id).exec();
 
         // id is not valid / user not found
-        if (!userDb) {            
+        if (!userDb) {
             this.loggerService.error(`User ${id} not found`)
             throw HttpError.notFound(`User with id ${id} not found`);
         }
@@ -297,7 +297,7 @@ export class UserService {
 
             // if email is different change "emailValidated" prop        
             if (propertiesUpdated.email) {
-                if (userToUpdate.email !== propertiesUpdated.email) {
+                if (userToUpdate.email !== propertiesUpdated.email && requestUserInfo.role != 'admin') {
                     userToUpdate.emailValidated = false;
                     userToUpdate.role = 'readonly';
                 }
