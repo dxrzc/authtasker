@@ -1,6 +1,10 @@
 import { AsyncLocalStorage } from "async_hooks";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { mock } from "jest-mock-extended";
+// https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
+import * as nodemailer from "nodemailer";
+import { NodemailerMock } from "nodemailer-mock";
+const { mock: nodemailerMock } = nodemailer as unknown as NodemailerMock;
 
 import { ConfigService, HashingService, LoggerService, RedisService, SystemLoggerService } from "@root/services";
 import { MongoDatabase } from "@root/databases/mongo/mongo.database";
@@ -13,6 +17,11 @@ import { type IntegrationConfigService } from "./types/config.service.type";
 
 let mongoMemoryServer: MongoMemoryServer;
 let mongoDatabase: MongoDatabase;
+
+beforeEach(()=> {
+    // Reset nodemailer emails
+    nodemailerMock.reset();
+});
 
 beforeAll(async () => {
     // disable info and warning logs

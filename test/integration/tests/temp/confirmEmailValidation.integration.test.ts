@@ -32,7 +32,7 @@ describe('POST /api/users/confirmEmailValidation', () => {
         test('return status 200 OK', async () => {
             const expectedStatus = 200;
 
-            const { sessionToken, userId } = await createUser('readonly');
+            const { sessionToken } = await createUser('readonly');
 
             // Request email validation
             await request(testKit.server)
