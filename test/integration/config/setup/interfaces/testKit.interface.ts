@@ -20,6 +20,7 @@ export interface ITestKit {
         register: string;
         login: string;
         requestEmailValidation: string;
+        confirmEmailValidation: string;
 
         tasksAPI: string;
         createTask: string;        

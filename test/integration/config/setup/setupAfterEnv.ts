@@ -80,6 +80,7 @@ beforeAll(async () => {
     testKit.endpoints.register = `${testKit.endpoints.usersAPI}/register`;
     testKit.endpoints.login = `${testKit.endpoints.usersAPI}/login`;
     testKit.endpoints.requestEmailValidation = `${testKit.endpoints.usersAPI}/requestEmailValidation`;
+    testKit.endpoints.confirmEmailValidation = `${testKit.endpoints.usersAPI}/confirmEmailValidation`;
     testKit.endpoints.tasksAPI = '/api/tasks';
     testKit.endpoints.createTask = `${testKit.endpoints.tasksAPI}/create`;
 });
