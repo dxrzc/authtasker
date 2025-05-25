@@ -17,7 +17,7 @@ describe('POST /api/users/register', () => {
             expect(userInDb).toBeDefined();
 
             // Verify transformations
-            expect(userInDb?.name).toBe(user.name.toLowerCase());
+            expect(userInDb!.name).toBe(user.name.toLowerCase());
             await expect(testKit.hashingService.compare(user.password, userInDb!.password))
                 .resolves.toBeTruthy();
 
