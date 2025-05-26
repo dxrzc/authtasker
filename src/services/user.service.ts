@@ -264,6 +264,7 @@ export class UserService {
             .find()
             .skip(offset)
             .limit(limit)
+            .sort({ name: 'asc' })
             .exec();
     }
 
