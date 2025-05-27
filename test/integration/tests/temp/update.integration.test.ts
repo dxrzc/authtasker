@@ -4,7 +4,7 @@ import { testKit, status2xx, createUser } from '@integration/utils';
 
 describe('PATCH /api/users/:id', () => {
     describe('Database Operations', () => {
-        test('update properties in database', async () => {
+        test.concurrent('update properties in database', async () => {
             // Create user
             const { sessionToken, userId } = await createUser('readonly');
 
@@ -35,7 +35,7 @@ describe('PATCH /api/users/:id', () => {
             expect(updatedUserInDb!.email).toBe(update.email);
         });
 
-        test('email change triggers account downgrade', async () => {
+        test.concurrent('email change triggers account downgrade', async () => {
             // Create an editor user
             const { sessionToken, userId } = await createUser('editor');
 
@@ -53,7 +53,7 @@ describe('PATCH /api/users/:id', () => {
             expect(updatedUserInDb?.role).toBe('readonly');
         });
 
-        test('dont downgrade the user if the new email is exactly the same', async () => {
+        test.concurrent('dont downgrade the user if the new email is exactly the same', async () => {
             // Create an editor user
             const { sessionToken, userId, userEmail } = await createUser('editor');
 
@@ -71,7 +71,7 @@ describe('PATCH /api/users/:id', () => {
             expect(updatedUserInDb?.role).toBe('editor');
         });
 
-        test('dont downgrade admin users when they update their email ', async () => {
+        test.concurrent('dont downgrade admin users when they update their email ', async () => {
             // Create an administrator user
             const { sessionToken, userId } = await createUser('admin');
 
@@ -91,7 +91,7 @@ describe('PATCH /api/users/:id', () => {
     });
 
     describe('Response - Success ', () => {
-        test('return safe and correct data (200 OK)', async () => {
+        test.concurrent('return safe and correct data (200 OK)', async () => {
             const expectedStatus = 200;
 
             // Create user
@@ -122,7 +122,7 @@ describe('PATCH /api/users/:id', () => {
     });
 
     describe('Response - Failure', () => {
-        test('return 404 NOT FOUND when user is not found', async () => {
+        test.concurrent('return 404 NOT FOUND when user is not found', async () => {
             const validId = new Types.ObjectId();
             const expectedStatus = 404;
             const expectedErrorMssg = `User with id ${validId} not found`;
@@ -140,7 +140,7 @@ describe('PATCH /api/users/:id', () => {
             expect(response.statusCode).toBe(expectedStatus);
         });
 
-        test('return 404 NOT FOUND even when the id is not a valid mongo id', async () => {
+        test.concurrent('return 404 NOT FOUND even when the id is not a valid mongo id', async () => {
             const expectedStatus = 404;
             const invalidId = '12345';
             const expectedErrorMssg = `User with id ${invalidId} not found`;
@@ -158,7 +158,7 @@ describe('PATCH /api/users/:id', () => {
             expect(response.statusCode).toBe(expectedStatus);
         });
 
-        test('return 400 BAD REQUEST when no field to update is provided', async () => {
+        test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {
             const expectedStatus = 400;
             const expectedErrorMssg = 'At least one field is required to update the user';
 
@@ -175,7 +175,7 @@ describe('PATCH /api/users/:id', () => {
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
         });
 
-        test.each(['name', 'email'])
+        test.concurrent.each(['name', 'email'])
             ('return 409 CONFLICT when user %s already exists', async (property: string) => {                
 
                 // Create the original user

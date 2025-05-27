@@ -4,7 +4,7 @@ import { status2xx, testKit } from '@integration/utils';
 
 describe('POST /api/users/register', () => {
     describe('Database Operations', () => {
-        test('create user with correct data in db', async () => {
+        test.concurrent('create user with correct data in db', async () => {
             // Create user            
             const user = testKit.userDataGenerator.fullUser();
             await request(testKit.server)
@@ -33,7 +33,7 @@ describe('POST /api/users/register', () => {
     });
 
     describe('Response - Success', () => {
-        test('return safe and correct data in response (201 CREATED)', async () => {
+        test.concurrent('return safe and correct data in response (201 CREATED)', async () => {
             const expectedStatus = 201;
 
             // Create user
@@ -60,7 +60,7 @@ describe('POST /api/users/register', () => {
     });
 
     describe('Response - Failure', () => {
-        test.each(['name', 'email'])
+        test.concurrent.each(['name', 'email'])
             ('return 409 CONFLICT when user %s already exists', async (property: string) => {
                 // Create original user
                 const originalUser = await testKit.userModel.create(testKit.userDataGenerator.fullUser()) as any;
@@ -81,7 +81,7 @@ describe('POST /api/users/register', () => {
                 expect(response.statusCode).toBe(expectedStatus);
             });
 
-        test.each(['name', 'email', 'password'])
+        test.concurrent.each(['name', 'email', 'password'])
             ('return 400 BAD REQUEST when %s is missing', async (property: string) => {
                 const expectedStatus = 400;
                 const expectedErrorMssg = `${property} should not be null or undefined`
@@ -99,7 +99,7 @@ describe('POST /api/users/register', () => {
                 expect(response.statusCode).toBe(expectedStatus);
             });
 
-        test('return 400 BAD REQUEST when an unexpected property is provided', async () => {
+        test.concurrent('return 400 BAD REQUEST when an unexpected property is provided', async () => {
             const expectedStatus = 400;
             const unexpectedPropertyName = faker.food.vegetable()
             const expectedErrorMssg = `property ${unexpectedPropertyName} should not exist`;

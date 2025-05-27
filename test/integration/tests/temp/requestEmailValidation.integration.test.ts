@@ -7,7 +7,7 @@ const { mock } = nodemailer as unknown as NodemailerMock;
 
 describe('POST /api/users/requestEmailValidation', () => {
     describe('Token in the sent url', () => {
-        test('return status 401 UNAUTHORIZED if token is used for other purposes', async () => {
+        test.concurrent('return status 401 UNAUTHORIZED if token is used for other purposes', async () => {
             const expectedStatus = 401;
             const expectedErrorMssg = 'Invalid bearer token';
 
@@ -50,7 +50,7 @@ describe('POST /api/users/requestEmailValidation', () => {
     });
 
     describe('Response - Success', () => {
-        test('return 204 NO CONTENT', async () => {
+        test.concurrent('return 204 NO CONTENT', async () => {
             const expectedStatus = 204;
 
             // Create editor
@@ -67,7 +67,7 @@ describe('POST /api/users/requestEmailValidation', () => {
     });
 
     describe('Response - Failure', () => {
-        test('return 400 BAD REQUEST when email is already validated', async () => {
+        test.concurrent('return 400 BAD REQUEST when email is already validated', async () => {
             const expectedStatus = 400;
             const expectedErrorMssg = 'User email is already validated';
 

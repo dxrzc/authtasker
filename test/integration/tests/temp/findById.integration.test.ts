@@ -4,7 +4,7 @@ import { createUser, testKit } from '@integration/utils';
 
 describe('GET /api/users/:id', () => {
     describe('Response - Success', () => {
-        test('return status 200 OK and the correct and safe user data', async () => {
+        test.concurrent('return status 200 OK and the correct and safe user data', async () => {
             const expectedStatus = 200;
 
             const { userId, sessionToken } = await createUser('readonly');
@@ -28,7 +28,7 @@ describe('GET /api/users/:id', () => {
     });
 
     describe('Response - Failure', () => {
-        test('return status 404 NOT FOUND when user is not found', async () => {
+        test.concurrent('return status 404 NOT FOUND when user is not found', async () => {
             const mongoId = new Types.ObjectId();
             const { sessionToken } = await createUser('readonly');
 
@@ -43,7 +43,7 @@ describe('GET /api/users/:id', () => {
             expect(response.statusCode).toBe(expectedStatus);
         });
 
-        test('return status 404 NOT FOUND even when id is not a valid', async () => {
+        test.concurrent('return status 404 NOT FOUND even when id is not a valid', async () => {
             const invalidMongoId = '12345';
             const { sessionToken } = await createUser('readonly');
 

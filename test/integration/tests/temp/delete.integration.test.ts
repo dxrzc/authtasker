@@ -4,7 +4,7 @@ import { createUser, status2xx, testKit } from '@integration/utils';
 
 describe('DELETE /api/users/:id', () => {
     describe('Database Operations', () => {
-        test('user is deleted in database', async () => {
+        test.concurrent('user is deleted in database', async () => {
             // Create user
             const { sessionToken, userId } = await createUser('readonly');
 
@@ -17,7 +17,7 @@ describe('DELETE /api/users/:id', () => {
             await expect(testKit.userModel.findById(userId)).resolves.toBeNull();
         });
 
-        test('delete all tasks associated with the user', async () => {
+        test.concurrent('delete all tasks associated with the user', async () => {
             // Create editor
             const { sessionToken, userId } = await createUser('editor');
 
@@ -49,7 +49,7 @@ describe('DELETE /api/users/:id', () => {
     });
 
     describe('Response - Success', () => {
-        test('return 204 NO CONTENT', async () => {
+        test.concurrent('return 204 NO CONTENT', async () => {
             const expectedStatus = 204;
 
             // Create user
@@ -66,7 +66,7 @@ describe('DELETE /api/users/:id', () => {
     });
 
     describe('Response - Failure', () => {
-        test('return 404 NOT FOUND when user is not found', async () => {
+        test.concurrent('return 404 NOT FOUND when user is not found', async () => {
             const expectedStatus = 404;
             const validId = new Types.ObjectId();
             const expectedErrorMssg = `User with id ${validId} not found`;
@@ -83,7 +83,7 @@ describe('DELETE /api/users/:id', () => {
             expect(response.statusCode).toBe(expectedStatus);
         });
 
-        test('return 404 NOT FOUND even when id is not a valid mongo id', async () => {
+        test.concurrent('return 404 NOT FOUND even when id is not a valid mongo id', async () => {
             const invalidId = '12345';
             const expectedStatus = 404;
             const expectedErrorMssg = `User with id ${invalidId} not found`;

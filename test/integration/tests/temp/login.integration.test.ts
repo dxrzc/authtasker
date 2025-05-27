@@ -3,7 +3,7 @@ import { testKit } from '@integration/utils';
 
 describe('POST /api/users/login', () => {
     describe('Response - Failure', () => {
-        test.each(['email', 'password'])
+        test.concurrent.each(['email', 'password'])
             ('return 400 BAD REQUEST when %s is missing', async (property: string) => {
                 const expectedStatus = 400;
                 const expectedErrorMssg = `${property} should not be null or undefined`;
@@ -26,7 +26,7 @@ describe('POST /api/users/login', () => {
     });
 
     describe('Response - Success', () => {
-        test('return safe and correct data in response (200 OK)', async () => {
+        test.concurrent('return safe and correct data in response (200 OK)', async () => {
             const expectedStatus = 200;
             const user = testKit.userDataGenerator.fullUser();
 

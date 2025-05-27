@@ -3,7 +3,7 @@ import { JwtService } from '@root/services';
 import request from 'supertest';
 
 describe('POST /api/users/logout', () => {
-    test('token is blacklisted', async () => {
+    test.concurrent('token is blacklisted', async () => {
         const { sessionToken } = await createUser('editor');
 
         await request(testKit.server)
@@ -19,7 +19,7 @@ describe('POST /api/users/logout', () => {
         expect(data).not.toBeNull();
     });
 
-    test('return status 401 UNAUTHORIZED when trying to access other resources after logout', async () => {
+    test.concurrent('return status 401 UNAUTHORIZED when trying to access other resources after logout', async () => {
         const { sessionToken } = await createUser('editor');
         const expectedStatus = 401;
         const expectedErrorMssg = 'Invalid bearer token';
@@ -40,7 +40,7 @@ describe('POST /api/users/logout', () => {
     });
 
     describe('Response - Success', () => {
-        test('return status 204 NO CONTENT', async () => {
+        test.concurrent('return status 204 NO CONTENT', async () => {
             const expectedStatus = 204;
             const { sessionToken } = await createUser('editor');
 
@@ -54,7 +54,7 @@ describe('POST /api/users/logout', () => {
     });
 
     describe('Response - Failure', () => {
-        test('return status 401 UNAUTHORIZED when using a blacklisted token to logout', async () => {
+        test.concurrent('return status 401 UNAUTHORIZED when using a blacklisted token to logout', async () => {
             const expectedStatus = 401;
             const expectedErrorMssg = 'Invalid bearer token';
             const { sessionToken } = await createUser('editor');
