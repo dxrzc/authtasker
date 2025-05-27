@@ -6,6 +6,7 @@ describe('POST /api/users/login', () => {
         test.each(['email', 'password'])
             ('return 400 BAD REQUEST when %s is missing', async (property: string) => {
                 const expectedStatus = 400;
+                const expectedErrorMssg = `${property} should not be null or undefined`;
 
                 // Delete property
                 const user = {
@@ -19,7 +20,7 @@ describe('POST /api/users/login', () => {
                     .post(testKit.endpoints.login)
                     .send(user);
 
-                expect(response.body).toStrictEqual({ error: `${property} should not be null or undefined` });
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
                 expect(response.statusCode).toBe(expectedStatus);
             });
     });

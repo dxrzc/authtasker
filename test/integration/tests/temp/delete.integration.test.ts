@@ -69,6 +69,7 @@ describe('DELETE /api/users/:id', () => {
         test('return 404 NOT FOUND when user is not found', async () => {
             const expectedStatus = 404;
             const validId = new Types.ObjectId();
+            const expectedErrorMssg = `User with id ${validId} not found`;
 
             // Create user
             const { sessionToken } = await createUser('readonly');
@@ -78,13 +79,14 @@ describe('DELETE /api/users/:id', () => {
                 .delete(`${testKit.endpoints.usersAPI}/${validId}`)
                 .set('Authorization', `Bearer ${sessionToken}`);
 
-            expect(response.body).toStrictEqual({ error: `User with id ${validId} not found` });
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
         });
 
         test('return 404 NOT FOUND even when id is not a valid mongo id', async () => {
-            const expectedStatus = 404;
             const invalidId = '12345';
+            const expectedStatus = 404;
+            const expectedErrorMssg = `User with id ${invalidId} not found`;
 
             // Create user
             const { sessionToken } = await createUser('readonly');
@@ -94,7 +96,7 @@ describe('DELETE /api/users/:id', () => {
                 .delete(`${testKit.endpoints.usersAPI}/${invalidId}`)
                 .set('Authorization', `Bearer ${sessionToken}`);
 
-            expect(response.body).toStrictEqual({ error: `User with id ${invalidId} not found` });
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
         });
     });

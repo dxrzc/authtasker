@@ -66,6 +66,9 @@ describe('POST /api/users/register', () => {
                 const originalUser = await testKit.userModel.create(testKit.userDataGenerator.fullUser()) as any;
                 const originalUserDuplicatedPropertyValue = originalUser[property];
 
+                const expectedStatus = 409;
+                const expectedErrorMssg = `User with ${property} "${originalUserDuplicatedPropertyValue}" already exists`;
+
                 // Create user with the same property value
                 const response = await request(testKit.server)
                     .post(testKit.endpoints.register)
@@ -74,13 +77,14 @@ describe('POST /api/users/register', () => {
                         [property]: originalUserDuplicatedPropertyValue
                     });
 
-                expect(response.body).toStrictEqual({ error: `User with ${property} "${originalUserDuplicatedPropertyValue}" already exists` })
-                expect(response.statusCode).toBe(409);
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg })
+                expect(response.statusCode).toBe(expectedStatus);
             });
 
         test.each(['name', 'email', 'password'])
             ('return 400 BAD REQUEST when %s is missing', async (property: string) => {
                 const expectedStatus = 400;
+                const expectedErrorMssg = `${property} should not be null or undefined`
 
                 // Delete the property
                 const user = testKit.userDataGenerator.fullUser() as any;
@@ -91,13 +95,14 @@ describe('POST /api/users/register', () => {
                     .post(testKit.endpoints.register)
                     .send(user);
 
-                expect(response.body).toStrictEqual({ error: `${property} should not be null or undefined` });
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
                 expect(response.statusCode).toBe(expectedStatus);
             });
 
         test('return 400 BAD REQUEST when an unexpected property is provided', async () => {
             const expectedStatus = 400;
             const unexpectedPropertyName = faker.food.vegetable()
+            const expectedErrorMssg = `property ${unexpectedPropertyName} should not exist`;
 
             const response = await request(testKit.server)
                 .post(testKit.endpoints.register)
@@ -106,7 +111,7 @@ describe('POST /api/users/register', () => {
                     [unexpectedPropertyName]: faker.food.fruit(),
                 });
 
-            expect(response.body).toStrictEqual({ error: `property ${unexpectedPropertyName} should not exist` });
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
         });
     });

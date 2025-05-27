@@ -9,6 +9,7 @@ describe('POST /api/users/requestEmailValidation', () => {
     describe('Token in the sent url', () => {
         test('return status 401 UNAUTHORIZED if token is used for other purposes', async () => {
             const expectedStatus = 401;
+            const expectedErrorMssg = 'Invalid bearer token';
 
             // Create user
             const { sessionToken, userId } = await createUser('readonly');
@@ -26,7 +27,7 @@ describe('POST /api/users/requestEmailValidation', () => {
                 .delete(`${testKit.endpoints.usersAPI}/${userId}`)
                 .set('Authorization', `Bearer ${tokenInEmail}`);
 
-            expect(response.body).toEqual({ error: 'Invalid bearer token' });
+            expect(response.body).toEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
         });
     });

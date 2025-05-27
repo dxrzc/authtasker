@@ -123,8 +123,9 @@ describe('PATCH /api/users/:id', () => {
 
     describe('Response - Failure', () => {
         test('return 404 NOT FOUND when user is not found', async () => {
-            const expectedStatus = 404;
             const validId = new Types.ObjectId();
+            const expectedStatus = 404;
+            const expectedErrorMssg = `User with id ${validId} not found`;
 
             // Create user
             const { sessionToken } = await createUser('readonly');
@@ -135,13 +136,14 @@ describe('PATCH /api/users/:id', () => {
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .send({ name: testKit.userDataGenerator.name() });
 
-            expect(response.body).toStrictEqual({ error: `User with id ${validId} not found` });
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
         });
 
         test('return 404 NOT FOUND even when the id is not a valid mongo id', async () => {
             const expectedStatus = 404;
             const invalidId = '12345';
+            const expectedErrorMssg = `User with id ${invalidId} not found`;
 
             // Create user
             const { sessionToken } = await createUser('readonly');
@@ -152,12 +154,13 @@ describe('PATCH /api/users/:id', () => {
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .send({ name: testKit.userDataGenerator.name() });
 
-            expect(response.body).toStrictEqual({ error: `User with id ${invalidId} not found` });
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
         });
 
         test('return 400 BAD REQUEST when no field to update is provided', async () => {
             const expectedStatus = 400;
+            const expectedErrorMssg = 'At least one field is required to update the user';
 
             // Create user
             const { sessionToken, userId } = await createUser('readonly');
@@ -169,16 +172,18 @@ describe('PATCH /api/users/:id', () => {
                 .send();
 
             expect(response.statusCode).toBe(expectedStatus);
-            expect(response.body).toStrictEqual({ error: 'At least one field is required to update the user' });
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
         });
 
         test.each(['name', 'email'])
-            ('return 409 CONFLICT when user %s already exists', async (property: string) => {
-                const expectedStatus = 409;
+            ('return 409 CONFLICT when user %s already exists', async (property: string) => {                
 
                 // Create the original user
                 const originalUserInDb = await testKit.userModel.create(testKit.userDataGenerator.fullUser()) as any;
                 const alreadyExistingPropertyValue = originalUserInDb[property];
+
+                const expectedStatus = 409;
+                const expectedErrorMssg = `User with ${property} "${alreadyExistingPropertyValue}" already exists`;
 
                 // Create the user to update
                 const { sessionToken: userToUpdateSessionToken, userId: userToUpdateId } = await createUser('readonly');
@@ -189,7 +194,7 @@ describe('PATCH /api/users/:id', () => {
                     .set('Authorization', `Bearer ${userToUpdateSessionToken}`)
                     .send({ [property]: alreadyExistingPropertyValue })
 
-                expect(response.body).toStrictEqual({ error: `User with ${property} "${alreadyExistingPropertyValue}" already exists` })
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg })
                 expect(response.statusCode).toBe(expectedStatus);
             });
     });
