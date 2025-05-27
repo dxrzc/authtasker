@@ -10,6 +10,7 @@ export const createUser = async (role: UserRole) => {
     const sessionToken = response.body.token;
     const userId = response.body.user.id;
     const userEmail = response.body.user.email;
+    const userName = response.body.user.name;
 
     if (role != 'readonly')
         await testKit.userModel.findByIdAndUpdate(userId, { role, emailValidated: true });
@@ -17,6 +18,7 @@ export const createUser = async (role: UserRole) => {
     return {
         sessionToken,
         userId,
-        userEmail
+        userEmail,
+        userName,
     };
 };

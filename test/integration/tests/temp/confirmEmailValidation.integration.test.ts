@@ -5,7 +5,7 @@ import { NodemailerMock } from "nodemailer-mock";
 const { mock } = nodemailer as unknown as NodemailerMock;
 import { createUser, getTokenFromMail, status2xx, testKit } from "@integration/utils";
 
-describe('POST /api/users/confirmEmailValidation', () => {
+describe('POST /api/users/confirmEmailValidation/:token', () => {
     test('upgrade user to editor and change emailValidated property to true', async () => {
         const { sessionToken, userId } = await createUser('readonly');
 
