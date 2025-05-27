@@ -1,9 +1,9 @@
 import { faker } from '@faker-js/faker/.';
+import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
 import { createTask } from '@integration/utils/createTask.util';
-import request from 'supertest';
 
-describe('POST api/tasks', () => {
+describe('POST /api/tasks', () => {
     describe('Database operations', () => {
         test.concurrent('create task with correct data in db', async () => {
             const { sessionToken, userId } = await createUser('editor');

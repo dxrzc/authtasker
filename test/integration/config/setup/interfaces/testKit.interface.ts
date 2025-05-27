@@ -27,6 +27,7 @@ export interface ITestKit {
         confirmEmailValidation: string;
 
         tasksAPI: string;
-        createTask: string;        
+        createTask: string;  
+        findAllTasksByUser: string;      
     };
 };

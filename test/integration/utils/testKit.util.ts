@@ -10,5 +10,6 @@ export const testKit: ITestKit = {
         confirmEmailValidation: `/api/users/confirmEmailValidation`,
         tasksAPI: '/api/tasks',
         createTask: `/api/tasks/create`,
+        findAllTasksByUser: '/api/tasks/allByUser/:id'
     }
 } as any;
