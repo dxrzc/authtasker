@@ -5,6 +5,7 @@ export const testKit: ITestKit = {
         usersAPI: '/api/users',
         register: `/api/users/register`,
         login: `/api/users/login`,
+        logout: `/api/users/logout`,
         requestEmailValidation: `/api/users/requestEmailValidation`,
         confirmEmailValidation: `/api/users/confirmEmailValidation`,
         tasksAPI: '/api/tasks',

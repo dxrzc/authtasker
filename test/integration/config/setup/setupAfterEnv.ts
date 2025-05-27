@@ -47,6 +47,7 @@ beforeAll(async () => {
         JWT_PRIVATE_KEY: 'testkey',
         HTTP_LOGS: false,
     } as const;
+    testKit.jwtPrivateKey = configService.JWT_PRIVATE_KEY;
 
     mongoDatabase = new MongoDatabase(configService as ConfigService, loggerServiceMock);
     await mongoDatabase.connect();
@@ -54,6 +55,7 @@ beforeAll(async () => {
     // ioredis-mock
     const redisService = new RedisService(configService as ConfigService);
     await redisService.connect();
+    testKit.redisService = redisService
 
     // models
     const userModel = ModelLoader.loadUserModel(configService as ConfigService);
