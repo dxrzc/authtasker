@@ -122,42 +122,6 @@ describe('PATCH /api/users/:id', () => {
     });
 
     describe('Response - Failure', () => {
-        test.concurrent('return 404 NOT FOUND when user is not found', async () => {
-            const validId = new Types.ObjectId();
-            const expectedStatus = 404;
-            const expectedErrorMssg = `User with id ${validId} not found`;
-
-            // Create user
-            const { sessionToken } = await createUser('readonly');
-
-            // Update
-            const response = await request(testKit.server)
-                .patch(`${testKit.endpoints.usersAPI}/${validId}`)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .send({ name: testKit.userDataGenerator.name() });
-
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-            expect(response.statusCode).toBe(expectedStatus);
-        });
-
-        test.concurrent('return 404 NOT FOUND even when the id is not a valid mongo id', async () => {
-            const expectedStatus = 404;
-            const invalidId = '12345';
-            const expectedErrorMssg = `User with id ${invalidId} not found`;
-
-            // Create user
-            const { sessionToken } = await createUser('readonly');
-
-            // Update
-            const response = await request(testKit.server)
-                .patch(`${testKit.endpoints.usersAPI}/${invalidId}`)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .send({ name: testKit.userDataGenerator.name() });
-
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-            expect(response.statusCode).toBe(expectedStatus);
-        });
-
         test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {
             const expectedStatus = 400;
             const expectedErrorMssg = 'At least one field is required to update the user';

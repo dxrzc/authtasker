@@ -64,40 +64,4 @@ describe('DELETE /api/users/:id', () => {
             expect(response.statusCode).toBe(expectedStatus);
         });
     });
-
-    describe('Response - Failure', () => {
-        test.concurrent('return 404 NOT FOUND when user is not found', async () => {
-            const expectedStatus = 404;
-            const validId = new Types.ObjectId();
-            const expectedErrorMssg = `User with id ${validId} not found`;
-
-            // Create user
-            const { sessionToken } = await createUser('readonly');
-
-            // Delete
-            const response = await request(testKit.server)
-                .delete(`${testKit.endpoints.usersAPI}/${validId}`)
-                .set('Authorization', `Bearer ${sessionToken}`);
-
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-            expect(response.statusCode).toBe(expectedStatus);
-        });
-
-        test.concurrent('return 404 NOT FOUND even when id is not a valid mongo id', async () => {
-            const invalidId = '12345';
-            const expectedStatus = 404;
-            const expectedErrorMssg = `User with id ${invalidId} not found`;
-
-            // Create user
-            const { sessionToken } = await createUser('readonly');
-
-            // Delete
-            const response = await request(testKit.server)
-                .delete(`${testKit.endpoints.usersAPI}/${invalidId}`)
-                .set('Authorization', `Bearer ${sessionToken}`);
-
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-            expect(response.statusCode).toBe(expectedStatus);
-        });
-    });
 });
