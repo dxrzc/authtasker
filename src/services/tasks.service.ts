@@ -116,6 +116,7 @@ export class TasksService {
             .find()
             .skip(offset)
             .limit(limit)
+            .sort({ createdAt: 1 })
             .exec();
     }
 
@@ -124,6 +125,7 @@ export class TasksService {
 
         const tasks = await this.tasksModel
             .find({ user: userId })
+            .sort({ createdAt: 1 })
             .exec();
 
         return tasks;
