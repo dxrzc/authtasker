@@ -14,7 +14,7 @@ const config: Config = {
     setupFilesAfterEnv: ["<rootDir>/test/integration/config/setup/setupAfterEnv.ts"],
     preset: "ts-jest",
     // test files
-    roots: ["<rootDir>/test/integration/tests/temp"],
+    roots: ["<rootDir>/test/integration/tests"],
     testEnvironment: "jest-environment-node",    
 };
 
