@@ -1,2 +1,2 @@
 
-export { usersModificationCases } from './modification-cases.fixture'
+export { usersApiProtectedRoutes } from './protected-routes.fixture'

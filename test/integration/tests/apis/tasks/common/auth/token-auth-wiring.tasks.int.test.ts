@@ -1,21 +1,13 @@
-import { createUser, status2xx, testKit } from '@integration/utils';
 import request from 'supertest';
+import { createUser, status2xx, testKit } from '@integration/utils';
+import { tasksApiProtectedRoutes } from './fixtures';
 
-// These tests don't intend to test the roles middleware but rather 
-// make sure the middleware is wired to the following routes.
+// Ensure the logic in charge of the token authentication is integrated 
+// with the tasks API endpoints.
 
-const protectedRoutes = [
-    { method: 'post', url: testKit.endpoints.requestEmailValidation }, // requestEmailValidation
-    { method: 'post', url: testKit.endpoints.logout }, // logout
-    { method: 'delete', url: `${testKit.endpoints.usersAPI}/123` }, // delete    
-    { method: 'patch', url: `${testKit.endpoints.usersAPI}/123` }, // update
-    { method: 'get', url: `${testKit.endpoints.usersAPI}/123` }, // find by id
-    { method: 'get', url: testKit.endpoints.usersAPI }, // findAll
-] as const;
-
-describe('Auth Middleware Wiring', () => {
+describe('Tasks API - Token Authentication - Wiring', () => {
     test.concurrent.each(
-        protectedRoutes
+        tasksApiProtectedRoutes
     )('return 401 UNAUTHORIZED when token is not provided in $method $url', async ({ method, url }) => {
         const expectedStatus = 401;
         const expectedErrorMssg = 'No token provided';
@@ -28,7 +20,7 @@ describe('Auth Middleware Wiring', () => {
     });
 
     test.concurrent.each(
-        protectedRoutes
+        tasksApiProtectedRoutes
     )('return 401 UNAUTHORIZED when token blacklisted $method $url', async ({ method, url }) => {
         const expectedStatus = 401;
         const expectedErrorMssg = 'Invalid bearer token';

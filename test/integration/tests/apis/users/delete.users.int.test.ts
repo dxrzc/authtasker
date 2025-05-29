@@ -1,8 +1,25 @@
 import request from 'supertest';
-import { Types } from 'mongoose';
 import { createUser, status2xx, testKit } from '@integration/utils';
 
 describe('DELETE /api/users/:id', () => {
+    describe('Modification Access Logic Wiring', () => {
+        test.concurrent('return status 403 FORBIDDEN when editor tries to delete another editor', async () => {
+            const expectedStatus = 403;
+
+            // Create current user
+            const { sessionToken: currentUserSessionToken } = await createUser('editor');
+
+            // Create target user
+            const { userId: targetUserId } = await createUser('editor');
+
+            // Attempt to delete the target user
+            await request(testKit.server)
+                .delete(`${testKit.endpoints.usersAPI}/${targetUserId}`)
+                .set('Authorization', `Bearer ${currentUserSessionToken}`)
+                .expect(expectedStatus);
+        });
+    });
+
     describe('Database Operations', () => {
         test.concurrent('user is deleted in database', async () => {
             // Create user

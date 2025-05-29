@@ -1,8 +1,28 @@
+import request from 'supertest';
 import { createUser, status2xx, testKit } from "@integration/utils";
 import { createTask } from "@integration/utils/createTask.util";
-import request from 'supertest';
 
 describe('PATCH /api/tasks/:id', () => {
+    describe('Modification Access Logic Wiring', () => {
+        test.concurrent('return 403 FORBIDDEN when admin tries to delete another admin\'s task', async () => {
+            const expectedStatus = 403;
+
+            // Create current user
+            const { sessionToken: currentUserSessionToken } = await createUser('admin');
+
+            // Create target user and task
+            const { sessionToken: targetUserSessionToken } = await createUser('admin');
+            const { taskId } = await createTask(targetUserSessionToken);
+
+            // Attempt to update the target user task
+            await request(testKit.server)
+                .patch(`${testKit.endpoints.tasksAPI}/${taskId}`)
+                .set('Authorization', `Bearer ${currentUserSessionToken}`)
+                .send({ name: testKit.tasksDataGenerator.name() })
+                .expect(expectedStatus);
+        });
+    });
+
     describe('Database operations', () => {
         test.concurrent('update properties in database', async () => {
             const { sessionToken } = await createUser('editor');
@@ -104,7 +124,7 @@ describe('PATCH /api/tasks/:id', () => {
                 .send({ name: alreadyExistingTaskName })
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg })
-            expect(response.statusCode).toBe(expectedStatus);            
+            expect(response.statusCode).toBe(expectedStatus);
         });
     });
 });

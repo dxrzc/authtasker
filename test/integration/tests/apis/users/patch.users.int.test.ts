@@ -1,8 +1,26 @@
 import request from 'supertest';
-import { Types } from 'mongoose';
 import { testKit, status2xx, createUser } from '@integration/utils';
 
 describe('PATCH /api/users/:id', () => {
+    describe('Modification Access Logic Wiring', () => {
+        test.concurrent('return 403 FORBIDDEN when admin tries to update another admin', async () => {
+            const expectedStatus = 403;
+
+            // Create current user
+            const { sessionToken: currentUserSessionToken } = await createUser('admin');
+
+            // Create target user
+            const { userId: targetUserId } = await createUser('admin');
+
+            // Attempt to update the target user
+            await request(testKit.server)
+                .patch(`${testKit.endpoints.usersAPI}/${targetUserId}`)
+                .set('Authorization', `Bearer ${currentUserSessionToken}`)
+                .send({ name: testKit.userDataGenerator.name(), })
+                .expect(expectedStatus);
+        });
+    });
+
     describe('Database Operations', () => {
         test.concurrent('update properties in database', async () => {
             // Create user
@@ -140,7 +158,7 @@ describe('PATCH /api/users/:id', () => {
         });
 
         test.concurrent.each(['name', 'email'])
-            ('return 409 CONFLICT when user %s already exists', async (property: string) => {                
+            ('return 409 CONFLICT when user %s already exists', async (property: string) => {
 
                 // Create the original user
                 const originalUserInDb = await testKit.userModel.create(testKit.userDataGenerator.fullUser()) as any;
