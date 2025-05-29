@@ -1,26 +1,9 @@
-import { createUser, status2xx, testKit } from '@integration/utils';
-import { UserRole, validRoles } from '@root/types/user';
 import request from 'supertest';
+import { UserRole, validRoles } from '@root/types/user';
+import { createUser, status2xx, testKit } from '@integration/utils';
+import { usersModificationCases } from './fixtures';
 
-const cases = [
-    // editor
-    { currentRole: 'editor', targetRole: 'admin', expect: 403 },
-    { currentRole: 'editor', targetRole: 'readonly', expect: 403 },
-    { currentRole: 'editor', targetRole: 'editor', expect: 403 },
-
-    // admin
-    { currentRole: 'admin', targetRole: 'editor', expect: status2xx },
-    { currentRole: 'admin', targetRole: 'readonly', expect: status2xx },
-    { currentRole: 'admin', targetRole: 'admin', expect: 403 }, // can't modify other admins
-
-    // readonly
-    { currentRole: 'readonly', targetRole: 'readonly', expect: 403 },
-    { currentRole: 'readonly', targetRole: 'editor', expect: 403 },
-    { currentRole: 'readonly', targetRole: 'admin', expect: 403 },
-
-] as const;
-
-describe('Authorization', () => {
+describe('Users API - Modification Permissions', () => {
     describe('DELETE api/users/:id', () => {
         test.concurrent.each(
             validRoles
@@ -35,7 +18,7 @@ describe('Authorization', () => {
         });
 
         test.concurrent.each(
-            cases
+            usersModificationCases
         )('return status $expect when $currentRole tries to delete an $targetRole', async ({ currentRole, targetRole, expect }) => {
             const { sessionToken: currentUserToken } = await createUser(currentRole);
             const { userId: targetUserId } = await createUser(targetRole);
@@ -48,7 +31,7 @@ describe('Authorization', () => {
         });
     });
 
-    describe('UPDATE api/users/:id', () => {
+    describe('PATCH api/users/:id', () => {
         test.concurrent.each(
             validRoles
         )('%s users can update their own accounts', async (role: UserRole) => {
@@ -63,7 +46,7 @@ describe('Authorization', () => {
         });
 
         test.concurrent.each(
-            cases
+            usersModificationCases
         )('return status $expect when $currentRole tries to update an $targetRole', async ({ currentRole, targetRole, expect }) => {
             const { sessionToken: currentUserToken } = await createUser(currentRole);
             const { userId: targetUserId } = await createUser(targetRole);
