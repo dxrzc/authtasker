@@ -103,7 +103,7 @@ export class UserController {
             }
 
             await this.userService.confirmEmailValidation(token);
-            res.status(HTTP_STATUS_CODE.OK).send('Email successfully validated');
+            res.status(HTTP_STATUS_CODE.OK).send({ message: 'Email successfully validated' });
 
         } catch (error) {
             handleError(res, error, this.loggerService);
@@ -111,7 +111,7 @@ export class UserController {
     }
 
     readonly findOne = async (req: Request, res: Response): Promise<void> => {
-        try {            
+        try {
             const id = req.params.id;
             this.loggerService.info(`User ${id} search attempt`);
             const userFound = await this.userService.findOne(id);
@@ -151,7 +151,7 @@ export class UserController {
     }
 
     readonly updateOne = async (req: Request, res: Response): Promise<void> => {
-        try {            
+        try {
             const userIdToUpdate = req.params.id;
             this.loggerService.info(`User ${userIdToUpdate} update attempt`);
             const propertiesToUpdate = req.body;
