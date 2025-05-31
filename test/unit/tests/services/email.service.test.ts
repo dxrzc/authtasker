@@ -2,13 +2,6 @@ import nodemailer from "nodemailer";
 import { ITransporter } from "@root/interfaces";
 import { EmailService } from "@root/services";
 
-describe('H', () => {
-    test('ola', async () => {
-        console.log('xd');
-    });
-});
-
-/* 
 describe('Email Service', () => {
     describe('constructor', () => {
         test('createTransport is called with the provided options', async () => {
@@ -36,7 +29,7 @@ describe('Email Service', () => {
     });
 
     describe('sendMail', () => {
-        test('transporter.sendMail is called with the provided options', async () => {
+        test('transporter.sendMail is called with the provided options', async () => {            
             const emailService = new EmailService({
                 host: 'localhost',
                 port: 5379,
@@ -52,10 +45,10 @@ describe('Email Service', () => {
 
             const sendMailMock = jest.spyOn(emailService['transporter'], 'sendMail')
                 .mockImplementation();
-
+                
             emailService.sendMail(mailOptions);
 
             expect(sendMailMock).toHaveBeenCalledWith(mailOptions);
         });
     });
-}); */
+}); 
