@@ -1,20 +1,29 @@
 import type { Config } from 'jest';
 
 const config: Config = {
-    rootDir: "../", // unit folder    
+    rootDir: process.cwd(), // workidr
+
+    // mocks
+    resetMocks: false,
     clearMocks: true,
     restoreMocks: true,
-    resetMocks: true,
+
+    // coverage
     collectCoverage: true,
-    coverageDirectory: "<rootDir>/../../coverage/unit",
-    coverageProvider: "v8",    
-    moduleNameMapper: {
-        "^@root/(.*)$": "<rootDir>/../../src/$1"
-    },
-    preset: 'ts-jest',
+    collectCoverageFrom: ['!<rootDir>/test/unit/**'],
+    coverageDirectory: '<rootDir>/coverage/unit',
+    coverageProvider: 'v8',
+
     // test files
-    roots: ["<rootDir>/tests"],
-    testEnvironment: "jest-environment-node",
+    roots: ['<rootDir>/test/unit/tests'],
+
+    // alias
+    moduleNameMapper: {
+        '^@root/(.*)$': '<rootDir>/src/$1'
+    },
+
+    preset: 'ts-jest',
+    testEnvironment: 'jest-environment-node',
 };
 
 export default config;

@@ -1,19 +1,29 @@
 import type { Config } from 'jest';
 
 const config: Config = {
-    rootDir: "../",  // integration folder
+    rootDir: process.cwd(), // workidr
+    
+    // setup
+    setupFilesAfterEnv: ["<rootDir>/test/integration/config/setup/setupAfterEnv.ts"],
+    
+    // coverage
     collectCoverage: true,
-    coverageDirectory: "<rootDir>/../../coverage/integration",
+    collectCoverageFrom: ['!<rootDir>/test/integration/**'],
+    coverageDirectory: "<rootDir>/coverage/integration",
     coverageProvider: "v8",
+    
+    // test files
+    roots: ["<rootDir>/test/integration/tests"],
+    
+    // aliases
     moduleNameMapper: {
-        "^@root/(.*)$": "<rootDir>/../../src/$1",  
-        "^@integration/(.*)$": "<rootDir>/$1",  
-        "^ioredis$": "ioredis-mock",      
-        "^nodemailer$": "<rootDir>/config/setup/mocks/nodemailer.ts"
+        "^@root/(.*)$": "<rootDir>/src/$1",
+        "^@integration/(.*)$": "<rootDir>/test/integration/$1",
+        "^ioredis$": "ioredis-mock",
+        "^nodemailer$": "<rootDir>/test/integration/config/setup/mocks/nodemailer.ts"
     },
-    setupFilesAfterEnv: ["<rootDir>/config/setup/setupAfterEnv.ts"],
+    
     preset: "ts-jest",
-    roots: ["<rootDir>/tests"],
     testEnvironment: "jest-environment-node",    
 };
 
