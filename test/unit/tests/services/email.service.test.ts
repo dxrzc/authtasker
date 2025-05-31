@@ -5,17 +5,15 @@ import { EmailService } from "@root/services";
 describe('Email Service', () => {
     describe('constructor', () => {
         test('createTransport is called with the provided options', async () => {
+            const createTransportMock = jest.spyOn(nodemailer, 'createTransport').mockImplementation();
             const transporterOptions: ITransporter = {
                 host: 'localhost',
                 port: 5379,
                 user: 'test-user',
                 pass: 'test-password'
             };
-            const createTransportMock = jest.spyOn(nodemailer, 'createTransport')
-                .mockImplementation();
 
             new EmailService(transporterOptions);
-
             expect(createTransportMock).toHaveBeenCalledWith({
                 host: transporterOptions.host,
                 port: transporterOptions.port,
@@ -29,7 +27,7 @@ describe('Email Service', () => {
     });
 
     describe('sendMail', () => {
-        test('transporter.sendMail is called with the provided options', async () => {            
+        test('transporter.sendMail is called with the provided options', async () => {
             const emailService = new EmailService({
                 host: 'localhost',
                 port: 5379,
@@ -37,17 +35,14 @@ describe('Email Service', () => {
                 pass: 'test-password'
             });
 
+            const sendMailMock = jest.spyOn(emailService['transporter'], 'sendMail').mockImplementation();
             const mailOptions: nodemailer.SendMailOptions = {
                 to: 'test-email@gmail.com',
                 subject: 'Hello World',
                 html: `<h1>Hello-World</h1>`
             };
 
-            const sendMailMock = jest.spyOn(emailService['transporter'], 'sendMail')
-                .mockImplementation();
-                
             emailService.sendMail(mailOptions);
-
             expect(sendMailMock).toHaveBeenCalledWith(mailOptions);
         });
     });
