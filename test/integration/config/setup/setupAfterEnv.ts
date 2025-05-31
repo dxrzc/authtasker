@@ -12,13 +12,15 @@ import { TasksDataGenerator, UserDataGenerator } from "@root/seed/generators";
 import { AppRoutes } from "@root/routes";
 import { Server } from "@root/server/server.init";
 import * as ModelLoader from "@root/databases/mongo/models";
+
 import { testKit } from "@integration/utils/testKit.util";
 import { type IntegrationConfigService } from "./types/config.service.type";
 
 let mongoMemoryServer: MongoMemoryServer;
 let mongoDatabase: MongoDatabase;
+let redisService: RedisService;
 
-beforeEach(()=> {
+beforeEach(() => {
     // Reset nodemailer emails
     nodemailerMock.reset();
 });
@@ -47,29 +49,29 @@ beforeAll(async () => {
         JWT_PRIVATE_KEY: 'testkey',
         HTTP_LOGS: false,
     } as const;
-    testKit.jwtPrivateKey = configService.JWT_PRIVATE_KEY;
-
     mongoDatabase = new MongoDatabase(configService as ConfigService, loggerServiceMock);
-    await mongoDatabase.connect();
+
+    testKit.jwtPrivateKey = configService.JWT_PRIVATE_KEY;
+    testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);    
 
     // ioredis-mock
-    const redisService = new RedisService(configService as ConfigService);
-    await redisService.connect();
+    redisService = new RedisService(configService as ConfigService);
     testKit.redisService = redisService
 
-    // models
+    // Connect databases
+    await Promise.all([mongoDatabase.connect(), redisService.connect()]);
+
+    // models (can not be compiled twice)
     const userModel = ModelLoader.loadUserModel(configService as ConfigService);
     const tasksModel = ModelLoader.loadTasksModel(configService as ConfigService);
+    jest.spyOn(ModelLoader, 'loadUserModel').mockReturnValue(userModel);
+    jest.spyOn(ModelLoader, 'loadTasksModel').mockReturnValue(tasksModel);
     testKit.userModel = userModel;
     testKit.tasksModel = tasksModel;
 
-    // models can not be compiled twice.
-    jest.spyOn(ModelLoader, 'loadUserModel').mockReturnValue(userModel);
-    jest.spyOn(ModelLoader, 'loadTasksModel').mockReturnValue(tasksModel);
-
     // data generators
     const userDataGenerator = new UserDataGenerator();
-    const tasksDataGenerator = new TasksDataGenerator();    
+    const tasksDataGenerator = new TasksDataGenerator();
     testKit.tasksDataGenerator = tasksDataGenerator;
     testKit.userDataGenerator = userDataGenerator;
 
@@ -82,12 +84,12 @@ beforeAll(async () => {
     );
     const server = new Server(0, await appRoutes.buildApp());
     testKit.server = server['app'];
-
-    // hashing service
-    testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);
 });
 
 afterAll(async () => {
-    await mongoDatabase.disconnect();
-    await mongoMemoryServer.stop();
+    await Promise.all([
+        redisService.disconnect(),
+        mongoMemoryServer.stop(),
+        mongoDatabase.disconnect()
+    ]);
 });
