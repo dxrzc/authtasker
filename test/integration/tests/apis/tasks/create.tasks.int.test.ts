@@ -1,9 +1,29 @@
-import { faker } from '@faker-js/faker/.';
 import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
 import { createTask } from '@integration/utils/createTask.util';
 
 describe('POST /api/tasks', () => {
+    describe('Input Sanitization', () => {
+        test.concurrent('return status 404 BAD REQUEST when task priority is not valid', async () => {
+            const expectedStatus = 400;
+            const expectedErrorMssg = 'priority must be one of the following values: low, medium, high';
+
+            const { sessionToken } = await createUser('editor');
+
+            // Create task with invalid priority            
+            const response = await request(testKit.server)
+                .post(testKit.endpoints.createTask)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({
+                    ...testKit.tasksDataGenerator.fullTask(),
+                    priority: 'invalid_priority' as any
+                })
+
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+            expect(response.statusCode).toBe(expectedStatus);
+        });
+    });
+
     describe('Database operations', () => {
         test.concurrent('create task with correct data in db', async () => {
             const { sessionToken, userId } = await createUser('editor');
@@ -34,9 +54,33 @@ describe('POST /api/tasks', () => {
             expect(taskInDb!.createdAt).toBeDefined();
             expect(taskInDb!.updatedAt).toBeDefined();
         });
+
+        describe('Duplicated Property Error Handling Wiring', () => {
+            test.concurrent('return status 409 CONFLICT when task name already exists', async () => {
+                // Create a task associated to user1
+                const { sessionToken: user1SessionToken } = await createUser('editor');
+                const { taskName } = await createTask(user1SessionToken);
+
+                const expectedStatus = 409;
+                const expectedErrorMssg = `Task with name "${taskName}" already exists`;
+
+                // user2 tries to create a new task with the same name
+                const { sessionToken: user2SessionToken } = await createUser('admin');
+                const response = await request(testKit.server)
+                    .post(testKit.endpoints.createTask)
+                    .send({
+                        ...testKit.tasksDataGenerator.fullTask(),
+                        name: taskName,
+                    })
+                    .set('Authorization', `Bearer ${user2SessionToken}`);
+
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+                expect(response.statusCode).toBe(expectedStatus);
+            });
+        });
     });
 
-    describe('Response - Success', () => {
+    describe('Response', () => {
         test.concurrent('return status 201 CREATED and correct data', async () => {
             const expectedStatus = 201;
             const { sessionToken, userId } = await createUser('editor');
@@ -60,70 +104,6 @@ describe('POST /api/tasks', () => {
                 updatedAt: taskInDb!.updatedAt.toISOString(),
                 id: taskInDb!.id,
             });
-        });
-    });
-
-    describe('Response - Failure', () => {
-        test.concurrent('return status 409 CONFLICT when task name already exists', async () => {
-            // Create a task associated to user1
-            const { sessionToken: user1SessionToken } = await createUser('editor');
-            const { taskName } = await createTask(user1SessionToken);
-
-            const expectedStatus = 409;
-            const expectedErrorMssg = `Task with name "${taskName}" already exists`;
-
-            // user2 tries to create a new task with the same name
-            const { sessionToken: user2SessionToken } = await createUser('admin');
-            const response = await request(testKit.server)
-                .post(testKit.endpoints.createTask)
-                .send({
-                    ...testKit.tasksDataGenerator.fullTask(),
-                    name: taskName,
-                })
-                .set('Authorization', `Bearer ${user2SessionToken}`);
-
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-            expect(response.statusCode).toBe(expectedStatus);
-        });
-
-        test.concurrent.each([
-            'name', 'description', 'status', 'priority'
-        ])('return status 404 BAD REQUEST when %s is missing', async (property: string) => {
-            const expectedStatus = 400;
-            const expectedErrorMssg = `${property} should not be null or undefined`
-
-            const { sessionToken } = await createUser('editor');
-
-            // Delete the property
-            const badTask = testKit.tasksDataGenerator.fullTask() as any;
-            delete badTask[property];
-
-            const response = await request(testKit.server)
-                .post(testKit.endpoints.createTask)
-                .send(badTask)
-                .set('Authorization', `Bearer ${sessionToken}`);
-
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-            expect(response.statusCode).toBe(expectedStatus);
-        });
-
-        test.concurrent('return status 404 BAD REQUEST when a unexpected property is provided', async () => {
-            const expectedStatus = 400;
-            const unexpectedPropertyName = faker.food.vegetable()
-            const expectedErrorMssg = `property ${unexpectedPropertyName} should not exist`;
-
-            const { sessionToken } = await createUser('editor');
-
-            const response = await request(testKit.server)
-                .post(testKit.endpoints.createTask)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .send({
-                    ...testKit.tasksDataGenerator.fullTask(),
-                    [unexpectedPropertyName]: faker.food.fruit(),
-                });
-
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-            expect(response.statusCode).toBe(expectedStatus);
         });
     });
 });

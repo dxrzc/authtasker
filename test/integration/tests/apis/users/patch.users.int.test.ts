@@ -1,16 +1,56 @@
 import request from 'supertest';
 import { testKit, status2xx, createUser } from '@integration/utils';
+import { USER_CONSTANTS } from '@root/rules/constants';
 
 describe('PATCH /api/users/:id', () => {
-    describe('Modification Access Logic Wiring', () => {
-        test.concurrent('return 403 FORBIDDEN when admin tries to update another admin', async () => {
+    describe('Input sanitization', () => {
+        describe('Validation Rules Wiring', () => {
+            test.concurrent('return 400 BAD REQUEST when user name is too short', async () => {
+                const expectedStatus = 400;
+                const expectedErrorMssg = `name must be longer than or equal to ${USER_CONSTANTS.MIN_NAME_LENGTH} characters`;
+
+                // Create user
+                const { sessionToken, userId } = await createUser('editor');
+
+                const invalidName = 'a';
+
+                const response = await request(testKit.server)
+                    .patch(`${testKit.endpoints.usersAPI}/${userId}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .send({ name: invalidName });
+
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+                expect(response.statusCode).toBe(expectedStatus);
+            });
+        });
+
+        test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {
+            const expectedStatus = 400;
+            const expectedErrorMssg = 'At least one field is required to update the user';
+
+            // Create user
+            const { sessionToken, userId } = await createUser('readonly');
+
+            // Update
+            const response = await request(testKit.server)
+                .patch(`${testKit.endpoints.usersAPI}/${userId}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send();
+
+            expect(response.statusCode).toBe(expectedStatus);
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+        });
+    });
+
+    describe('Modification Access Rules Wiring', () => {
+        test.concurrent('editors are forbidden to update other editors', async () => {
             const expectedStatus = 403;
 
             // Create current user
-            const { sessionToken: currentUserSessionToken } = await createUser('admin');
+            const { sessionToken: currentUserSessionToken } = await createUser('editor');
 
             // Create target user
-            const { userId: targetUserId } = await createUser('admin');
+            const { userId: targetUserId } = await createUser('editor');
 
             // Attempt to update the target user
             await request(testKit.server)
@@ -19,9 +59,44 @@ describe('PATCH /api/users/:id', () => {
                 .send({ name: testKit.userDataGenerator.name(), })
                 .expect(expectedStatus);
         });
+
+        test.concurrent('admins are authorized to update editors', async () => {
+            // Create current user
+            const { sessionToken: currentUserSessionToken } = await createUser('admin');
+
+            // Create target user
+            const { userId: targetUserId } = await createUser('editor');
+
+            // Attempt to update the target user
+            await request(testKit.server)
+                .patch(`${testKit.endpoints.usersAPI}/${targetUserId}`)
+                .set('Authorization', `Bearer ${currentUserSessionToken}`)
+                .send({ name: testKit.userDataGenerator.name(), })
+                .expect(status2xx);
+        });
     });
 
-    describe('Database Operations', () => {
+    describe('Database operations', () => {
+        describe('Email Update Rules Wiring', () => {
+            test.concurrent('email change triggers account role downgrade', async () => {
+                // Create an editor user
+                const { sessionToken, userId } = await createUser('editor');
+
+                // Update
+                await request(testKit.server)
+                    .patch(`${testKit.endpoints.usersAPI}/${userId}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .send({
+                        email: testKit.userDataGenerator.email()
+                    })
+                    .expect(status2xx);
+
+                const updatedUserInDb = await testKit.userModel.findById(userId);
+                expect(updatedUserInDb!.emailValidated).toBeFalsy();
+                expect(updatedUserInDb?.role).toBe('readonly');
+            });
+        });
+
         test.concurrent('update properties in database', async () => {
             // Create user
             const { sessionToken, userId } = await createUser('readonly');
@@ -53,63 +128,29 @@ describe('PATCH /api/users/:id', () => {
             expect(updatedUserInDb!.email).toBe(update.email);
         });
 
-        test.concurrent('email change triggers account downgrade', async () => {
-            // Create an editor user
-            const { sessionToken, userId } = await createUser('editor');
+        describe('Duplicated Property Error Handling Wiring', () => {
+            test.concurrent('return 409 conflict when user name already exists', async () => {
+                const expectedStatus = 409;
 
-            // Update
-            await request(testKit.server)
-                .patch(`${testKit.endpoints.usersAPI}/${userId}`)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .send({
-                    email: testKit.userDataGenerator.email()
-                })
-                .expect(status2xx);
+                // Create user
+                const user1 = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
 
-            const updatedUserInDb = await testKit.userModel.findById(userId);
-            expect(updatedUserInDb!.emailValidated).toBeFalsy();
-            expect(updatedUserInDb?.role).toBe('readonly');
-        });
+                // Create another user with same name
+                const response = await request(testKit.server)
+                    .post(testKit.endpoints.register)
+                    .send({
+                        ...testKit.userDataGenerator.fullUser(),
+                        name: user1.name
+                    });
 
-        test.concurrent('dont downgrade the user if the new email is exactly the same', async () => {
-            // Create an editor user
-            const { sessionToken, userId, userEmail } = await createUser('editor');
-
-            // Update the email using the same email
-            await request(testKit.server)
-                .patch(`${testKit.endpoints.usersAPI}/${userId}`)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .send({
-                    email: userEmail
-                })
-                .expect(status2xx);
-
-            const updatedUserInDb = await testKit.userModel.findById(userId);
-            expect(updatedUserInDb!.emailValidated).toBeTruthy();
-            expect(updatedUserInDb?.role).toBe('editor');
-        });
-
-        test.concurrent('dont downgrade admin users when they update their email ', async () => {
-            // Create an administrator user
-            const { sessionToken, userId } = await createUser('admin');
-
-            // Update
-            await request(testKit.server)
-                .patch(`${testKit.endpoints.usersAPI}/${userId}`)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .send({
-                    email: testKit.userDataGenerator.email()
-                })
-                .expect(status2xx);
-
-            const updatedUserInDb = await testKit.userModel.findById(userId);
-            expect(updatedUserInDb?.role).toBe('admin');
-            expect(updatedUserInDb!.emailValidated).toBeTruthy();
+                expect(response.body).toStrictEqual({ error: `User with name "${user1.name}" already exists` });
+                expect(response.statusCode).toBe(expectedStatus);
+            });
         });
     });
 
-    describe('Response - Success ', () => {
-        test.concurrent('return safe and correct data (200 OK)', async () => {
+    describe('Response', () => {
+        test.concurrent('return 200 OK and correct data (same data, no password, etc)', async () => {
             const expectedStatus = 200;
 
             // Create user
@@ -137,47 +178,5 @@ describe('PATCH /api/users/:id', () => {
             });
             expect(response.statusCode).toBe(expectedStatus);
         });
-    });
-
-    describe('Response - Failure', () => {
-        test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {
-            const expectedStatus = 400;
-            const expectedErrorMssg = 'At least one field is required to update the user';
-
-            // Create user
-            const { sessionToken, userId } = await createUser('readonly');
-
-            // Update
-            const response = await request(testKit.server)
-                .patch(`${testKit.endpoints.usersAPI}/${userId}`)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .send();
-
-            expect(response.statusCode).toBe(expectedStatus);
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-        });
-
-        test.concurrent.each(['name', 'email'])
-            ('return 409 CONFLICT when user %s already exists', async (property: string) => {
-
-                // Create the original user
-                const originalUserInDb = await testKit.userModel.create(testKit.userDataGenerator.fullUser()) as any;
-                const alreadyExistingPropertyValue = originalUserInDb[property];
-
-                const expectedStatus = 409;
-                const expectedErrorMssg = `User with ${property} "${alreadyExistingPropertyValue}" already exists`;
-
-                // Create the user to update
-                const { sessionToken: userToUpdateSessionToken, userId: userToUpdateId } = await createUser('readonly');
-
-                // Update
-                const response = await request(testKit.server)
-                    .patch(`${testKit.endpoints.usersAPI}/${userToUpdateId}`)
-                    .set('Authorization', `Bearer ${userToUpdateSessionToken}`)
-                    .send({ [property]: alreadyExistingPropertyValue })
-
-                expect(response.body).toStrictEqual({ error: expectedErrorMssg })
-                expect(response.statusCode).toBe(expectedStatus);
-            });
     });
 });

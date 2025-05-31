@@ -3,7 +3,7 @@ import { createUser, status2xx, testKit } from "@integration/utils";
 import { createTask } from "@integration/utils/createTask.util";
 
 describe('GET /api/tasks/allByUser/:id', () => {
-    describe('Response - Success', () => {
+    describe('Response', () => {
         test.concurrent('return status 200 OK and all the tasks created by the user in ascending order (based on createdAt)', async () => {
             const expectedStatus = 200;
             const { userId, sessionToken } = await createUser('editor');

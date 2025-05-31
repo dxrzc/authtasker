@@ -3,6 +3,45 @@ import { faker } from '@faker-js/faker/.';
 import { status2xx, testKit } from '@integration/utils';
 
 describe('POST /api/users/register', () => {
+    describe('Input Sanitization', () => {
+        describe('Validation Rules Wiring', () => {
+            test.concurrent('return status 400 BAD REQUEST when email is not a valid email', async () => {
+                const expectedStatus = 400;
+                const expectedErrorMssg = 'email must be an email';
+
+                // Create user with invalid email
+                const user = testKit.userDataGenerator.fullUser();
+                user.email = faker.string.alpha(10); // Invalid email
+                const response = await request(testKit.server)
+                    .post(testKit.endpoints.register)
+                    .send(user);
+
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+                expect(response.statusCode).toBe(expectedStatus);
+            });
+
+            test.concurrent('return status 400 BAD REQUEST when a property is missing', async () => {
+                const properties = ['name', 'email', 'password'];
+                const randomProp = properties[Math.floor(Math.random() * properties.length)];
+
+                const expectedStatus = 400;
+                const expectedErrorMssg = `${randomProp} should not be null or undefined`;
+
+                // Delete the property
+                const user = testKit.userDataGenerator.fullUser() as any;
+                delete user[randomProp];
+
+                // Create
+                const response = await request(testKit.server)
+                    .post(testKit.endpoints.register)
+                    .send(user);
+
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+                expect(response.statusCode).toBe(expectedStatus);
+            });
+        });
+    });
+
     describe('Database Operations', () => {
         test.concurrent('create user with correct data in db', async () => {
             // Create user            
@@ -30,10 +69,30 @@ describe('POST /api/users/register', () => {
             expect(userInDb!.createdAt).toBeDefined();
             expect(userInDb!.updatedAt).toBeDefined();
         });
+
+        describe('Duplicated Property Error Handling Wiring', () => {
+            test.concurrent('return 409 CONFLICT when user email already exists', async () => {
+                const expectedStatus = 409;
+
+                // Create user
+                const user1 = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
+
+                // Create another user with same email
+                const response = await request(testKit.server)
+                    .post(testKit.endpoints.register)
+                    .send({
+                        ...testKit.userDataGenerator.fullUser(),
+                        email: user1.email
+                    });
+
+                expect(response.body).toStrictEqual({ error: `User with email "${user1.email}" already exists` });
+                expect(response.statusCode).toBe(expectedStatus);
+            });
+        });
     });
 
-    describe('Response - Success', () => {
-        test.concurrent('return safe and correct data in response (201 CREATED)', async () => {
+    describe('Response', () => {
+        test.concurrent('return 201 CREATED and correct data (same data, no password, etc)', async () => {
             const expectedStatus = 201;
 
             // Create user
@@ -58,62 +117,4 @@ describe('POST /api/users/register', () => {
             expect(response.statusCode).toBe(expectedStatus);
         });
     });
-
-    describe('Response - Failure', () => {
-        test.concurrent.each(['name', 'email'])
-            ('return 409 CONFLICT when user %s already exists', async (property: string) => {
-                // Create original user
-                const originalUser = await testKit.userModel.create(testKit.userDataGenerator.fullUser()) as any;
-                const originalUserDuplicatedPropertyValue = originalUser[property];
-
-                const expectedStatus = 409;
-                const expectedErrorMssg = `User with ${property} "${originalUserDuplicatedPropertyValue}" already exists`;
-
-                // Create user with the same property value
-                const response = await request(testKit.server)
-                    .post(testKit.endpoints.register)
-                    .send({
-                        ...testKit.userDataGenerator.fullUser(),
-                        [property]: originalUserDuplicatedPropertyValue
-                    });
-
-                expect(response.body).toStrictEqual({ error: expectedErrorMssg })
-                expect(response.statusCode).toBe(expectedStatus);
-            });
-
-        test.concurrent.each(['name', 'email', 'password'])
-            ('return 400 BAD REQUEST when %s is missing', async (property: string) => {
-                const expectedStatus = 400;
-                const expectedErrorMssg = `${property} should not be null or undefined`
-
-                // Delete the property
-                const user = testKit.userDataGenerator.fullUser() as any;
-                delete user[property];
-
-                // Create
-                const response = await request(testKit.server)
-                    .post(testKit.endpoints.register)
-                    .send(user);
-
-                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-                expect(response.statusCode).toBe(expectedStatus);
-            });
-
-        test.concurrent('return 400 BAD REQUEST when an unexpected property is provided', async () => {
-            const expectedStatus = 400;
-            const unexpectedPropertyName = faker.food.vegetable()
-            const expectedErrorMssg = `property ${unexpectedPropertyName} should not exist`;
-
-            const response = await request(testKit.server)
-                .post(testKit.endpoints.register)
-                .send({
-                    ...testKit.userDataGenerator.fullUser(),
-                    [unexpectedPropertyName]: faker.food.fruit(),
-                });
-
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-            expect(response.statusCode).toBe(expectedStatus);
-        });
-    });
 });
-

@@ -3,8 +3,8 @@ import request from 'supertest';
 import { createUser, testKit } from '@integration/utils';
 
 describe('GET /api/users/:id', () => {
-    describe('Response - Success', () => {
-        test.concurrent('return status 200 OK and the correct and safe user data', async () => {
+    describe('Response', () => {
+        test.concurrent('return 200 OK and correct data (same data, no password, etc)', async () => {
             const expectedStatus = 200;
 
             const { userId, sessionToken } = await createUser('readonly');

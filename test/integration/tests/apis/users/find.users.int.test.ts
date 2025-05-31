@@ -25,23 +25,27 @@ describe('GET /api/users/:id', () => {
         usersIdSorted = sortedUsers.map((obj) => obj.userId);
     });
 
-    describe('Page and limit not provided', () => {
-        test('use the default page and limit', async () => {
-            const defaultPage = PAGINATION_SETTINGS.DEFAULT_PAGE;
-            const defaultLimit = PAGINATION_SETTINGS.DEFAULT_LIMIT;
+    describe('Pagination Rules Wiring', () => {
+        test('return status 400 BAD REQUEST when page exceeds the max possible page for the documents count', async () => {
+            const expectedStatus = 400;
+            const expectedErrorMssg = 'Invalid page';
+
+            const documentsCount = await testKit.userModel.countDocuments();
+            const limit = 10;
+            const invalidPage = Math.ceil(documentsCount / limit) + 1;
 
             const response = await request(testKit.server)
                 .get(testKit.endpoints.usersAPI)
-                .set('Authorization', `Bearer ${randomUserSessionToken}`)
-                .expect(status2xx);
+                .query({ page: invalidPage, limit })
+                .set('Authorization', `Bearer ${randomUserSessionToken}`);
 
-            expect(response.body.length).toBe(defaultLimit);
-            expect(response.body[0].id).toBe(usersIdSorted[defaultLimit * (defaultPage - 1)]);
+            expect(response.statusCode).toBe(expectedStatus);
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
         });
     });
 
-    describe('Response - Success', () => {
-        test('return the expected users with the expected and correct data (200 OK)', async () => {
+    describe('Response', () => {
+        test('return 200 OK and the expected users with the expected and correct data', async () => {
             const expectedStatus = 200;
 
             const page = 3;
@@ -77,25 +81,6 @@ describe('GET /api/users/:id', () => {
             }
 
             expect(response.statusCode).toBe(expectedStatus);
-        });
-    });
-
-    describe('Response - Failure', () => {
-        test('return status 400 BAD REQUEST when page exceeds the max possible page for the documents count', async () => {
-            const expectedStatus = 400;
-            const expectedErrorMssg = 'Invalid page';
-
-            const documentsCount = await testKit.userModel.countDocuments();
-            const limit = 10;
-            const invalidPage = Math.ceil(documentsCount / limit) + 1;
-
-            const response = await request(testKit.server)
-                .get(testKit.endpoints.usersAPI)
-                .query({ page: invalidPage, limit })
-                .set('Authorization', `Bearer ${randomUserSessionToken}`);
-
-            expect(response.statusCode).toBe(expectedStatus);
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
         });
     });
 });

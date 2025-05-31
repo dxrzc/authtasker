@@ -3,7 +3,7 @@ import { createUser, testKit } from '@integration/utils';
 import { createTask } from '@integration/utils/createTask.util';
 
 describe('GET /api/tasks/:id', () => {
-    describe('Response - Success', () => {
+    describe('Response', () => {
         test.concurrent('return status 200 OK and correct data', async () => {
             const expectedStatus = 200;
             const { sessionToken } = await createUser('editor');

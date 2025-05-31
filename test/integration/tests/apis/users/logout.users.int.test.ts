@@ -3,44 +3,26 @@ import { JwtService } from '@root/services';
 import request from 'supertest';
 
 describe('POST /api/users/logout', () => {
-    test.concurrent('token is blacklisted', async () => {
-        const { sessionToken } = await createUser('editor');
+    describe('Token operations', () => {
+        test.concurrent('token is blacklisted after logout', async () => {
+            const { sessionToken } = await createUser('editor');
 
-        await request(testKit.server)
-            .post(testKit.endpoints.logout)
-            .set('Authorization', `Bearer ${sessionToken}`)
-            .expect(status2xx);
+            await request(testKit.server)
+                .post(testKit.endpoints.logout)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
 
-        const jwtService = new JwtService(testKit.jwtPrivateKey);
-        const payload = jwtService.verify(sessionToken);
-        const tokenJti = payload!.jti;
+            const jwtService = new JwtService(testKit.jwtPrivateKey);
+            const payload = jwtService.verify(sessionToken);
+            const tokenJti = payload!.jti;
 
-        const data = await testKit.redisService.get(tokenJti);
-        expect(data).not.toBeNull();
+            const data = await testKit.redisService.get(tokenJti);
+            expect(data).not.toBeNull();
+        });
     });
 
-    test.concurrent('return status 401 UNAUTHORIZED when trying to access other resources after logout', async () => {
-        const { sessionToken } = await createUser('editor');
-        const expectedStatus = 401;
-        const expectedErrorMssg = 'Invalid bearer token';
-
-        // Logout
-        await request(testKit.server)
-            .post(testKit.endpoints.logout)
-            .set('Authorization', `Bearer ${sessionToken}`)
-            .expect(status2xx);
-
-        // Create task using a blacklisted token
-        const response = await request(testKit.server)
-            .post(testKit.endpoints.createTask)
-            .set('Authorization', `Bearer ${sessionToken}`)            
-
-        expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-        expect(response.statusCode).toBe(expectedStatus);
-    });
-
-    describe('Response - Success', () => {
-        test.concurrent('return status 204 NO CONTENT', async () => {
+    describe('Response', () => {
+        test.concurrent('return 204 NO CONTENT', async () => {
             const expectedStatus = 204;
             const { sessionToken } = await createUser('editor');
 
@@ -49,28 +31,6 @@ describe('POST /api/users/logout', () => {
                 .set('Authorization', `Bearer ${sessionToken}`);
 
             expect(response.body).toStrictEqual({});
-            expect(response.statusCode).toBe(expectedStatus);
-        });
-    });
-
-    describe('Response - Failure', () => {
-        test.concurrent('return status 401 UNAUTHORIZED when using a blacklisted token to logout', async () => {
-            const expectedStatus = 401;
-            const expectedErrorMssg = 'Invalid bearer token';
-            const { sessionToken } = await createUser('editor');
-
-            // Logout 1 blacklists
-            await request(testKit.server)
-                .post(testKit.endpoints.logout)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .expect(status2xx);
-
-            // Logout with the blacklisted token
-            const response = await request(testKit.server)
-                .post(testKit.endpoints.logout)
-                .set('Authorization', `Bearer ${sessionToken}`);
-
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
         });
     });

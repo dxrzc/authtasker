@@ -6,29 +6,31 @@ const { mock } = nodemailer as unknown as NodemailerMock;
 import { createUser, getTokenFromMail, status2xx, testKit } from "@integration/utils";
 
 describe('POST /api/users/confirmEmailValidation/:token', () => {
-    test('upgrade user to editor and change emailValidated property to true', async () => {
-        const { sessionToken, userId } = await createUser('readonly');
+    describe('Database Operations', () => {
+        test('update user role and emailValidated after email is confirmed', async () => {
+            const { sessionToken, userId } = await createUser('readonly');
 
-        // Request email validation
-        await request(testKit.server)
-            .post(testKit.endpoints.requestEmailValidation)
-            .set('Authorization', `Bearer ${sessionToken}`)
-            .expect(status2xx);
+            // Request email validation
+            await request(testKit.server)
+                .post(testKit.endpoints.requestEmailValidation)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
 
-        // Obtain token sent in url
-        const tokenInEmail = getTokenFromMail(mock.getSentMail().at(0)?.html as string);
+            // Obtain token sent in url
+            const tokenInEmail = getTokenFromMail(mock.getSentMail().at(0)?.html as string);
 
-        // Confirm email validation
-        await request(testKit.server)
-            .get(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
-            .expect(status2xx);
+            // Confirm email validation
+            await request(testKit.server)
+                .get(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
+                .expect(status2xx);
 
-        const userInDb = await testKit.userModel.findById(userId);
-        expect(userInDb!.role).toBe('editor');
-        expect(userInDb!.emailValidated).toBeTruthy();
+            const userInDb = await testKit.userModel.findById(userId);
+            expect(userInDb!.role).toBe('editor');
+            expect(userInDb!.emailValidated).toBeTruthy();
+        });
     });
 
-    describe('Response - Success', () => {
+    describe('Response', () => {
         test('return status 200 OK', async () => {
             const expectedStatus = 200;
 
@@ -44,9 +46,11 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
             const tokenInEmail = getTokenFromMail(mock.getSentMail().at(0)?.html as string);
 
             // Confirm email validation
-            await request(testKit.server)
+            const response = await request(testKit.server)
                 .get(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
-                .expect(expectedStatus);
+
+            expect(response.body).toStrictEqual({ message: 'Email successfully validated' });
+            expect(response.statusCode).toBe(expectedStatus);
         });
     });
 });

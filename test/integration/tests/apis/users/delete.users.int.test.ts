@@ -2,21 +2,35 @@ import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
 
 describe('DELETE /api/users/:id', () => {
-    describe('Modification Access Logic Wiring', () => {
-        test.concurrent('return status 403 FORBIDDEN when editor tries to delete another editor', async () => {
+    describe('Modification Access Rules Wiring', () => {
+        test.concurrent('editors are forbiddenn to delete readonly users', async () => {
             const expectedStatus = 403;
 
             // Create current user
             const { sessionToken: currentUserSessionToken } = await createUser('editor');
 
             // Create target user
-            const { userId: targetUserId } = await createUser('editor');
+            const { userId: targetUserId } = await createUser('readonly');
 
             // Attempt to delete the target user
             await request(testKit.server)
                 .delete(`${testKit.endpoints.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`)
                 .expect(expectedStatus);
+        });
+
+        test.concurrent('admins are authorized to delete readonly accounts', async () => {
+            // Create current user
+            const { sessionToken: currentUserSessionToken } = await createUser('admin');
+
+            // Create target user
+            const { userId: targetUserId } = await createUser('readonly');
+
+            // Attempt to delete the target user
+            await request(testKit.server)
+                .delete(`${testKit.endpoints.usersAPI}/${targetUserId}`)
+                .set('Authorization', `Bearer ${currentUserSessionToken}`)                
+                .expect(status2xx);
         });
     });
 
@@ -65,7 +79,7 @@ describe('DELETE /api/users/:id', () => {
         });
     });
 
-    describe('Response - Success', () => {
+    describe('Response', () => {
         test.concurrent('return 204 NO CONTENT', async () => {
             const expectedStatus = 204;
 

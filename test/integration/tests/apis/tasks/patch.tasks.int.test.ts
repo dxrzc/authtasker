@@ -3,8 +3,46 @@ import { createUser, status2xx, testKit } from "@integration/utils";
 import { createTask } from "@integration/utils/createTask.util";
 
 describe('PATCH /api/tasks/:id', () => {
-    describe('Modification Access Logic Wiring', () => {
-        test.concurrent('return 403 FORBIDDEN when admin tries to delete another admin\'s task', async () => {
+    describe('Input Sanitization', () => {
+        describe('Validation Rules Wiring', () => {
+            test.concurrent('return 400 BAD REQUEST when a unexpected property is sent', async () => {
+                const unexpectedProperty = 'newProp';
+                const expectedStatus = 400;
+                const expectedErrorMssg = `property ${unexpectedProperty} should not exist`;
+
+                const { sessionToken } = await createUser('editor');
+                const { taskId } = await createTask(sessionToken);
+
+                // Update with an unexpected property
+                const response = await request(testKit.server)
+                    .patch(`${testKit.endpoints.tasksAPI}/${taskId}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .send({ [unexpectedProperty]: 'unexpectedValue' });
+
+                expect(response.statusCode).toBe(expectedStatus);
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg })
+            });
+        });
+
+        test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {
+            const expectedStatus = 400;
+            const expectedErrorMssg = 'At least one field is required to update the task';
+
+            const { sessionToken } = await createUser('editor');
+            const { taskId } = await createTask(sessionToken);
+
+            const response = await request(testKit.server)
+                .patch(`${testKit.endpoints.tasksAPI}/${taskId}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send();
+
+            expect(response.statusCode).toBe(expectedStatus);
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+        });
+    });
+
+    describe('Modification Access Rules Wiring', () => {
+        test.concurrent('admins are forbidden to update other admin\'s tasks', async () => {
             const expectedStatus = 403;
 
             // Create current user
@@ -20,6 +58,22 @@ describe('PATCH /api/tasks/:id', () => {
                 .set('Authorization', `Bearer ${currentUserSessionToken}`)
                 .send({ name: testKit.tasksDataGenerator.name() })
                 .expect(expectedStatus);
+        });
+
+        test.concurrent('admins are authorized to update editor\'s tasks', async () => {
+            // Create admin
+            const { sessionToken: currentUserSessionToken } = await createUser('admin');
+
+            // Create editor and task
+            const { sessionToken: targetUserSessionToken } = await createUser('editor');
+            const { taskId } = await createTask(targetUserSessionToken);
+
+            // Attempt to update the target user task
+            await request(testKit.server)
+                .patch(`${testKit.endpoints.tasksAPI}/${taskId}`)
+                .set('Authorization', `Bearer ${currentUserSessionToken}`)
+                .send({ name: testKit.tasksDataGenerator.name() })
+                .expect(status2xx);
         });
     });
 
@@ -54,9 +108,33 @@ describe('PATCH /api/tasks/:id', () => {
             expect(taskInDb!.status).toBe(update.status);
             expect(taskInDb!.priority).toBe(update.priority);
         });
+
+        describe('Duplicated Property Error Handling Wiring', () => {
+            test.concurrent('return 409 CONFLICT when task name already exists', async () => {
+                // Create the original task
+                const { sessionToken: user1SessionToken } = await createUser('editor');
+                const { taskName: alreadyExistingTaskName } = await createTask(user1SessionToken);
+
+                const expectedStatus = 409;
+                const expectedErrorMssg = `Task with name "${alreadyExistingTaskName}" already exists`;
+
+                // Create the task to update
+                const { sessionToken: user2SessionToken } = await createUser('editor');
+                const { taskId: taskToUpdateId } = await createTask(user2SessionToken);
+
+                // Update
+                const response = await request(testKit.server)
+                    .patch(`${testKit.endpoints.tasksAPI}/${taskToUpdateId}`)
+                    .set('Authorization', `Bearer ${user2SessionToken}`)
+                    .send({ name: alreadyExistingTaskName })
+
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg })
+                expect(response.statusCode).toBe(expectedStatus);
+            });
+        });
     });
 
-    describe('Response - Success', () => {
+    describe('Response', () => {
         test.concurrent('return status 200 and correct task data', async () => {
             const expectedStatus = 200;
 
@@ -84,46 +162,6 @@ describe('PATCH /api/tasks/:id', () => {
                 updatedAt: taskInDb!.updatedAt.toISOString(),
                 id: taskInDb!.id,
             });
-            expect(response.statusCode).toBe(expectedStatus);
-        });
-    });
-
-    describe('Response - Failure', () => {
-        test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {
-            const expectedStatus = 400;
-            const expectedErrorMssg = 'At least one field is required to update the task';
-
-            const { sessionToken } = await createUser('editor');
-            const { taskId } = await createTask(sessionToken);
-
-            const response = await request(testKit.server)
-                .patch(`${testKit.endpoints.tasksAPI}/${taskId}`)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .send();
-
-            expect(response.statusCode).toBe(expectedStatus);
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-        });
-
-        test.concurrent('return 409 CONFLICT when task name already exists', async () => {
-            // Create the original task
-            const { sessionToken: user1SessionToken } = await createUser('editor');
-            const { taskName: alreadyExistingTaskName } = await createTask(user1SessionToken);
-
-            const expectedStatus = 409;
-            const expectedErrorMssg = `Task with name "${alreadyExistingTaskName}" already exists`;
-
-            // Create the task to update
-            const { sessionToken: user2SessionToken } = await createUser('editor');
-            const { taskId: taskToUpdateId } = await createTask(user2SessionToken);
-
-            // Update
-            const response = await request(testKit.server)
-                .patch(`${testKit.endpoints.tasksAPI}/${taskToUpdateId}`)
-                .set('Authorization', `Bearer ${user2SessionToken}`)
-                .send({ name: alreadyExistingTaskName })
-
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg })
             expect(response.statusCode).toBe(expectedStatus);
         });
     });
