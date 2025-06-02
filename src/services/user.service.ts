@@ -55,12 +55,6 @@ export class UserService {
     }
 
     private async sendEmailValidationLink(email: string): Promise<void> {
-        // this function shouldn't be called if emailService is not provided 
-        if (!this.emailService) {
-            SystemLoggerService.error('An email validation is trying to be sent but email service is not injected');
-            throw HttpError.internalServer('Email can not be validated due to a server error');
-        }
-
         const jwtExpirationTime = '10m';
         const token = this.jwtService.generate(jwtExpirationTime, {
             purpose: TOKEN_PURPOSES.EMAIL_VALIDATION,
