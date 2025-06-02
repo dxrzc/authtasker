@@ -6,12 +6,27 @@
   "compilerOptions": {
     // @root is an alias for source inside the project and testing
     "paths": {
+      "@logic/*": [
+        "./src/common/logic/*"
+      ],  
+
+      "@interfaces/*": [
+        "./src/interfaces/*"
+      ],
+
       "@root/*": [
         "./src/*"
-      ],
+      ],  
+
+
+      // Testing
 
       "@integration/*": [
         "./test/integration/*"
+      ],
+
+      "@unit/*": [
+        "./test/unit/*"
       ]
     },
     "plugins": [
