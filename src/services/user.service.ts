@@ -24,15 +24,12 @@ export class UserService {
     // returns the user to modify in order to not have to findOne it again
     private async getTargetUserIfAuthorized(requestUserInfo: { id: string, role: UserRole }, userIdToUpdate: string): Promise<HydratedDocument<IUser> | null> {
         const userToModify = await this.findOne(userIdToUpdate);
-
         // admin users can modify other users (but not other admins)
         if (requestUserInfo.role === 'admin' && userToModify.role !== 'admin')
             return userToModify;
-
         // users can modify themselves
         if (requestUserInfo.id === userToModify.id)
             return userToModify;
-
         return null;
     }
 
@@ -44,19 +41,18 @@ export class UserService {
     }
 
     private generateSessionToken(userId: string): string {
-        const expirationTime = this.configService.JWT_SESSION_EXPIRATION_TIME;
-        const token = this.jwtService.generate(expirationTime, {
+        const expTime = this.configService.JWT_SESSION_EXP_TIME;
+        const token = this.jwtService.generate(expTime, {
             id: userId,
             purpose: TOKEN_PURPOSES.SESSION
         });
-
-        this.loggerService.info(`Session token generated, expires at ${expirationTime}`);
+        this.loggerService.info(`Session token generated, expires at ${expTime}`);
         return token;
     }
 
     private async sendEmailValidationLink(email: string): Promise<void> {
-        const jwtExpirationTime = '10m';
-        const token = this.jwtService.generate(jwtExpirationTime, {
+        const jwtExpTime = this.configService.JWT_EMAIL_VALIDATION_EXP_TIME;
+        const token = this.jwtService.generate(jwtExpTime, {
             purpose: TOKEN_PURPOSES.EMAIL_VALIDATION,
             email: email,
         });
