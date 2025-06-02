@@ -1,6 +1,7 @@
 import { mock } from "jest-mock-extended";
 import { LoggerService } from "@root/services";
 import { handleDbDuplicatedKeyError } from "@logic/errors/database";
+import { HttpError } from "@root/rules/errors/http.error";
 
 describe('handleDbDuplicatedKeyError', () => {
     const loggerService = mock<LoggerService>();
@@ -19,6 +20,7 @@ describe('handleDbDuplicatedKeyError', () => {
         try {
             handleDbDuplicatedKeyError(mongooseError, loggerService);
         } catch (error: any) {
+            expect(error).toBeInstanceOf(HttpError);
             expect(error.message).toEqual(expect.stringContaining(duplicatedProperty));
             expect(error.message).toEqual(expect.stringContaining(duplicatedValue));
             expect(error.statusCode).toBe(409);
