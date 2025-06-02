@@ -45,7 +45,8 @@ beforeAll(async () => {
         ADMIN_PASSWORD: 'testpassword',
         ADMIN_EMAIL: 'test_admin@gmail.com',
         BCRYPT_SALT_ROUNDS: 1,
-        JWT_SESSION_EXPIRATION_TIME: '30m',
+        JWT_SESSION_EXP_TIME: '30m',
+        JWT_EMAIL_VALIDATION_EXP_TIME: '5m',
         JWT_PRIVATE_KEY: 'testkey',
         HTTP_LOGS: false,
     } as const;
