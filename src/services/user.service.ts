@@ -1,11 +1,12 @@
 import { HydratedDocument, Model, Types } from "mongoose";
 import { CreateUserValidator, LoginUserValidator, UpdateUserValidator } from "@root/rules/validators/models/user";
-import { EmailService, HashingService, JwtBlackListService, JwtService, LoggerService, SystemLoggerService } from ".";
-import { FORBIDDEN_MESSAGE } from "@root/rules/errors/messages/error.messages"; import { ConfigService } from "./config.service";
+import { EmailService, HashingService, JwtBlackListService, JwtService, LoggerService, SystemLoggerService, ConfigService } from ".";
+import { FORBIDDEN_MESSAGE } from "@root/rules/errors/messages/error.messages";
 import { HttpError } from "../rules/errors/http.error";
 import { ITasks, IUser, UserFromRequest } from "@root/interfaces";
 import { TOKEN_PURPOSES } from "@root/rules/constants";
 import { UserRole } from "@root/types/user/user-roles.type";
+import { handleDbDuplicatedKeyError } from "@logic/errors/database";
 
 export class UserService {
 
@@ -21,7 +22,7 @@ export class UserService {
     ) {}
 
     // returns the user to modify in order to not have to findOne it again
-    private async IsModificationAuthorized(requestUserInfo: { id: string, role: UserRole }, userIdToUpdate: string): Promise<HydratedDocument<IUser> | null> {
+    private async getTargetUserIfAuthorized(requestUserInfo: { id: string, role: UserRole }, userIdToUpdate: string): Promise<HydratedDocument<IUser> | null> {
         const userToModify = await this.findOne(userIdToUpdate);
 
         // admin users can modify other users (but not other admins)
@@ -51,19 +52,6 @@ export class UserService {
 
         this.loggerService.info(`Session token generated, expires at ${expirationTime}`);
         return token;
-    }
-
-    private handlePossibleDuplicatedKeyError(error: any): never {
-        if (error.code && error.code === 11000) {
-            const duplicatedKey = Object.keys(error.keyValue);
-            const keyValue = Object.values(error.keyValue);
-            const message = `User with ${duplicatedKey} "${keyValue}" already exists`;
-            this.loggerService.error(message);
-            throw HttpError.conflict(message);
-        } else {
-            // rethrowing        
-            throw error;
-        }
     }
 
     private async sendEmailValidationLink(email: string): Promise<void> {
@@ -175,7 +163,9 @@ export class UserService {
             };
 
         } catch (error: any) {
-            this.handlePossibleDuplicatedKeyError(error);
+            if (error.code === 11000)
+                handleDbDuplicatedKeyError(error, this.loggerService);
+            throw error;
         }
     }
 
@@ -269,7 +259,7 @@ export class UserService {
     }
 
     async deleteOne(requestUserInfo: { id: string, role: UserRole }, id: string): Promise<void> {
-        const userToDelete = await this.IsModificationAuthorized(requestUserInfo, id);
+        const userToDelete = await this.getTargetUserIfAuthorized(requestUserInfo, id);
 
         if (!userToDelete) {
             this.loggerService.error(`Not authorized to perform this action`);
@@ -286,7 +276,7 @@ export class UserService {
 
     async updateOne(requestUserInfo: { id: string, role: UserRole }, id: string, propertiesUpdated: UpdateUserValidator): Promise<HydratedDocument<IUser>> {
         try {
-            const userToUpdate = await this.IsModificationAuthorized(requestUserInfo, id);
+            const userToUpdate = await this.getTargetUserIfAuthorized(requestUserInfo, id);
             if (!userToUpdate) {
                 this.loggerService.error(`Not authorized to perform this action`);
                 throw HttpError.forbidden(FORBIDDEN_MESSAGE);
@@ -314,7 +304,9 @@ export class UserService {
 
             return userToUpdate;
         } catch (error: any) {
-            this.handlePossibleDuplicatedKeyError(error);
+            if (error.code === 11000)
+                handleDbDuplicatedKeyError(error, this.loggerService);
+            throw error;
         }
     }
 }
