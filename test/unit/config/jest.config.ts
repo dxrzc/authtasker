@@ -3,7 +3,10 @@ import type { Config } from 'jest';
 const config: Config = {
     rootDir: process.cwd(), // workidr
 
-    // mocks
+    // setup
+    setupFilesAfterEnv: ['<rootDir>/test/unit/config/setup/setupAfterEnv.ts'],
+
+    // mocks    
     resetMocks: false,
     clearMocks: true,
     restoreMocks: true,
