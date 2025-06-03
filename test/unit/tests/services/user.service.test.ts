@@ -51,9 +51,9 @@ beforeEach(() => {
 
 describe('User Service', () => {
     describe('getUserIfAuthorizedToModify', () => {
-        test.each([
+        test.each(
             validRoles
-        ])('%s users are authorized to modify themselves', async (role) => {
+        )('%s users are authorized to modify themselves', async (role) => {
             const requestUser = {
                 id: 'testId',
                 role: role
