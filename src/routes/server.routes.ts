@@ -17,6 +17,7 @@ import {
 import {
     apiLimiterMiddlewareFactory,
     authLimiterMiddlewareFactory,
+    errorHandlerMiddlewareFactory,
     requestContextMiddlewareFactory,
     rolesMiddlewareFactory
 } from "@root/middlewares";
@@ -164,15 +165,16 @@ export class AppRoutes {
     async buildApp() {
         const router = Router();
 
+        router.get('/health', this.rolesMiddlewares.admin, this.healthController.getServerHealth);
         router.use(this.buildGlobalMiddlewares());
         router.use('/api/users', await this.buildUserRoutes());
         router.use('/api/tasks', await this.buildTasksRoutes());
-        router.get('/health', this.rolesMiddlewares.admin, this.healthController.getServerHealth);
-
+        
         if (this.configService.NODE_ENV === 'development') {
             router.use('/seed', await this.buildSeedRoutes());
         }
-
+        
+        router.use(errorHandlerMiddlewareFactory(this.loggerService));
         return router;
     }
 }
