@@ -20,8 +20,7 @@ export class UserService {
         private readonly loggerService: LoggerService,
         private readonly emailService: EmailService,
     ) {}
-
-    // returns the user to modify in order to not have to findOne it again
+    
     private async getTargetUserIfAuthorized(requestUserInfo: { id: string, role: UserRole }, userIdToUpdate: string): Promise<HydratedDocument<IUser> | null> {
         const userToModify = await this.findOne(userIdToUpdate);
         // admin users can modify other users (but not other admins)
@@ -33,10 +32,11 @@ export class UserService {
         return null;
     }
 
-    private async blackListToken(jti: string, tokenExp: number) {
+    private async blackListToken(jti: string, tokenExp: number) {        
         const currentTime = Math.floor(Date.now() / 1000);
         const remainingTokenTTL = tokenExp! - currentTime;
         this.loggerService.debug(`Token ${jti} blacklisted`);
+        // blacklist it until it expires
         await this.jwtBlacklistService.blacklist(jti, remainingTokenTTL);
     }
 
@@ -99,6 +99,26 @@ export class UserService {
         return payload.email;
     }
 
+    private async setUserDocumentNewProperties(userToUpdate: HydratedDocument<IUser>, propertiesUpdated: UpdateUserValidator) {
+        // updating email
+        if (propertiesUpdated.email) {
+            if (userToUpdate.role !== 'admin') {
+                userToUpdate.emailValidated = false;
+                userToUpdate.role = 'readonly';
+            }
+            userToUpdate.email = propertiesUpdated.email;
+        }
+        // updating password
+        if (propertiesUpdated.password) {
+            userToUpdate.password = await this.hashingService.hash(propertiesUpdated.password);
+        }
+        // updating name
+        if (propertiesUpdated.name) {
+            userToUpdate.name = propertiesUpdated.name
+        }
+        return userToUpdate;
+    }
+
     async requestEmailValidation(id: string): Promise<void> {
         const user = await this.userModel.findById(id).exec();
         if (!user) {
@@ -115,14 +135,12 @@ export class UserService {
 
     async confirmEmailValidation(token: string): Promise<void> {
         const emailInToken = await this.consumeEmailValidationToken(token);
-
         // check user existence
         const user = await this.userModel.findOne({ email: emailInToken }).exec();
         if (!user) {
             this.loggerService.error(`User ${emailInToken} not found`);
             throw HttpError.notFound('User not found');
         }
-
         // update 
         user.emailValidated = true;
         user.role = 'editor';
@@ -132,16 +150,13 @@ export class UserService {
 
     async create(user: CreateUserValidator): Promise<{ user: HydratedDocument<IUser>, token: string }> {
         try {
-            // hashing
+            // password hashing
             const passwordHash = await this.hashingService.hash(user.password);
             user.password = passwordHash;
-
             // creation in db
             const created = await this.userModel.create(user);
-
             // token generation
             const token = this.generateSessionToken(created.id);
-
             this.loggerService.info(`User ${created.id} created`);
             return {
                 user: created,
@@ -157,29 +172,19 @@ export class UserService {
 
     async login(userToLogin: LoginUserValidator): Promise<{ user: HydratedDocument<IUser>, token: string }> {
         // check user existence
-        const userDb = await this.userModel
-            .findOne({ email: userToLogin.email })
-            .exec();
-
+        const userDb = await this.userModel.findOne({ email: userToLogin.email }).exec();
         if (!userDb) {
             this.loggerService.error(`User ${userToLogin.email} not found`);
             throw HttpError.badRequest(`User with email ${userToLogin.email} not found`);
         }
-
         // check password
-        const passwordOk = await this.hashingService.compare(
-            userToLogin.password,
-            userDb.password
-        );
-
+        const passwordOk = await this.hashingService.compare(userToLogin.password, userDb.password);
         if (!passwordOk) {
             this.loggerService.error('Password does not match');
             throw HttpError.badRequest('Email or password is not correct');
         }
-
         // token generation
         const token = this.generateSessionToken(userDb.id);
-
         this.loggerService.info(`User ${userDb.id} logged in`);
         return {
             user: userDb,
@@ -194,16 +199,13 @@ export class UserService {
 
     async findOne(id: string): Promise<HydratedDocument<IUser>> {
         let userDb;
-
         if (Types.ObjectId.isValid(id))
             userDb = await this.userModel.findById(id).exec();
-
         // id is not valid / user not found
         if (!userDb) {
             this.loggerService.error(`User ${id} not found`)
             throw HttpError.notFound(`User with id ${id} not found`);
         }
-
         return userDb;
     }
 
@@ -245,16 +247,14 @@ export class UserService {
     }
 
     async deleteOne(requestUserInfo: { id: string, role: UserRole }, id: string): Promise<void> {
+        // check if current user is authorized
         const userToDelete = await this.getTargetUserIfAuthorized(requestUserInfo, id);
-
         if (!userToDelete) {
             this.loggerService.error(`Not authorized to perform this action`);
             throw HttpError.forbidden(FORBIDDEN_MESSAGE);
         }
-
         await userToDelete.deleteOne().exec();
         this.loggerService.info(`User ${id} deleted`);
-
         // remove all tasks associated
         const tasksRemoved = await this.tasksModel.deleteMany({ user: userToDelete.id });
         this.loggerService.info(`${tasksRemoved.deletedCount} tasks associated to user removed`);
@@ -262,33 +262,18 @@ export class UserService {
 
     async updateOne(requestUserInfo: { id: string, role: UserRole }, id: string, propertiesUpdated: UpdateUserValidator): Promise<HydratedDocument<IUser>> {
         try {
+            // check if current user is authorized
             const userToUpdate = await this.getTargetUserIfAuthorized(requestUserInfo, id);
             if (!userToUpdate) {
                 this.loggerService.error(`Not authorized to perform this action`);
                 throw HttpError.forbidden(FORBIDDEN_MESSAGE);
             }
-
-            if (propertiesUpdated.password) {
-                userToUpdate.password = await this.hashingService.hash(propertiesUpdated.password);
-            }
-
-            // if email is different change "emailValidated" prop        
-            if (propertiesUpdated.email) {
-                if (userToUpdate.email !== propertiesUpdated.email && requestUserInfo.role != 'admin') {
-                    userToUpdate.emailValidated = false;
-                    userToUpdate.role = 'readonly';
-                }
-                userToUpdate.email = propertiesUpdated.email;
-            }
-
-            if (propertiesUpdated.name) {
-                userToUpdate.name = propertiesUpdated.name
-            }
-
+            // set new properties requires specific logic
+            await this.setUserDocumentNewProperties(userToUpdate, propertiesUpdated);
             await userToUpdate.save();
             this.loggerService.info(`User ${id} updated`);
-
             return userToUpdate;
+
         } catch (error: any) {
             if (error.code === 11000)
                 handleDbDuplicatedKeyError(error, this.loggerService);

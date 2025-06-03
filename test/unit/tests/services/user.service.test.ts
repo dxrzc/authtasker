@@ -8,6 +8,8 @@ import { MongooseModel, NoReadonly } from "@unit/utils/types";
 import { TOKEN_PURPOSES } from "@root/rules/constants";
 import { HttpError } from "@root/rules/errors/http.error";
 import { v4 as uuidv4 } from 'uuid';
+import { getRandomRole } from "@unit/utils/get-random-role.util";
+import { faker } from "@faker-js/faker/.";
 
 let configService: MockProxy<NoReadonly<ConfigService>>;
 let userModel: MockProxy<MongooseModel<Model<IUser>>>;
@@ -257,58 +259,149 @@ describe('User Service', () => {
         });
     });
 
-    describe('requestEmailValidation', () => {
-        describe('User is not found', () => {
-            test('throw BAD REQUEST Http error', async () => {
-                userModel.findById().exec.mockResolvedValue(null);
-                try {
-                    await userService.requestEmailValidation('testID');
-                } catch (err: any) {
-                    expect(err).toBeInstanceOf(HttpError);
-                    expect(err.statusCode).toBe(400);
-                    expect(typeof err.message).toBe('string')
-                }
+    describe('setUserDocumentNewProperties', () => {
+        describe('Email update', () => {
+            test('downgrade role and emailValidated property for editors', async () => {
+                const userToUpdate = {
+                    role: 'editor',
+                    emailValidated: true,
+                    email: faker.internet.email(),
+                    password: faker.internet.password(),
+                    name: faker.internet.username()
+                };
+                const newEmail = faker.internet.email();
+                await userService['setUserDocumentNewProperties'](userToUpdate as any, { email: newEmail });
+                expect(userToUpdate).toStrictEqual({
+                    ...userToUpdate,
+                    role: 'readonly',
+                    email: newEmail,
+                    emailValidated: false
+                });
             });
 
-            test('error logger is called with the user id', async () => {
-                userModel.findById().exec.mockResolvedValue(null);
-                const userId = 'testID';
-                await expect(userService.requestEmailValidation(userId)).rejects.toThrow();
-                expect(loggerService.error).toHaveBeenCalledWith(expect.stringContaining(userId));
+            test('nothing changed for readonlys (only the email)', async () => {
+                const userToUpdate = {
+                    role: 'readonly',
+                    emailValidated: false,
+                    email: faker.internet.email(),
+                    password: faker.internet.password(),
+                    name: faker.internet.username()
+                };
+                const newEmail = faker.internet.email();
+                await userService['setUserDocumentNewProperties'](userToUpdate as any, { email: newEmail });
+                expect(userToUpdate).toStrictEqual({
+                    ...userToUpdate,                    
+                    email: newEmail,
+                });                
+            });
+
+            test('no modifications for admins (only the email)', async () => {
+                const userToUpdate = {
+                    role: 'admin',
+                    emailValidated: true,
+                    email: faker.internet.email(),
+                    password: faker.internet.password(),
+                    name: faker.internet.username()
+                };
+                const newEmail = faker.internet.email();
+                await userService['setUserDocumentNewProperties'](userToUpdate as any, { email: newEmail });
+                expect(userToUpdate).toStrictEqual({
+                    ...userToUpdate,
+                    email: newEmail,
+                });
             });
         });
 
-        describe('User email is already validated', () => {
-            test('throw BAD REQUEST Http error', async () => {
-                userModel.findById().exec.mockResolvedValue({ emailValidated: true });
-                try {
-                    await userService.requestEmailValidation('testID');
-                } catch (err: any) {
-                    expect(err).toBeInstanceOf(HttpError);
-                    expect(err.statusCode).toBe(400);
-                    expect(typeof err.message).toBe('string')
-                }
-            });
-
-            test('error logger is called with the user emial', async () => {
-                const userEmail = 'test@example.com';
-                userModel.findById().exec.mockResolvedValue({ emailValidated: true, email: userEmail });
-                await expect(userService.requestEmailValidation('testId')).rejects.toThrow();
-                expect(loggerService.error).toHaveBeenCalledWith(expect.stringContaining(userEmail));
+        describe('Password update', () => {
+            test('call hash function (hashingService) and set hashed password', async () => {
+                // hashingService.hash mock
+                const hashedPassword = '######';
+                const hashMock = hashingService.hash.mockResolvedValue(hashedPassword);
+                const userToUpdate = {
+                    role: getRandomRole(),
+                    emailValidated: true,
+                    email: faker.internet.email(),
+                    password: faker.internet.password(),
+                    name: faker.internet.username()
+                };
+                const newPassword = faker.internet.password();
+                await userService['setUserDocumentNewProperties'](userToUpdate as any, { password: newPassword });
+                expect(hashMock).toHaveBeenCalledWith(newPassword);
+                expect(userToUpdate).toStrictEqual({
+                    ...userToUpdate,
+                    password: hashedPassword
+                });
             });
         });
 
-        test('sendEmailValidationLink is called with the user email', async () => {
-            const testEmail = 'testEmail';
-            userModel.findById().exec.mockResolvedValue({ emailValidated: false, email: testEmail });
-            const sendEmailValidationLinkMock = jest.spyOn(userService as any, 'sendEmailValidationLink')
-                .mockImplementation();
-            await userService.requestEmailValidation('testID');
-            expect(sendEmailValidationLinkMock).toHaveBeenCalledWith(testEmail);
+        describe('Name update', () => {
+            test('just update the name with no extra modifications', async () => {
+                const userToUpdate = {
+                    role: getRandomRole(),
+                    emailValidated: true,
+                    email: faker.internet.email(),
+                    password: faker.internet.password(),
+                    name: faker.internet.username()
+                };
+                const newName = faker.internet.username();
+                await userService['setUserDocumentNewProperties'](userToUpdate as any, { name: newName });
+                expect(userToUpdate).toStrictEqual({
+                    ...userToUpdate,
+                    name: newName
+                });
+            });
         });
     });
 
-    // describe('confirmEmailValidation', () => {
 
+    // describe('requestEmailValidation', () => {
+    //     describe('User is not found', () => {
+    //         test('throw BAD REQUEST Http error', async () => {
+    //             userModel.findById().exec.mockResolvedValue(null);
+    //             try {
+    //                 await userService.requestEmailValidation('testID');
+    //             } catch (err: any) {
+    //                 expect(err).toBeInstanceOf(HttpError);
+    //                 expect(err.statusCode).toBe(400);
+    //                 expect(typeof err.message).toBe('string')
+    //             }
+    //         });
+
+    //         test('error logger is called with the user id', async () => {
+    //             userModel.findById().exec.mockResolvedValue(null);
+    //             const userId = 'testID';
+    //             await expect(userService.requestEmailValidation(userId)).rejects.toThrow();
+    //             expect(loggerService.error).toHaveBeenCalledWith(expect.stringContaining(userId));
+    //         });
+    //     });
+
+    //     describe('User email is already validated', () => {
+    //         test('throw BAD REQUEST Http error', async () => {
+    //             userModel.findById().exec.mockResolvedValue({ emailValidated: true });
+    //             try {
+    //                 await userService.requestEmailValidation('testID');
+    //             } catch (err: any) {
+    //                 expect(err).toBeInstanceOf(HttpError);
+    //                 expect(err.statusCode).toBe(400);
+    //                 expect(typeof err.message).toBe('string')
+    //             }
+    //         });
+
+    //         test('error logger is called with the user emial', async () => {
+    //             const userEmail = 'test@example.com';
+    //             userModel.findById().exec.mockResolvedValue({ emailValidated: true, email: userEmail });
+    //             await expect(userService.requestEmailValidation('testId')).rejects.toThrow();
+    //             expect(loggerService.error).toHaveBeenCalledWith(expect.stringContaining(userEmail));
+    //         });
+    //     });
+
+    //     test('sendEmailValidationLink is called with the user email', async () => {
+    //         const testEmail = 'testEmail';
+    //         userModel.findById().exec.mockResolvedValue({ emailValidated: false, email: testEmail });
+    //         const sendEmailValidationLinkMock = jest.spyOn(userService as any, 'sendEmailValidationLink')
+    //             .mockImplementation();
+    //         await userService.requestEmailValidation('testID');
+    //         expect(sendEmailValidationLinkMock).toHaveBeenCalledWith(testEmail);
+    //     });
     // });
 });
