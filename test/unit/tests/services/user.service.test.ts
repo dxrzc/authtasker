@@ -1,6 +1,6 @@
 import { Model, Query } from "mongoose";
 import { mock, MockProxy } from "jest-mock-extended";
-import { ITasks, IUser } from "@root/interfaces";
+import { ITasks, IUser, UserFromRequest } from "@root/interfaces";
 import { ConfigService, EmailService, HashingService, JwtBlackListService, JwtService, LoggerService, UserService } from "@root/services";
 import { validRoles } from "@root/types/user";
 import { modificationAuthFixture } from "./fixtures";
@@ -290,9 +290,9 @@ describe('User Service', () => {
                 const newEmail = faker.internet.email();
                 await userService['setUserDocumentNewProperties'](userToUpdate as any, { email: newEmail });
                 expect(userToUpdate).toStrictEqual({
-                    ...userToUpdate,                    
+                    ...userToUpdate,
                     email: newEmail,
-                });                
+                });
             });
 
             test('no modifications for admins (only the email)', async () => {
@@ -353,55 +353,29 @@ describe('User Service', () => {
         });
     });
 
+    describe('logout', () => {
+        test('call blacklistToken with the token jti and exp', async () => {
+            const blacklistTokenMock = jest.spyOn(userService as any, 'blackListToken')
+                .mockImplementation();
+            const reqUserInfo: UserFromRequest = {
+                id: '12345',
+                role: 'readonly',
+                jti: 'test-jti',
+                tokenExp: 3133913,
+            };
+            await userService.logout(reqUserInfo);
+            expect(blacklistTokenMock).toHaveBeenCalledWith(reqUserInfo.jti, reqUserInfo.tokenExp);
+        });
 
-    // describe('requestEmailValidation', () => {
-    //     describe('User is not found', () => {
-    //         test('throw BAD REQUEST Http error', async () => {
-    //             userModel.findById().exec.mockResolvedValue(null);
-    //             try {
-    //                 await userService.requestEmailValidation('testID');
-    //             } catch (err: any) {
-    //                 expect(err).toBeInstanceOf(HttpError);
-    //                 expect(err.statusCode).toBe(400);
-    //                 expect(typeof err.message).toBe('string')
-    //             }
-    //         });
-
-    //         test('error logger is called with the user id', async () => {
-    //             userModel.findById().exec.mockResolvedValue(null);
-    //             const userId = 'testID';
-    //             await expect(userService.requestEmailValidation(userId)).rejects.toThrow();
-    //             expect(loggerService.error).toHaveBeenCalledWith(expect.stringContaining(userId));
-    //         });
-    //     });
-
-    //     describe('User email is already validated', () => {
-    //         test('throw BAD REQUEST Http error', async () => {
-    //             userModel.findById().exec.mockResolvedValue({ emailValidated: true });
-    //             try {
-    //                 await userService.requestEmailValidation('testID');
-    //             } catch (err: any) {
-    //                 expect(err).toBeInstanceOf(HttpError);
-    //                 expect(err.statusCode).toBe(400);
-    //                 expect(typeof err.message).toBe('string')
-    //             }
-    //         });
-
-    //         test('error logger is called with the user emial', async () => {
-    //             const userEmail = 'test@example.com';
-    //             userModel.findById().exec.mockResolvedValue({ emailValidated: true, email: userEmail });
-    //             await expect(userService.requestEmailValidation('testId')).rejects.toThrow();
-    //             expect(loggerService.error).toHaveBeenCalledWith(expect.stringContaining(userEmail));
-    //         });
-    //     });
-
-    //     test('sendEmailValidationLink is called with the user email', async () => {
-    //         const testEmail = 'testEmail';
-    //         userModel.findById().exec.mockResolvedValue({ emailValidated: false, email: testEmail });
-    //         const sendEmailValidationLinkMock = jest.spyOn(userService as any, 'sendEmailValidationLink')
-    //             .mockImplementation();
-    //         await userService.requestEmailValidation('testID');
-    //         expect(sendEmailValidationLinkMock).toHaveBeenCalledWith(testEmail);
-    //     });
-    // });
+        test('info logger is called with user id', async () => {
+            const reqUserInfo: UserFromRequest = {
+                id: '12345',
+                role: 'editor',
+                jti: 'test-jti',
+                tokenExp: 3133913,
+            };
+            await userService.logout(reqUserInfo);
+            expect(loggerService.info).toHaveBeenCalledWith(expect.stringContaining(reqUserInfo.id));
+        });
+    });
 });
