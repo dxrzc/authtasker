@@ -22,7 +22,7 @@ export class UserService {
         private readonly emailService: EmailService,
     ) {}
 
-    private async getTargetUserIfAuthorized(requestUserInfo: { id: string, role: UserRole }, userIdToUpdate: string): Promise<HydratedDocument<IUser> | null> {
+    private async getUserIfAuthorizedToModify(requestUserInfo: { id: string, role: UserRole }, userIdToUpdate: string): Promise<HydratedDocument<IUser> | null> {
         const userToModify = await this.findOne(userIdToUpdate);
         // admin users can modify other users (but not other admins)
         if (requestUserInfo.role === 'admin' && userToModify.role !== 'admin')
@@ -225,7 +225,7 @@ export class UserService {
 
     async deleteOne(requestUserInfo: { id: string, role: UserRole }, id: string): Promise<void> {
         // check if current user is authorized
-        const userToDelete = await this.getTargetUserIfAuthorized(requestUserInfo, id);
+        const userToDelete = await this.getUserIfAuthorizedToModify(requestUserInfo, id);
         if (!userToDelete) {
             this.loggerService.error(`Not authorized to perform this action`);
             throw HttpError.forbidden(FORBIDDEN_MESSAGE);
@@ -240,7 +240,7 @@ export class UserService {
     async updateOne(requestUserInfo: { id: string, role: UserRole }, id: string, propertiesUpdated: UpdateUserValidator): Promise<HydratedDocument<IUser>> {
         try {
             // check if current user is authorized
-            const userToUpdate = await this.getTargetUserIfAuthorized(requestUserInfo, id);
+            const userToUpdate = await this.getUserIfAuthorizedToModify(requestUserInfo, id);
             if (!userToUpdate) {
                 this.loggerService.error(`Not authorized to perform this action`);
                 throw HttpError.forbidden(FORBIDDEN_MESSAGE);

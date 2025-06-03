@@ -50,7 +50,7 @@ beforeEach(() => {
 });
 
 describe('User Service', () => {
-    describe('getTargetUserIfAuthorized', () => {
+    describe('getUserIfAuthorizedToModify', () => {
         test.each([
             validRoles
         ])('%s users are authorized to modify themselves', async (role) => {
@@ -65,7 +65,7 @@ describe('User Service', () => {
             };
 
             const findOneMock = jest.spyOn(userService, 'findOne').mockResolvedValue(userToModify as any);
-            const result = await userService['getTargetUserIfAuthorized'](requestUser, userToModify.id);
+            const result = await userService['getUserIfAuthorizedToModify'](requestUser, userToModify.id);
 
             expect(findOneMock).toHaveBeenCalledTimes(1);
             expect(result).toStrictEqual(userToModify);
@@ -85,7 +85,7 @@ describe('User Service', () => {
             };
 
             const findOneMock = jest.spyOn(userService, 'findOne').mockResolvedValue(userToModify as any);
-            const result = await userService['getTargetUserIfAuthorized'](requestUser, userToModify.id);
+            const result = await userService['getUserIfAuthorizedToModify'](requestUser, userToModify.id);
 
             expect(findOneMock).toHaveBeenCalledTimes(1);
             (expected === 'forbidden')
