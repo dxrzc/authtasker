@@ -7,6 +7,7 @@ import { ITasks, IUser, UserFromRequest } from "@root/interfaces";
 import { TOKEN_PURPOSES } from "@root/rules/constants";
 import { UserRole } from "@root/types/user/user-roles.type";
 import { handleDbDuplicatedKeyError } from "@logic/errors/database";
+import { paginationRules } from "@logic/others/pagination-rules";
 
 export class UserService {
 
@@ -20,7 +21,7 @@ export class UserService {
         private readonly loggerService: LoggerService,
         private readonly emailService: EmailService,
     ) {}
-    
+
     private async getTargetUserIfAuthorized(requestUserInfo: { id: string, role: UserRole }, userIdToUpdate: string): Promise<HydratedDocument<IUser> | null> {
         const userToModify = await this.findOne(userIdToUpdate);
         // admin users can modify other users (but not other admins)
@@ -32,7 +33,7 @@ export class UserService {
         return null;
     }
 
-    private async blackListToken(jti: string, tokenExp: number) {        
+    private async blackListToken(jti: string, tokenExp: number) {
         const currentTime = Math.floor(Date.now() / 1000);
         const remainingTokenTTL = tokenExp! - currentTime;
         this.loggerService.debug(`Token ${jti} blacklisted`);
@@ -210,34 +211,10 @@ export class UserService {
     }
 
     async findAll(limit: number, page: number): Promise<HydratedDocument<IUser>[]> {
-        if (limit <= 0) {
-            throw HttpError.badRequest('Limit must be a valid number');
-        }
-
-        if (limit > 100) {
-            throw HttpError.badRequest('Limit is too large');
-        }
-
-        const totalDocuments = await this.userModel
-            .countDocuments()
-            .exec();
-
-        if (totalDocuments === 0) {
+        const offset = await paginationRules(limit, page, this.userModel);
+        // no documents found
+        if (offset instanceof Array)
             return [];
-        }
-
-        const totalPages = Math.ceil(totalDocuments / limit);
-
-        if (page <= 0) {
-            throw HttpError.badRequest('Page must be a valid number');
-        }
-
-        if (page > totalPages) {
-            throw HttpError.badRequest('Invalid page');
-        }
-
-        const offset = (page - 1) * limit;
-
         return await this.userModel
             .find()
             .skip(offset)
