@@ -53,13 +53,12 @@ describe('Tasks Service', () => {
             };
             const taskOwner = {
                 role: targetUserRole,
-                id: 'targetUserId'
+                id: new Types.ObjectId()
             };
             const task = {
-                user: new Types.ObjectId(taskOwner.id),
+                user: taskOwner.id,
                 id: 'taskId'
             };
-
             // mock task found
             const findTaskMock = jest.spyOn(tasksService, 'findOne').mockResolvedValue(task as any);
             // mock task owner found
