@@ -176,13 +176,13 @@ export class UserService {
         const userDb = await this.userModel.findOne({ email: userToLogin.email }).exec();
         if (!userDb) {
             this.loggerService.error(`User ${userToLogin.email} not found`);
-            throw HttpError.badRequest(`User with email ${userToLogin.email} not found`);
+            throw HttpError.badRequest(`Invalid credentials`);
         }
         // check password
         const passwordOk = await this.hashingService.compare(userToLogin.password, userDb.password);
         if (!passwordOk) {
             this.loggerService.error('Password does not match');
-            throw HttpError.badRequest('Email or password is not correct');
+            throw HttpError.badRequest('Invalid credentials');
         }
         // token generation
         const token = this.generateSessionToken(userDb.id);
