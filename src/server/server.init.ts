@@ -13,7 +13,6 @@ export class Server {
         private readonly port: number,
         private readonly routes: Router
     ) {
-        this.app.use(express.json());
         this.app.use(express.json({ limit: '10kb' }));
         this.app.use(helmet());        
         this.app.use(timeout('5s'));
