@@ -47,7 +47,7 @@ export class UserController extends BaseController {
 
     readonly logout = this.forwardError(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         this.loggerService.info('User logout attempt');
-        const requestUserInfo = this.getUseRequestInfo(req, res);
+        const requestUserInfo = this.getUserRequestInfo(req, res);
         if (requestUserInfo) {
             await this.userService.logout(requestUserInfo);
             res.status(HTTP_STATUS_CODE.NO_CONTENT).end();
@@ -57,7 +57,7 @@ export class UserController extends BaseController {
 
     readonly requestEmailValidation = this.forwardError(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         this.loggerService.info('Email validation request attempt');
-        const requestUserInfo = this.getUseRequestInfo(req, res);
+        const requestUserInfo = this.getUserRequestInfo(req, res);
         if (requestUserInfo) {
             await this.userService.requestEmailValidation(requestUserInfo.id);
             res.status(HTTP_STATUS_CODE.NO_CONTENT).end();
@@ -95,7 +95,7 @@ export class UserController extends BaseController {
     readonly deleteOne = this.forwardError(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const userIdToDelete = req.params.id;
         this.loggerService.info(`User ${userIdToDelete} deletion attempt`);
-        const requestUserInfo = this.getUseRequestInfo(req, res);
+        const requestUserInfo = this.getUserRequestInfo(req, res);
         if (requestUserInfo) {
             await this.userService.deleteOne(requestUserInfo, userIdToDelete);
             res.status(HTTP_STATUS_CODE.NO_CONTENT).end();
@@ -111,7 +111,7 @@ export class UserController extends BaseController {
             .validateAndTransform(propertiesToUpdate);
         if (validatedProperties) {
             this.loggerService.info(`Data successfully validated`);
-            const requestUserInfo = this.getUseRequestInfo(req, res);
+            const requestUserInfo = this.getUserRequestInfo(req, res);
 
             if (requestUserInfo) {
                 const updated = await this.userService.updateOne(requestUserInfo, userIdToUpdate, validatedProperties);

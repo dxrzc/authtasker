@@ -17,7 +17,7 @@ export class TasksController extends BaseController {
 
         if (validatedTask) {
             this.loggerService.info('Data successfully validated');
-            const requestUserInfo = this.getUseRequestInfo(req, res);
+            const requestUserInfo = this.getUserRequestInfo(req, res);
 
             if (requestUserInfo) {
                 const created = await this.tasksService.create(validatedTask, requestUserInfo.id);
@@ -57,7 +57,7 @@ export class TasksController extends BaseController {
     readonly deleteOne = this.forwardError(async (req: Request, res: Response) => {
         const id = req.params.id;
         this.loggerService.info(`Task ${id} deletion attempt`);
-        const requestUserInfo = this.getUseRequestInfo(req, res);
+        const requestUserInfo = this.getUserRequestInfo(req, res);
         if (requestUserInfo) {
             await this.tasksService.deleteOne(requestUserInfo, id);
             res.status(HTTP_STATUS_CODE.NO_CONTENT).end();
@@ -71,7 +71,7 @@ export class TasksController extends BaseController {
 
         if (validatedTask) {
             this.loggerService.info('Data successfully validated');
-            const requestUserInfo = this.getUseRequestInfo(req, res);
+            const requestUserInfo = this.getUserRequestInfo(req, res);
 
             if (requestUserInfo) {
                 const updated = await this.tasksService.updateOne(requestUserInfo, id, validatedTask);
