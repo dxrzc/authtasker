@@ -1,14 +1,12 @@
 import { HydratedDocument, Model, Types } from "mongoose";
-import { CreateTaskValidator } from "@root/rules/validators/models/tasks/create-task.validator";
-import { FORBIDDEN_MESSAGE } from "@root/rules/errors/messages/error.messages";
-import { HttpError } from "@root/rules/errors/http.error";
+import { HttpError } from "@root/common/errors/classes/http-error.class";
 import { ITasks } from "@root/interfaces/tasks/task.interface";
 import { LoggerService } from "./logger.service";
-import { UpdateTaskValidator } from "@root/rules/validators/models/tasks/update-task.validator";
 import { UserRole } from "@root/types/user/user-roles.type";
 import { UserService } from "./user.service";
-import { handleDbDuplicatedKeyError } from "@logic/errors/database";
 import { paginationRules } from "@logic/others";
+import { CreateTaskValidator, UpdateTaskValidator } from '@root/validators/models/tasks';
+import { errorMessages, tasksApiErrors } from '@root/common/errors/messages';
 
 export class TasksService {
 
@@ -17,6 +15,13 @@ export class TasksService {
         private readonly tasksModel: Model<ITasks>,
         private readonly userService: UserService,
     ) {}
+
+    private handleDbDuplicatedKeyError(error: any): never {
+        const duplicatedKey = Object.keys(error.keyValue);
+        const keyValue = Object.values(error.keyValue);        
+        this.loggerService.error(`Task with ${duplicatedKey}: "${keyValue}" already exists`);
+        throw HttpError.conflict(tasksApiErrors.TASK_ALREADY_EXISTS(duplicatedKey[0]));
+    }
 
     private async getTaskIfUserAuthorizedToModify(requestUserInfo: { id: string, role: UserRole }, taskId: string): Promise<HydratedDocument<ITasks> | null> {
         const task = await this.findOne(taskId);
@@ -39,7 +44,7 @@ export class TasksService {
 
         } catch (error: any) {
             if (error.code === 11000)
-                handleDbDuplicatedKeyError(error, this.loggerService);
+                this.handleDbDuplicatedKeyError(error);
             throw error;
         }
     }
@@ -49,10 +54,9 @@ export class TasksService {
         if (Types.ObjectId.isValid(id))
             taskFound = await this.tasksModel.findById(id).exec();
         // id is not valid / task not found
-        if (!taskFound) {
-            const error = `Task with id ${id} not found`;
-            this.loggerService.error(error)
-            throw HttpError.notFound(error);
+        if (!taskFound) {            
+            this.loggerService.error(`Task with id ${id} not found`)
+            throw HttpError.notFound(tasksApiErrors.TASK_NOT_FOUND);
         }
         return taskFound;
     }
@@ -85,7 +89,7 @@ export class TasksService {
         const task = await this.getTaskIfUserAuthorizedToModify(requestUserInfo, id);
         if (!task) {
             this.loggerService.error(`Not authorized to perform this action`);
-            throw HttpError.forbidden(FORBIDDEN_MESSAGE);
+            throw HttpError.forbidden(errorMessages.FORBIDDEN);
         }
         await task.deleteOne().exec();
         this.loggerService.info(`Task ${id} deleted`);
@@ -97,7 +101,7 @@ export class TasksService {
             const taskToUpdate = await this.getTaskIfUserAuthorizedToModify(requestUserInfo, id);
             if (!taskToUpdate) {
                 this.loggerService.error(`Not authorized to perform this action`);
-                throw HttpError.forbidden(FORBIDDEN_MESSAGE);
+                throw HttpError.forbidden(errorMessages.FORBIDDEN);
             }
             // set new properties in document
             Object.assign(taskToUpdate, task);
@@ -107,7 +111,7 @@ export class TasksService {
 
         } catch (error: any) {
             if (error.code === 11000)
-                handleDbDuplicatedKeyError(error, this.loggerService);
+                this.handleDbDuplicatedKeyError(error);
             throw error;
         }
     }

@@ -1,7 +1,7 @@
 import { Model, Query } from 'mongoose';
 import { mock } from 'jest-mock-extended';
 import { IUser } from '@root/interfaces';
-import { HttpError } from '@root/rules/errors/http.error';
+import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { paginationRules } from '@logic/others';
 
 describe('paginationRules', () => {

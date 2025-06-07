@@ -1,4 +1,4 @@
-import { BaseMiddleware } from '@root/common/classes/base';
+import { BaseMiddleware } from '@root/common/base';
 import { Request, Response, RequestHandler } from 'express';
 
 describe('BaseMiddleware', () => {

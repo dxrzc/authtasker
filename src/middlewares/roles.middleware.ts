@@ -1,13 +1,13 @@
 import { Model } from "mongoose";
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { FORBIDDEN_MESSAGE } from "@root/rules/errors/messages/error.messages";
-import { HTTP_STATUS_CODE } from "@root/rules/constants";
 import { IUser } from "@root/interfaces";
 import { JwtBlackListService, JwtService, LoggerService } from "@root/services";
 import { UserRole } from "@root/types/user";
 import { processSessionToken } from "@logic/token";
 import { hasSufficientRole } from "@logic/roles";
-import { BaseMiddleware } from '@root/common/classes';
+import { statusCodes } from '@root/common/constants';
+import { BaseMiddleware } from '@root/common/base';
+import { errorMessages } from '@root/common/errors/messages';
 
 export class RolesMiddleware extends BaseMiddleware<[UserRole]> {
 
@@ -26,7 +26,7 @@ export class RolesMiddleware extends BaseMiddleware<[UserRole]> {
             const tokenProcessed = await processSessionToken(req, this.userModel, this.jwtService, this.jwtBlacklistService);
             // token is not valid
             if ('error' in tokenProcessed) {
-                res.status(HTTP_STATUS_CODE.UNAUTHORIZED).json({ error: 'Invalid bearer token' });
+                res.status(statusCodes.UNAUTHORIZED).json({ error: errorMessages.INVALID_TOKEN });
                 this.loggerService.error(tokenProcessed.error);
                 return;
             } else {
@@ -39,7 +39,7 @@ export class RolesMiddleware extends BaseMiddleware<[UserRole]> {
                 }
                 else {
                     this.loggerService.error(`Access denied for ${id} (${role})`);
-                    res.status(HTTP_STATUS_CODE.FORBIDDEN).json({ error: FORBIDDEN_MESSAGE });
+                    res.status(statusCodes.FORBIDDEN).json({ error: errorMessages.FORBIDDEN });
                 }
             }
         }

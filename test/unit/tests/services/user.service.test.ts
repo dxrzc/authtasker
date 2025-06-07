@@ -5,11 +5,11 @@ import { ConfigService, EmailService, HashingService, JwtBlackListService, JwtSe
 import { validRoles } from "@root/types/user";
 import { modificationAuthFixture } from "./fixtures";
 import { MongooseModel, NoReadonly } from "@unit/utils/types";
-import { TOKEN_PURPOSES } from "@root/rules/constants";
-import { HttpError } from "@root/rules/errors/http.error";
+import { HttpError } from "@root/common/errors/classes/http-error.class";
 import { v4 as uuidv4 } from 'uuid';
 import { getRandomRole } from "@unit/utils/get-random-role.util";
 import { faker } from "@faker-js/faker/.";
+import { tokenPurposes } from '@root/common/constants';
 
 let configService: MockProxy<NoReadonly<ConfigService>>;
 let userModel: MockProxy<MongooseModel<Model<IUser>>>;
@@ -112,7 +112,7 @@ describe('User Service', () => {
         test('call generate(jwtService) with the exp time, user id and session purpose', async () => {
             const expirationTimeConfig = '10h';
             const userId = 'userId123';
-            const sessionPurpose = TOKEN_PURPOSES.SESSION;
+            const sessionPurpose = tokenPurposes.SESSION;
             configService.JWT_SESSION_EXP_TIME = expirationTimeConfig;
 
             userService['generateSessionToken'](userId);
@@ -141,7 +141,7 @@ describe('User Service', () => {
     describe('sendEmailValidationLink', () => {
         test('call generate token function (jwtService) with the exp time, provided email and email valid. purpose', async () => {
             const userEmail = 'testEmail';
-            const emailValidationPurpose = TOKEN_PURPOSES.EMAIL_VALIDATION;
+            const emailValidationPurpose = tokenPurposes.EMAIL_VALIDATION;
             await userService['sendEmailValidationLink'](userEmail);
             expect(jwtService.generate).toHaveBeenCalledWith(configService.JWT_EMAIL_VALIDATION_EXP_TIME, {
                 purpose: emailValidationPurpose,
@@ -187,7 +187,7 @@ describe('User Service', () => {
             test('throws BAD REQUEST HttpError and logs error', async () => {
                 // token verified but email not in payload
                 jwtService.verify.mockReturnValue({
-                    purpose: TOKEN_PURPOSES.EMAIL_VALIDATION,
+                    purpose: tokenPurposes.EMAIL_VALIDATION,
                     jti: uuidv4()
                 });
                 try {
@@ -223,7 +223,7 @@ describe('User Service', () => {
                 // valid but blacklisted token
                 jwtBlacklistService.isBlacklisted.mockResolvedValue(true);
                 jwtService.verify.mockReturnValue({
-                    purpose: TOKEN_PURPOSES.EMAIL_VALIDATION,
+                    purpose: tokenPurposes.EMAIL_VALIDATION,
                     jti: uuidv4(),
                     email: 'test@gmail.com'
                 });
@@ -245,7 +245,7 @@ describe('User Service', () => {
             // full valid and non-blacklisted token
             jwtBlacklistService.isBlacklisted.mockResolvedValue(false);
             jwtService.verify.mockReturnValue({
-                purpose: TOKEN_PURPOSES.EMAIL_VALIDATION,
+                purpose: tokenPurposes.EMAIL_VALIDATION,
                 jti: testJti,
                 email: testEmail,
                 exp: testExp

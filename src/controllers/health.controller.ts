@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { BaseController } from '@root/common/classes';
-import { HTTP_STATUS_CODE } from '@root/rules/constants/http-status-codes.constants';
 import { LoggerService } from '@root/services';
+import { statusCodes } from '@root/common/constants';
+import { BaseController } from '@root/common/base';
 
 export class HealthController extends BaseController {
 
@@ -18,6 +18,6 @@ export class HealthController extends BaseController {
             cpuUsage: process.cpuUsage(),
             timestamp: new Date(),
         };
-        res.status(HTTP_STATUS_CODE.OK).json(health);
+        res.status(statusCodes.OK).json(health);
     });
 }

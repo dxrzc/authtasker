@@ -1,8 +1,8 @@
-import { IUser, UserFromRequest } from "@root/interfaces";
-import { TOKEN_PURPOSES } from "@root/rules/constants";
-import { JwtBlackListService, JwtService } from "@root/services";
 import { Request } from "express";
 import { Model } from "mongoose";
+import { tokenPurposes } from '@root/common/constants';
+import { IUser, UserFromRequest } from "@root/interfaces";
+import { JwtBlackListService, JwtService } from "@root/services";
 
 export async function processSessionToken(
     req: Request,
@@ -30,7 +30,7 @@ export async function processSessionToken(
 
     // token purpose is not the expected
     const tokenPurpose = payload.purpose;
-    if (tokenPurpose !== TOKEN_PURPOSES.SESSION)
+    if (tokenPurpose !== tokenPurposes.SESSION)
         return { error: `Token purpose "${tokenPurpose}" is not the expected` };
 
     // token is blacklisted

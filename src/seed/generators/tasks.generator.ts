@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { ITasks } from '@root/interfaces';
-import { TASKS_CONSTANTS as CONSTS } from "@root/rules/constants/tasks.constants";
+import { tasksLimits } from '@root/common/constants';
 import { TasksPriority, tasksPriority } from "@root/types/tasks/task-priority.type";
 import { TasksStatus, tasksStatus } from "@root/types/tasks/task-status.type";
 
@@ -10,7 +9,7 @@ export class TasksDataGenerator {
 
     name(): string {
         const prefix = 'Task ';
-        const random = faker.string.alpha(CONSTS.MAX_NAME_LENGTH - prefix.length);
+        const random = faker.string.alpha(tasksLimits.MAX_NAME_LENGTH - prefix.length);
         const name = `${prefix}${random}`;
         return name
             .toLowerCase()
@@ -25,8 +24,8 @@ export class TasksDataGenerator {
             description = faker.lorem.text();
             length = description.length;
         } while (
-            length > CONSTS.MAX_DESCRIPTION_LENGTH ||
-            length < CONSTS.MIN_DESCRIPTION_LENGTH
+            length > tasksLimits.MAX_DESCRIPTION_LENGTH ||
+            length < tasksLimits.MIN_DESCRIPTION_LENGTH
         );
 
         return description;

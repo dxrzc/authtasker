@@ -1,5 +1,5 @@
-import { HttpError } from "@root/rules/errors/http.error";
 import { Model } from "mongoose";
+import { HttpError } from '@root/common/errors/classes';
 
 export async function paginationRules(limit: number, page: number, model: Model<any>): Promise<number | any[]> {
     if (limit <= 0)

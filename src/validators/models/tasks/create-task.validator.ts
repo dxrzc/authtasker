@@ -3,23 +3,23 @@ import { plainToInstance, Transform } from "class-transformer";
 import { Exact } from "@root/types/shared/exact.type";
 import { returnFirstError } from "../../helpers/return-first-error.helper";
 import { TaskRequest, TasksPriority, tasksPriority, TasksStatus, tasksStatus } from "@root/types/tasks";
-import { TASKS_CONSTANTS } from "@root/rules/constants/tasks.constants";
 import { toLowerCase } from "../../helpers/to-lowercase.helper";
 import { validationOptionsConfig } from "../../config/validation.config";
 import { ValidationResult } from "../../types/validation-result.type";
+import { tasksLimits } from '@root/common/constants';
 
 export class CreateTaskValidator implements Exact<CreateTaskValidator, TaskRequest> {
 
     @IsDefined()
-    @MinLength(TASKS_CONSTANTS.MIN_NAME_LENGTH)
-    @MaxLength(TASKS_CONSTANTS.MAX_NAME_LENGTH)
+    @MinLength(tasksLimits.MIN_NAME_LENGTH)
+    @MaxLength(tasksLimits.MAX_NAME_LENGTH)
     @IsString()
     @Transform(toLowerCase)
     name!: string;
 
     @IsDefined()
-    @MinLength(TASKS_CONSTANTS.MIN_DESCRIPTION_LENGTH)
-    @MaxLength(TASKS_CONSTANTS.MAX_DESCRIPTION_LENGTH)
+    @MinLength(tasksLimits.MIN_DESCRIPTION_LENGTH)
+    @MaxLength(tasksLimits.MAX_DESCRIPTION_LENGTH)
     @IsString()
     description!: string;
 

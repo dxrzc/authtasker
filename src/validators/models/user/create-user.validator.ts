@@ -1,18 +1,18 @@
 import { IsDefined, IsEmail, IsString, MaxLength, MinLength, validate } from "class-validator";
 import { plainToInstance, Transform } from "class-transformer";
 import { Exact } from "@root/types/shared/exact.type";
-import { toLowerCase } from "../../helpers/to-lowercase.helper";
-import { USER_CONSTANTS } from "@root/rules/constants/user.constants";
-import { UserRequest } from "../../../../types/user/user-request.type";
-import { validationOptionsConfig } from "../../config/validation.config";
-import { ValidationResult } from "../../types/validation-result.type";
-import { returnFirstError } from "../../helpers/return-first-error.helper";
+import { usersLimits } from '@root/common/constants';
+import { UserRequest } from '@root/types/user';
+import { toLowerCase } from '@root/validators/helpers/to-lowercase.helper';
+import { ValidationResult } from '@root/validators/types/validation-result.type';
+import { validationOptionsConfig } from '@root/validators/config/validation.config';
+import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
 
 export class CreateUserValidator implements Exact<CreateUserValidator, UserRequest> {
 
     @IsDefined()
-    @MinLength(USER_CONSTANTS.MIN_NAME_LENGTH)
-    @MaxLength(USER_CONSTANTS.MAX_NAME_LENGTH)
+    @MinLength(usersLimits.MIN_NAME_LENGTH)
+    @MaxLength(usersLimits.MAX_NAME_LENGTH)
     @IsString()
     @Transform(toLowerCase)
     name!: string;
@@ -22,8 +22,8 @@ export class CreateUserValidator implements Exact<CreateUserValidator, UserReque
     email!: string;
 
     @IsDefined()
-    @MinLength(USER_CONSTANTS.MIN_PASSWORD_LENGTH)
-    @MaxLength(USER_CONSTANTS.MAX_PASSWORD_LENGTH)
+    @MinLength(usersLimits.MIN_PASSWORD_LENGTH)
+    @MaxLength(usersLimits.MAX_PASSWORD_LENGTH)
     @IsString()
     password!: string;
 

@@ -1,6 +1,6 @@
 import rateLimit from "express-rate-limit";
 import { ConfigService } from "@root/services";
-import { BaseMiddleware } from '@root/common/classes';
+import { BaseMiddleware } from '@root/common/base';
 
 export class ApiLimiterMiddleware extends BaseMiddleware {
 
