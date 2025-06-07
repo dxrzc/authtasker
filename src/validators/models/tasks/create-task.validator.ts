@@ -3,34 +3,63 @@ import { plainToInstance, Transform } from "class-transformer";
 import { Exact } from "@root/types/shared/exact.type";
 import { returnFirstError } from "../../helpers/return-first-error.helper";
 import { TaskRequest, TasksPriority, tasksPriority, TasksStatus, tasksStatus } from "@root/types/tasks";
-import { toLowerCase } from "../../helpers/to-lowercase.helper";
 import { validationOptionsConfig } from "../../config/validation.config";
 import { ValidationResult } from "../../types/validation-result.type";
 import { tasksLimits } from '@root/common/constants';
+import { errorMessages } from '@root/common/errors/messages';
+import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper';
 
 export class CreateTaskValidator implements Exact<CreateTaskValidator, TaskRequest> {
 
-    @IsDefined()
-    @MinLength(tasksLimits.MIN_NAME_LENGTH)
-    @MaxLength(tasksLimits.MAX_NAME_LENGTH)
-    @IsString()
-    @Transform(toLowerCase)
+    @IsDefined({
+        message: errorMessages.PROPERTY_NOT_PROVIDED('name')
+    })
+    @MinLength(tasksLimits.MIN_NAME_LENGTH, {
+        message: errorMessages.PROPERTY_BAD_LENGTH(
+            'name',
+            tasksLimits.MIN_NAME_LENGTH,
+            tasksLimits.MAX_NAME_LENGTH
+        )
+    })
+    @MaxLength(
+        tasksLimits.MAX_NAME_LENGTH, {
+        message: errorMessages.PROPERTY_BAD_LENGTH(
+            'name',
+            tasksLimits.MIN_NAME_LENGTH,
+            tasksLimits.MAX_NAME_LENGTH
+        )
+    })
+    @Transform(toLowerCaseAndTrim)
     name!: string;
 
-    @IsDefined()
-    @MinLength(tasksLimits.MIN_DESCRIPTION_LENGTH)
-    @MaxLength(tasksLimits.MAX_DESCRIPTION_LENGTH)
-    @IsString()
+    @IsDefined({
+        message: errorMessages.PROPERTY_NOT_PROVIDED('description')
+    })
+    @MinLength(tasksLimits.MIN_DESCRIPTION_LENGTH, {
+        message: errorMessages.PROPERTY_BAD_LENGTH(
+            'description',
+            tasksLimits.MIN_DESCRIPTION_LENGTH,
+            tasksLimits.MAX_DESCRIPTION_LENGTH
+        )
+    })
+    @MaxLength(tasksLimits.MAX_DESCRIPTION_LENGTH, {
+        message: errorMessages.PROPERTY_BAD_LENGTH(
+            'description',
+            tasksLimits.MIN_DESCRIPTION_LENGTH,
+            tasksLimits.MAX_DESCRIPTION_LENGTH
+        )
+    })
+    @Transform(toLowerCaseAndTrim)
     description!: string;
 
-    @IsDefined()
-    @IsIn(tasksStatus)
-    @IsString()
+    @IsIn(tasksStatus, {
+        message: errorMessages.PROPERTY_NOT_IN('status', <any>tasksStatus)
+    })
     status!: TasksStatus;
 
-    @IsDefined()
-    @IsIn(tasksPriority)
-    @IsString()
+    @IsIn(tasksPriority, {
+        message: errorMessages.PROPERTY_NOT_IN('priority', <any>tasksPriority)
+    })
     priority!: TasksPriority;
 
     static async validateAndTransform(data: object): ValidationResult<CreateTaskValidator> {
@@ -40,8 +69,8 @@ export class CreateTaskValidator implements Exact<CreateTaskValidator, TaskReque
         const errors = await validate(task, validationOptionsConfig);
 
         if (errors.length > 0)
-            return [returnFirstError(errors), undefined];
+            return [returnFirstError(errors), null];
 
-        return [undefined, plainToInstance(CreateTaskValidator, task)];
+        return [null, plainToInstance(CreateTaskValidator, task)];
     }
 }

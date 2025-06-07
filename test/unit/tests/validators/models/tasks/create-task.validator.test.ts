@@ -1,0 +1,186 @@
+import { faker } from '@faker-js/faker/.';
+import { tasksLimits } from '@root/common/constants';
+import { errorMessages } from '@root/common/errors/messages';
+import { TasksDataGenerator } from '@root/seed/generators';
+import { tasksPriority, tasksStatus } from '@root/types/tasks';
+import { CreateTaskValidator } from '@root/validators/models/tasks';
+
+const tasksData = new TasksDataGenerator();
+
+describe('CreateTaskValidator', () => {
+    describe('invalid name', () => {
+        const missingNameErr = errorMessages.PROPERTY_NOT_PROVIDED('name');
+        const badNameLengthErr = errorMessages.PROPERTY_BAD_LENGTH('name',
+            tasksLimits.MIN_NAME_LENGTH,
+            tasksLimits.MAX_NAME_LENGTH
+        );
+
+        test.concurrent('return error if too short', async () => {
+            const data = {
+                name: 'ab',
+                description: tasksData.description(),
+                status: tasksData.status(),
+                priority: tasksData.priority()
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toBeDefined();
+            expect(error).toStrictEqual(badNameLengthErr);
+        });
+
+        test.concurrent('return error if too long', async () => {
+            const data = {
+                name: faker.string.alpha(tasksLimits.MAX_NAME_LENGTH + 1),
+                description: tasksData.description(),
+                status: tasksData.status(),
+                priority: tasksData.priority()
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toBeDefined();
+            expect(error).toStrictEqual(badNameLengthErr);
+        });
+
+        test.concurrent('return error if missing', async () => {
+            const data = {
+                description: tasksData.description(),
+                status: tasksData.status(),
+                priority: tasksData.priority()
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toBeDefined();
+            expect(error).toStrictEqual(missingNameErr);
+        });
+
+        test.concurrent('return error if not a string', async () => {
+            const data = {
+                name: 12345,
+                description: tasksData.description(),
+                status: tasksData.status(),
+                priority: tasksData.priority()
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toBeDefined();
+            expect(error).toStrictEqual(badNameLengthErr);
+        });
+    });
+
+    describe('invalid description', () => {
+        const missingDescErr = errorMessages.PROPERTY_NOT_PROVIDED('description');
+        const badDescLengthErr = errorMessages.PROPERTY_BAD_LENGTH('description',
+            tasksLimits.MIN_DESCRIPTION_LENGTH,
+            tasksLimits.MAX_DESCRIPTION_LENGTH
+        );
+
+        test.concurrent('return error if too short', async () => {
+            const data = {
+                name: tasksData.name(),
+                description: 'short',
+                status: tasksData.status(),
+                priority: tasksData.priority()
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toStrictEqual(badDescLengthErr);
+        });
+
+        test.concurrent('return error if too long', async () => {
+            const data = {
+                name: tasksData.name(),
+                description: faker.string.alpha(tasksLimits.MAX_DESCRIPTION_LENGTH + 1),
+                status: tasksData.status(),
+                priority: tasksData.priority()
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toStrictEqual(badDescLengthErr);
+        });
+
+        test.concurrent('return error if missing', async () => {
+            const data = {
+                name: tasksData.name(),
+                status: tasksData.status(),
+                priority: tasksData.priority()
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toStrictEqual(missingDescErr);
+        });
+
+        test.concurrent('return error if not a string', async () => {
+            const data = {
+                name: tasksData.name(),
+                description: 12345,
+                status: tasksData.status(),
+                priority: tasksData.priority()
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toStrictEqual(badDescLengthErr);
+        });
+    });
+
+    describe('invalid status', () => {
+        const statusErr = errorMessages.PROPERTY_NOT_IN('status', <any>tasksStatus);        
+
+        test.concurrent('return error if invalid', async () => {
+            const data = {
+                name: tasksData.name(),
+                description: tasksData.description(),
+                status: 'random-status',
+                priority: tasksData.priority()
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toStrictEqual(statusErr);
+        });
+
+        test.concurrent('return error if missing', async () => {
+            const data = {
+                name: tasksData.name(),
+                description: tasksData.description(),
+                priority: tasksData.priority()
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toStrictEqual(statusErr);
+        });
+    });
+
+    describe('invalid priority', () => {
+        const priorityErr = errorMessages.PROPERTY_NOT_IN('priority', <any>tasksPriority);        
+
+        test.concurrent('return error if invalid', async () => {
+            const data = {
+                name: tasksData.name(),
+                description: tasksData.description(),
+                status: tasksData.status(),
+                priority: 'urgent'
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toStrictEqual(priorityErr);
+        });
+
+        test.concurrent('return error if missing', async () => {
+            const data = {
+                name: tasksData.name(),
+                description: tasksData.description(),
+                status: tasksData.status(),
+            };
+            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            expect(error).toStrictEqual(priorityErr);
+        });
+    });
+
+    describe('valid input', () => {
+        test('return instance when input is valid', async () => {
+            const data = {
+                name: '  MY Task  ',
+                description: '   Do something important.  ',
+                status: tasksData.status(),
+                priority: tasksData.priority()
+            };
+
+            const [error, result] = await CreateTaskValidator.validateAndTransform(data);
+
+            expect(error).toBeNull();
+            expect(result).toBeInstanceOf(CreateTaskValidator);
+            expect(result?.name).toBe(data.name.trim().toLowerCase());
+            expect(result?.description).toBe(data.description.trim().toLowerCase());
+            expect(result?.status).toBe(data.status);
+            expect(result?.priority).toBe(data.priority);
+        });
+    });
+});
