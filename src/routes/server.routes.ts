@@ -15,19 +15,20 @@ import {
 } from "@root/services";
 
 import {
-    apiLimiterMiddlewareFactory,
-    authLimiterMiddlewareFactory,
-    errorHandlerMiddlewareFactory,
-    requestContextMiddlewareFactory,
-    rolesMiddlewareFactory
+    ApiLimiterMiddleware,
+    AuthLimiterMiddleware,
+    RolesMiddleware,
+    RequestContextMiddleware,
+    ErrorHandlerMiddleware,
 } from "@root/middlewares";
 
 import { UserRoutes, TasksRoutes } from ".";
 import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
-import { RequestLimiterMiddlewares, RolesMiddlewares } from "@root/types/middlewares";
 import { HealthController } from "@root/controllers/health.controller";
 import { ITasks, IUser } from "@root/interfaces";
 import { loadTasksModel, loadUserModel } from "@root/databases/mongo/models";
+
+// TODO: this needs a big refactor btw
 
 export class AppRoutes {
 
@@ -39,9 +40,11 @@ export class AppRoutes {
     private readonly jwtBlacklistService: JwtBlackListService;
     private readonly userService: UserService;
     private readonly tasksService: TasksService;
-    private readonly rolesMiddlewares: RolesMiddlewares;
-    private readonly requestLimiterMiddlewares: RequestLimiterMiddlewares;
+    private readonly rolesMiddleware: RolesMiddleware;
+    private readonly authLimiterMiddleware: AuthLimiterMiddleware;
+    private readonly apiLimiterMiddleware: ApiLimiterMiddleware;
     private readonly healthController: HealthController;
+    private readonly errorHandlerMiddleware = new ErrorHandlerMiddleware(this.loggerService);
 
     constructor(
         private readonly configService: ConfigService,
@@ -64,37 +67,15 @@ export class AppRoutes {
             pass: this.configService.MAIL_SERVICE_PASS,
         });
 
-        // roles middlewares
-        this.rolesMiddlewares = {
-            readonly: rolesMiddlewareFactory(
-                'readonly',
-                this.userModel,
-                this.loggerService,
-                this.jwtService,
-                this.jwtBlacklistService,
-            ),
-
-            editor: rolesMiddlewareFactory(
-                'editor',
-                this.userModel,
-                this.loggerService,
-                this.jwtService,
-                this.jwtBlacklistService,
-            ),
-
-            admin: rolesMiddlewareFactory(
-                'admin',
-                this.userModel,
-                this.loggerService,
-                this.jwtService,
-                this.jwtBlacklistService,
-            ),
-        };
-
-        this.requestLimiterMiddlewares = {
-            authLimiter: authLimiterMiddlewareFactory(configService),
-            apiLimiter: apiLimiterMiddlewareFactory(configService),
-        }
+        // Middlewares
+        this.authLimiterMiddleware = new AuthLimiterMiddleware(this.configService);
+        this.apiLimiterMiddleware = new ApiLimiterMiddleware(this.configService);
+        this.rolesMiddleware = new RolesMiddleware(
+            this.userModel,
+            this.loggerService,
+            this.jwtService,
+            this.jwtBlacklistService,
+        );
 
         // api services
         this.userService = new UserService(
@@ -114,15 +95,17 @@ export class AppRoutes {
             this.userService,
         );
 
-        this.healthController = new HealthController();
+        this.healthController = new HealthController(this.loggerService);
     }
 
     private buildGlobalMiddlewares() {
+        const requestContextMiddleware = new RequestContextMiddleware(
+            this.asyncLocalStorage,
+            this.loggerService,
+        );
+
         return [
-            requestContextMiddlewareFactory(
-                this.asyncLocalStorage,
-                this.loggerService,
-            )
+            requestContextMiddleware.middleware()
         ];
     }
 
@@ -133,8 +116,9 @@ export class AppRoutes {
             this.userModel,
             this.hashingService,
             this.loggerService,
-            this.rolesMiddlewares,
-            this.requestLimiterMiddlewares
+            this.rolesMiddleware,
+            this.authLimiterMiddleware,
+            this.apiLimiterMiddleware,
         );
         return await userRoutes.build();
     }
@@ -143,8 +127,8 @@ export class AppRoutes {
         const tasksRoutes = new TasksRoutes(
             this.tasksService,
             this.loggerService,
-            this.rolesMiddlewares,
-            this.requestLimiterMiddlewares
+            this.rolesMiddleware,
+            this.apiLimiterMiddleware,
         );
         return await tasksRoutes.build();
     }
@@ -165,16 +149,16 @@ export class AppRoutes {
     async buildApp() {
         const router = Router();
 
-        router.get('/health', this.rolesMiddlewares.admin, this.healthController.getServerHealth);
+        router.get('/health', this.rolesMiddleware.middleware('admin'), this.healthController.getServerHealth);
         router.use(this.buildGlobalMiddlewares());
         router.use('/api/users', await this.buildUserRoutes());
         router.use('/api/tasks', await this.buildTasksRoutes());
-        
+
         if (this.configService.NODE_ENV === 'development') {
             router.use('/seed', await this.buildSeedRoutes());
         }
-        
-        router.use(errorHandlerMiddlewareFactory(this.loggerService));
+
+        router.use(this.errorHandlerMiddleware.middleware());
         return router;
     }
 }

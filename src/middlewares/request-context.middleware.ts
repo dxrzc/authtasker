@@ -1,15 +1,18 @@
 import { v4 as uuidv4 } from 'uuid';
+import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { AsyncLocalStorage } from 'async_hooks';
-import { handleError } from '@root/common/handlers/error.handler';
 import { LoggerService } from '@root/services/logger.service';
-import { NextFunction, Request, Response } from "express";
+import { BaseMiddleware } from '@root/common/classes';
 
-export const requestContextMiddlewareFactory = (
-    asyncLocalStorage: AsyncLocalStorage<unknown>,
-    loggerService: LoggerService,
-) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-        try {            
+export class RequestContextMiddleware extends BaseMiddleware {
+
+    constructor(
+        private readonly asyncLocalStorage: AsyncLocalStorage<unknown>,
+        private readonly loggerService: LoggerService,
+    ) { super(); }
+
+    protected getHandler(): RequestHandler {
+        return async (req: Request, res: Response, next: NextFunction) => {
             const url = req.originalUrl;
             const method = req.method;
             const requestId = uuidv4();
@@ -25,7 +28,7 @@ export const requestContextMiddlewareFactory = (
                 const [seconds, nanoseconds] = process.hrtime(start);
                 const durationInMs = (seconds * 1000) + (nanoseconds / 1000000);
 
-                loggerService.logRequest({
+                this.loggerService.logRequest({
                     ip: req.ip!,
                     method: req.method,
                     requestId: requestId,
@@ -37,12 +40,9 @@ export const requestContextMiddlewareFactory = (
 
             res.setHeader("Request-Id", requestId);
 
-            asyncLocalStorage.run(store, () => {
+            this.asyncLocalStorage.run(store, () => {
                 next();
             });
-
-        } catch (error) {
-            handleError(res, error, loggerService);
         }
-    };
-};
+    }
+}

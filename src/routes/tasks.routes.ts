@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { LoggerService, SystemLoggerService, TasksService } from "@root/services";
-import { RequestLimiterMiddlewares, RolesMiddlewares } from "@root/types/middlewares";
 import { TasksController } from "@root/controllers";
+import { ApiLimiterMiddleware, RolesMiddleware } from '@root/middlewares';
 
 export class TasksRoutes {
 
@@ -10,8 +10,8 @@ export class TasksRoutes {
     constructor(
         private readonly tasksService: TasksService,
         private readonly loggerService: LoggerService,
-        private readonly rolesMiddlewares: RolesMiddlewares,
-        private readonly requestLimiterMiddlewares: RequestLimiterMiddlewares,
+        private readonly rolesMiddleware: RolesMiddleware,
+        private readonly apiLimiterMiddleware: ApiLimiterMiddleware,
     ) {
         this.tasksController = new TasksController(
             this.tasksService,
@@ -23,41 +23,41 @@ export class TasksRoutes {
 
     async build(): Promise<Router> {
         const router = Router();
-        router.use(this.requestLimiterMiddlewares.apiLimiter);
+        router.use(this.apiLimiterMiddleware.middleware());
 
         router.post(
             '/create',
-            this.rolesMiddlewares.editor,
+            this.rolesMiddleware.middleware('editor'),
             this.tasksController.create
         );
 
         router.delete(
             '/:id',
-            this.rolesMiddlewares.editor,
+            this.rolesMiddleware.middleware('editor'),
             this.tasksController.deleteOne
         );
 
         router.get(
             '/:id',
-            this.rolesMiddlewares.readonly,
+            this.rolesMiddleware.middleware('readonly'),
             this.tasksController.findOne
         );
 
         router.get(
             '/',
-            this.rolesMiddlewares.readonly,
+            this.rolesMiddleware.middleware('readonly'),
             this.tasksController.findAll
         );
 
         router.get(
             '/allByUser/:id',
-            this.rolesMiddlewares.readonly,
+            this.rolesMiddleware.middleware('readonly'),
             this.tasksController.findAllByUser
         );
 
         router.patch(
             '/:id',
-            this.rolesMiddlewares.editor,
+            this.rolesMiddleware.middleware('editor'),
             this.tasksController.updateOne
         );
 
