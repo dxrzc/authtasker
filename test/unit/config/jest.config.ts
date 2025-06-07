@@ -13,7 +13,10 @@ const config: Config = {
 
     // coverage
     collectCoverage: true,
-    collectCoverageFrom: ['!<rootDir>/test/unit/**'],
+    collectCoverageFrom: [
+        '<rootDir>/src/**/*.ts',
+        '!<rootDir>/test/unit/**'
+    ],
     coverageDirectory: '<rootDir>/coverage/unit',
     coverageProvider: 'v8',
 

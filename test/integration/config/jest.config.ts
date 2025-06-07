@@ -8,7 +8,10 @@ const config: Config = {
     
     // coverage
     collectCoverage: true,
-    collectCoverageFrom: ['!<rootDir>/test/integration/**'],
+    collectCoverageFrom: [
+        '<rootDir>/src/**/*.ts',
+        '!<rootDir>/test/integration/**'
+    ],
     coverageDirectory: "<rootDir>/coverage/integration",
     coverageProvider: "v8",
     
