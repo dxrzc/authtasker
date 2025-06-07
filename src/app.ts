@@ -5,6 +5,7 @@ import { ConfigService, LoggerService, RedisService, SystemLoggerService } from 
 import { IAsyncLocalStorageStore } from "./interfaces";
 import { MongoDatabase } from "./databases/mongo/mongo.database";
 import { Server } from "./server/server.init";
+import { ErrorHandlerMiddleware } from './middlewares';
 
 async function main() {
     process.on('unhandledRejection', (reason, promise) => {
@@ -36,7 +37,8 @@ async function main() {
             loggerService,
             asyncLocalStorage,
             redisService
-        ).buildApp()
+        ).buildApp(),
+        new ErrorHandlerMiddleware(loggerService)
     );
     server.start();
 

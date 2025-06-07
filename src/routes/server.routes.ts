@@ -44,7 +44,6 @@ export class AppRoutes {
     private readonly authLimiterMiddleware: AuthLimiterMiddleware;
     private readonly apiLimiterMiddleware: ApiLimiterMiddleware;
     private readonly healthController: HealthController;
-    private readonly errorHandlerMiddleware = new ErrorHandlerMiddleware(this.loggerService);
 
     constructor(
         private readonly configService: ConfigService,
@@ -157,8 +156,6 @@ export class AppRoutes {
         if (this.configService.NODE_ENV === 'development') {
             router.use('/seed', await this.buildSeedRoutes());
         }
-
-        router.use(this.errorHandlerMiddleware.middleware());
         return router;
     }
 }

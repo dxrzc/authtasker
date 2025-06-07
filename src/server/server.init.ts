@@ -3,6 +3,7 @@ import helmet from "helmet";
 import timeout from "connect-timeout";
 import { Server as HttpServer } from "http";
 import { SystemLoggerService } from "@root/services";
+import { ErrorHandlerMiddleware } from '@root/middlewares';
 
 export class Server {
 
@@ -11,12 +12,14 @@ export class Server {
 
     constructor(
         private readonly port: number,
-        private readonly routes: Router
+        private readonly routes: Router,
+        private readonly errorHandlerMiddleware: ErrorHandlerMiddleware,
     ) {
         this.app.use(express.json({ limit: '10kb' }));
         this.app.use(helmet());        
-        this.app.use(timeout('5s'));
+        this.app.use(timeout('5s')); // use env
         this.app.use(this.routes);
+        this.app.use(this.errorHandlerMiddleware.middleware())
     }
 
     start(): Promise<void> {
