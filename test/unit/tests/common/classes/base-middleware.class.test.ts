@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { BaseMiddleware } from '@root/common/classes';
+import { BaseMiddleware } from '@root/common/classes/base';
+import { Request, Response, RequestHandler } from 'express';
 
 describe('BaseMiddleware', () => {
     class TestMiddleware extends BaseMiddleware<[string]> {

@@ -1,7 +1,7 @@
 import { mock } from "jest-mock-extended";
 import { LoggerService } from "@root/services";
 import { handleDbDuplicatedKeyError } from "@logic/errors/database";
-import { HttpError } from "@root/rules/errors/http.error";
+import { HttpError } from "@root/common/classes/errors/http-error.class";
 
 describe('handleDbDuplicatedKeyError', () => {
     const loggerService = mock<LoggerService>();

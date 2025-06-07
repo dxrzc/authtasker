@@ -1,4 +1,4 @@
-import { BaseHttpComponent } from '@root/common/classes';
+import { BaseHttpComponent } from '@root/common/classes/base';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 
 describe('BaseHttpComponent', () => {

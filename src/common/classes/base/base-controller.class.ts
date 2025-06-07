@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { UserFromRequest } from '@root/interfaces';
-import { BaseHttpComponent } from './base-http-component';
+import { BaseHttpComponent } from './base-http-component.class';
 
 export abstract class BaseController extends BaseHttpComponent {
     // get the user request info, the roles middleware is in charge to collect this info
