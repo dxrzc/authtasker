@@ -1,3 +1,4 @@
+import { statusCodes } from '@root/common/constants';
 
 export class HttpError extends Error {
 
@@ -9,26 +10,26 @@ export class HttpError extends Error {
     }
 
     static badRequest(message: string) {
-        return new HttpError(400, message);
+        return new HttpError(statusCodes.BAD_REQUEST, message);
     }
 
     static conflict(message: string) {
-        return new HttpError(409, message);
+        return new HttpError(statusCodes.CONFLICT, message);
     }
 
     static unAuthorized(message: string) {
-        return new HttpError(401, message);
+        return new HttpError(statusCodes.UNAUTHORIZED, message);
     }
 
     static forbidden(message: string) {
-        return new HttpError(403, message);
+        return new HttpError(statusCodes.FORBIDDEN, message);
     }
 
     static notFound(message: string) {
-        return new HttpError(404, message);
+        return new HttpError(statusCodes.NOT_FOUND, message);
     }
 
     static internalServer(message: string) {
-        return new HttpError(500, message);
+        return new HttpError(statusCodes.INTERNAL_SERVER_ERROR, message);
     }
 }
