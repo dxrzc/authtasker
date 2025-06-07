@@ -5,20 +5,21 @@ import { validate } from "class-validator";
 import { validationOptionsConfig } from "../../config/validation.config";
 import { returnFirstError } from "../../helpers/return-first-error.helper";
 import { plainToInstance } from "class-transformer";
+import { errorMessages } from '@root/common/errors/messages';
 
 export class UpdateTaskValidator extends PartialType(CreateTaskValidator) {
 
     static async validateAndTransform(data: object): ValidationResult<UpdateTaskValidator> {
         if (Object.keys(data).length === 0)
-            return ['At least one field is required to update the task', undefined];
+            return [errorMessages.NO_PROPERTIES_PROVIDED_WHEN_UPDATE('task'), null];
 
         const user = new UpdateTaskValidator();
         Object.assign(user, data);
         const errors = await validate(user, validationOptionsConfig);
 
         if (errors.length > 0)
-            return [returnFirstError(errors), undefined];
+            return [returnFirstError(errors), null];
 
-        return [undefined, plainToInstance(UpdateTaskValidator, user)];
+        return [null, plainToInstance(UpdateTaskValidator, user)];
     }
 }
