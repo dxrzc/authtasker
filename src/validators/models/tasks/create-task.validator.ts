@@ -1,13 +1,13 @@
-import { IsDefined, IsIn, IsString, MaxLength, MinLength, validate } from "class-validator";
+import { IsDefined, IsIn, MaxLength, MinLength, validate } from "class-validator";
 import { plainToInstance, Transform } from "class-transformer";
 import { Exact } from "@root/types/shared/exact.type";
-import { returnFirstError } from "../../helpers/return-first-error.helper";
 import { TaskRequest, TasksPriority, tasksPriority, TasksStatus, tasksStatus } from "@root/types/tasks";
-import { validationOptionsConfig } from "../../config/validation.config";
-import { ValidationResult } from "../../types/validation-result.type";
 import { tasksLimits } from '@root/common/constants';
 import { errorMessages } from '@root/common/errors/messages';
 import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper';
+import { ValidationResult } from '@root/validators/types';
+import { validationOptionsConfig } from '@root/validators/config';
+import { returnFirstError } from '@root/validators/helpers';
 
 export class CreateTaskValidator implements Exact<CreateTaskValidator, TaskRequest> {
 

@@ -1,11 +1,11 @@
 import { PartialType } from "@nestjs/mapped-types";
 import { CreateTaskValidator } from "./create-task.validator";
-import { ValidationResult } from "../../types/validation-result.type";
 import { validate } from "class-validator";
-import { validationOptionsConfig } from "../../config/validation.config";
-import { returnFirstError } from "../../helpers/return-first-error.helper";
 import { plainToInstance } from "class-transformer";
 import { errorMessages } from '@root/common/errors/messages';
+import { ValidationResult } from '@root/validators/types';
+import { returnFirstError } from '@root/validators/helpers';
+import { validationOptionsConfig } from '@root/validators/config';
 
 export class UpdateTaskValidator extends PartialType(CreateTaskValidator) {
 

@@ -1,3 +1,3 @@
 
-export * from './create-task.validator';
-export * from './update-task.validator';
+export { CreateTaskValidator } from './create-task.validator';
+export { UpdateTaskValidator } from './update-task.validator';
