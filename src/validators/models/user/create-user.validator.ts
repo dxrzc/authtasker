@@ -1,30 +1,39 @@
-import { IsDefined, IsEmail, IsString, MaxLength, MinLength, validate } from "class-validator";
+import { IsDefined, IsEmail, MaxLength, MinLength, validate } from "class-validator";
 import { plainToInstance, Transform } from "class-transformer";
 import { Exact } from "@root/types/shared/exact.type";
-import { usersLimits } from '@root/common/constants';
 import { UserRequest } from '@root/types/user';
-import { toLowerCase } from '@root/validators/helpers/to-lowercase.helper';
+import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper';
 import { ValidationResult } from '@root/validators/types/validation-result.type';
 import { validationOptionsConfig } from '@root/validators/config/validation.config';
 import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
+import {
+    emailMissingErr,
+    nameBadLengthErr,
+    nameMaxLength,
+    nameMinLength,
+    nameMissingErr,
+    passwordBadLengthErr,
+    passwordMaxLength,
+    passwordMinLength,
+    passwordMissingErr
+} from '@root/validators/errors/user.errors';
+import { errorMessages } from '@root/common/errors/messages';
 
 export class CreateUserValidator implements Exact<CreateUserValidator, UserRequest> {
 
-    @IsDefined()
-    @MinLength(usersLimits.MIN_NAME_LENGTH)
-    @MaxLength(usersLimits.MAX_NAME_LENGTH)
-    @IsString()
-    @Transform(toLowerCase)
+    @IsDefined({ message: nameMissingErr })
+    @MinLength(nameMinLength, { message: nameBadLengthErr })
+    @MaxLength(nameMaxLength, { message: nameBadLengthErr })
+    @Transform(toLowerCaseAndTrim)
     name!: string;
 
-    @IsDefined()
-    @IsEmail()
+    @IsDefined({ message: emailMissingErr })
+    @IsEmail({}, {message: errorMessages.INVALID_EMAIL})
     email!: string;
 
-    @IsDefined()
-    @MinLength(usersLimits.MIN_PASSWORD_LENGTH)
-    @MaxLength(usersLimits.MAX_PASSWORD_LENGTH)
-    @IsString()
+    @IsDefined({ message: passwordMissingErr })
+    @MinLength(passwordMinLength, { message: passwordBadLengthErr })
+    @MaxLength(passwordMaxLength, { message: passwordBadLengthErr })
     password!: string;
 
     static async validateAndTransform(data: object): ValidationResult<CreateUserValidator> {
@@ -34,8 +43,8 @@ export class CreateUserValidator implements Exact<CreateUserValidator, UserReque
         const errors = await validate(user, validationOptionsConfig);
 
         if (errors.length > 0)
-            return [returnFirstError(errors), undefined];
+            return [returnFirstError(errors), null];
 
-        return [undefined, plainToInstance(CreateUserValidator, user)];
+        return [null, plainToInstance(CreateUserValidator, user)];
     }
 }

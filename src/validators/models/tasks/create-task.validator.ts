@@ -6,7 +6,18 @@ import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper
 import { ValidationResult } from '@root/validators/types';
 import { validationOptionsConfig } from '@root/validators/config';
 import { returnFirstError } from '@root/validators/helpers';
-import { descriptionBadLengthErr, descriptionMaxLength, descriptionMinLength, descriptionMissingErr, nameBadLengthErr, nameMaxLength, nameMinLength, nameMissingErr, priorityNotInErr, statusNotInErr } from '@root/validators/errors/task.errors';
+import {
+    descriptionBadLengthErr,
+    descriptionMaxLength,
+    descriptionMinLength,
+    descriptionMissingErr,
+    nameBadLengthErr,
+    nameMaxLength,
+    nameMinLength,
+    nameMissingErr,
+    priorityNotInErr,
+    statusNotInErr
+} from '@root/validators/errors/task.errors';
 
 export class CreateTaskValidator implements Exact<CreateTaskValidator, TaskRequest> {
 
@@ -21,10 +32,10 @@ export class CreateTaskValidator implements Exact<CreateTaskValidator, TaskReque
     @MaxLength(descriptionMaxLength, { message: descriptionBadLengthErr })
     @Transform(toLowerCaseAndTrim)
     description!: string;
-    
+
     @IsIn(tasksStatus, { message: statusNotInErr })
     status!: TasksStatus;
-    
+
     @IsIn(tasksPriority, { message: priorityNotInErr })
     priority!: TasksPriority;
 

@@ -4,6 +4,7 @@ export const errorMessages = {
     INTERNAL_SERVER_ERROR: 'Internal server error',
     INVALID_TOKEN: 'Invalid token',
     INVALID_CREDENTIALS: 'Invalid credentials',
+    INVALID_EMAIL: 'Invalid email format',
 
     PROPERTY_NOT_PROVIDED: (property: string) => `Property "${property}" is required`,
     PROPERTY_BAD_LENGTH: (property: string, minLength: number, maxLength: number) =>
