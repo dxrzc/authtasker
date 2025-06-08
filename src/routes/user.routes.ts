@@ -79,7 +79,7 @@ export class UserRoutes {
             this.userController.updateOneFwdErr()
         );
 
-        router.get('/confirmEmailValidation/:token',
+        router.post('/confirmEmailValidation/:token',
             this.apiLimiterMiddleware.middleware(),
             this.authLimiterMiddleware.middleware(),
             this.userController.confirmEmailValidationFwdErr()
