@@ -2,6 +2,7 @@ import { Router } from "express";
 import { LoggerService, SystemLoggerService, TasksService } from "@root/services";
 import { TasksController } from "@root/controllers";
 import { ApiLimiterMiddleware, RolesMiddleware } from '@root/middlewares';
+import { CreateTaskValidator, UpdateTaskValidator } from '@root/validators/models/tasks';
 
 export class TasksRoutes {
 
@@ -15,7 +16,9 @@ export class TasksRoutes {
     ) {
         this.tasksController = new TasksController(
             this.tasksService,
-            this.loggerService
+            this.loggerService,
+            new CreateTaskValidator(),
+            new UpdateTaskValidator()
         );
 
         SystemLoggerService.info('Task routes loaded');
@@ -28,37 +31,37 @@ export class TasksRoutes {
         router.post(
             '/create',
             this.rolesMiddleware.middleware('editor'),
-            this.tasksController.create
+            this.tasksController.createFwdErr()
         );
 
         router.delete(
             '/:id',
             this.rolesMiddleware.middleware('editor'),
-            this.tasksController.deleteOne
+            this.tasksController.deleteOneFwdErr()
         );
 
         router.get(
             '/:id',
             this.rolesMiddleware.middleware('readonly'),
-            this.tasksController.findOne
+            this.tasksController.findOneFwdErr()
         );
 
         router.get(
             '/',
             this.rolesMiddleware.middleware('readonly'),
-            this.tasksController.findAll
+            this.tasksController.findAllFwdErr()
         );
 
         router.get(
             '/allByUser/:id',
             this.rolesMiddleware.middleware('readonly'),
-            this.tasksController.findAllByUser
+            this.tasksController.findAllByUserFwdErr()
         );
 
         router.patch(
             '/:id',
             this.rolesMiddleware.middleware('editor'),
-            this.tasksController.updateOne
+            this.tasksController.updateOneFwdErr()
         );
 
         return router;

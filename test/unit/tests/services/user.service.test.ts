@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getRandomRole } from "@unit/utils/get-random-role.util";
 import { faker } from "@faker-js/faker/.";
 import { tokenPurposes } from '@root/common/constants';
+import { UpdateUserValidator } from '@root/validators/models/user';
 
 let configService: MockProxy<NoReadonly<ConfigService>>;
 let userModel: MockProxy<MongooseModel<Model<IUser>>>;
@@ -270,7 +271,7 @@ describe('User Service', () => {
                     name: faker.internet.username()
                 };
                 const newEmail = faker.internet.email();
-                await userService['setUserDocumentNewProperties'](userToUpdate as any, { email: newEmail });
+                await userService['setUserDocumentNewProperties'](userToUpdate as any, <UpdateUserValidator>{ email: newEmail });
                 expect(userToUpdate).toStrictEqual({
                     ...userToUpdate,
                     role: 'readonly',
@@ -288,7 +289,7 @@ describe('User Service', () => {
                     name: faker.internet.username()
                 };
                 const newEmail = faker.internet.email();
-                await userService['setUserDocumentNewProperties'](userToUpdate as any, { email: newEmail });
+                await userService['setUserDocumentNewProperties'](userToUpdate as any, <UpdateUserValidator>{ email: newEmail });
                 expect(userToUpdate).toStrictEqual({
                     ...userToUpdate,
                     email: newEmail,
@@ -304,7 +305,7 @@ describe('User Service', () => {
                     name: faker.internet.username()
                 };
                 const newEmail = faker.internet.email();
-                await userService['setUserDocumentNewProperties'](userToUpdate as any, { email: newEmail });
+                await userService['setUserDocumentNewProperties'](userToUpdate as any, <UpdateUserValidator>{ email: newEmail });
                 expect(userToUpdate).toStrictEqual({
                     ...userToUpdate,
                     email: newEmail,
@@ -325,7 +326,7 @@ describe('User Service', () => {
                     name: faker.internet.username()
                 };
                 const newPassword = faker.internet.password();
-                await userService['setUserDocumentNewProperties'](userToUpdate as any, { password: newPassword });
+                await userService['setUserDocumentNewProperties'](userToUpdate as any, <UpdateUserValidator>{ password: newPassword });
                 expect(hashMock).toHaveBeenCalledWith(newPassword);
                 expect(userToUpdate).toStrictEqual({
                     ...userToUpdate,
@@ -344,7 +345,7 @@ describe('User Service', () => {
                     name: faker.internet.username()
                 };
                 const newName = faker.internet.username();
-                await userService['setUserDocumentNewProperties'](userToUpdate as any, { name: newName });
+                await userService['setUserDocumentNewProperties'](userToUpdate as any, <UpdateUserValidator>{ name: newName });
                 expect(userToUpdate).toStrictEqual({
                     ...userToUpdate,
                     name: newName

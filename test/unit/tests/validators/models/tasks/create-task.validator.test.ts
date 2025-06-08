@@ -5,6 +5,7 @@ import { TasksDataGenerator } from '@root/seed/generators';
 import { tasksPriority, tasksStatus } from '@root/types/tasks';
 import { CreateTaskValidator } from '@root/validators/models/tasks';
 
+const createTaskValidator = new CreateTaskValidator();
 const tasksData = new TasksDataGenerator();
 
 describe('CreateTaskValidator', () => {
@@ -22,7 +23,7 @@ describe('CreateTaskValidator', () => {
                 status: tasksData.status(),
                 priority: tasksData.priority()
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toBeDefined();
             expect(error).toStrictEqual(badNameLengthErr);
         });
@@ -34,7 +35,7 @@ describe('CreateTaskValidator', () => {
                 status: tasksData.status(),
                 priority: tasksData.priority()
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toBeDefined();
             expect(error).toStrictEqual(badNameLengthErr);
         });
@@ -45,7 +46,7 @@ describe('CreateTaskValidator', () => {
                 status: tasksData.status(),
                 priority: tasksData.priority()
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toBeDefined();
             expect(error).toStrictEqual(missingNameErr);
         });
@@ -57,7 +58,7 @@ describe('CreateTaskValidator', () => {
                 status: tasksData.status(),
                 priority: tasksData.priority()
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toBeDefined();
             expect(error).toStrictEqual(badNameLengthErr);
         });
@@ -77,7 +78,7 @@ describe('CreateTaskValidator', () => {
                 status: tasksData.status(),
                 priority: tasksData.priority()
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toStrictEqual(badDescLengthErr);
         });
 
@@ -88,7 +89,7 @@ describe('CreateTaskValidator', () => {
                 status: tasksData.status(),
                 priority: tasksData.priority()
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toStrictEqual(badDescLengthErr);
         });
 
@@ -98,7 +99,7 @@ describe('CreateTaskValidator', () => {
                 status: tasksData.status(),
                 priority: tasksData.priority()
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toStrictEqual(missingDescErr);
         });
 
@@ -109,7 +110,7 @@ describe('CreateTaskValidator', () => {
                 status: tasksData.status(),
                 priority: tasksData.priority()
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toStrictEqual(badDescLengthErr);
         });
     });
@@ -124,7 +125,7 @@ describe('CreateTaskValidator', () => {
                 status: 'random-status',
                 priority: tasksData.priority()
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toStrictEqual(statusErr);
         });
 
@@ -134,7 +135,7 @@ describe('CreateTaskValidator', () => {
                 description: tasksData.description(),
                 priority: tasksData.priority()
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toStrictEqual(statusErr);
         });
     });
@@ -149,7 +150,7 @@ describe('CreateTaskValidator', () => {
                 status: tasksData.status(),
                 priority: 'urgent'
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toStrictEqual(priorityErr);
         });
 
@@ -159,7 +160,7 @@ describe('CreateTaskValidator', () => {
                 description: tasksData.description(),
                 status: tasksData.status(),
             };
-            const [error, _] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, _] = await createTaskValidator.validateProperties(data);
             expect(error).toStrictEqual(priorityErr);
         });
     });
@@ -173,7 +174,7 @@ describe('CreateTaskValidator', () => {
                 priority: tasksData.priority()
             };
 
-            const [error, result] = await CreateTaskValidator.validateAndTransform(data);
+            const [error, result] = await createTaskValidator.validateProperties(data);
 
             expect(error).toBeNull();
             expect(result).toBeInstanceOf(CreateTaskValidator);

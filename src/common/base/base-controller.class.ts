@@ -4,7 +4,7 @@ import { BaseHttpComponent } from './base-http-component.class';
 
 export abstract class BaseController extends BaseHttpComponent {
     // get the user request info, the roles middleware is in charge to collect this info
-    protected getUserRequestInfo(req: Request & Partial<UserFromRequest>, res: Response): UserFromRequest | undefined {
+    protected getUserRequestInfo(req: Request & Partial<UserFromRequest>, res: Response): UserFromRequest | never {
         const role = req.role;
         const id = req.id;
         const jti = req.jti;

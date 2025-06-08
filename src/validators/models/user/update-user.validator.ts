@@ -5,11 +5,11 @@ import { CreateUserValidator } from "./create-user.validator";
 import { errorMessages } from '@root/common/errors/messages';
 import { returnFirstError } from '@root/validators/helpers';
 import { validationOptionsConfig } from '@root/validators/config';
-import { ValidationResult } from '@root/validators/types';
+import { ValidationResult } from '@root/types/validation';
 
 export class UpdateUserValidator extends PartialType(CreateUserValidator) {
 
-    static async validateAndTransform(data: object): ValidationResult<UpdateUserValidator> {
+    async validateNewProperties(data: object): ValidationResult<UpdateUserValidator> {
         if (Object.keys(data).length === 0)
             return [errorMessages.NO_PROPERTIES_PROVIDED_WHEN_UPDATE('user'), null];
 

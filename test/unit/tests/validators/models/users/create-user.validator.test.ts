@@ -5,6 +5,7 @@ import { UserDataGenerator } from '@root/seed/generators';
 import { CreateUserValidator } from '@root/validators/models/user';
 
 const userData = new UserDataGenerator();
+const createUserValidator = new CreateUserValidator();
 
 describe('CreateUserValidator', () => {
     describe('name validation', () => {
@@ -20,7 +21,7 @@ describe('CreateUserValidator', () => {
                 email: userData.email(),
                 password: userData.password(),
             };
-            const [error] = await CreateUserValidator.validateAndTransform(data);
+            const [error] = await createUserValidator.validateProperties(data);
             expect(error).toBe(nameMissingErr);
         });
 
@@ -30,7 +31,7 @@ describe('CreateUserValidator', () => {
                 email: userData.email(),
                 password: userData.password(),
             };
-            const [error] = await CreateUserValidator.validateAndTransform(data);
+            const [error] = await createUserValidator.validateProperties(data);
             expect(error).toBe(nameBadLengthErr);
         });
 
@@ -40,7 +41,7 @@ describe('CreateUserValidator', () => {
                 email: userData.email(),
                 password: userData.password(),
             };
-            const [error] = await CreateUserValidator.validateAndTransform(data);
+            const [error] = await createUserValidator.validateProperties(data);
             expect(error).toBe(nameBadLengthErr);
         });
     });
@@ -53,7 +54,7 @@ describe('CreateUserValidator', () => {
                 name: userData.name(),
                 password: userData.password(),
             };
-            const [error] = await CreateUserValidator.validateAndTransform(data);
+            const [error] = await createUserValidator.validateProperties(data);
             expect(error).toBe(emailMissingErr);
         });
 
@@ -63,7 +64,7 @@ describe('CreateUserValidator', () => {
                 email: 'invalid-email',
                 password: userData.password(),
             };
-            const [error] = await CreateUserValidator.validateAndTransform(data);
+            const [error] = await createUserValidator.validateProperties(data);
             expect(error).toBe(errorMessages.INVALID_EMAIL);
         });
     });
@@ -81,7 +82,7 @@ describe('CreateUserValidator', () => {
                 name: userData.name(),
                 email: userData.email(),
             };
-            const [error] = await CreateUserValidator.validateAndTransform(data);
+            const [error] = await createUserValidator.validateProperties(data);
             expect(error).toBe(passwordMissingErr);
         });
 
@@ -91,7 +92,7 @@ describe('CreateUserValidator', () => {
                 email: userData.email(),
                 password: 'abc',
             };
-            const [error] = await CreateUserValidator.validateAndTransform(data);
+            const [error] = await createUserValidator.validateProperties(data);
             expect(error).toBe(passwordBadLengthErr);
         });
 
@@ -101,7 +102,7 @@ describe('CreateUserValidator', () => {
                 email: userData.email(),
                 password: faker.string.alpha(100),
             };
-            const [error] = await CreateUserValidator.validateAndTransform(data);
+            const [error] = await createUserValidator.validateProperties(data);
             expect(error).toBe(passwordBadLengthErr);
         });
     });
@@ -113,7 +114,7 @@ describe('CreateUserValidator', () => {
                 email: userData.email(),
                 password: userData.password(),
             };
-            const [error, result] = await CreateUserValidator.validateAndTransform(data);
+            const [error, result] = await createUserValidator.validateProperties(data);
             expect(error).toBeNull();
             expect(result).toBeInstanceOf(CreateUserValidator);
             expect(result?.name).toBe(data.name.toLowerCase().trim());

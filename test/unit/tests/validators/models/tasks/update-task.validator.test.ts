@@ -5,6 +5,7 @@ import { tasksPriority, tasksStatus } from '@root/types/tasks';
 import { UpdateTaskValidator } from '@root/validators/models/tasks';
 
 const tasksData = new TasksDataGenerator();
+const updateTaskValidator = new UpdateTaskValidator();
 
 describe('UpdateTaskValidator', () => {
     const statusErr = errorMessages.PROPERTY_NOT_IN('status', <any>tasksStatus);
@@ -20,37 +21,37 @@ describe('UpdateTaskValidator', () => {
     );
 
     test.concurrent('return error if all fields are missing', async () => {
-        const [error, _] = await UpdateTaskValidator.validateAndTransform({});
+        const [error, _] = await updateTaskValidator.validateNewProperties({});
         expect(error).toBe(noPropertiesProvidedErr);
     });
 
     test.concurrent('return error if name is invalid', async () => {
         const data = { name: 'ab' };
-        const [error, _] = await UpdateTaskValidator.validateAndTransform(data);
+        const [error, _] = await updateTaskValidator.validateNewProperties(data);
         expect(error).toBe(badNameLengthErr);
     });
 
     test.concurrent('return error if description is invalid', async () => {
         const data = { description: 'x' };
-        const [error, _] = await UpdateTaskValidator.validateAndTransform(data);
+        const [error, _] = await updateTaskValidator.validateNewProperties(data);
         expect(error).toBe(badDescLengthErr);
     });
 
     test.concurrent('return error if status is invalid', async () => {
         const data = { status: 'not-valid' };
-        const [error, _] = await UpdateTaskValidator.validateAndTransform(data);
+        const [error, _] = await updateTaskValidator.validateNewProperties(data);
         expect(error).toBe(statusErr);
     });
 
     test.concurrent('return error if priority is invalid', async () => {
         const data = { priority: 'urgent' };
-        const [error, _] = await UpdateTaskValidator.validateAndTransform(data);
+        const [error, _] = await updateTaskValidator.validateNewProperties(data);
         expect(error).toBe(priorityErr);
     });
 
     test.concurrent('succeed with one valid field (e.g. name)', async () => {
         const data = { name: 'New task name' };
-        const [error, result] = await UpdateTaskValidator.validateAndTransform(data);
+        const [error, result] = await updateTaskValidator.validateNewProperties(data);
         expect(error).toBeNull();
         expect(result?.name).toBe(data.name.toLowerCase().trim());
     });
@@ -62,7 +63,7 @@ describe('UpdateTaskValidator', () => {
             status: tasksData.status(),
             priority: tasksData.priority()
         };
-        const [error, result] = await UpdateTaskValidator.validateAndTransform(data);
+        const [error, result] = await updateTaskValidator.validateNewProperties(data);
         expect(error).toBeNull();
         expect(result).toBeInstanceOf(UpdateTaskValidator);
         expect(result?.name).toBe(data.name.toLowerCase().trim());

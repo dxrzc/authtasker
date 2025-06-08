@@ -4,6 +4,7 @@ import { UserDataGenerator } from '@root/seed/generators';
 import { LoginUserValidator } from '@root/validators/models/user';
 
 const userData = new UserDataGenerator();
+const loginUserValidator = new LoginUserValidator();
 
 describe('LoginUserValidator', () => {
     describe('valid credentials', () => {
@@ -13,7 +14,7 @@ describe('LoginUserValidator', () => {
                 password: userData.password()
             };
 
-            const [error, result] = await LoginUserValidator.validate(data);
+            const [error, result] = await loginUserValidator.validate(data);
             expect(error).toBeNull();
             expect(result).toBeInstanceOf(LoginUserValidator);
             expect(result?.email).toBe(data.email);
@@ -30,7 +31,7 @@ describe('LoginUserValidator', () => {
                 password: userData.password()
             };
 
-            const [error] = await LoginUserValidator.validate(data);
+            const [error] = await loginUserValidator.validate(data);
             expect(error).toBe(missingEmailErr);
         });
 
@@ -40,7 +41,7 @@ describe('LoginUserValidator', () => {
                 password: userData.password()
             };
 
-            const [error] = await LoginUserValidator.validate(data);
+            const [error] = await loginUserValidator.validate(data);
             expect(error).toBe(invalidEmailErr);
         });
     });
@@ -57,7 +58,7 @@ describe('LoginUserValidator', () => {
                 email: userData.email()
             };
 
-            const [error] = await LoginUserValidator.validate(data);
+            const [error] = await loginUserValidator.validate(data);
             expect(error).toBe(missingPasswordErr);
         });
 
@@ -67,7 +68,7 @@ describe('LoginUserValidator', () => {
                 password: '123'
             };
 
-            const [error] = await LoginUserValidator.validate(data);
+            const [error] = await loginUserValidator.validate(data);
             expect(error).toBe(badPasswordLengthErr);
         });
 
@@ -77,7 +78,7 @@ describe('LoginUserValidator', () => {
                 password: 'a'.repeat(65)
             };
 
-            const [error] = await LoginUserValidator.validate(data);
+            const [error] = await loginUserValidator.validate(data);
             expect(error).toBe(badPasswordLengthErr);
         });
     });

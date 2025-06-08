@@ -1,15 +1,15 @@
-import { PartialType } from "@nestjs/mapped-types";
-import { CreateTaskValidator } from "./create-task.validator";
 import { validate } from "class-validator";
 import { plainToInstance } from "class-transformer";
+import { PartialType } from "@nestjs/mapped-types";
+import { CreateTaskValidator } from "./create-task.validator";
 import { errorMessages } from '@root/common/errors/messages';
-import { ValidationResult } from '@root/validators/types';
 import { returnFirstError } from '@root/validators/helpers';
 import { validationOptionsConfig } from '@root/validators/config';
+import { ValidationResult } from '@root/types/validation';
 
 export class UpdateTaskValidator extends PartialType(CreateTaskValidator) {
 
-    static async validateAndTransform(data: object): ValidationResult<UpdateTaskValidator> {
+    async validateNewProperties(data: object): ValidationResult<UpdateTaskValidator> {
         if (Object.keys(data).length === 0)
             return [errorMessages.NO_PROPERTIES_PROVIDED_WHEN_UPDATE('task'), null];
 

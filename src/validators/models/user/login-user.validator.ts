@@ -1,9 +1,9 @@
 import { IsDefined, IsEmail, MaxLength, MinLength, validate } from "class-validator";
 import { CreateUserValidator } from "./create-user.validator";
 import { errorMessages } from '@root/common/errors/messages';
-import { ValidationResult } from '@root/validators/types';
 import { validationOptionsConfig } from '@root/validators/config';
 import { returnFirstError } from '@root/validators/helpers';
+import { ValidationResult } from '@root/types/validation';
 import {
     emailMissingErr,
     passwordBadLengthErr,
@@ -23,7 +23,7 @@ export class LoginUserValidator implements Pick<CreateUserValidator, 'email' | '
     @MinLength(passwordMinLength, { message: passwordBadLengthErr })
     password!: string;
 
-    static async validate(data: object): ValidationResult<LoginUserValidator> {
+    async validate(data: object): ValidationResult<LoginUserValidator> {
         const user = new LoginUserValidator();
         Object.assign(user, data);
         const errors = await validate(user, validationOptionsConfig);

@@ -1,70 +1,67 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { LoggerService } from "@root/services/logger.service";
 import { UserService } from "@root/services/user.service";
-import { BaseController } from '@root/common/base';
 import { CreateUserValidator, LoginUserValidator, UpdateUserValidator } from '@root/validators/models/user';
 import { paginationSettings, statusCodes } from '@root/common/constants';
+import { BaseUserController } from '@root/common/base/base-user-controller.class';
 
-export class UserController extends BaseController {
-
+export class UserController extends BaseUserController {
+    
     constructor(
         private readonly userService: UserService,
         private readonly loggerService: LoggerService,
+        private readonly createUserValidator: CreateUserValidator,
+        private readonly updateUserValidator: UpdateUserValidator,
+        private readonly loginUserValidator: LoginUserValidator,        
     ) { super(); }
 
-    readonly create = this.forwardError(async (req: Request, res: Response, next: NextFunction) => {
+    protected readonly create = async (req: Request, res: Response): Promise<void> => {
         this.loggerService.info('User creation attempt');
         const user = req.body;
-        const [error, validatedUser] = await CreateUserValidator.validateAndTransform(user);
-        if (validatedUser) {
-            this.loggerService.info(`Data successfully validated`);
-            const created = await this.userService.create(validatedUser);
-            res.status(statusCodes.CREATED).json(created);
-            return;
-        } else {
+        const [error, validatedUser] = await this.createUserValidator.validateProperties(user);
+
+        if (!validatedUser) {
             this.loggerService.error(`Data validation failed`);
             res.status(statusCodes.BAD_REQUEST).json({ error });
             return;
         }
-    });
 
-    readonly login = this.forwardError(async (req: Request, res: Response, next: NextFunction) => {
+        this.loggerService.info(`Data successfully validated`);
+        const created = await this.userService.create(validatedUser);
+        res.status(statusCodes.CREATED).json(created);
+    }
+
+    protected readonly login = async (req: Request, res: Response): Promise<void> => {
         this.loggerService.info('User login attempt');
         const user = req.body;
-        const [error, validatedUser] = await LoginUserValidator.validate(user);
-        if (validatedUser) {
-            this.loggerService.info(`Data successfully validated`);
-            const loggedIn = await this.userService.login(validatedUser);
-            res.status(statusCodes.OK).json(loggedIn);
-            return;
-        } else {
+        const [error, validatedUser] = await this.loginUserValidator.validate(user);
+
+        if (!validatedUser) {
             this.loggerService.error(`Data validation failed`);
             res.status(statusCodes.BAD_REQUEST).json({ error });
             return;
         }
-    });
 
-    readonly logout = this.forwardError(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        this.loggerService.info(`Data successfully validated`);
+        const loggedIn = await this.userService.login(validatedUser);
+        res.status(statusCodes.OK).json(loggedIn);
+    }
+
+    protected readonly logout = async (req: Request, res: Response): Promise<void> => {
         this.loggerService.info('User logout attempt');
         const requestUserInfo = this.getUserRequestInfo(req, res);
-        if (requestUserInfo) {
-            await this.userService.logout(requestUserInfo);
-            res.status(statusCodes.NO_CONTENT).end();
-            return;
-        }
-    });
+        await this.userService.logout(requestUserInfo);
+        res.status(statusCodes.NO_CONTENT).end();
+    }
 
-    readonly requestEmailValidation = this.forwardError(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    protected readonly requestEmailValidation = async (req: Request, res: Response): Promise<void> => {
         this.loggerService.info('Email validation request attempt');
         const requestUserInfo = this.getUserRequestInfo(req, res);
-        if (requestUserInfo) {
-            await this.userService.requestEmailValidation(requestUserInfo.id);
-            res.status(statusCodes.NO_CONTENT).end();
-            return;
-        }
-    });
+        await this.userService.requestEmailValidation(requestUserInfo.id);
+        res.status(statusCodes.NO_CONTENT).end();
+    }
 
-    readonly confirmEmailValidation = this.forwardError(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    protected readonly confirmEmailValidation = async (req: Request, res: Response): Promise<void> => {
         this.loggerService.info('Email confirmation attempt');
         const token = req.params.token;
         if (!token) {
@@ -74,53 +71,46 @@ export class UserController extends BaseController {
         }
         await this.userService.confirmEmailValidation(token);
         res.status(statusCodes.OK).send({ message: 'Email successfully validated' });
-    });
+    }
 
-    readonly findOne = this.forwardError(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    protected readonly findOne = async (req: Request, res: Response): Promise<void> => {
         const id = req.params.id;
         this.loggerService.info(`User ${id} search attempt`);
         const userFound = await this.userService.findOne(id);
         res.status(statusCodes.OK).json(userFound);
-    });
+    }
 
-    readonly findAll = this.forwardError(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    protected readonly findAll = async (req: Request, res: Response): Promise<void> => {
         this.loggerService.info(`Users search attempt`);
         const limit = (req.query.limit) ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = (req.query.page) ? +req.query.page : paginationSettings.DEFAULT_PAGE;
         const usersFound = await this.userService.findAll(limit, page);
         res.status(statusCodes.OK).json(usersFound);
-    });
+    }
 
-    readonly deleteOne = this.forwardError(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    protected readonly deleteOne = async (req: Request, res: Response): Promise<void> => {
         const userIdToDelete = req.params.id;
         this.loggerService.info(`User ${userIdToDelete} deletion attempt`);
         const requestUserInfo = this.getUserRequestInfo(req, res);
-        if (requestUserInfo) {
-            await this.userService.deleteOne(requestUserInfo, userIdToDelete);
-            res.status(statusCodes.NO_CONTENT).end();
-            return;
-        }
-    });
+        await this.userService.deleteOne(requestUserInfo, userIdToDelete);
+        res.status(statusCodes.NO_CONTENT).end();
+    }
 
-    readonly updateOne = this.forwardError(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    protected readonly updateOne = async (req: Request, res: Response): Promise<void> => {
         const userIdToUpdate = req.params.id;
         this.loggerService.info(`User ${userIdToUpdate} update attempt`);
         const propertiesToUpdate = req.body;
-        const [error, validatedProperties] = await UpdateUserValidator.validateAndTransform(propertiesToUpdate);        
-        
-        if (validatedProperties) {
-            this.loggerService.info(`Data successfully validated`);
-            const requestUserInfo = this.getUserRequestInfo(req, res);
-            if (requestUserInfo) {
-                const updated = await this.userService.updateOne(requestUserInfo, userIdToUpdate, validatedProperties);
-                res.status(statusCodes.OK).json(updated);
-                return;
-            }
+        const [error, validProps] = await this.updateUserValidator.validateNewProperties(propertiesToUpdate);
 
-        } else {
+        if (!validProps) {
             this.loggerService.error(`Data validation failed`);
             res.status(statusCodes.BAD_REQUEST).json({ error });
             return;
         }
-    });
+
+        this.loggerService.info(`Data successfully validated`);
+        const requestUserInfo = this.getUserRequestInfo(req, res);
+        const updated = await this.userService.updateOne(requestUserInfo, userIdToUpdate, validProps);
+        res.status(statusCodes.OK).json(updated);
+    }
 }

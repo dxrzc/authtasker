@@ -1,11 +1,10 @@
 import { IsDefined, IsIn, MaxLength, MinLength, validate } from "class-validator";
 import { plainToInstance, Transform } from "class-transformer";
-import { Exact } from "@root/types/shared/exact.type";
-import { TaskRequest, TasksPriority, tasksPriority, TasksStatus, tasksStatus } from "@root/types/tasks";
+import { TasksPriority, tasksPriority, TasksStatus, tasksStatus } from "@root/types/tasks";
 import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper';
-import { ValidationResult } from '@root/validators/types';
 import { validationOptionsConfig } from '@root/validators/config';
 import { returnFirstError } from '@root/validators/helpers';
+import { ValidationResult } from '@root/types/validation';
 import {
     descriptionBadLengthErr,
     descriptionMaxLength,
@@ -19,7 +18,7 @@ import {
     statusNotInErr
 } from '@root/validators/errors/task.errors';
 
-export class CreateTaskValidator implements Exact<CreateTaskValidator, TaskRequest> {
+export class CreateTaskValidator {
 
     @IsDefined({ message: nameMissingErr })
     @MinLength(nameMinLength, { message: nameBadLengthErr })
@@ -39,7 +38,7 @@ export class CreateTaskValidator implements Exact<CreateTaskValidator, TaskReque
     @IsIn(tasksPriority, { message: priorityNotInErr })
     priority!: TasksPriority;
 
-    static async validateAndTransform(data: object): ValidationResult<CreateTaskValidator> {
+    async validateProperties(data: object): ValidationResult<CreateTaskValidator> {
         const task = new CreateTaskValidator();
         Object.assign(task, data);
 
