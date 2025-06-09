@@ -3,6 +3,7 @@ import { tasksLimits } from '@root/common/constants';
 import { errorMessages } from '@root/common/errors/messages';
 import { TasksDataGenerator } from '@root/seed/generators';
 import { tasksPriority, tasksStatus } from '@root/types/tasks';
+import { UNEXPECTED_PROPERTY_PROVIDED } from '@root/validators/errors/common.errors';
 import { CreateTaskValidator } from '@root/validators/models/tasks';
 
 const createTaskValidator = new CreateTaskValidator();
@@ -116,7 +117,7 @@ describe('CreateTaskValidator', () => {
     });
 
     describe('invalid status', () => {
-        const statusErr = errorMessages.PROPERTY_NOT_IN('status', <any>tasksStatus);        
+        const statusErr = errorMessages.PROPERTY_NOT_IN('status', <any>tasksStatus);
 
         test.concurrent('return error if invalid', async () => {
             const data = {
@@ -141,7 +142,7 @@ describe('CreateTaskValidator', () => {
     });
 
     describe('invalid priority', () => {
-        const priorityErr = errorMessages.PROPERTY_NOT_IN('priority', <any>tasksPriority);        
+        const priorityErr = errorMessages.PROPERTY_NOT_IN('priority', <any>tasksPriority);
 
         test.concurrent('return error if invalid', async () => {
             const data = {
@@ -165,23 +166,42 @@ describe('CreateTaskValidator', () => {
         });
     });
 
+    test.concurrent('return error when unexpected property is provided', async () => {
+        const data = {
+            name: tasksData.name(),
+            description: tasksData.description(),
+            status: tasksData.status(),
+            user: '12345' //!
+        };
+        const [error, _] = await createTaskValidator.validateProperties(data);
+        expect(error).toBe(UNEXPECTED_PROPERTY_PROVIDED);
+    });
+
     describe('valid input', () => {
-        test('return instance when input is valid', async () => {
+        test.concurrent('returns a CreateTaskValidator instance and null error', async () => {
             const data = {
-                name: '  MY Task  ',
-                description: '   Do something important.  ',
+                name: tasksData.name(),
+                description: tasksData.description(),
                 status: tasksData.status(),
                 priority: tasksData.priority()
             };
-
             const [error, result] = await createTaskValidator.validateProperties(data);
-
             expect(error).toBeNull();
             expect(result).toBeInstanceOf(CreateTaskValidator);
-            expect(result?.name).toBe(data.name.trim().toLowerCase());
-            expect(result?.description).toBe(data.description.trim().toLowerCase());
-            expect(result?.status).toBe(data.status);
-            expect(result?.priority).toBe(data.priority);
+        });
+
+        describe('Properties transformation', () => {
+            test.concurrent('transform name and description to lowercase and trim', async () => {
+                const data = {
+                    name: ` ${faker.string.alpha(tasksLimits.MAX_NAME_LENGTH - 2)} `,
+                    description: `  ${faker.string.alpha(tasksLimits.MAX_DESCRIPTION_LENGTH - 4)}  `,
+                    status: tasksData.status(),
+                    priority: tasksData.priority()
+                };
+                const [_, result] = await createTaskValidator.validateProperties(data);
+                expect(result?.name).toBe(data.name.trim().toLowerCase());
+                expect(result?.description).toBe(data.description.trim().toLowerCase());
+            });
         });
     });
 });

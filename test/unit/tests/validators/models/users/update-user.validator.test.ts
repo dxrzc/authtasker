@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { errorMessages } from '@root/common/errors/messages';
 import { UserDataGenerator } from '@root/seed/generators';
+import { UNEXPECTED_PROPERTY_PROVIDED } from '@root/validators/errors/common.errors';
 import { UpdateUserValidator } from '@root/validators/models/user';
 
 const userData = new UserDataGenerator();
@@ -79,6 +80,34 @@ describe('UpdateUserValidator', () => {
                 password: '123'
             });
             expect(error).toMatch(/password/);
+        });
+    });
+
+    test.concurrent('return error when unexpected property is provided', async () => {
+        const data = {
+            email: userData.email(),            
+            role: 'admin'
+        };
+        const [error] = await updateUserValidator.validateNewProperties(data);
+        expect(error).toBe(UNEXPECTED_PROPERTY_PROVIDED);
+    });
+
+    describe('valid input', () => {
+        test('return UpdateUserValidator instance', async () => {
+            const data = {
+                name: userData.name(),
+            };
+            const [error, result] = await updateUserValidator.validateNewProperties(data);
+            expect(error).toBeNull();
+            expect(result).toBeInstanceOf(UpdateUserValidator);            
+        });
+
+        test('transform name to lowercase and trim it', async () => {
+            const data = {
+                name: ` ${userData.name().toUpperCase()} `,
+            };
+            const [_, result] = await updateUserValidator.validateNewProperties(data);
+            expect(result?.name).toBe(data.name.trim().toLowerCase());        
         });
     });
 });

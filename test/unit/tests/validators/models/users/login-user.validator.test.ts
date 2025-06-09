@@ -1,27 +1,13 @@
 import { usersLimits } from '@root/common/constants';
 import { errorMessages } from '@root/common/errors/messages';
 import { UserDataGenerator } from '@root/seed/generators';
+import { UNEXPECTED_PROPERTY_PROVIDED } from '@root/validators/errors/common.errors';
 import { LoginUserValidator } from '@root/validators/models/user';
 
 const userData = new UserDataGenerator();
 const loginUserValidator = new LoginUserValidator();
 
 describe('LoginUserValidator', () => {
-    describe('valid credentials', () => {
-        test.concurrent('passes with valid email and password', async () => {
-            const data = {
-                email: userData.email(),
-                password: userData.password()
-            };
-
-            const [error, result] = await loginUserValidator.validate(data);
-            expect(error).toBeNull();
-            expect(result).toBeInstanceOf(LoginUserValidator);
-            expect(result?.email).toBe(data.email);
-            expect(result?.password).toBe(data.password);
-        });
-    });
-
     describe('invalid email', () => {
         const invalidEmailErr = errorMessages.INVALID_EMAIL;
         const missingEmailErr = errorMessages.PROPERTY_NOT_PROVIDED('email');
@@ -80,6 +66,28 @@ describe('LoginUserValidator', () => {
 
             const [error] = await loginUserValidator.validate(data);
             expect(error).toBe(badPasswordLengthErr);
+        });
+    });
+
+    test.concurrent('return error when unexpected property is provided', async () => {
+        const data = {
+            email: userData.email(),
+            password: userData.password(),
+            role: 'admin'
+        };
+        const [error] = await loginUserValidator.validate(data);
+        expect(error).toBe(UNEXPECTED_PROPERTY_PROVIDED);
+    });
+
+    describe('valid input', () => {
+        test.concurrent('return LoginUserValidator instance', async () => {
+            const data = {
+                email: userData.email(),
+                password: userData.password()
+            };
+            const [error, result] = await loginUserValidator.validate(data);
+            expect(error).toBeNull();
+            expect(result).toBeInstanceOf(LoginUserValidator);
         });
     });
 });

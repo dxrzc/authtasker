@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import { usersLimits } from '@root/common/constants';
 import { errorMessages } from '@root/common/errors/messages';
 import { UserDataGenerator } from '@root/seed/generators';
+import { UNEXPECTED_PROPERTY_PROVIDED } from '@root/validators/errors/common.errors';
 import { CreateUserValidator } from '@root/validators/models/user';
 
 const userData = new UserDataGenerator();
@@ -107,16 +108,37 @@ describe('CreateUserValidator', () => {
         });
     });
 
+    test.concurrent('return error when unexpected property is provided', async () => {
+        const data = {
+            name: userData.name(),
+            email: userData.email(),
+            password: faker.string.alpha(100),
+            role: 'admin'
+        };
+        const [error] = await createUserValidator.validateProperties(data);
+        expect(error).toBe(UNEXPECTED_PROPERTY_PROVIDED);
+    });
+
     describe('valid input', () => {
-        test.concurrent('passes with valid data', async () => {
+        test.concurrent('return CreateUserValidator instance and null error', async () => {
             const data = {
-                name: ` ${userData.name().toUpperCase()} `,
+                name: userData.name(),
                 email: userData.email(),
-                password: userData.password(),
+                password: userData.password(),                
             };
             const [error, result] = await createUserValidator.validateProperties(data);
             expect(error).toBeNull();
-            expect(result).toBeInstanceOf(CreateUserValidator);
+            expect(result).toBeInstanceOf(CreateUserValidator);            
+        });
+
+        test.concurrent('name is transformed to lowercase and trimmed, the rest of the props remain intact', async () => {
+            const data = {
+                name: ` ${faker.string.alpha(usersLimits.MAX_NAME_LENGTH - 2).toUpperCase()} `,
+                email: userData.email(),
+                password: userData.password(),
+            };
+            const [_, result] = await createUserValidator.validateProperties(data);
+            expect(result).toBeDefined();
             expect(result?.name).toBe(data.name.toLowerCase().trim());
             expect(result?.email).toBe(data.email);
             expect(result?.password).toBe(data.password);

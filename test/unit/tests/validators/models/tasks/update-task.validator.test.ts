@@ -1,7 +1,9 @@
+import { faker } from '@faker-js/faker/.';
 import { tasksLimits } from '@root/common/constants';
 import { errorMessages } from '@root/common/errors/messages';
 import { TasksDataGenerator } from '@root/seed/generators';
 import { tasksPriority, tasksStatus } from '@root/types/tasks';
+import { UNEXPECTED_PROPERTY_PROVIDED } from '@root/validators/errors/common.errors';
 import { UpdateTaskValidator } from '@root/validators/models/tasks';
 
 const tasksData = new TasksDataGenerator();
@@ -56,19 +58,39 @@ describe('UpdateTaskValidator', () => {
         expect(result?.name).toBe(data.name.toLowerCase().trim());
     });
 
-    test.concurrent('succeed with all fields valid', async () => {
+    test.concurrent('return error when unexpected property is provided', async () => {
         const data = {
             name: 'Updated name',
             description: 'Updated description',
             status: tasksData.status(),
-            priority: tasksData.priority()
+            priority: tasksData.priority(),
+            user: '123'
         };
-        const [error, result] = await updateTaskValidator.validateNewProperties(data);
-        expect(error).toBeNull();
-        expect(result).toBeInstanceOf(UpdateTaskValidator);
-        expect(result?.name).toBe(data.name.toLowerCase().trim());
-        expect(result?.description).toBe(data.description.toLowerCase().trim());
-        expect(result?.status).toBe(data.status);
-        expect(result?.priority).toBe(data.priority);
+
+        const [error, _] = await updateTaskValidator.validateNewProperties(data);
+        expect(error).toBe(UNEXPECTED_PROPERTY_PROVIDED);
+    });
+
+    describe('valid input', () => {
+        test.concurrent('return UpdateTaskValidator instance and null error', async () => {
+            const data = {
+                name: tasksData.name(),
+            };
+            const [error, result] = await updateTaskValidator.validateNewProperties(data);
+            expect(error).toBeNull();
+            expect(result).toBeInstanceOf(UpdateTaskValidator);     
+        });
+        
+        test.concurrent('transform name and description to lowercase and trim', async () => {
+            const data = {
+                name: ` ${faker.string.alpha(tasksLimits.MAX_NAME_LENGTH - 2)} `,
+                description: `  ${faker.string.alpha(tasksLimits.MAX_DESCRIPTION_LENGTH - 4)}  `,
+                status: tasksData.status(),
+                priority: tasksData.priority()
+            };
+            const [error, result] = await updateTaskValidator.validateNewProperties(data);
+            expect(result?.name).toBe(data.name.trim().toLowerCase());
+            expect(result?.description).toBe(data.description.trim().toLowerCase());
+        });
     });
 });
