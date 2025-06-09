@@ -1,14 +1,13 @@
 import request from 'supertest';
 import { testKit, status2xx, createUser } from '@integration/utils';
-import { nameBadLengthErr } from '@root/validators/errors/user.errors';
-import { errorMessages, usersApiErrors } from '@root/common/errors/messages';
+import { usersApiErrors } from '@root/common/errors/messages';
 
 describe('PATCH /api/users/:id', () => {
     describe('Input sanitization', () => {
         describe('Validation Rules Wiring', () => {
             test.concurrent('return 400 BAD REQUEST when user name is too short', async () => {
                 const expectedStatus = 400;
-                const expectedErrorMssg = nameBadLengthErr;
+                const expectedErrorMssg = usersApiErrors.INVALID_NAME_LENGTH;
 
                 // Create user
                 const { sessionToken, userId } = await createUser('editor');
@@ -27,7 +26,7 @@ describe('PATCH /api/users/:id', () => {
 
         test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = errorMessages.NO_PROPERTIES_PROVIDED_WHEN_UPDATE('user');
+            const expectedErrorMssg = usersApiErrors.NO_PROPERTIES_TO_UPDATE;
 
             // Create user
             const { sessionToken, userId } = await createUser('readonly');

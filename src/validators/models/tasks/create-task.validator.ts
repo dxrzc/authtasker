@@ -1,40 +1,30 @@
-import { IsDefined, IsIn, MaxLength, MinLength, validate } from "class-validator";
-import { plainToInstance, Transform } from "class-transformer";
-import { TasksPriority, tasksPriority, TasksStatus, tasksStatus } from "@root/types/tasks";
+import { IsDefined, IsIn, MaxLength, MinLength, validate } from 'class-validator';
+import { plainToInstance, Transform } from 'class-transformer';
+import { TasksPriority, tasksPriority, TasksStatus, tasksStatus } from '@root/types/tasks';
 import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper';
 import { validationOptionsConfig } from '@root/validators/config';
 import { returnFirstError } from '@root/validators/helpers';
 import { ValidationResult } from '@root/types/validation';
-import {
-    descriptionBadLengthErr,
-    descriptionMaxLength,
-    descriptionMinLength,
-    descriptionMissingErr,
-    nameBadLengthErr,
-    nameMaxLength,
-    nameMinLength,
-    nameMissingErr,
-    priorityNotInErr,
-    statusNotInErr
-} from '@root/validators/errors/task.errors';
+import { tasksApiErrors } from '@root/common/errors/messages';
+import { tasksLimits } from '@root/common/constants';
 
 export class CreateTaskValidator {
 
-    @IsDefined({ message: nameMissingErr })
-    @MinLength(nameMinLength, { message: nameBadLengthErr })
-    @MaxLength(nameMaxLength, { message: nameBadLengthErr })
+    @IsDefined({ message: tasksApiErrors.NAME_NOT_PROVIDED })
+    @MinLength(tasksLimits.MIN_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
+    @MaxLength(tasksLimits.MAX_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
     @Transform(toLowerCaseAndTrim)
     name!: string;
 
-    @IsDefined({ message: descriptionMissingErr })
-    @MinLength(descriptionMinLength, { message: descriptionBadLengthErr })
-    @MaxLength(descriptionMaxLength, { message: descriptionBadLengthErr })
+    @IsDefined({ message: tasksApiErrors.DESCRIPTION_NOT_PROVIDED })
+    @MinLength(tasksLimits.MIN_DESCRIPTION_LENGTH, { message: tasksApiErrors.INVALID_DESCRIPTION_LENGTH })
+    @MaxLength(tasksLimits.MAX_DESCRIPTION_LENGTH, { message: tasksApiErrors.INVALID_DESCRIPTION_LENGTH })
     description!: string;
 
-    @IsIn(tasksStatus, { message: statusNotInErr })
+    @IsIn(tasksStatus, { message: tasksApiErrors.INVALID_STATUS })
     status!: TasksStatus;
 
-    @IsIn(tasksPriority, { message: priorityNotInErr })
+    @IsIn(tasksPriority, { message: tasksApiErrors.INVALID_PRIORITY })
     priority!: TasksPriority;
 
     async validateProperties(data: object): ValidationResult<CreateTaskValidator> {
@@ -42,10 +32,9 @@ export class CreateTaskValidator {
         Object.assign(task, data);
 
         const errors = await validate(task, validationOptionsConfig);
-
         if (errors.length > 0)
             return [returnFirstError(errors), null];
-
+        
         return [null, plainToInstance(CreateTaskValidator, task)];
     }
 }

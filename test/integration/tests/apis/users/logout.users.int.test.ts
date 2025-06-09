@@ -1,6 +1,6 @@
+import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
 import { JwtService } from '@root/services';
-import request from 'supertest';
 
 describe('POST /api/users/logout', () => {
     describe('Token operations', () => {

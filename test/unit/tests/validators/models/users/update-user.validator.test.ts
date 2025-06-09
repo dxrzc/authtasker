@@ -1,113 +1,86 @@
-import { faker } from '@faker-js/faker';
-import { errorMessages } from '@root/common/errors/messages';
-import { UserDataGenerator } from '@root/seed/generators';
-import { UNEXPECTED_PROPERTY_PROVIDED } from '@root/validators/errors/common.errors';
+import { faker } from '@faker-js/faker/';
+import { usersApiErrors, commonErrors } from '@root/common/errors/messages';
 import { UpdateUserValidator } from '@root/validators/models/user';
+import { UserDataGenerator } from '@root/seed/generators';
+import { usersLimits } from '@root/common/constants';
 
-const userData = new UserDataGenerator();
+const usersData = new UserDataGenerator();
 const updateUserValidator = new UpdateUserValidator();
 
 describe('UpdateUserValidator', () => {
-    const noPropsErr = errorMessages.NO_PROPERTIES_PROVIDED_WHEN_UPDATE('user');
-
-    test.concurrent('fails when no properties are provided', async () => {
-        const [error, result] = await updateUserValidator.validateNewProperties({});
-        expect(error).toBe(noPropsErr);
-        expect(result).toBeNull();
+    test.concurrent('return error if all fields are missing', async () => {
+        const [error, _] = await updateUserValidator.validateNewProperties({});
+        expect(error).toBe(usersApiErrors.NO_PROPERTIES_TO_UPDATE);
     });
 
-    describe('valid partial updates', () => {
-        test.concurrent('passes with only valid name', async () => {
-            const [error, result] = await updateUserValidator.validateNewProperties({
-                name: userData.name()
-            });
-            expect(error).toBeNull();
-            expect(result?.name).toBeDefined();
-        });
-
-        test.concurrent('passes with only valid email', async () => {
-            const [error, result] = await updateUserValidator.validateNewProperties({
-                email: userData.email()
-            });
-            expect(error).toBeNull();
-            expect(result?.email).toBeDefined();
-        });
-
-        test.concurrent('passes with only valid password', async () => {
-            const [error, result] = await updateUserValidator.validateNewProperties({
-                password: userData.password()
-            });
-            expect(error).toBeNull();
-            expect(result?.password).toBeDefined();
-        });
-
-        test.concurrent('passes with all valid fields', async () => {
-            const validData = {
-                name: userData.name(),
-                email: userData.email(),
-                password: userData.password()
-            };
-            const [error, result] = await updateUserValidator.validateNewProperties(validData);
-            expect(error).toBeNull();
-            expect(result).toBeInstanceOf(UpdateUserValidator);
-        });
+    test.concurrent('return error if name is too short', async () => {
+        const data = { name: 'ab' };
+        const [error, _] = await updateUserValidator.validateNewProperties(data);
+        expect(error).toBe(usersApiErrors.INVALID_NAME_LENGTH);
     });
 
-    describe('invalid field updates', () => {
-        test.concurrent('fails with invalid email', async () => {
-            const [error] = await updateUserValidator.validateNewProperties({
-                email: 'invalid-email'
-            });
-            expect(error).toBe(errorMessages.INVALID_EMAIL);
-        });
+    test.concurrent('return error if name is too long', async () => {
+        const data = { name: faker.string.alpha(usersLimits.MAX_NAME_LENGTH + 1) };
+        const [error, _] = await updateUserValidator.validateNewProperties(data);
+        expect(error).toBe(usersApiErrors.INVALID_NAME_LENGTH);
+    });
 
-        test.concurrent('fails with short name', async () => {
-            const [error] = await updateUserValidator.validateNewProperties({
-                name: 'a'
-            });
-            expect(error).toMatch(/name/);
-        });
+    test.concurrent('return error if email format is invalid', async () => {
+        const data = { email: 'not-an-email' };
+        const [error, _] = await updateUserValidator.validateNewProperties(data);
+        expect(error).toBe(usersApiErrors.INVALID_EMAIL);
+    });
 
-        test.concurrent('fails with too long name', async () => {
-            const [error] = await updateUserValidator.validateNewProperties({
-                name: faker.string.alpha(50)
-            });
-            expect(error).toMatch(/name/);
-        });
+    test.concurrent('return error if password is too short', async () => {
+        const data = {
+            password: faker.string.alpha(usersLimits.MIN_PASSWORD_LENGTH - 1),
+        };
+        const [error, _] = await updateUserValidator.validateNewProperties(data);
+        expect(error).toBe(usersApiErrors.INVALID_PASSWORD_LENGTH);
+    });
 
-        test.concurrent('fails with too short password', async () => {
-            const [error] = await updateUserValidator.validateNewProperties({
-                password: '123'
-            });
-            expect(error).toMatch(/password/);
-        });
+    test.concurrent('return error if password is too long', async () => {
+        const data = {
+            password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1),
+        };
+        const [error, _] = await updateUserValidator.validateNewProperties(data);
+        expect(error).toBe(usersApiErrors.INVALID_PASSWORD_LENGTH);
     });
 
     test.concurrent('return error when unexpected property is provided', async () => {
         const data = {
-            email: userData.email(),            
-            role: 'admin'
+            name: usersData.name(),
+            email: usersData.email(),
+            unknown: 'surprise',
         };
-        const [error] = await updateUserValidator.validateNewProperties(data);
-        expect(error).toBe(UNEXPECTED_PROPERTY_PROVIDED);
+        const [error, _] = await updateUserValidator.validateNewProperties(data);
+        expect(error).toBe(commonErrors.UNEXPECTED_PROPERTY_PROVIDED);
     });
 
     describe('valid input', () => {
-        test('return UpdateUserValidator instance', async () => {
-            const data = {
-                name: userData.name(),
-            };
+        test.concurrent('return UpdateUserValidator instance and null error', async () => {
+            const data = { name: usersData.name() };
             const [error, result] = await updateUserValidator.validateNewProperties(data);
             expect(error).toBeNull();
-            expect(result).toBeInstanceOf(UpdateUserValidator);            
+            expect(result).toBeInstanceOf(UpdateUserValidator);
         });
 
-        test('transform name to lowercase and trim it', async () => {
+        test.concurrent('transform name to lowercase and trim', async () => {
+            const nameRaw = ` ${faker.string.alpha(usersLimits.MAX_NAME_LENGTH - 2).toUpperCase()} `;
+            const data = { name: nameRaw };
+            const [_, result] = await updateUserValidator.validateNewProperties(data);
+            expect(result?.name).toBe(nameRaw.trim().toLowerCase());
+        });
+
+        test.concurrent('return all other properties unchanged', async () => {
             const data = {
-                name: ` ${userData.name().toUpperCase()} `,
+                name: usersData.name(),
+                email: usersData.email(),
+                password: usersData.password(),
             };
             const [_, result] = await updateUserValidator.validateNewProperties(data);
-            expect(result?.name).toBe(data.name.trim().toLowerCase());        
+            expect(result?.email).toBe(data.email);
+            expect(result?.password).toBe(data.password);
         });
     });
 });

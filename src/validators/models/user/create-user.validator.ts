@@ -1,37 +1,27 @@
-import { IsDefined, IsEmail, MaxLength, MinLength, validate } from "class-validator";
-import { plainToInstance, Transform } from "class-transformer";
+import { IsDefined, IsEmail, MaxLength, MinLength, validate } from 'class-validator';
+import { plainToInstance, Transform } from 'class-transformer';
 import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper';
 import { validationOptionsConfig } from '@root/validators/config/validation.config';
 import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
-import {
-    emailMissingErr,
-    nameBadLengthErr,
-    nameMaxLength,
-    nameMinLength,
-    nameMissingErr,
-    passwordBadLengthErr,
-    passwordMaxLength,
-    passwordMinLength,
-    passwordMissingErr
-} from '@root/validators/errors/user.errors';
-import { errorMessages } from '@root/common/errors/messages';
 import { ValidationResult } from '@root/types/validation';
+import { usersApiErrors } from '@root/common/errors/messages';
+import { usersLimits } from '@root/common/constants';
 
 export class CreateUserValidator {
 
-    @IsDefined({ message: nameMissingErr })
-    @MinLength(nameMinLength, { message: nameBadLengthErr })
-    @MaxLength(nameMaxLength, { message: nameBadLengthErr })
+    @IsDefined({ message: usersApiErrors.NAME_NOT_PROVIDED })
+    @MinLength(usersLimits.MIN_NAME_LENGTH, { message: usersApiErrors.INVALID_NAME_LENGTH })
+    @MaxLength(usersLimits.MAX_NAME_LENGTH, { message: usersApiErrors.INVALID_NAME_LENGTH })
     @Transform(toLowerCaseAndTrim)
     name!: string;
 
-    @IsDefined({ message: emailMissingErr })
-    @IsEmail({}, {message: errorMessages.INVALID_EMAIL})
+    @IsDefined({ message: usersApiErrors.EMAIL_NOT_PROVIDED })
+    @IsEmail(undefined, { message: usersApiErrors.INVALID_EMAIL })
     email!: string;
 
-    @IsDefined({ message: passwordMissingErr })
-    @MinLength(passwordMinLength, { message: passwordBadLengthErr })
-    @MaxLength(passwordMaxLength, { message: passwordBadLengthErr })
+    @IsDefined({ message: usersApiErrors.PASSWORD_NOT_PROVIDED })
+    @MinLength(usersLimits.MIN_PASSWORD_LENGTH, { message: usersApiErrors.INVALID_PASSWORD_LENGTH })
+    @MaxLength(usersLimits.MAX_PASSWORD_LENGTH, { message: usersApiErrors.INVALID_PASSWORD_LENGTH })
     password!: string;
 
     async validateProperties(data: object): ValidationResult<CreateUserValidator> {

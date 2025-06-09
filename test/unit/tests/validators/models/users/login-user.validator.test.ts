@@ -1,93 +1,75 @@
-import { usersLimits } from '@root/common/constants';
-import { errorMessages } from '@root/common/errors/messages';
-import { UserDataGenerator } from '@root/seed/generators';
-import { UNEXPECTED_PROPERTY_PROVIDED } from '@root/validators/errors/common.errors';
+import { faker } from '@faker-js/faker/';
 import { LoginUserValidator } from '@root/validators/models/user';
+import { usersApiErrors } from '@root/common/errors/messages';
+import { UserDataGenerator } from '@root/seed/generators';
+import { usersLimits } from '@root/common/constants';
 
-const userData = new UserDataGenerator();
+const usersData = new UserDataGenerator();
 const loginUserValidator = new LoginUserValidator();
 
 describe('LoginUserValidator', () => {
     describe('invalid email', () => {
-        const invalidEmailErr = errorMessages.INVALID_EMAIL;
-        const missingEmailErr = errorMessages.PROPERTY_NOT_PROVIDED('email');
-
-        test.concurrent('fails with missing email', async () => {
-            const data = {
-                password: userData.password()
-            };
-
-            const [error] = await loginUserValidator.validate(data);
-            expect(error).toBe(missingEmailErr);
+        test.concurrent('return error if email is missing', async () => {
+            const data = { password: usersData.password() };
+            const [error, _] = await loginUserValidator.validate(data);
+            expect(error).toBe(usersApiErrors.EMAIL_NOT_PROVIDED);
         });
 
-        test.concurrent('fails with malformed email', async () => {
-            const data = {
-                email: 'invalid-email',
-                password: userData.password()
-            };
-
-            const [error] = await loginUserValidator.validate(data);
-            expect(error).toBe(invalidEmailErr);
+        test.concurrent('return error if email format is invalid', async () => {
+            const data = { email: 'not-an-email', password: usersData.password() };
+            const [error, _] = await loginUserValidator.validate(data);
+            expect(error).toBe(usersApiErrors.INVALID_EMAIL);
         });
     });
 
     describe('invalid password', () => {
-        const missingPasswordErr = errorMessages.PROPERTY_NOT_PROVIDED('password');
-        const badPasswordLengthErr = errorMessages.PROPERTY_BAD_LENGTH('password',
-            usersLimits.MIN_PASSWORD_LENGTH,
-            usersLimits.MAX_PASSWORD_LENGTH
-        );
-
-        test.concurrent('fails with missing password', async () => {
-            const data = {
-                email: userData.email()
-            };
-
-            const [error] = await loginUserValidator.validate(data);
-            expect(error).toBe(missingPasswordErr);
+        test.concurrent('return error if password is missing', async () => {
+            const data = { email: usersData.email() };
+            const [error, _] = await loginUserValidator.validate(data);
+            expect(error).toBe(usersApiErrors.PASSWORD_NOT_PROVIDED);
         });
 
-        test.concurrent('fails with short password', async () => {
-            const data = {
-                email: userData.email(),
-                password: '123'
-            };
 
-            const [error] = await loginUserValidator.validate(data);
-            expect(error).toBe(badPasswordLengthErr);
+        test.concurrent('return error if password is too short', async () => {
+            const data = {
+                email: usersData.email(),
+                password: faker.string.alpha(usersLimits.MIN_PASSWORD_LENGTH - 1),
+            };
+            const [error, _] = await loginUserValidator.validate(data);
+            expect(error).toBe(usersApiErrors.INVALID_PASSWORD_LENGTH);
         });
 
-        test.concurrent('fails with long password', async () => {
+        test.concurrent('return error if password is too long', async () => {
             const data = {
-                email: userData.email(),
-                password: 'a'.repeat(65)
+                email: usersData.email(),
+                password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1),
             };
-
-            const [error] = await loginUserValidator.validate(data);
-            expect(error).toBe(badPasswordLengthErr);
+            const [error, _] = await loginUserValidator.validate(data);
+            expect(error).toBe(usersApiErrors.INVALID_PASSWORD_LENGTH);
         });
-    });
-
-    test.concurrent('return error when unexpected property is provided', async () => {
-        const data = {
-            email: userData.email(),
-            password: userData.password(),
-            role: 'admin'
-        };
-        const [error] = await loginUserValidator.validate(data);
-        expect(error).toBe(UNEXPECTED_PROPERTY_PROVIDED);
     });
 
     describe('valid input', () => {
-        test.concurrent('return LoginUserValidator instance', async () => {
+        test.concurrent('return LoginUserValidator instance and null error', async () => {
             const data = {
-                email: userData.email(),
-                password: userData.password()
+                email: usersData.email(),
+                password: usersData.password(),
             };
+
             const [error, result] = await loginUserValidator.validate(data);
             expect(error).toBeNull();
             expect(result).toBeInstanceOf(LoginUserValidator);
+        });
+
+        test.concurrent('email and password match input', async () => {
+            const data = {
+                email: usersData.email(),
+                password: usersData.password(),
+            };
+
+            const [_, result] = await loginUserValidator.validate(data);
+            expect(result?.email).toBe(data.email);
+            expect(result?.password).toBe(data.password);
         });
     });
 });

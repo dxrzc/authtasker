@@ -1,12 +1,12 @@
 import { HydratedDocument, Model, Types } from "mongoose";
+import { CreateTaskValidator, UpdateTaskValidator } from '@root/validators/models/tasks';
+import { authErrors, tasksApiErrors } from '@root/common/errors/messages';
 import { HttpError } from "@root/common/errors/classes/http-error.class";
 import { ITasks } from "@root/interfaces/tasks/task.interface";
-import { LoggerService } from "./logger.service";
 import { UserRole } from "@root/types/user/user-roles.type";
-import { UserService } from "./user.service";
+import { LoggerService } from "./logger.service";
 import { paginationRules } from "@logic/others";
-import { CreateTaskValidator, UpdateTaskValidator } from '@root/validators/models/tasks';
-import { errorMessages, tasksApiErrors } from '@root/common/errors/messages';
+import { UserService } from "./user.service";
 
 export class TasksService {
 
@@ -18,9 +18,9 @@ export class TasksService {
 
     private handleDbDuplicatedKeyError(error: any): never {
         const duplicatedKey = Object.keys(error.keyValue);
-        const keyValue = Object.values(error.keyValue);        
+        const keyValue = Object.values(error.keyValue);
         this.loggerService.error(`Task with ${duplicatedKey}: "${keyValue}" already exists`);
-        throw HttpError.conflict(tasksApiErrors.TASK_ALREADY_EXISTS(duplicatedKey[0]));
+        throw HttpError.conflict(tasksApiErrors.taskAlreadyExists(duplicatedKey[0]));
     }
 
     private async getTaskIfUserAuthorizedToModify(requestUserInfo: { id: string, role: UserRole }, taskId: string): Promise<HydratedDocument<ITasks> | null> {
@@ -54,7 +54,7 @@ export class TasksService {
         if (Types.ObjectId.isValid(id))
             taskFound = await this.tasksModel.findById(id).exec();
         // id is not valid / task not found
-        if (!taskFound) {            
+        if (!taskFound) {
             this.loggerService.error(`Task with id ${id} not found`)
             throw HttpError.notFound(tasksApiErrors.TASK_NOT_FOUND);
         }
@@ -89,7 +89,7 @@ export class TasksService {
         const task = await this.getTaskIfUserAuthorizedToModify(requestUserInfo, id);
         if (!task) {
             this.loggerService.error(`Not authorized to perform this action`);
-            throw HttpError.forbidden(errorMessages.FORBIDDEN);
+            throw HttpError.forbidden(authErrors.FORBIDDEN);
         }
         await task.deleteOne().exec();
         this.loggerService.info(`Task ${id} deleted`);
@@ -101,7 +101,7 @@ export class TasksService {
             const taskToUpdate = await this.getTaskIfUserAuthorizedToModify(requestUserInfo, id);
             if (!taskToUpdate) {
                 this.loggerService.error(`Not authorized to perform this action`);
-                throw HttpError.forbidden(errorMessages.FORBIDDEN);
+                throw HttpError.forbidden(authErrors.FORBIDDEN);
             }
             // set new properties in document
             Object.assign(taskToUpdate, task);

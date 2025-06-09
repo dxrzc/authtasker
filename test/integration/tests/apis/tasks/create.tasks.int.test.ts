@@ -1,14 +1,13 @@
 import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
 import { createTask } from '@integration/utils/createTask.util';
-import { priorityNotInErr } from '@root/validators/errors/task.errors';
 import { tasksApiErrors } from '@root/common/errors/messages';
 
 describe('POST /api/tasks', () => {
     describe('Input Sanitization', () => {
         test.concurrent('return status 404 BAD REQUEST when task priority is not valid', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = priorityNotInErr;
+            const expectedErrorMssg = tasksApiErrors.INVALID_PRIORITY;
 
             const { sessionToken } = await createUser('editor');
 
@@ -60,7 +59,7 @@ describe('POST /api/tasks', () => {
         describe('Duplicated Property Error Handling Wiring', () => {
             test.concurrent('return status 409 CONFLICT when task name already exists', async () => {
                 const expectedStatus = 409;
-                const expectedErrorMssg = tasksApiErrors.TASK_ALREADY_EXISTS('name');
+                const expectedErrorMssg = tasksApiErrors.taskAlreadyExists('name');
 
                 // Create a task associated to user1
                 const { sessionToken: user1SessionToken } = await createUser('editor');

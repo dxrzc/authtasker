@@ -1,13 +1,13 @@
 import request from 'supertest';
 import { createUser, status2xx, testKit } from "@integration/utils";
 import { createTask } from "@integration/utils/createTask.util";
-import { errorMessages } from '@root/common/errors/messages';
+import { authErrors } from '@root/common/errors/messages';
 
 describe('DELETE /api/tasks/:id', () => {
     describe('Modification Access Rules Wiring', () => {
         test.concurrent('editors are forbidden to delete another editor\'s task', async () => {
             const expectedStatus = 403;
-            const expectedErrorMssg = errorMessages.FORBIDDEN;
+            const expectedErrorMssg = authErrors.FORBIDDEN;
 
             // Create current user
             const { sessionToken: currentUserSessionToken } = await createUser('editor');

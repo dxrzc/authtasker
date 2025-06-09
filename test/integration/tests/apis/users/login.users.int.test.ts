@@ -1,12 +1,12 @@
 import request from 'supertest';
 import { testKit } from '@integration/utils';
-import { nameMissingErr } from '@root/validators/errors/user.errors';
+import { usersApiErrors } from '@root/common/errors/messages';
 
 describe('POST /api/users/login', () => {
     describe('Input sanitization', () => {
         test.concurrent('return status 400 BAD REQUEST when name is missing', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = nameMissingErr;
+            const expectedErrorMssg = usersApiErrors.NAME_NOT_PROVIDED;
 
             const response = await request(testKit.server)
                 .post(testKit.endpoints.register)

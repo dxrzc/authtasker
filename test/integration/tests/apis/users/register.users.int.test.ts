@@ -1,16 +1,14 @@
 import request from 'supertest';
 import { faker } from '@faker-js/faker/.';
 import { status2xx, testKit } from '@integration/utils';
-import { errorMessages, usersApiErrors } from '@root/common/errors/messages';
-import { UNEXPECTED_PROPERTY_PROVIDED } from '@root/validators/errors/common.errors';
-import { emailMissingErr } from '@root/validators/errors/user.errors';
+import { usersApiErrors } from '@root/common/errors/messages';
 
 describe('POST /api/users/register', () => {
     describe('Input Sanitization', () => {
         describe('Validation Rules Wiring', () => {
             test.concurrent('return status 400 BAD REQUEST when email is not a valid email', async () => {
                 const expectedStatus = 400;
-                const expectedErrorMssg = errorMessages.INVALID_EMAIL;
+                const expectedErrorMssg = usersApiErrors.INVALID_EMAIL;
 
                 // Create user with invalid email
                 const user = testKit.userDataGenerator.fullUser();

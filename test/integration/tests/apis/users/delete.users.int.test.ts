@@ -1,12 +1,12 @@
 import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
-import { errorMessages } from '@root/common/errors/messages';
+import { authErrors } from '@root/common/errors/messages';
 
 describe('DELETE /api/users/:id', () => {
     describe('Modification Access Rules Wiring', () => {
         test.concurrent('editors are forbiddenn to delete readonly users', async () => {
             const expectedStatus = 403;
-            const expectedErrorMssg = errorMessages.FORBIDDEN;
+            const expectedErrorMssg = authErrors.FORBIDDEN;
 
             // Create current user
             const { sessionToken: currentUserSessionToken } = await createUser('editor');

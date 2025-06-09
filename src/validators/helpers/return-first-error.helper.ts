@@ -1,5 +1,5 @@
+import { commonErrors } from '@root/common/errors/messages';
 import { ValidationError } from "class-validator";
-import { UNEXPECTED_PROPERTY_PROVIDED } from '../errors/common.errors';
 
 export const returnFirstError = (errors: ValidationError[]): string => {    
     const firstOne = errors.at(0);
@@ -8,6 +8,6 @@ export const returnFirstError = (errors: ValidationError[]): string => {
     const errs = Object.values<string>(firstOne.constraints);    
     // Use a custom error when a unexpected property is found in body
     if (Object.keys(firstOne.constraints).includes('whitelistValidation'))
-        errs[0] = UNEXPECTED_PROPERTY_PROVIDED;
+        errs[0] = commonErrors.UNEXPECTED_PROPERTY_PROVIDED;
     return errs[0];
 };

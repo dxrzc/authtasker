@@ -3,7 +3,7 @@ import { mock } from 'jest-mock-extended';
 import { IUser } from '@root/interfaces';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { paginationRules } from '@logic/others';
-import { errorMessages } from '@root/common/errors/messages';
+import { paginationErrors } from '@root/common/errors/messages';
 
 describe('paginationRules', () => {
     const userModel = mock<Model<IUser>>()
@@ -18,7 +18,7 @@ describe('paginationRules', () => {
         } catch (error: any) {
             expect(error).toBeInstanceOf(HttpError);
             expect(error.statusCode).toBe(400);
-            expect(error.message).toBe(errorMessages.INVALID_PAG_LIMIT);
+            expect(error.message).toBe(paginationErrors.INVALID_LIMIT);
         }
     });
 
@@ -28,7 +28,7 @@ describe('paginationRules', () => {
         } catch (error: any) {
             expect(error).toBeInstanceOf(HttpError);
             expect(error.statusCode).toBe(400);
-            expect(error.message).toBe(errorMessages.PAG_LIMIT_TOO_LARGE);
+            expect(error.message).toBe(paginationErrors.LIMIT_TOO_LARGE);
         }
     });
 
@@ -46,7 +46,7 @@ describe('paginationRules', () => {
         } catch (error: any) {
             expect(error).toBeInstanceOf(HttpError);
             expect(error.statusCode).toBe(400);
-            expect(error.message).toBe(errorMessages.INVALID_PAG_PAGE);
+            expect(error.message).toBe(paginationErrors.INVALID_PAGE);
         }
     });
 
@@ -57,7 +57,7 @@ describe('paginationRules', () => {
         } catch (error: any) {
             expect(error).toBeInstanceOf(HttpError);
             expect(error.statusCode).toBe(400);
-            expect(error.message).toBe(errorMessages.PAG_PAGE_TOO_LARGE);
+            expect(error.message).toBe(paginationErrors.PAGE_TOO_LARGE);
         }
     });
 
