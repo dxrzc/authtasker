@@ -77,14 +77,18 @@ describe('POST /api/users/register', () => {
                 const expectedErrorMssg = usersApiErrors.USER_ALREADY_EXISTS;
 
                 // Create user
-                const user1 = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
+                const firstUser = await request(testKit.server)
+                    .post(testKit.endpoints.register)
+                    .send(testKit.userDataGenerator.fullUser())
+                    .expect(status2xx);                
+                const usedEmail = firstUser.body.user.email;
 
                 // Create another user with same email
                 const response = await request(testKit.server)
                     .post(testKit.endpoints.register)
                     .send({
                         ...testKit.userDataGenerator.fullUser(),
-                        email: user1.email
+                        email: usedEmail
                     });
 
                 expect(response.body).toStrictEqual({ error: expectedErrorMssg });
