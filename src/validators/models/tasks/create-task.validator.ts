@@ -29,7 +29,6 @@ export class CreateTaskValidator {
     @IsDefined({ message: descriptionMissingErr })
     @MinLength(descriptionMinLength, { message: descriptionBadLengthErr })
     @MaxLength(descriptionMaxLength, { message: descriptionBadLengthErr })
-    @Transform(toLowerCaseAndTrim)
     description!: string;
 
     @IsIn(tasksStatus, { message: statusNotInErr })
