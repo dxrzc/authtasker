@@ -1,10 +1,12 @@
 import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
+import { errorMessages } from '@root/common/errors/messages';
 
 describe('DELETE /api/users/:id', () => {
     describe('Modification Access Rules Wiring', () => {
         test.concurrent('editors are forbiddenn to delete readonly users', async () => {
             const expectedStatus = 403;
+            const expectedErrorMssg = errorMessages.FORBIDDEN;
 
             // Create current user
             const { sessionToken: currentUserSessionToken } = await createUser('editor');
@@ -13,10 +15,12 @@ describe('DELETE /api/users/:id', () => {
             const { userId: targetUserId } = await createUser('readonly');
 
             // Attempt to delete the target user
-            await request(testKit.server)
+            const response = await request(testKit.server)
                 .delete(`${testKit.endpoints.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .expect(expectedStatus);
+                .set('Authorization', `Bearer ${currentUserSessionToken}`);
+                
+            expect(response.statusCode).toBe(expectedStatus);
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });            
         });
 
         test.concurrent('admins are authorized to delete readonly accounts', async () => {

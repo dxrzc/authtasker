@@ -1,13 +1,14 @@
 import request from 'supertest';
 import { testKit, status2xx, createUser } from '@integration/utils';
-import { USER_CONSTANTS } from '@root/rules/constants';
+import { nameBadLengthErr } from '@root/validators/errors/user.errors';
+import { errorMessages, usersApiErrors } from '@root/common/errors/messages';
 
 describe('PATCH /api/users/:id', () => {
     describe('Input sanitization', () => {
         describe('Validation Rules Wiring', () => {
             test.concurrent('return 400 BAD REQUEST when user name is too short', async () => {
                 const expectedStatus = 400;
-                const expectedErrorMssg = `name must be longer than or equal to ${USER_CONSTANTS.MIN_NAME_LENGTH} characters`;
+                const expectedErrorMssg = nameBadLengthErr;
 
                 // Create user
                 const { sessionToken, userId } = await createUser('editor');
@@ -26,7 +27,7 @@ describe('PATCH /api/users/:id', () => {
 
         test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = 'At least one field is required to update the user';
+            const expectedErrorMssg = errorMessages.NO_PROPERTIES_PROVIDED_WHEN_UPDATE('user');
 
             // Create user
             const { sessionToken, userId } = await createUser('readonly');
@@ -131,6 +132,7 @@ describe('PATCH /api/users/:id', () => {
         describe('Duplicated Property Error Handling Wiring', () => {
             test.concurrent('return 409 conflict when user name already exists', async () => {
                 const expectedStatus = 409;
+                const expectedErrorMssg = usersApiErrors.USER_ALREADY_EXISTS;
 
                 // Create user
                 const user1 = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
@@ -143,7 +145,7 @@ describe('PATCH /api/users/:id', () => {
                         name: user1.name
                     });
 
-                expect(response.body).toStrictEqual({ error: `User with name "${user1.name}" already exists` });
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
                 expect(response.statusCode).toBe(expectedStatus);
             });
         });

@@ -78,19 +78,15 @@ describe('UpdateTaskValidator', () => {
             };
             const [error, result] = await updateTaskValidator.validateNewProperties(data);
             expect(error).toBeNull();
-            expect(result).toBeInstanceOf(UpdateTaskValidator);     
+            expect(result).toBeInstanceOf(UpdateTaskValidator);
         });
-        
-        test.concurrent('transform name and description to lowercase and trim', async () => {
+
+        test.concurrent('transform name to lowercase and trim', async () => {
             const data = {
-                name: ` ${faker.string.alpha(tasksLimits.MAX_NAME_LENGTH - 2)} `,
-                description: `  ${faker.string.alpha(tasksLimits.MAX_DESCRIPTION_LENGTH - 4)}  `,
-                status: tasksData.status(),
-                priority: tasksData.priority()
+                name: ` ${faker.string.alpha(tasksLimits.MAX_NAME_LENGTH - 2).toUpperCase()} `,
             };
-            const [error, result] = await updateTaskValidator.validateNewProperties(data);
-            expect(result?.name).toBe(data.name.trim().toLowerCase());
-            expect(result?.description).toBe(data.description.trim().toLowerCase());
+            const [_, result] = await updateTaskValidator.validateNewProperties(data);
+            expect(result?.name).toBe(data.name.toLowerCase().trim());
         });
     });
 });

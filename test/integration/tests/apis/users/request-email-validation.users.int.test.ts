@@ -3,6 +3,7 @@ import request from 'supertest';
 // https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
 import * as nodemailer from "nodemailer";
 import { NodemailerMock } from "nodemailer-mock";
+import { usersApiErrors } from '@root/common/errors/messages';
 const { mock } = nodemailer as unknown as NodemailerMock;
 
 describe('POST /api/users/requestEmailValidation', () => {
@@ -26,7 +27,7 @@ describe('POST /api/users/requestEmailValidation', () => {
     describe('Database Operations', () => {
         test('return 400 BAD REQUEST when user email is already validated', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = 'User email is already validated';
+            const expectedErrorMssg = usersApiErrors.USER_EMAIL_ALREADY_VALIDATED;
 
             // Create editor
             const { sessionToken } = await createUser('editor');

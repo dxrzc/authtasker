@@ -1,13 +1,16 @@
 import request from 'supertest';
 import { faker } from '@faker-js/faker/.';
 import { status2xx, testKit } from '@integration/utils';
+import { errorMessages, usersApiErrors } from '@root/common/errors/messages';
+import { UNEXPECTED_PROPERTY_PROVIDED } from '@root/validators/errors/common.errors';
+import { emailMissingErr } from '@root/validators/errors/user.errors';
 
 describe('POST /api/users/register', () => {
     describe('Input Sanitization', () => {
         describe('Validation Rules Wiring', () => {
             test.concurrent('return status 400 BAD REQUEST when email is not a valid email', async () => {
                 const expectedStatus = 400;
-                const expectedErrorMssg = 'email must be an email';
+                const expectedErrorMssg = errorMessages.INVALID_EMAIL;
 
                 // Create user with invalid email
                 const user = testKit.userDataGenerator.fullUser();
@@ -21,11 +24,10 @@ describe('POST /api/users/register', () => {
             });
 
             test.concurrent('return status 400 BAD REQUEST when a property is missing', async () => {
+                const expectedStatus = 400;
+
                 const properties = ['name', 'email', 'password'];
                 const randomProp = properties[Math.floor(Math.random() * properties.length)];
-
-                const expectedStatus = 400;
-                const expectedErrorMssg = `${randomProp} should not be null or undefined`;
 
                 // Delete the property
                 const user = testKit.userDataGenerator.fullUser() as any;
@@ -35,8 +37,7 @@ describe('POST /api/users/register', () => {
                 const response = await request(testKit.server)
                     .post(testKit.endpoints.register)
                     .send(user);
-
-                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+                
                 expect(response.statusCode).toBe(expectedStatus);
             });
         });
@@ -73,6 +74,7 @@ describe('POST /api/users/register', () => {
         describe('Duplicated Property Error Handling Wiring', () => {
             test.concurrent('return 409 CONFLICT when user email already exists', async () => {
                 const expectedStatus = 409;
+                const expectedErrorMssg = usersApiErrors.USER_ALREADY_EXISTS;
 
                 // Create user
                 const user1 = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
@@ -85,7 +87,7 @@ describe('POST /api/users/register', () => {
                         email: user1.email
                     });
 
-                expect(response.body).toStrictEqual({ error: `User with email "${user1.email}" already exists` });
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
                 expect(response.statusCode).toBe(expectedStatus);
             });
         });

@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { createUser, testKit } from '@integration/utils';
 import { createTask } from '@integration/utils/createTask.util';
+import { errorMessages } from '@root/common/errors/messages';
 
 describe('GET /api/tasks/', () => {
     let tasksIdSorted = new Array<string>();
@@ -31,7 +32,7 @@ describe('GET /api/tasks/', () => {
     describe('Pagination Rules Wiring', () => {
         test('return status 400 BAD REQUEST when page exceeds the max possible page for the documents count', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = 'Invalid page';
+            const expectedErrorMssg = errorMessages.PAG_PAGE_TOO_LARGE;
             const { sessionToken } = await createUser('readonly');
 
             const documentsCount = await testKit.tasksModel.countDocuments();

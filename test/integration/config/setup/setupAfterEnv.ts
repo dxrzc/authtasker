@@ -15,6 +15,7 @@ import * as ModelLoader from "@root/databases/mongo/models";
 
 import { testKit } from "@integration/utils/testKit.util";
 import { type IntegrationConfigService } from "./types/config.service.type";
+import { ErrorHandlerMiddleware } from '@root/middlewares';
 
 let mongoMemoryServer: MongoMemoryServer;
 let mongoDatabase: MongoDatabase;
@@ -53,7 +54,7 @@ beforeAll(async () => {
     mongoDatabase = new MongoDatabase(configService as ConfigService, loggerServiceMock);
 
     testKit.jwtPrivateKey = configService.JWT_PRIVATE_KEY;
-    testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);    
+    testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);
 
     // ioredis-mock
     redisService = new RedisService(configService as ConfigService);
@@ -83,7 +84,7 @@ beforeAll(async () => {
         new AsyncLocalStorage<any>(),
         redisService
     );
-    const server = new Server(0, await appRoutes.buildApp());
+    const server = new Server(0, await appRoutes.buildApp(), new ErrorHandlerMiddleware(loggerServiceMock));
     testKit.server = server['app'];
 });
 

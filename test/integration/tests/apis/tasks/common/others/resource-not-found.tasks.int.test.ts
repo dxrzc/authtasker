@@ -1,4 +1,5 @@
 import { createUser, testKit } from '@integration/utils';
+import { tasksApiErrors } from '@root/common/errors/messages';
 import { Types } from 'mongoose';
 import request from 'supertest';
 
@@ -10,7 +11,7 @@ describe('404 NOT FOUND - Task not found', () => {
     )('%s /api/tasks/:id return 404 NOT FOUND when task does not exist', async (method) => {
         const expectedStatus = 404;
         const mongoId = new Types.ObjectId();
-        const expectedErrorMssg = `Task with id ${mongoId} not found`;
+        const expectedErrorMssg = tasksApiErrors.TASK_NOT_FOUND;
 
         const { sessionToken } = await createUser('editor');
 
@@ -30,7 +31,7 @@ describe('404 NOT FOUND - Task not found', () => {
     )('%s /api/tasks/:id return 404 NOT FOUND for invalid mongoId', async (method) => {
         const expectedStatus = 404;
         const invalidMongoId = '12345';
-        const expectedErrorMssg = `Task with id ${invalidMongoId} not found`;
+        const expectedErrorMssg = tasksApiErrors.TASK_NOT_FOUND;
 
         const { sessionToken } = await createUser('editor');
 

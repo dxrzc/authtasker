@@ -191,16 +191,15 @@ describe('CreateTaskValidator', () => {
         });
 
         describe('Properties transformation', () => {
-            test.concurrent('transform name and description to lowercase and trim', async () => {
+            test.concurrent('transform name to lowercase and trim it', async () => {
                 const data = {
                     name: ` ${faker.string.alpha(tasksLimits.MAX_NAME_LENGTH - 2)} `,
-                    description: `  ${faker.string.alpha(tasksLimits.MAX_DESCRIPTION_LENGTH - 4)}  `,
+                    description: tasksData.description(),
                     status: tasksData.status(),
                     priority: tasksData.priority()
                 };
-                const [_, result] = await createTaskValidator.validateProperties(data);
-                expect(result?.name).toBe(data.name.trim().toLowerCase());
-                expect(result?.description).toBe(data.description.trim().toLowerCase());
+                const [_, result] = await createTaskValidator.validateProperties(data);                
+                expect(result?.name).toBe(data.name.trim().toLowerCase());                
             });
         });
     });

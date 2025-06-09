@@ -1,11 +1,13 @@
 import request from 'supertest';
 import { createUser, status2xx, testKit } from "@integration/utils";
 import { createTask } from "@integration/utils/createTask.util";
+import { errorMessages } from '@root/common/errors/messages';
 
 describe('DELETE /api/tasks/:id', () => {
     describe('Modification Access Rules Wiring', () => {
         test.concurrent('editors are forbidden to delete another editor\'s task', async () => {
             const expectedStatus = 403;
+            const expectedErrorMssg = errorMessages.FORBIDDEN;
 
             // Create current user
             const { sessionToken: currentUserSessionToken } = await createUser('editor');
@@ -15,10 +17,12 @@ describe('DELETE /api/tasks/:id', () => {
             const { taskId } = await createTask(targetUserSessionToken);
 
             // Attempt to delete the target user task
-            await request(testKit.server)
+            const response = await request(testKit.server)
                 .delete(`${testKit.endpoints.tasksAPI}/${taskId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .expect(expectedStatus);
+                .set('Authorization', `Bearer ${currentUserSessionToken}`);
+
+            expect(response.statusCode).toBe(expectedStatus);
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
         });
 
         test.concurrent('admins are authorized to delete editor\'s tasks', async () => {
@@ -35,7 +39,7 @@ describe('DELETE /api/tasks/:id', () => {
                 .set('Authorization', `Bearer ${currentUserSessionToken}`)
                 .expect(status2xx);
         });
-    });   
+    });
 
     describe('Database operations', () => {
         test.concurrent('task is deleted in database', async () => {

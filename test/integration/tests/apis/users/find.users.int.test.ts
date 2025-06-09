@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
-import { PAGINATION_SETTINGS } from '@root/rules/constants';
+import { errorMessages } from '@root/common/errors/messages';
 
 describe('GET /api/users/:id', () => {
     // Creating an extra user to get a valid token breaks the tests
@@ -28,7 +28,7 @@ describe('GET /api/users/:id', () => {
     describe('Pagination Rules Wiring', () => {
         test('return status 400 BAD REQUEST when page exceeds the max possible page for the documents count', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = 'Invalid page';
+            const expectedErrorMssg = errorMessages.PAG_PAGE_TOO_LARGE;
 
             const documentsCount = await testKit.userModel.countDocuments();
             const limit = 10;

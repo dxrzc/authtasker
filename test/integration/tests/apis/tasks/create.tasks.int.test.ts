@@ -1,12 +1,14 @@
 import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
 import { createTask } from '@integration/utils/createTask.util';
+import { priorityNotInErr } from '@root/validators/errors/task.errors';
+import { tasksApiErrors } from '@root/common/errors/messages';
 
 describe('POST /api/tasks', () => {
     describe('Input Sanitization', () => {
         test.concurrent('return status 404 BAD REQUEST when task priority is not valid', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = 'priority must be one of the following values: low, medium, high';
+            const expectedErrorMssg = priorityNotInErr;
 
             const { sessionToken } = await createUser('editor');
 
@@ -57,12 +59,12 @@ describe('POST /api/tasks', () => {
 
         describe('Duplicated Property Error Handling Wiring', () => {
             test.concurrent('return status 409 CONFLICT when task name already exists', async () => {
+                const expectedStatus = 409;
+                const expectedErrorMssg = tasksApiErrors.TASK_ALREADY_EXISTS('name');
+
                 // Create a task associated to user1
                 const { sessionToken: user1SessionToken } = await createUser('editor');
                 const { taskName } = await createTask(user1SessionToken);
-
-                const expectedStatus = 409;
-                const expectedErrorMssg = `Task with name "${taskName}" already exists`;
 
                 // user2 tries to create a new task with the same name
                 const { sessionToken: user2SessionToken } = await createUser('admin');
@@ -83,7 +85,7 @@ describe('POST /api/tasks', () => {
     describe('Response', () => {
         test.concurrent('return status 201 CREATED and correct data', async () => {
             const expectedStatus = 201;
-            const { sessionToken, userId } = await createUser('editor');
+            const { sessionToken } = await createUser('editor');
             const task = testKit.tasksDataGenerator.fullTask();
 
             const response = await request(testKit.server)

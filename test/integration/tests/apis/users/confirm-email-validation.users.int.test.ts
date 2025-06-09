@@ -21,7 +21,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // Confirm email validation
             await request(testKit.server)
-                .get(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
+                .post(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
                 .expect(status2xx);
 
             const userInDb = await testKit.userModel.findById(userId);
@@ -47,7 +47,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // Confirm email validation
             const response = await request(testKit.server)
-                .get(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
+                .post(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
 
             expect(response.body).toStrictEqual({ message: 'Email successfully validated' });
             expect(response.statusCode).toBe(expectedStatus);

@@ -1,6 +1,8 @@
 import request from 'supertest';
 import { createUser, status2xx, testKit } from "@integration/utils";
 import { createTask } from "@integration/utils/createTask.util";
+import { UNEXPECTED_PROPERTY_PROVIDED } from '@root/validators/errors/common.errors';
+import { errorMessages, tasksApiErrors } from '@root/common/errors/messages';
 
 describe('PATCH /api/tasks/:id', () => {
     describe('Input Sanitization', () => {
@@ -8,7 +10,7 @@ describe('PATCH /api/tasks/:id', () => {
             test.concurrent('return 400 BAD REQUEST when a unexpected property is sent', async () => {
                 const unexpectedProperty = 'newProp';
                 const expectedStatus = 400;
-                const expectedErrorMssg = `property ${unexpectedProperty} should not exist`;
+                const expectedErrorMssg = UNEXPECTED_PROPERTY_PROVIDED;
 
                 const { sessionToken } = await createUser('editor');
                 const { taskId } = await createTask(sessionToken);
@@ -26,7 +28,7 @@ describe('PATCH /api/tasks/:id', () => {
 
         test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = 'At least one field is required to update the task';
+            const expectedErrorMssg = errorMessages.NO_PROPERTIES_PROVIDED_WHEN_UPDATE('task');
 
             const { sessionToken } = await createUser('editor');
             const { taskId } = await createTask(sessionToken);
@@ -111,12 +113,12 @@ describe('PATCH /api/tasks/:id', () => {
 
         describe('Duplicated Property Error Handling Wiring', () => {
             test.concurrent('return 409 CONFLICT when task name already exists', async () => {
+                const expectedStatus = 409;
+                const expectedErrorMssg = tasksApiErrors.TASK_ALREADY_EXISTS('name');
+
                 // Create the original task
                 const { sessionToken: user1SessionToken } = await createUser('editor');
                 const { taskName: alreadyExistingTaskName } = await createTask(user1SessionToken);
-
-                const expectedStatus = 409;
-                const expectedErrorMssg = `Task with name "${alreadyExistingTaskName}" already exists`;
 
                 // Create the task to update
                 const { sessionToken: user2SessionToken } = await createUser('editor');

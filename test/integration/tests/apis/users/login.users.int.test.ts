@@ -1,11 +1,12 @@
 import request from 'supertest';
 import { testKit } from '@integration/utils';
+import { nameMissingErr } from '@root/validators/errors/user.errors';
 
 describe('POST /api/users/login', () => {
     describe('Input sanitization', () => {
         test.concurrent('return status 400 BAD REQUEST when name is missing', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = 'name should not be null or undefined';
+            const expectedErrorMssg = nameMissingErr;
 
             const response = await request(testKit.server)
                 .post(testKit.endpoints.register)
