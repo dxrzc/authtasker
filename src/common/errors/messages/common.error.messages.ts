@@ -5,6 +5,10 @@ export const errorMessages = {
     INVALID_TOKEN: 'Invalid token',
     INVALID_CREDENTIALS: 'Invalid credentials',
     INVALID_EMAIL: 'Invalid email format',
+    INVALID_PAG_PAGE: 'Invalid page',
+    INVALID_PAG_LIMIT: 'Invalid limit',
+    PAG_PAGE_TOO_LARGE: 'Page is too large',
+    PAG_LIMIT_TOO_LARGE: 'Limit is too large',
 
     PROPERTY_NOT_PROVIDED: (property: string) => `Property "${property}" is required`,
     PROPERTY_BAD_LENGTH: (property: string, minLength: number, maxLength: number) =>
