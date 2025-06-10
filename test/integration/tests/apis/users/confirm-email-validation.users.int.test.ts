@@ -5,8 +5,29 @@ import { NodemailerMock } from "nodemailer-mock";
 const { mock } = nodemailer as unknown as NodemailerMock;
 import { createUser, getTokenFromMail, status2xx, testKit } from "@integration/utils";
 import { makeSessionTokenBlacklistKey } from '@logic/token';
+import { authErrors } from '@root/common/errors/messages';
+import { tokenPurposes } from '@root/common/constants';
 
 describe('POST /api/users/confirmEmailValidation/:token', () => {
+    describe('Token', () => {
+        test('return status 400 BAD REQUEST if token is not valid', async () => {
+            const expectedStatus = 400;
+            const expectedErrorMssg = authErrors.INVALID_TOKEN;
+
+            const sessionToken = testKit.jwtService.generate('10m', {
+                jti: 'test-jti',
+                purpose: tokenPurposes.SESSION
+            });
+
+            // Confirm email validation using an invalid token
+            const response = await request(testKit.server)
+                .post(`${testKit.endpoints.confirmEmailValidation}/${sessionToken}`);
+
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+            expect(response.statusCode).toBe(expectedStatus);
+        });
+    });
+
     describe('Database Operations', () => {
         test('update user role and emailValidated', async () => {
             const { sessionToken, userId } = await createUser('readonly');
