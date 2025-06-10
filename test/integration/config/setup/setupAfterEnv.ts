@@ -16,10 +16,11 @@ import * as ModelLoader from "@root/databases/mongo/models";
 import { testKit } from "@integration/utils/testKit.util";
 import { type IntegrationConfigService } from "./types/config.service.type";
 import { ErrorHandlerMiddleware } from '@root/middlewares';
+import { RedisDatabase } from '@root/databases/redis/redis.database';
 
 let mongoMemoryServer: MongoMemoryServer;
 let mongoDatabase: MongoDatabase;
-let redisService: RedisService;
+let redisDatabase: RedisDatabase;
 
 beforeEach(() => {
     // Reset nodemailer emails
@@ -52,16 +53,16 @@ beforeAll(async () => {
         HTTP_LOGS: false,
     } as const;
     mongoDatabase = new MongoDatabase(configService as ConfigService, loggerServiceMock);
+    await mongoDatabase.connect();
 
     testKit.jwtPrivateKey = configService.JWT_PRIVATE_KEY;
     testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);
 
-    // ioredis-mock
-    redisService = new RedisService(configService as ConfigService);
-    testKit.redisService = redisService
-
-    // Connect databases
-    await Promise.all([mongoDatabase.connect(), redisService.connect()]);
+    // redis connection
+    redisDatabase = new RedisDatabase(configService as ConfigService);
+    const redisInstance = await redisDatabase.connect();
+    const redisService = new RedisService(redisInstance);
+    testKit.redisService = redisService;
 
     // models (can not be compiled twice)
     const userModel = ModelLoader.loadUserModel(configService as ConfigService);
@@ -90,7 +91,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
     await Promise.all([
-        redisService.disconnect(),
+        redisDatabase.disconnect(),
         mongoMemoryServer.stop(),
         mongoDatabase.disconnect()
     ]);

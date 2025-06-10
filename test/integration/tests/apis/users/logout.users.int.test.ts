@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
 import { JwtService } from '@root/services';
+import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
 
 describe('POST /api/users/logout', () => {
     describe('Token operations', () => {
@@ -16,7 +17,7 @@ describe('POST /api/users/logout', () => {
             const payload = jwtService.verify(sessionToken);
             const tokenJti = payload!.jti;
 
-            const data = await testKit.redisService.get(tokenJti);
+            const data = await testKit.redisService.get(makeSessionTokenBlacklistKey(tokenJti));
             expect(data).not.toBeNull();
         });
     });

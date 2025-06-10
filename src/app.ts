@@ -6,6 +6,7 @@ import { IAsyncLocalStorageStore } from "./interfaces";
 import { MongoDatabase } from "./databases/mongo/mongo.database";
 import { Server } from "./server/server.init";
 import { ErrorHandlerMiddleware } from './middlewares';
+import { RedisDatabase } from './databases/redis/redis.database';
 
 async function main() {
     process.on('unhandledRejection', (reason, promise) => {
@@ -26,8 +27,9 @@ async function main() {
     await mongoDatabase.connect();
 
     // redis connection
-    const redisService = new RedisService(configService);
-    await redisService.connect();
+    const redisDatabase = new RedisDatabase(configService);
+    const redisInstance = await redisDatabase.connect();
+    const redisService = new RedisService(redisInstance);
 
     // server connection
     const server = new Server(
@@ -45,7 +47,7 @@ async function main() {
     // function called in case mongodb reconnects after a disconnection
     ApplicationEvents.resumeApplication(async () => {
         await server.start();
-        await redisService.connect();
+        await redisDatabase.connect();
     });
 
     // function called in case redis or mongo connection fails
