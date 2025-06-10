@@ -1,42 +1,37 @@
 import request from 'supertest';
-import { createUser, status2xx, testKit } from '@integration/utils';
-import { usersApiProtectedRoutes } from './fixtures';
 import { authErrors } from '@root/common/errors/messages';
+import { protectedRoutes } from '@integration/fixtures';
+import { status2xx, testKit } from '@integration/utils';
 
-// Ensure the logic in charge of the token authentication is integrated 
-// with the users API endpoints.
-
-describe('Users API - Token Authentication - Wiring', () => {
-    test.concurrent.each(
-        usersApiProtectedRoutes
-    )('return 401 UNAUTHORIZED when token is not provided in $method $url', async ({ method, url }) => {
+describe('Session Token Auth Wiring', () => {
+    test.concurrent.each(protectedRoutes)('return 401 UNAUTHORIZED when token is not provided in $method $url', async ({ method, url }) => {
         const expectedStatus = 401;
         const expectedErrorMssg = authErrors.INVALID_TOKEN;
-
-        // Endpoint
         const response = await request(testKit.server)[method](url);
-
         expect(response.statusCode).toBe(expectedStatus);
         expect(response.body).toStrictEqual({ error: expectedErrorMssg });
     });
 
-    test.concurrent.each(
-        usersApiProtectedRoutes
-    )('return 401 UNAUTHORIZED when token blacklisted $method $url', async ({ method, url }) => {
+    test.concurrent.each(protectedRoutes)('return 401 UNAUTHORIZED when token belongs to a closed session in $method $url', async ({ method, url }) => {
         const expectedStatus = 401;
         const expectedErrorMssg = authErrors.INVALID_TOKEN;
-        const { sessionToken } = await createUser('admin');
 
-        // Logout 
+        // register
+        const registerResponse = await request(testKit.server)
+            .post(testKit.endpoints.register)
+            .send(testKit.userDataGenerator.fullUser())
+            .expect(status2xx);
+        const sessionToken = registerResponse.body.token;
+
+        // logout
         await request(testKit.server)
             .post(testKit.endpoints.logout)
             .set('Authorization', `Bearer ${sessionToken}`)
             .expect(status2xx);
 
-        // Endpoint
+        // access endpoint with the token
         const response = await request(testKit.server)[method](url)
             .set('Authorization', `Bearer ${sessionToken}`);
-
         expect(response.statusCode).toBe(expectedStatus);
         expect(response.body).toStrictEqual({ error: expectedErrorMssg });
     });
