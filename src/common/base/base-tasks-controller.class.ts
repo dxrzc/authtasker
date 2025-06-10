@@ -1,5 +1,4 @@
 import { Request, RequestHandler, Response } from 'express';
-import { BaseHttpComponent } from './base-http-component.class';
 import { BaseController } from './base-controller.class';
 
 export abstract class BaseTasksController extends BaseController {

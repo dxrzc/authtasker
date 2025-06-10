@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import { LoggerService } from "@root/services/logger.service";
-import { UserService } from "@root/services/user.service";
 import { CreateUserValidator, LoginUserValidator, UpdateUserValidator } from '@root/validators/models/user';
 import { paginationSettings, statusCodes } from '@root/common/constants';
-import { BaseUserController } from '@root/common/base/base-user-controller.class';
+import { LoggerService } from "@root/services/logger.service";
+import { UserService } from "@root/services/user.service";
+import { BaseUserController } from '@root/common/base';
 
 export class UserController extends BaseUserController {
     

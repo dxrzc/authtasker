@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { LoggerService, TasksService } from "@root/services";
 import { CreateTaskValidator, UpdateTaskValidator } from '@root/validators/models/tasks';
 import { paginationSettings, statusCodes } from '@root/common/constants';
-import { BaseTasksController } from '@root/common/base/base-tasks-controller.class';
+import { LoggerService, TasksService } from "@root/services";
+import { BaseTasksController } from '@root/common/base';
 
 export class TasksController extends BaseTasksController {
 
