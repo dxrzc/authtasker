@@ -6,7 +6,7 @@ import * as nodemailer from "nodemailer";
 import { NodemailerMock } from "nodemailer-mock";
 const { mock: nodemailerMock } = nodemailer as unknown as NodemailerMock;
 
-import { ConfigService, HashingService, LoggerService, RedisService, SystemLoggerService } from "@root/services";
+import { ConfigService, HashingService, JwtService, LoggerService, RedisService, SystemLoggerService } from "@root/services";
 import { MongoDatabase } from "@root/databases/mongo/mongo.database";
 import { TasksDataGenerator, UserDataGenerator } from "@root/seed/generators";
 import { AppRoutes } from "@root/routes";
@@ -55,7 +55,9 @@ beforeAll(async () => {
     mongoDatabase = new MongoDatabase(configService as ConfigService, loggerServiceMock);
     await mongoDatabase.connect();
 
-    testKit.jwtPrivateKey = configService.JWT_PRIVATE_KEY;
+    const jwtService = new JwtService(configService.JWT_PRIVATE_KEY);
+    testKit.jwtService = jwtService;
+    
     testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);
 
     // redis connection

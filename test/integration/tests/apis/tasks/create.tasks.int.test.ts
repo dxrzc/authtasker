@@ -1,7 +1,8 @@
 import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
 import { createTask } from '@integration/utils/createTask.util';
-import { tasksApiErrors } from '@root/common/errors/messages';
+import { commonErrors, tasksApiErrors } from '@root/common/errors/messages';
+import { Types } from 'mongoose';
 
 describe('POST /api/tasks', () => {
     describe('Input Sanitization', () => {
@@ -17,8 +18,27 @@ describe('POST /api/tasks', () => {
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .send({
                     ...testKit.tasksDataGenerator.fullTask(),
-                    priority: 'invalid_priority' as any
-                })
+                    priority: 'invalid_priority'
+                });
+
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+            expect(response.statusCode).toBe(expectedStatus);
+        });
+
+        test.concurrent('return status 404 BAD REQUEST when unexpected property is provided', async () => {
+            const expectedStatus = 400;
+            const expectedErrorMssg = commonErrors.UNEXPECTED_PROPERTY_PROVIDED;
+
+            const { sessionToken } = await createUser('editor');
+
+            // Try to set the owner
+            const response = await request(testKit.server)
+                .post(testKit.endpoints.createTask)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({
+                    ...testKit.tasksDataGenerator.fullTask(),
+                    user: new Types.ObjectId()
+                });
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);

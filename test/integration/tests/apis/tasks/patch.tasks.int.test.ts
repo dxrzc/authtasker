@@ -5,24 +5,21 @@ import { commonErrors, tasksApiErrors } from '@root/common/errors/messages';
 
 describe('PATCH /api/tasks/:id', () => {
     describe('Input Sanitization', () => {
-        describe('Validation Rules Wiring', () => {
-            test.concurrent('return 400 BAD REQUEST when a unexpected property is sent', async () => {
-                const unexpectedProperty = 'newProp';
-                const expectedStatus = 400;
-                const expectedErrorMssg = commonErrors.UNEXPECTED_PROPERTY_PROVIDED;
+        test.concurrent('return 400 BAD REQUEST when a unexpected property is sent', async () => {
+            const expectedStatus = 400;
+            const expectedErrorMssg = commonErrors.UNEXPECTED_PROPERTY_PROVIDED;
 
-                const { sessionToken } = await createUser('editor');
-                const { taskId } = await createTask(sessionToken);
+            const { sessionToken } = await createUser('editor');
+            const { taskId } = await createTask(sessionToken);
 
-                // Update with an unexpected property
-                const response = await request(testKit.server)
-                    .patch(`${testKit.endpoints.tasksAPI}/${taskId}`)
-                    .set('Authorization', `Bearer ${sessionToken}`)
-                    .send({ [unexpectedProperty]: 'unexpectedValue' });
+            // Update with an unexpected property
+            const response = await request(testKit.server)
+                .patch(`${testKit.endpoints.tasksAPI}/${taskId}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ user: '12345' });
 
-                expect(response.statusCode).toBe(expectedStatus);
-                expect(response.body).toStrictEqual({ error: expectedErrorMssg })
-            });
+            expect(response.statusCode).toBe(expectedStatus);
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg })
         });
 
         test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {

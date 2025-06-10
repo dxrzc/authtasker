@@ -1,24 +1,24 @@
 import request from 'supertest';
 import { createUser, status2xx, testKit } from '@integration/utils';
-import { JwtService } from '@root/services';
-import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
+import { makeSessionTokenBlacklistKey } from '@logic/token';
 
 describe('POST /api/users/logout', () => {
     describe('Token operations', () => {
-        test.concurrent('token is blacklisted after logout', async () => {
+        test.concurrent('session token is blacklisted after logout', async () => {
             const { sessionToken } = await createUser('editor');
 
+            // logout
             await request(testKit.server)
                 .post(testKit.endpoints.logout)
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .expect(status2xx);
 
-            const jwtService = new JwtService(testKit.jwtPrivateKey);
-            const payload = jwtService.verify(sessionToken);
-            const tokenJti = payload!.jti;
+            const payload = testKit.jwtService.verify(sessionToken);
+            const jti = payload!.jti!;
 
-            const data = await testKit.redisService.get(makeSessionTokenBlacklistKey(tokenJti));
-            expect(data).not.toBeNull();
+            // expect session token in blacklist
+            const token = await testKit.redisService.get(makeSessionTokenBlacklistKey(jti));
+            expect(token).not.toBeNull();
         });
     });
 

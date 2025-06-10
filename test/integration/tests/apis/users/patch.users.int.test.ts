@@ -1,27 +1,21 @@
 import request from 'supertest';
 import { testKit, status2xx, createUser } from '@integration/utils';
-import { usersApiErrors } from '@root/common/errors/messages';
+import { commonErrors, usersApiErrors } from '@root/common/errors/messages';
 
 describe('PATCH /api/users/:id', () => {
-    describe('Input sanitization', () => {
-        describe('Validation Rules Wiring', () => {
-            test.concurrent('return 400 BAD REQUEST when user name is too short', async () => {
-                const expectedStatus = 400;
-                const expectedErrorMssg = usersApiErrors.INVALID_NAME_LENGTH;
+    describe('Input sanitization Wiring', () => {
+        test.concurrent('return 400 BAD REQUEST when an unexpected property is provided', async () => {
+            const expectedStatus = 400;
+            const expectedErrorMssg = commonErrors.UNEXPECTED_PROPERTY_PROVIDED;
 
-                // Create user
-                const { sessionToken, userId } = await createUser('editor');
+            const { sessionToken, userId } = await createUser('editor');
+            const response = await request(testKit.server)
+                .patch(`${testKit.endpoints.usersAPI}/${userId}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ role: 'admin' });
 
-                const invalidName = 'a';
-
-                const response = await request(testKit.server)
-                    .patch(`${testKit.endpoints.usersAPI}/${userId}`)
-                    .set('Authorization', `Bearer ${sessionToken}`)
-                    .send({ name: invalidName });
-
-                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-                expect(response.statusCode).toBe(expectedStatus);
-            });
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+            expect(response.statusCode).toBe(expectedStatus);
         });
 
         test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {
@@ -77,24 +71,36 @@ describe('PATCH /api/users/:id', () => {
     });
 
     describe('Database operations', () => {
-        describe('Email Update Rules Wiring', () => {
-            test.concurrent('email change triggers account role downgrade', async () => {
-                // Create an editor user
-                const { sessionToken, userId } = await createUser('editor');
+        test.concurrent('email change triggers role downgrade to "readonly" and "emailValidated" to false', async () => {
+            // Create an editor user
+            const { sessionToken, userId } = await createUser('editor');
 
-                // Update
-                await request(testKit.server)
-                    .patch(`${testKit.endpoints.usersAPI}/${userId}`)
-                    .set('Authorization', `Bearer ${sessionToken}`)
-                    .send({
-                        email: testKit.userDataGenerator.email()
-                    })
-                    .expect(status2xx);
+            // Update
+            await request(testKit.server)
+                .patch(`${testKit.endpoints.usersAPI}/${userId}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ email: testKit.userDataGenerator.email() })
+                .expect(status2xx);
 
-                const updatedUserInDb = await testKit.userModel.findById(userId);
-                expect(updatedUserInDb!.emailValidated).toBeFalsy();
-                expect(updatedUserInDb?.role).toBe('readonly');
-            });
+            const updatedUserInDb = await testKit.userModel.findById(userId);
+            expect(updatedUserInDb!.emailValidated).toBeFalsy();
+            expect(updatedUserInDb?.role).toBe('readonly');
+        });
+
+        test.concurrent('admin email change does not downgrade role or modifies "emailValidated" property', async () => {
+            // Create an editor user
+            const { sessionToken, userId } = await createUser('admin');
+
+            // Update
+            await request(testKit.server)
+                .patch(`${testKit.endpoints.usersAPI}/${userId}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ email: testKit.userDataGenerator.email() })
+                .expect(status2xx);
+
+            const updatedUserInDb = await testKit.userModel.findById(userId);
+            expect(updatedUserInDb!.emailValidated).toBeTruthy();
+            expect(updatedUserInDb?.role).toBe('admin');
         });
 
         test.concurrent('update properties in database', async () => {
@@ -120,7 +126,7 @@ describe('PATCH /api/users/:id', () => {
             expect(updatedUserInDb).toBeDefined();
 
             // Verify transformations 
-            expect(updatedUserInDb!.name).toBe(update.name.toLowerCase());
+            expect(updatedUserInDb!.name).toBe(update.name.toLowerCase().trim());
             await expect(testKit.hashingService.compare(update.password, updatedUserInDb!.password))
                 .resolves.toBeTruthy();
 
@@ -128,25 +134,42 @@ describe('PATCH /api/users/:id', () => {
             expect(updatedUserInDb!.email).toBe(update.email);
         });
 
-        describe('Duplicated Property Error Handling Wiring', () => {
-            test.concurrent('return 409 conflict when user name already exists', async () => {
-                const expectedStatus = 409;
-                const expectedErrorMssg = usersApiErrors.USER_ALREADY_EXISTS;
+        test.concurrent('return 409 CONFLICT when user name already exists', async () => {
+            const expectedStatus = 409;
+            const expectedErrorMssg = usersApiErrors.USER_ALREADY_EXISTS;
 
-                // Create user
-                const user1 = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
+            // Create user
+            const user1 = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
 
-                // Create another user with same name
-                const response = await request(testKit.server)
-                    .post(testKit.endpoints.register)
-                    .send({
-                        ...testKit.userDataGenerator.fullUser(),
-                        name: user1.name
-                    });
+            // Create another user with same name
+            const response = await request(testKit.server)
+                .post(testKit.endpoints.register)
+                .send({
+                    ...testKit.userDataGenerator.fullUser(),
+                    name: user1.name
+                });
 
-                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-                expect(response.statusCode).toBe(expectedStatus);
-            });
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+            expect(response.statusCode).toBe(expectedStatus);
+        });
+
+        test.concurrent('return 409 CONFLICT when user email already exists', async () => {
+            const expectedStatus = 409;
+            const expectedErrorMssg = usersApiErrors.USER_ALREADY_EXISTS;
+
+            // Create user
+            const user1 = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
+
+            // Create another user with same email
+            const response = await request(testKit.server)
+                .post(testKit.endpoints.register)
+                .send({
+                    ...testKit.userDataGenerator.fullUser(),
+                    email: user1.email
+                });
+
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+            expect(response.statusCode).toBe(expectedStatus);
         });
     });
 
