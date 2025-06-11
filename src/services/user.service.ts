@@ -5,8 +5,10 @@ import { ITasks, IUser, UserFromRequest } from "@root/interfaces";
 import { UserRole } from "@root/types/user/user-roles.type";
 import { paginationRules } from "@logic/others/pagination-rules";
 import { tokenPurposes } from '@root/common/constants';
+import { calculateTokenTTL } from '@logic/token';
 import { CreateUserValidator, LoginUserValidator, UpdateUserValidator } from '@root/validators/models/user';
 import { authErrors, usersApiErrors } from '@root/common/errors/messages';
+import { JwtTypes } from '@root/enums';
 
 export class UserService {
 
@@ -39,32 +41,41 @@ export class UserService {
         return null;
     }
 
-    private async blackListToken(jti: string, tokenExp: number) {
-        const currentTime = Math.floor(Date.now() / 1000);
-        const remainingTokenTTL = tokenExp! - currentTime;
-        this.loggerService.debug(`Token ${jti} blacklisted`);
-        // blacklist it until it expires
-        await this.jwtBlacklistService.blacklist(jti, remainingTokenTTL);
+    private async blacklistSessionToken(jti: string, tokenExp: number) {
+        const remainingTokenTTL = calculateTokenTTL(tokenExp);
+        this.loggerService.debug(`Session token "${jti}" blacklisted`);
+        await this.jwtBlacklistService.blacklist(JwtTypes.session, jti, remainingTokenTTL);
+    }
+
+    private async blacklistEmailValidationToken(jti: string, tokenExp: number) {
+        const remainingTokenTTL = calculateTokenTTL(tokenExp);
+        this.loggerService.debug(`Email validation token "${jti}" blacklisted`);
+        await this.jwtBlacklistService.blacklist(JwtTypes.emailValidation, jti, remainingTokenTTL);
     }
 
     private generateSessionToken(userId: string): string {
         const expTime = this.configService.JWT_SESSION_EXP_TIME;
         const token = this.jwtService.generate(expTime, {
-            id: userId,
-            purpose: tokenPurposes.SESSION
+            purpose: tokenPurposes.SESSION,
+            id: userId
         });
         this.loggerService.info(`Session token generated, expires at ${expTime}`);
         return token;
     }
 
-    private async sendEmailValidationLink(email: string): Promise<void> {
+    private generateEmailValidationToken(userEmail: string): string {
         const jwtExpTime = this.configService.JWT_EMAIL_VALIDATION_EXP_TIME;
         const token = this.jwtService.generate(jwtExpTime, {
             purpose: tokenPurposes.EMAIL_VALIDATION,
-            email
+            email: userEmail
         });
+        return token;
+    }
+
+    private async sendEmailValidationLink(email: string): Promise<void> {
+        const token = this.generateEmailValidationToken(email);
         // web url is appended with a default "/" when read
-        const link = `${this.configService.WEB_URL}api/users/confirmEmailValidation/${token}`;
+        const link = `${this.configService.WEB_URL}api/users/confirmEmailValidation/${token}`;        
         await this.emailService.sendMail({
             to: email,
             subject: 'Email validation',
@@ -96,13 +107,13 @@ export class UserService {
             throw HttpError.badRequest(authErrors.INVALID_TOKEN);
         }
         // token is not blacklisted
-        const tokenIsBlacklisted = await this.jwtBlacklistService.isBlacklisted(payload.jti)
+        const tokenIsBlacklisted = await this.jwtBlacklistService.tokenInBlacklist(JwtTypes.emailValidation, payload.jti)
         if (tokenIsBlacklisted) {
             this.loggerService.error('Token is blacklisted');
             throw HttpError.badRequest(authErrors.INVALID_TOKEN);
         }
         // single-use token
-        await this.blackListToken(payload.jti, payload.exp!);
+        await this.blacklistEmailValidationToken(payload.jti, payload.exp!);
         return payload.email;
     }
 
@@ -200,7 +211,7 @@ export class UserService {
     }
 
     async logout(requestUserInfo: UserFromRequest): Promise<void> {
-        await this.blackListToken(requestUserInfo.jti, requestUserInfo.tokenExp);
+        await this.blacklistSessionToken(requestUserInfo.jti, requestUserInfo.tokenExp);
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 

@@ -11,6 +11,7 @@ import { getRandomRole } from "@unit/utils/get-random-role.util";
 import { faker } from "@faker-js/faker/.";
 import { tokenPurposes } from '@root/common/constants';
 import { UpdateUserValidator } from '@root/validators/models/user';
+import { JwtTypes } from '@root/enums';
 
 let configService: MockProxy<NoReadonly<ConfigService>>;
 let userModel: MockProxy<MongooseModel<Model<IUser>>>;
@@ -95,17 +96,18 @@ describe('User Service', () => {
         });
     });
 
-    describe('blackListToken', () => {
+    describe('blacklistSessionToken', () => {
         test('call blacklist(blacklistService) with jti the token TTL', async () => {
             const testJti = 'testJti';
             const expiresIn = 50; // seconds
             const tokenTTL = Math.floor((Date.now() / 1000) + expiresIn);
 
-            await userService['blackListToken'](testJti, tokenTTL);
+            await userService['blacklistSessionToken'](testJti, tokenTTL);
 
-            const [arg1, arg2] = jwtBlacklistService.blacklist.mock.calls[0];
-            expect(arg1).toBe(testJti);
-            expect(Math.abs(arg2 - expiresIn)).toBeLessThanOrEqual(1); // minor delays
+            const [tokenTypeArg, tokeJtiArg, expTimeArg] = jwtBlacklistService.blacklist.mock.calls[0];
+            expect(tokenTypeArg).toBe(JwtTypes.session);
+            expect(tokeJtiArg).toBe(testJti);
+            expect(Math.abs(expTimeArg - expiresIn)).toBeLessThanOrEqual(1); // minor delays
         });
     });
 
@@ -222,7 +224,7 @@ describe('User Service', () => {
         describe('Token is blacklisted', () => {
             test('throws BAD REQUEST HttpError and logs error', async () => {
                 // valid but blacklisted token
-                jwtBlacklistService.isBlacklisted.mockResolvedValue(true);
+                jwtBlacklistService.tokenInBlacklist.mockResolvedValue(true);
                 jwtService.verify.mockReturnValue({
                     purpose: tokenPurposes.EMAIL_VALIDATION,
                     jti: uuidv4(),
@@ -238,24 +240,24 @@ describe('User Service', () => {
                 }
             });
         });
-
-        test('return email in payload and call blackListToken with jti and exp', async () => {
+        
+        test('return email in payload and call blacklistEmailValidationToken with jti and exp', async () => {
             const testJti = uuidv4();
             const testExp = 100;
             const testEmail = 'test@gmail.com'
             // full valid and non-blacklisted token
-            jwtBlacklistService.isBlacklisted.mockResolvedValue(false);
+            jwtBlacklistService.tokenInBlacklist.mockResolvedValue(false);
             jwtService.verify.mockReturnValue({
                 purpose: tokenPurposes.EMAIL_VALIDATION,
                 jti: testJti,
                 email: testEmail,
                 exp: testExp
             });
-            const blacklistMock = jest.spyOn(userService as any, 'blackListToken')
+            const blacklistEmailValidationTokenMock = jest.spyOn(userService as any, 'blacklistEmailValidationToken')
                 .mockImplementation();
 
             const email = await userService['consumeEmailValidationToken']('test-token');
-            expect(blacklistMock).toHaveBeenCalledWith(testJti, testExp);
+            expect(blacklistEmailValidationTokenMock).toHaveBeenCalledWith(testJti, testExp);
             expect(email).toBe(testEmail);
         });
     });
@@ -355,8 +357,8 @@ describe('User Service', () => {
     });
 
     describe('logout', () => {
-        test('call blacklistToken with the token jti and exp', async () => {
-            const blacklistTokenMock = jest.spyOn(userService as any, 'blackListToken')
+        test('call blacklistSessionToken with the token jti and exp', async () => {
+            const blacklistSessionTokenMock = jest.spyOn(userService as any, 'blacklistSessionToken')
                 .mockImplementation();
             const reqUserInfo: UserFromRequest = {
                 id: '12345',
@@ -365,7 +367,7 @@ describe('User Service', () => {
                 tokenExp: 3133913,
             };
             await userService.logout(reqUserInfo);
-            expect(blacklistTokenMock).toHaveBeenCalledWith(reqUserInfo.jti, reqUserInfo.tokenExp);
+            expect(blacklistSessionTokenMock).toHaveBeenCalledWith(reqUserInfo.jti, reqUserInfo.tokenExp);
         });
 
         test('info logger is called with user id', async () => {

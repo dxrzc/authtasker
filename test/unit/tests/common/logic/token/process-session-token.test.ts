@@ -2,7 +2,7 @@ import { processSessionToken } from '@logic/token';
 
 describe('processSessionToken', () => {
     const jwtService = { verify: jest.fn() };
-    const jwtBlacklistService = { isBlacklisted: jest.fn() };
+    const jwtBlacklistService = { tokenInBlacklist: jest.fn() };
     const userModel = { findById: jest.fn() };
     const req = { header: jest.fn() } as any;
 
@@ -35,7 +35,7 @@ describe('processSessionToken', () => {
     test('returns error if token is blacklisted', async () => {
         req.header.mockReturnValue('Bearer xyz');
         jwtService.verify.mockReturnValue({ purpose: 'session', jti: 'abc' });
-        jwtBlacklistService.isBlacklisted.mockResolvedValue(true);
+        jwtBlacklistService.tokenInBlacklist.mockResolvedValue(true);
         const result = await processSessionToken(req, userModel as any, jwtService as any, jwtBlacklistService as any);
         expect(result).toEqual({ error: 'Token is blacklisted' });
     });
@@ -43,7 +43,7 @@ describe('processSessionToken', () => {
     test('returns error if user id is missing', async () => {
         req.header.mockReturnValue('Bearer xyz');
         jwtService.verify.mockReturnValue({ purpose: 'session', jti: 'abc' });
-        jwtBlacklistService.isBlacklisted.mockResolvedValue(false);
+        jwtBlacklistService.tokenInBlacklist.mockResolvedValue(false);
         const result = await processSessionToken(req, userModel as any, jwtService as any, jwtBlacklistService as any);
         expect(result).toEqual({ error: 'User id not in token' });
     });
@@ -51,7 +51,7 @@ describe('processSessionToken', () => {
     test('returns error if user not found', async () => {
         req.header.mockReturnValue('Bearer xyz');
         jwtService.verify.mockReturnValue({ purpose: 'session', jti: 'abc', id: 'user123' });
-        jwtBlacklistService.isBlacklisted.mockResolvedValue(false);
+        jwtBlacklistService.tokenInBlacklist.mockResolvedValue(false);
         userModel.findById.mockReturnValue({ exec: () => null });
         const result = await processSessionToken(req, userModel as any, jwtService as any, jwtBlacklistService as any);
         expect(result).toEqual({ error: 'User in token does not exist' });
@@ -60,7 +60,7 @@ describe('processSessionToken', () => {
     test('returns user info if all checks pass', async () => {
         req.header.mockReturnValue('Bearer xyz');
         jwtService.verify.mockReturnValue({ purpose: 'session', jti: 'abc', id: 'user123', exp: 9999 });
-        jwtBlacklistService.isBlacklisted.mockResolvedValue(false);
+        jwtBlacklistService.tokenInBlacklist.mockResolvedValue(false);
         userModel.findById.mockReturnValue({ exec: () => ({ id: 'user123', role: 'editor' }) });
         const result = await processSessionToken(req, userModel as any, jwtService as any, jwtBlacklistService as any);
         expect(result).toEqual({

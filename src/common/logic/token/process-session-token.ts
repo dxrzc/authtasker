@@ -3,6 +3,7 @@ import { Model } from "mongoose";
 import { tokenPurposes } from '@root/common/constants';
 import { IUser, UserFromRequest } from "@root/interfaces";
 import { JwtBlackListService, JwtService } from "@root/services";
+import { JwtTypes } from '@root/enums';
 
 export async function processSessionToken(
     req: Request,
@@ -34,7 +35,7 @@ export async function processSessionToken(
         return { error: `Token purpose "${tokenPurpose}" is not the expected` };
 
     // token is blacklisted
-    const tokenIsBlacklisted = await jwtBlacklistService.isBlacklisted(payload.jti);
+    const tokenIsBlacklisted = await jwtBlacklistService.tokenInBlacklist(JwtTypes.session, payload.jti);
     if (tokenIsBlacklisted)
         return { error: `Token is blacklisted` };
 

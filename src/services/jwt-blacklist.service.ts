@@ -1,5 +1,6 @@
-import { makeSessionTokenBlacklistKey } from '@logic/token';
+import { makeEmailValidationBlacklistKey, makeSessionTokenBlacklistKey } from '@logic/token';
 import { RedisService } from './redis.service';
+import { JwtTypes } from '@root/enums';
 
 export class JwtBlackListService {
 
@@ -7,12 +8,21 @@ export class JwtBlackListService {
         private readonly redisService: RedisService,
     ) {}
 
-    async blacklist(jti: string, expirationTime: number): Promise<void> {
-        await this.redisService.set(makeSessionTokenBlacklistKey(jti), '1', expirationTime);
+    private resolveKey(jwtType: JwtTypes, jti: string): string {
+        switch (jwtType) {
+            case JwtTypes.session: return makeSessionTokenBlacklistKey(jti);
+            case JwtTypes.emailValidation: return makeEmailValidationBlacklistKey(jti);
+            default: throw new Error(`Unknown JWT type: ${jwtType}`);
+        }
     }
 
-    async isBlacklisted(jti: string): Promise<boolean> {
-        const exists = await this.redisService.get<string>(makeSessionTokenBlacklistKey(jti));
-        return !!exists;
+    async blacklist(jwtType: JwtTypes, jti: string, expirationTime: number): Promise<void> {
+        const key = this.resolveKey(jwtType, jti);
+        await this.redisService.set(key, '1', expirationTime);
+    }
+
+    async tokenInBlacklist(jwtType: JwtTypes, jti: string): Promise<boolean> {
+        const key = await this.redisService.get(this.resolveKey(jwtType, jti));
+        return !!key;
     }
 }
