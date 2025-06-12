@@ -19,7 +19,7 @@ export class LoggerService {
 
     private consoleLogger: winston.Logger;
     private requestCompletedFileLogger: winston.Logger
-    private httpMessageFileLogger: winston.Logger;
+    private fileLogger: winston.Logger;
 
     constructor(
         private readonly configService: ConfigService,
@@ -61,7 +61,7 @@ export class LoggerService {
         const folder = currentEnv === 'production' ?
             prodLogsFolder : devLogsFolder;
 
-        this.httpMessageFileLogger = winston.createLogger({
+        this.fileLogger = winston.createLogger({
             transports: [new winston.transports.File({
                 // no debug messages in fs
                 level: 'info',
@@ -107,7 +107,7 @@ export class LoggerService {
                 requestId,                
             });
 
-            this.httpMessageFileLogger.log({
+            this.fileLogger.log({
                 level,
                 message,
                 requestId,
