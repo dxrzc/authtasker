@@ -24,12 +24,13 @@ export class UserService {
     ) {}
 
     private handleDbDuplicatedKeyError(error: any): never {
-        const duplicatedKey = Object.keys(error.keyValue);
-        const keyValue = Object.values(error.keyValue);
-        this.loggerService.error(`User with ${duplicatedKey} ${keyValue} already exists`);
+        // - keyValue: {name: 'user123'}
+        const duplicatedKey = Object.keys(error.keyValue).at(0);
+        const keyValue = Object.values(error.keyValue).at(0);
+        this.loggerService.error(`User with ${duplicatedKey} "${keyValue}" already exists`);
         throw HttpError.conflict(usersApiErrors.USER_ALREADY_EXISTS);
     }
-
+    
     private async getUserIfAuthorizedToModify(requestUserInfo: { id: string, role: UserRole }, userIdToUpdate: string): Promise<HydratedDocument<IUser> | null> {
         const userToModify = await this.findOne(userIdToUpdate);
         // admin users can modify other users (but not other admins)
@@ -41,41 +42,50 @@ export class UserService {
         return null;
     }
 
-    private async blacklistSessionToken(jti: string, tokenExp: number) {
-        const remainingTokenTTL = calculateTokenTTL(tokenExp);
-        this.loggerService.debug(`Session token "${jti}" blacklisted`);
-        await this.jwtBlacklistService.blacklist(JwtTypes.session, jti, remainingTokenTTL);
+    private async blacklistSessionToken(jti: string, tokenExpiresAtUnixSeconds: number) {
+        const remainingTokenTTLInSeconds = calculateTokenTTL(tokenExpiresAtUnixSeconds);
+        if (remainingTokenTTLInSeconds > 0) {
+            this.loggerService.info(`Session token "${jti}" blacklisted for ${remainingTokenTTLInSeconds} seconds`);
+            await this.jwtBlacklistService.blacklist(JwtTypes.session, jti, remainingTokenTTLInSeconds);
+        } else {
+            this.loggerService.info(`Session token "${jti}" already expired, skipping blacklisting`)
+        }
     }
 
     private async blacklistEmailValidationToken(jti: string, tokenExp: number) {
         const remainingTokenTTL = calculateTokenTTL(tokenExp);
-        this.loggerService.debug(`Email validation token "${jti}" blacklisted`);
-        await this.jwtBlacklistService.blacklist(JwtTypes.emailValidation, jti, remainingTokenTTL);
+        if (remainingTokenTTL > 0) {
+            this.loggerService.info(`Email validation token "${jti}" blacklisted`);
+            await this.jwtBlacklistService.blacklist(JwtTypes.emailValidation, jti, remainingTokenTTL);
+        } else {
+            this.loggerService.info(`Email validation token "${jti}" already expired, skipping blacklisting`)
+        }
     }
 
     private generateSessionToken(userId: string): string {
         const expTime = this.configService.JWT_SESSION_EXP_TIME;
-        const token = this.jwtService.generate(expTime, {
+        const { token, jti } = this.jwtService.generate(expTime, {
             purpose: tokenPurposes.SESSION,
             id: userId
         });
-        this.loggerService.info(`Session token generated, expires at ${expTime}`);
+        this.loggerService.info(`Session token ${jti} generated, expires at ${expTime}`);
         return token;
     }
 
     private generateEmailValidationToken(userEmail: string): string {
-        const jwtExpTime = this.configService.JWT_EMAIL_VALIDATION_EXP_TIME;
-        const token = this.jwtService.generate(jwtExpTime, {
+        const expTime = this.configService.JWT_EMAIL_VALIDATION_EXP_TIME;
+        const { token, jti } = this.jwtService.generate(expTime, {
             purpose: tokenPurposes.EMAIL_VALIDATION,
             email: userEmail
         });
+        this.loggerService.info(`Email validation token ${jti} generated, expires at ${expTime}`);
         return token;
     }
 
     private async sendEmailValidationLink(email: string): Promise<void> {
         const token = this.generateEmailValidationToken(email);
         // web url is appended with a default "/" when read
-        const link = `${this.configService.WEB_URL}api/users/confirmEmailValidation/${token}`;        
+        const link = `${this.configService.WEB_URL}api/users/confirmEmailValidation/${token}`;
         await this.emailService.sendMail({
             to: email,
             subject: 'Email validation',

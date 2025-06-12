@@ -8,18 +8,20 @@ export class JwtService {
         private readonly privateKey: string,
     ) {}
 
-    generate(expirationTime: string, payload: object): string {
+    generate(expirationTime: string, payload: object): { token: string, jti: string } {
+        const jti = uuidv4();
         Object.defineProperty(
             payload,
             'jti',
-            { value: uuidv4(), enumerable: true }
+            { value: jti, enumerable: true }
         );
 
         const token = jwt.sign(payload,
             this.privateKey,
             { expiresIn: expirationTime as `${number}${'h' | 'd' | 'm'}` }
         );
-        return token;
+
+        return { token, jti };
     }
 
     verify<T>(token: string): IJwtPayload & T | null {
