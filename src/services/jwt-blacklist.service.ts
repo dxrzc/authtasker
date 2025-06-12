@@ -16,9 +16,9 @@ export class JwtBlackListService {
         }
     }
 
-    async blacklist(jwtType: JwtTypes, jti: string, expirationTime: number): Promise<void> {
+    async blacklist(jwtType: JwtTypes, jti: string, expirationTimeInSeconds: number): Promise<void> {
         const key = this.resolveKey(jwtType, jti);
-        await this.redisService.set(key, '1', expirationTime);
+        await this.redisService.set(key, '1', expirationTimeInSeconds);
     }
 
     async tokenInBlacklist(jwtType: JwtTypes, jti: string): Promise<boolean> {
