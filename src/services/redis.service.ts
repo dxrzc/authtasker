@@ -3,11 +3,11 @@ import Redis from 'ioredis';
 export class RedisService {
     constructor(private readonly redis: Redis) {}
 
-    async set(key: string, data: string | number | object, expirationTime?: number): Promise<void> {
+    async set(key: string, data: string | number | object, expirationTimeInSeconds?: number): Promise<void> {
         if (typeof data === 'object') data = JSON.stringify(data);
-        expirationTime
-            ? await this.redis.set(key, data, "EX", expirationTime)
-            : await this.redis.set(key, data)                        
+        expirationTimeInSeconds
+            ? await this.redis.set(key, data, "EX", expirationTimeInSeconds)
+            : await this.redis.set(key, data)
     }
 
     async get<T>(key: string): Promise<T | null> {
