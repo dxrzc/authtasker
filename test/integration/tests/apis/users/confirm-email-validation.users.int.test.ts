@@ -25,7 +25,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // Confirm email validation using an invalid token
             const response = await request(testKit.server)
-                .post(`${testKit.endpoints.confirmEmailValidation}/${sessionToken}`);
+                .get(`${testKit.endpoints.confirmEmailValidation}/${sessionToken}`);
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
@@ -44,7 +44,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // confirm email validation using a strange token
             const response = await request(testKit.server)
-                .post(`${testKit.endpoints.confirmEmailValidation}/${sessionToken}`);
+                .get(`${testKit.endpoints.confirmEmailValidation}/${sessionToken}`);
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
@@ -67,7 +67,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // confirm email validation using a blacklisted token
             const response = await request(testKit.server)
-                .post(`${testKit.endpoints.confirmEmailValidation}/${sessionToken}`);
+                .get(`${testKit.endpoints.confirmEmailValidation}/${sessionToken}`);
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
@@ -89,7 +89,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // Confirm email validation
             await request(testKit.server)
-                .post(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
+                .get(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
                 .expect(status2xx);
 
             const userInDb = await testKit.userModel.findById(userId);
@@ -116,7 +116,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // Confirm email validation
             const response = await request(testKit.server)
-                .post(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`);
+                .get(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`);
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
@@ -136,7 +136,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // Confirm email validation
             await request(testKit.server)
-                .post(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
+                .get(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
                 .expect(status2xx);
 
             // expect token in blacklist
@@ -162,7 +162,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // Confirm email validation
             const response = await request(testKit.server)
-                .post(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
+                .get(`${testKit.endpoints.confirmEmailValidation}/${tokenInEmail}`)
 
             expect(response.body).toStrictEqual({ message: expect.any(String) });
             expect(response.statusCode).toBe(expectedStatus);
