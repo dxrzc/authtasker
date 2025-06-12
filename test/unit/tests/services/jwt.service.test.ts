@@ -1,5 +1,5 @@
+import { JwtService } from '@root/services/jwt.service';
 import jwt from 'jsonwebtoken';
-import { JwtService } from '@root/services';
 
 const PRIVATE_KEY = 'my-secret-key';
 let jwtService = new JwtService(PRIVATE_KEY)

@@ -1,7 +1,9 @@
 import { mock } from 'jest-mock-extended';
-import { makeEmailValidationBlacklistKey, makeSessionTokenBlacklistKey } from '@logic/token';
-import { JwtBlackListService, RedisService } from '@root/services';
-import { JwtTypes } from '@root/enums';
+import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
+import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
+import { makeEmailValidationBlacklistKey } from '@logic/token/make-email-validation-token-blacklist-key';
+import { RedisService } from '@root/services/redis.service';
+import { JwtTypes } from '@root/enums/jwt-types.enum';
 
 const redisServiceMock = mock<RedisService>();
 const service = new JwtBlackListService(redisServiceMock);

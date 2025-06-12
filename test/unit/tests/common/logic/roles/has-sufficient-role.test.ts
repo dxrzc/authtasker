@@ -1,5 +1,5 @@
-import { hasSufficientRole } from '@logic/roles';
-import { UserRole, validRoles } from '@root/types/user';
+import { hasSufficientRole } from '@logic/roles/has-sufficent-role';
+import { UserRole, validRoles } from '@root/types/user/user-roles.type';
 
 describe('hasSufficientRole', () => {
     describe('readonly is the minimum role required', () => {

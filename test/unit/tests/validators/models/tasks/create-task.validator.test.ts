@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker/.';
-import { commonErrors, tasksApiErrors } from '@root/common/errors/messages';
-import { CreateTaskValidator } from '@root/validators/models/tasks';
-import { TasksDataGenerator } from '@root/seed/generators';
-import { tasksLimits } from '@root/common/constants';
+import { tasksLimits } from '@root/common/constants/tasks.constants';
+import { commonErrors } from '@root/common/errors/messages/common.error.messages';
+import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
+import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
+import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
 
 const createTaskValidator = new CreateTaskValidator();
 const tasksData = new TasksDataGenerator();

@@ -1,9 +1,9 @@
 import { Model, Query } from 'mongoose';
 import { mock } from 'jest-mock-extended';
-import { IUser } from '@root/interfaces';
+import { paginationErrors } from '@root/common/errors/messages/pagination.error.messages';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
-import { paginationRules } from '@logic/others';
-import { paginationErrors } from '@root/common/errors/messages';
+import { paginationRules } from '@logic/others/pagination-rules';
+import { IUser } from '@root/interfaces/user/user.interface';
 
 describe('paginationRules', () => {
     const userModel = mock<Model<IUser>>()

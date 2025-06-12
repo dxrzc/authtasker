@@ -1,4 +1,4 @@
-import { HashingService } from "@root/services";
+import { HashingService } from '@root/services/hashing.service';
 
 describe('Hashing Service', () => {
     describe('hash', () => {

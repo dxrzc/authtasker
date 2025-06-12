@@ -1,21 +1,30 @@
 import { Model, Query } from "mongoose";
 import { mock, MockProxy } from "jest-mock-extended";
-import { ITasks, IUser, UserFromRequest } from "@root/interfaces";
-import { ConfigService, EmailService, HashingService, JwtBlackListService, JwtService, LoggerService, UserService } from "@root/services";
-import { validRoles } from "@root/types/user";
-import { modificationAuthFixture } from "./fixtures";
-import { MongooseModel, NoReadonly } from "@unit/utils/types";
+import { faker } from "@faker-js/faker/.";
 import { HttpError } from "@root/common/errors/classes/http-error.class";
 import { getRandomRole } from "@unit/utils/get-random-role.util";
-import { faker } from "@faker-js/faker/.";
-import { tokenPurposes } from '@root/common/constants';
-import { UpdateUserValidator } from '@root/validators/models/user';
-import { JwtTypes } from '@root/enums';
-import { authErrors, usersApiErrors } from "@root/common/errors/messages";
+import { ConfigService } from '@root/services/config.service';
+import { HashingService } from '@root/services/hashing.service';
+import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
+import { LoggerService } from '@root/services/logger.service';
+import { JwtService } from '@root/services/jwt.service';
+import { UserService } from '@root/services/user.service';
+import { EmailService } from '@root/services/email.service';
+import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
+import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
+import { NoReadonly } from '@unit/utils/types/no-read-only.type';
+import { IUser } from '@root/interfaces/user/user.interface';
+import { ITasks } from '@root/interfaces/tasks/task.interface';
+import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { validRoles } from '@root/types/user/user-roles.type';
+import { modificationAuthFixture } from './fixtures/modification-auth.fixture';
+import { JwtTypes } from '@root/enums/jwt-types.enum';
+import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { UserFromRequest } from '@root/interfaces/user/user-from-request.interface';
 
 let configService: NoReadonly<ConfigService>;
-let userModel: MockProxy<MongooseModel<Model<IUser>>>;
-let tasksModel: MockProxy<MongooseModel<Model<ITasks>>>;
+let userModel: MockProxy<Model<IUser>>;
+let tasksModel: MockProxy<Model<ITasks>>;
 let hashingService: MockProxy<HashingService>;
 let jwtService: JwtService;
 let jwtBlacklistService: MockProxy<JwtBlackListService>;
@@ -47,14 +56,6 @@ beforeEach(() => {
         loggerService,
         emailService,
     );
-
-    // TODO: remove this sh
-    // this allows, for example, findOne().exec() to be a mock...
-    userModel.find.mockReturnValue(mock<Query<any, any>>());
-    userModel.findOne.mockReturnValue(mock<Query<any, any>>());
-    userModel.findById.mockReturnValue(mock<Query<any, any>>());
-    userModel.findByIdAndDelete.mockReturnValue(mock<Query<any, any>>());
-    userModel.findByIdAndUpdate.mockReturnValue(mock<Query<any, any>>());
 });
 
 describe('User Service', () => {

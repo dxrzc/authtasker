@@ -1,4 +1,4 @@
-import { HttpError } from '@root/common/errors/classes';
+import { HttpError } from '@root/common/errors/classes/http-error.class';
 
 describe('HttpError', () => {
     test('badRequest returns 400', () => {

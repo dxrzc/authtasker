@@ -1,9 +1,11 @@
 import { Model, Types } from "mongoose";
 import { mock, MockProxy } from "jest-mock-extended";
-import { ITasks } from "@root/interfaces";
-import { LoggerService, TasksService, UserService } from "@root/services";
-import { validRoles } from "@root/types/user";
-import { modificationAuthFixture } from "./fixtures";
+import { LoggerService } from '@root/services/logger.service';
+import { UserService } from '@root/services/user.service';
+import { TasksService } from '@root/services/tasks.service';
+import { modificationAuthFixture } from './fixtures/modification-auth.fixture';
+import { validRoles } from '@root/types/user/user-roles.type';
+import { ITasks } from '@root/interfaces/tasks/task.interface';
 
 let loggerService: MockProxy<LoggerService>;
 let tasksModel: MockProxy<Model<ITasks>>;

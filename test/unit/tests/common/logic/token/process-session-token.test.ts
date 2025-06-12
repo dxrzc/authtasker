@@ -1,4 +1,4 @@
-import { processSessionToken } from '@logic/token';
+import { processSessionToken } from '@logic/token/process-session-token';
 
 describe('processSessionToken', () => {
     const jwtService = { verify: jest.fn() };
