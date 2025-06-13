@@ -1,9 +1,11 @@
-import { Request } from "express";
 import { Model } from "mongoose";
-import { tokenPurposes } from '@root/common/constants';
-import { IUser, UserFromRequest } from "@root/interfaces";
-import { JwtBlackListService, JwtService } from "@root/services";
-import { JwtTypes } from '@root/enums';
+import { Request } from "express";
+import { JwtTypes } from '@root/enums/jwt-types.enum';
+import { JwtService } from '@root/services/jwt.service';
+import { IUser } from '@root/interfaces/user/user.interface';
+import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
+import { UserFromRequest } from '@root/interfaces/user/user-from-request.interface';
+import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
 
 export async function processSessionToken(
     req: Request,

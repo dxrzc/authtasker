@@ -1,9 +1,12 @@
-import { createUser, getTokenFromMail, status2xx, testKit } from '@integration/utils';
 import request from 'supertest';
-// https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
 import * as nodemailer from "nodemailer";
 import { NodemailerMock } from "nodemailer-mock";
-import { usersApiErrors } from '@root/common/errors/messages';
+import { testKit } from '@integration/utils/testKit.util';
+import { status2xx } from '@integration/utils/status2xx.util';
+import { createUser } from '@integration/utils/createUser.util';
+import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+
+// https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
 const { mock } = nodemailer as unknown as NodemailerMock;
 
 describe('POST /api/users/requestEmailValidation', () => {

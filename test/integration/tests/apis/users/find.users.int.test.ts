@@ -1,6 +1,7 @@
 import request from 'supertest';
-import { createUser, status2xx, testKit } from '@integration/utils';
-import { paginationErrors } from '@root/common/errors/messages';
+import { testKit } from '@integration/utils/testKit.util';
+import { createUser } from '@integration/utils/createUser.util';
+import { paginationErrors } from '@root/common/errors/messages/pagination.error.messages';
 
 describe('GET /api/users/:id', () => {
     // Creating an extra user to get a valid token breaks the tests

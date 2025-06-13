@@ -1,13 +1,18 @@
 import request from 'supertest';
-import { v4 as uuidv4 } from 'uuid';
-// https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
 import * as nodemailer from "nodemailer";
 import { NodemailerMock } from "nodemailer-mock";
-import { createUser, getTokenFromMail, status2xx, testKit } from "@integration/utils";
-import { makeEmailValidationBlacklistKey, makeSessionTokenBlacklistKey } from '@logic/token';
-import { authErrors, usersApiErrors } from '@root/common/errors/messages';
-import { tokenPurposes } from '@root/common/constants';
-import { JwtService } from '@root/services';
+import { JwtService } from '@root/services/jwt.service';
+import { testKit } from '@integration/utils/testKit.util';
+import { status2xx } from '@integration/utils/status2xx.util';
+import { createUser } from '@integration/utils/createUser.util';
+import { getTokenFromMail } from '@integration/utils/getTokenFromMail.util';
+import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
+import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
+import { makeEmailValidationBlacklistKey } from '@logic/token/make-email-validation-token-blacklist-key';
+
+// https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
 const { mock } = nodemailer as unknown as NodemailerMock;
 
 describe('POST /api/users/confirmEmailValidation/:token', () => {

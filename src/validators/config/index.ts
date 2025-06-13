@@ -1,1 +1,0 @@
-export { validationOptionsConfig } from './validation.config'

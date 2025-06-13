@@ -1,7 +1,8 @@
 import request from 'supertest';
-import { authErrors } from '@root/common/errors/messages';
-import { protectedRoutes } from '@integration/fixtures';
-import { status2xx, testKit } from '@integration/utils';
+import { testKit } from '@integration/utils/testKit.util';
+import { status2xx } from '@integration/utils/status2xx.util';
+import { protectedRoutes } from '@integration/fixtures/protected-routes.fixture';
+import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 
 describe('Session Token Auth Wiring', () => {
     test.concurrent.each(protectedRoutes)('return 401 UNAUTHORIZED when token is not provided in $method $url', async ({ method, url }) => {

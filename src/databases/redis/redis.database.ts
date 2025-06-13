@@ -1,6 +1,7 @@
 import Redis from 'ioredis';
-import { ConfigService, SystemLoggerService } from '@root/services';
 import { EventManager } from '@root/events/eventManager';
+import { ConfigService } from '@root/services/config.service';
+import { SystemLoggerService } from '@root/services/system-logger.service';
 
 // TODO:
 // The RedisDatabase emits the signal "fatalServiceConnectionError"

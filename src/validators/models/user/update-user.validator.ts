@@ -1,11 +1,11 @@
-import { PartialType } from '@nestjs/mapped-types';
 import { validate } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 import { plainToInstance } from 'class-transformer';
-import { returnFirstError } from '@root/validators/helpers';
-import { validationOptionsConfig } from '@root/validators/config';
-import { ValidationResult } from '@root/types/validation';
-import { usersApiErrors } from '@root/common/errors/messages';
-import { CreateUserValidator } from '.';
+import { CreateUserValidator } from './create-user.validator';
+import { ValidationResult } from '@root/types/validation/validation-result.type';
+import { validationOptionsConfig } from '@root/validators/config/validation.config';
+import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
+import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 
 export class UpdateUserValidator extends PartialType(CreateUserValidator) {
 

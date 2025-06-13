@@ -1,10 +1,10 @@
+import { CreateUserValidator } from './create-user.validator';
+import { usersLimits } from '@root/common/constants/user.constants';
+import { ValidationResult } from '@root/types/validation/validation-result.type';
+import { validationOptionsConfig } from '@root/validators/config/validation.config';
 import { IsDefined, IsEmail, MaxLength, MinLength, validate } from 'class-validator';
-import { validationOptionsConfig } from '@root/validators/config';
-import { returnFirstError } from '@root/validators/helpers';
-import { ValidationResult } from '@root/types/validation';
-import { usersApiErrors } from '@root/common/errors/messages';
-import { usersLimits } from '@root/common/constants';
-import { CreateUserValidator } from ".";
+import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
+import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 
 export class LoginUserValidator implements Pick<CreateUserValidator, 'email' | 'password'> {
 

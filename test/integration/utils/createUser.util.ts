@@ -1,6 +1,6 @@
 import request from 'supertest';
-import { UserRole } from '@root/types/user';
 import { testKit } from './testKit.util';
+import { UserRole } from '@root/types/user/user-roles.type';
 
 export const createUser = async (role: UserRole) => {
     const response = await request(testKit.server)

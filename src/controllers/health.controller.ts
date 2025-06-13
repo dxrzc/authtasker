@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { LoggerService } from '@root/services';
-import { statusCodes } from '@root/common/constants';
-import { BaseController } from '@root/common/base';
+import { LoggerService } from '@root/services/logger.service';
+import { BaseController } from '@root/common/base/base-controller.class';
+import { statusCodes } from '@root/common/constants/status-codes.constants';
 
 export class HealthController extends BaseController {
 

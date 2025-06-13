@@ -1,9 +1,12 @@
 import { Request, Response } from "express";
-import { CreateUserValidator, LoginUserValidator, UpdateUserValidator } from '@root/validators/models/user';
-import { paginationSettings, statusCodes } from '@root/common/constants';
-import { LoggerService } from "@root/services/logger.service";
 import { UserService } from "@root/services/user.service";
-import { BaseUserController } from '@root/common/base';
+import { LoggerService } from "@root/services/logger.service";
+import { statusCodes } from '@root/common/constants/status-codes.constants';
+import { paginationSettings } from '@root/common/constants/pagination.constants';
+import { BaseUserController } from '@root/common/base/base-user-controller.class';
+import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
+import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
+import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 
 export class UserController extends BaseUserController {
     

@@ -1,34 +1,27 @@
-import { AsyncLocalStorage } from "async_hooks";
-import { Model } from "mongoose";
 import { Router } from "express";
-
-import {
-    ConfigService,
-    EmailService,
-    HashingService,
-    JwtBlackListService,
-    JwtService,
-    LoggerService,
-    RedisService,
-    TasksService,
-    UserService
-} from "@root/services";
-
-import {
-    ApiLimiterMiddleware,
-    AuthLimiterMiddleware,
-    RolesMiddleware,
-    RequestContextMiddleware,
-    ErrorHandlerMiddleware,
-} from "@root/middlewares";
-
-import { UserRoutes, TasksRoutes } from ".";
-import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
+import { Model } from "mongoose";
+import { UserRoutes } from './user.routes';
+import { TasksRoutes } from './tasks.routes';
+import { AsyncLocalStorage } from "async_hooks";
+import { JwtService } from '@root/services/jwt.service';
+import { UserService } from '@root/services/user.service';
+import { EmailService } from '@root/services/email.service';
+import { RedisService } from '@root/services/redis.service';
+import { TasksService } from '@root/services/tasks.service';
+import { IUser } from '@root/interfaces/user/user.interface';
+import { LoggerService } from '@root/services/logger.service';
+import { ConfigService } from '@root/services/config.service';
+import { ITasks } from '@root/interfaces/tasks/task.interface';
+import { HashingService } from '@root/services/hashing.service';
+import { RolesMiddleware } from '@root/middlewares/roles.middleware';
 import { HealthController } from "@root/controllers/health.controller";
-import { ITasks, IUser } from "@root/interfaces";
-import { loadTasksModel, loadUserModel } from "@root/databases/mongo/models";
-
-// TODO: this needs a big refactor btw
+import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
+import { loadUserModel } from '@root/databases/mongo/models/user.model.load';
+import { loadTasksModel } from '@root/databases/mongo/models/tasks.model.load';
+import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
+import { AuthLimiterMiddleware } from '@root/middlewares/auth-limiter.middleware';
+import { RequestContextMiddleware } from '@root/middlewares/request-context.middleware';
+import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
 
 export class AppRoutes {
 

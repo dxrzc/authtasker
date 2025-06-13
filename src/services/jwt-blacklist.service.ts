@@ -1,6 +1,7 @@
-import { makeEmailValidationBlacklistKey, makeSessionTokenBlacklistKey } from '@logic/token';
 import { RedisService } from './redis.service';
-import { JwtTypes } from '@root/enums';
+import { JwtTypes } from '@root/enums/jwt-types.enum';
+import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
+import { makeEmailValidationBlacklistKey } from '@logic/token/make-email-validation-token-blacklist-key';
 
 export class JwtBlackListService {
 

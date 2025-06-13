@@ -1,8 +1,10 @@
-import { faker } from '@faker-js/faker/.';
 import request from 'supertest';
-import { authErrors, usersApiErrors } from '@root/common/errors/messages';
-import { usersLimits } from '@root/common/constants';
-import { createUser, status2xx, testKit } from '@integration/utils';
+import { faker } from '@faker-js/faker/.';
+import { testKit } from '@integration/utils/testKit.util';
+import { status2xx } from '@integration/utils/status2xx.util';
+import { usersLimits } from '@root/common/constants/user.constants';
+import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 
 describe('POST /api/users/login', () => {
     describe('Input sanitization Wiring', () => {

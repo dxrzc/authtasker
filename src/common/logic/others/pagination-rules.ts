@@ -1,7 +1,6 @@
 import { Model } from "mongoose";
-import { HttpError } from '@root/common/errors/classes';
-import { paginationSettings } from '@root/common/constants';
-import { paginationErrors } from '@root/common/errors/messages';
+import { HttpError } from '@root/common/errors/classes/http-error.class';
+import { paginationErrors } from '@root/common/errors/messages/pagination.error.messages';
 
 export async function paginationRules(limit: number, page: number, model: Model<any>): Promise<number | any[]> {
     if (limit <= 0)

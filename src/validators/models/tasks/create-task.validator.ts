@@ -1,12 +1,13 @@
-import { IsDefined, IsIn, MaxLength, MinLength, validate } from 'class-validator';
 import { plainToInstance, Transform } from 'class-transformer';
-import { TasksPriority, tasksPriority, TasksStatus, tasksStatus } from '@root/types/tasks';
+import { tasksLimits } from '@root/common/constants/tasks.constants';
+import { TasksStatus, tasksStatus } from '@root/types/tasks/task-status.type';
+import { ValidationResult } from '@root/types/validation/validation-result.type';
 import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper';
-import { validationOptionsConfig } from '@root/validators/config';
-import { returnFirstError } from '@root/validators/helpers';
-import { ValidationResult } from '@root/types/validation';
-import { tasksApiErrors } from '@root/common/errors/messages';
-import { tasksLimits } from '@root/common/constants';
+import { IsDefined, IsIn, MaxLength, MinLength, validate } from 'class-validator';
+import { tasksPriority, TasksPriority } from '@root/types/tasks/task-priority.type';
+import { validationOptionsConfig } from '@root/validators/config/validation.config';
+import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
+import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
 
 export class CreateTaskValidator {
 

@@ -1,4 +1,4 @@
-import { Request, RequestHandler, Response } from 'express';
+import { Request, RequestHandler, Response } from 'express'
 import { BaseController } from './base-controller.class';
 
 export abstract class BaseUserController extends BaseController {

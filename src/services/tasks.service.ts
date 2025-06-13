@@ -1,12 +1,15 @@
+import { UserService } from '@root/services/user.service';
 import { HydratedDocument, Model, Types } from "mongoose";
-import { CreateTaskValidator, UpdateTaskValidator } from '@root/validators/models/tasks';
-import { authErrors, tasksApiErrors } from '@root/common/errors/messages';
-import { HttpError } from "@root/common/errors/classes/http-error.class";
-import { ITasks } from "@root/interfaces/tasks/task.interface";
-import { UserRole } from "@root/types/user/user-roles.type";
-import { LoggerService } from "./logger.service";
-import { paginationRules } from "@logic/others";
-import { UserService } from "./user.service";
+import { UserRole } from '@root/types/user/user-roles.type';
+import { LoggerService } from '@root/services/logger.service';
+import { ITasks } from '@root/interfaces/tasks/task.interface';
+import { paginationRules } from '@logic/others/pagination-rules';
+import { HttpError } from '@root/common/errors/classes/http-error.class';
+import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
+import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
+import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
+
 
 export class TasksService {
 

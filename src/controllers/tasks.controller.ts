@@ -1,8 +1,11 @@
 import { Request, Response } from "express";
-import { CreateTaskValidator, UpdateTaskValidator } from '@root/validators/models/tasks';
-import { paginationSettings, statusCodes } from '@root/common/constants';
-import { LoggerService, TasksService } from "@root/services";
-import { BaseTasksController } from '@root/common/base';
+import { TasksService } from '@root/services/tasks.service';
+import { LoggerService } from '@root/services/logger.service';
+import { statusCodes } from '@root/common/constants/status-codes.constants';
+import { paginationSettings } from '@root/common/constants/pagination.constants';
+import { BaseTasksController } from '@root/common/base/base-tasks-controller.class';
+import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
+import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
 
 export class TasksController extends BaseTasksController {
 

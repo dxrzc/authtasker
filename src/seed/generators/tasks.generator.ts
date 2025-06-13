@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
-import { tasksLimits } from '@root/common/constants';
-import { TasksPriority, tasksPriority } from "@root/types/tasks/task-priority.type";
+import { tasksLimits } from '@root/common/constants/tasks.constants';
 import { TasksStatus, tasksStatus } from "@root/types/tasks/task-status.type";
+import { TasksPriority, tasksPriority } from "@root/types/tasks/task-priority.type";
 
 export class TasksDataGenerator {
 

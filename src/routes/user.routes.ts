@@ -1,11 +1,19 @@
-import { Model } from "mongoose";
 import { Router } from "express";
-import { ConfigService, HashingService, LoggerService, SystemLoggerService, UserService } from "@root/services";
-import { createAdmin } from "@root/admin/create-admin";
-import { IUser } from "@root/interfaces";
-import { UserController } from "@root/controllers";
-import { ApiLimiterMiddleware, AuthLimiterMiddleware, RolesMiddleware } from '@root/middlewares';
-import { CreateUserValidator, LoginUserValidator, UpdateUserValidator } from '@root/validators/models/user';
+import { Model } from "mongoose";
+import { createAdmin } from '@root/admin/create-admin';
+import { UserService } from '@root/services/user.service';
+import { IUser } from '@root/interfaces/user/user.interface';
+import { ConfigService } from '@root/services/config.service';
+import { LoggerService } from '@root/services/logger.service';
+import { HashingService } from '@root/services/hashing.service';
+import { UserController } from '@root/controllers/user.controller';
+import { RolesMiddleware } from '@root/middlewares/roles.middleware';
+import { SystemLoggerService } from '@root/services/system-logger.service';
+import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
+import { AuthLimiterMiddleware } from '@root/middlewares/auth-limiter.middleware';
+import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
+import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
+import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 
 export class UserRoutes {
 

@@ -1,4 +1,4 @@
-import { statusCodes } from '@root/common/constants';
+import { statusCodes } from '@root/common/constants/status-codes.constants';
 
 export class HttpError extends Error {
 

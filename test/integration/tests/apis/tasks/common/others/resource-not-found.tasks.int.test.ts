@@ -1,7 +1,8 @@
-import { Types } from 'mongoose';
 import request from 'supertest';
-import { createUser, testKit } from '@integration/utils';
-import { tasksApiErrors } from '@root/common/errors/messages';
+import { Types } from 'mongoose';
+import { testKit } from '@integration/utils/testKit.util';
+import { createUser } from '@integration/utils/createUser.util';
+import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
 
 const cases = ['get', 'patch', 'delete'] as const;
 

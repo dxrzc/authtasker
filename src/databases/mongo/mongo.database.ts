@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
-import { ConfigService, LoggerService, SystemLoggerService } from "@root/services";
 import { EventManager } from "@root/events/eventManager";
+import { ConfigService } from '@root/services/config.service';
+import { LoggerService } from '@root/services/logger.service';
+import { SystemLoggerService } from '@root/services/system-logger.service';
 
 // The MongoDatabase emits the signal "fatalServiceConnectionError"
 // immediately when the mongo service disconnects. It also emits the signal

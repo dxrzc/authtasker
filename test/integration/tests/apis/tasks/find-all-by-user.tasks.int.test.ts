@@ -1,6 +1,8 @@
 import request from 'supertest';
-import { createUser, status2xx, testKit } from "@integration/utils";
-import { createTask } from "@integration/utils/createTask.util";
+import { testKit } from '@integration/utils/testKit.util';
+import { status2xx } from '@integration/utils/status2xx.util';
+import { createUser } from '@integration/utils/createUser.util';
+import { createTask } from '@integration/utils/createTask.util';
 
 describe('GET /api/tasks/allByUser/:id', () => {
     describe('Response', () => {

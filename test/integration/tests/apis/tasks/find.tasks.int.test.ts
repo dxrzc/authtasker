@@ -1,7 +1,8 @@
 import request from 'supertest';
-import { createUser, testKit } from '@integration/utils';
+import { testKit } from '@integration/utils/testKit.util';
+import { createUser } from '@integration/utils/createUser.util';
 import { createTask } from '@integration/utils/createTask.util';
-import { paginationErrors } from '@root/common/errors/messages';
+import { paginationErrors } from '@root/common/errors/messages/pagination.error.messages';
 
 describe('GET /api/tasks/', () => {
     let tasksIdSorted = new Array<string>();

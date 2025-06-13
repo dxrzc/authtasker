@@ -1,4 +1,4 @@
-import { ITestKit } from '../config/setup/interfaces/testKit.interface';
+import { ITestKit } from '@integration/config/setup/interfaces/testKit.interface';
 
 export const testKit: ITestKit = {
     endpoints: {

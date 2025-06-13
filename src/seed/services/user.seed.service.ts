@@ -1,8 +1,10 @@
 import { Model } from "mongoose";
-import { ConfigService, HashingService, LoggerService } from "@root/services";
-import { IUser } from "@root/interfaces";
-import { UserDataGenerator } from "../generators";
-import { UserRequest } from "@root/types/user";
+import { IUser } from '@root/interfaces/user/user.interface';
+import { ConfigService } from '@root/services/config.service';
+import { LoggerService } from '@root/services/logger.service';
+import { HashingService } from '@root/services/hashing.service';
+import { UserDataGenerator } from '../generators/user.generator';
+import { UserRequest } from '@root/types/user/user-request.type';
 
 export class UserSeedService {
 

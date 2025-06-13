@@ -1,14 +1,24 @@
+import { JwtTypes } from '@root/enums/jwt-types.enum';
+import { JwtService } from '@root/services/jwt.service';
 import { HydratedDocument, Model, Types } from "mongoose";
-import { EmailService, HashingService, JwtBlackListService, JwtService, LoggerService, ConfigService } from ".";
-import { HttpError } from "../common/errors/classes/http-error.class";
-import { ITasks, IUser, UserFromRequest } from "@root/interfaces";
-import { UserRole } from "@root/types/user/user-roles.type";
-import { paginationRules } from "@logic/others/pagination-rules";
-import { tokenPurposes } from '@root/common/constants';
-import { calculateTokenTTL } from '@logic/token';
-import { CreateUserValidator, LoginUserValidator, UpdateUserValidator } from '@root/validators/models/user';
-import { authErrors, usersApiErrors } from '@root/common/errors/messages';
-import { JwtTypes } from '@root/enums';
+import { EmailService } from '@root/services/email.service';
+import { UserRole } from '@root/types/user/user-roles.type';
+import { IUser } from '@root/interfaces/user/user.interface';
+import { ConfigService } from '@root/services/config.service';
+import { LoggerService } from '@root/services/logger.service';
+import { ITasks } from '@root/interfaces/tasks/task.interface';
+import { HashingService } from '@root/services/hashing.service';
+import { paginationRules } from '@logic/others/pagination-rules';
+import { calculateTokenTTL } from '@logic/token/calculate-token-ttl';
+import { HttpError } from '@root/common/errors/classes/http-error.class';
+import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
+import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
+import { UserFromRequest } from '@root/interfaces/user/user-from-request.interface';
+import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
+import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
+import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
 
 export class UserService {
 

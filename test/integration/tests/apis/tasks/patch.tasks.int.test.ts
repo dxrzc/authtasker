@@ -1,7 +1,10 @@
 import request from 'supertest';
-import { createUser, status2xx, testKit } from "@integration/utils";
-import { createTask } from "@integration/utils/createTask.util";
-import { commonErrors, tasksApiErrors } from '@root/common/errors/messages';
+import { testKit } from '@integration/utils/testKit.util';
+import { status2xx } from '@integration/utils/status2xx.util';
+import { createUser } from '@integration/utils/createUser.util';
+import { createTask } from '@integration/utils/createTask.util';
+import { commonErrors } from '@root/common/errors/messages/common.error.messages';
+import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
 
 describe('PATCH /api/tasks/:id', () => {
     describe('Input Sanitization', () => {

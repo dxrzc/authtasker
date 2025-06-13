@@ -1,7 +1,10 @@
 import { NextFunction, Request, Response } from "express";
-import { LoggerService, SystemLoggerService } from "@root/services";
+import { ConfigService } from '@root/services/config.service';
+import { LoggerService } from '@root/services/logger.service';
+import { BaseMiddleware } from '@root/common/base/base-middleware.class';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
-import { commonErrors } from '@root/common/errors/messages';
+import { SystemLoggerService } from '@root/services/system-logger.service';
+import { commonErrors } from '@root/common/errors/messages/common.error.messages';
 
 export class ErrorHandlerMiddleware {
 

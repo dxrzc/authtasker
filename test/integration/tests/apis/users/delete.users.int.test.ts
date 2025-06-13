@@ -1,6 +1,8 @@
 import request from 'supertest';
-import { createUser, status2xx, testKit } from '@integration/utils';
-import { authErrors } from '@root/common/errors/messages';
+import { testKit } from '@integration/utils/testKit.util';
+import { status2xx } from '@integration/utils/status2xx.util';
+import { createUser } from '@integration/utils/createUser.util';
+import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 
 describe('DELETE /api/users/:id', () => {
     describe('Modification Access Rules Wiring', () => {

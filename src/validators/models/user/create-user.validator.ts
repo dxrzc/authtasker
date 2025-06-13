@@ -1,11 +1,11 @@
-import { IsDefined, IsEmail, MaxLength, MinLength, validate } from 'class-validator';
 import { plainToInstance, Transform } from 'class-transformer';
+import { usersLimits } from '@root/common/constants/user.constants';
+import { ValidationResult } from '@root/types/validation/validation-result.type';
 import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper';
 import { validationOptionsConfig } from '@root/validators/config/validation.config';
+import { IsDefined, IsEmail, MaxLength, MinLength, validate } from 'class-validator';
 import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
-import { ValidationResult } from '@root/types/validation';
-import { usersApiErrors } from '@root/common/errors/messages';
-import { usersLimits } from '@root/common/constants';
+import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 
 export class CreateUserValidator {
 

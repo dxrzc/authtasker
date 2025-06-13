@@ -1,27 +1,32 @@
-import { AsyncLocalStorage } from "async_hooks";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import { mock } from "jest-mock-extended";
-// https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
 import * as nodemailer from "nodemailer";
+import { mock } from "jest-mock-extended";
 import { NodemailerMock } from "nodemailer-mock";
-const { mock: nodemailerMock } = nodemailer as unknown as NodemailerMock;
-
-import { ConfigService, HashingService, JwtService, LoggerService, RedisService, SystemLoggerService } from "@root/services";
-import { MongoDatabase } from "@root/databases/mongo/mongo.database";
-import { TasksDataGenerator, UserDataGenerator } from "@root/seed/generators";
-import { AppRoutes } from "@root/routes";
-import { Server } from "@root/server/server.init";
-import * as ModelLoader from "@root/databases/mongo/models";
-
-import { testKit } from "@integration/utils/testKit.util";
-import { type IntegrationConfigService } from "./types/config.service.type";
-import { ErrorHandlerMiddleware } from '@root/middlewares';
+import { AsyncLocalStorage } from "async_hooks";
+import { Server } from '@root/server/server.init';
+import { AppRoutes } from '@root/routes/server.routes';
+import { JwtService } from '@root/services/jwt.service';
+import { testKit } from '@integration/utils/testKit.util';
+import { MongoMemoryServer } from "mongodb-memory-server";
+import { RedisService } from '@root/services/redis.service';
+import { LoggerService } from '@root/services/logger.service';
+import { ConfigService } from '@root/services/config.service';
+import { HashingService } from '@root/services/hashing.service';
+import { MongoDatabase } from '@root/databases/mongo/mongo.database';
 import { RedisDatabase } from '@root/databases/redis/redis.database';
+import { IntegrationConfigService } from './types/config.service.type';
+import { UserDataGenerator } from '@root/seed/generators/user.generator';
+import { SystemLoggerService } from '@root/services/system-logger.service';
+import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
+import * as UserModelLoader from '@root/databases/mongo/models/user.model.load';
+import * as TasksModelLoader from '@root/databases/mongo/models/tasks.model.load';
+import { ErrorHandlerMiddleware } from '@root/middlewares/error-handler.middleware';
 
 let mongoMemoryServer: MongoMemoryServer;
 let mongoDatabase: MongoDatabase;
 let redisDatabase: RedisDatabase;
 
+// https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
+const { mock: nodemailerMock } = nodemailer as unknown as NodemailerMock;
 beforeEach(() => {
     // Reset nodemailer emails
     nodemailerMock.reset();
@@ -67,10 +72,10 @@ beforeAll(async () => {
     testKit.redisService = redisService;
 
     // models (can not be compiled twice)
-    const userModel = ModelLoader.loadUserModel(configService as ConfigService);
-    const tasksModel = ModelLoader.loadTasksModel(configService as ConfigService);
-    jest.spyOn(ModelLoader, 'loadUserModel').mockReturnValue(userModel);
-    jest.spyOn(ModelLoader, 'loadTasksModel').mockReturnValue(tasksModel);
+    const userModel = UserModelLoader.loadUserModel(configService as ConfigService);
+    const tasksModel = TasksModelLoader.loadTasksModel(configService as ConfigService);
+    jest.spyOn(UserModelLoader, 'loadUserModel').mockReturnValue(userModel);
+    jest.spyOn(TasksModelLoader, 'loadTasksModel').mockReturnValue(tasksModel);
     testKit.userModel = userModel;
     testKit.tasksModel = tasksModel;
 

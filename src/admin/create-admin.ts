@@ -1,6 +1,8 @@
-import { Model } from "mongoose";
-import { IUser } from "@root/interfaces";
-import { ConfigService, HashingService, SystemLoggerService } from "@root/services";
+import { Model } from "mongoose";;
+import { IUser } from '@root/interfaces/user/user.interface';
+import { ConfigService } from '@root/services/config.service';
+import { HashingService } from '@root/services/hashing.service';
+import { SystemLoggerService } from '@root/services/system-logger.service';
 
 export const createAdmin = async (
     userModel: Model<IUser>,

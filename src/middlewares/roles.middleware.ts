@@ -1,13 +1,15 @@
-import { NextFunction, Request, RequestHandler, Response } from "express";
 import { Model } from "mongoose";
-import { IUser } from "@root/interfaces";
-import { JwtBlackListService, JwtService, LoggerService } from "@root/services";
-import { UserRole } from "@root/types/user";
-import { processSessionToken } from "@logic/token";
-import { hasSufficientRole } from "@logic/roles";
-import { statusCodes } from '@root/common/constants';
-import { BaseMiddleware } from '@root/common/base';
-import { authErrors } from '@root/common/errors/messages';
+import { JwtService } from '@root/services/jwt.service';
+import { UserRole } from '@root/types/user/user-roles.type';
+import { IUser } from '@root/interfaces/user/user.interface';
+import { LoggerService } from '@root/services/logger.service';
+import { hasSufficientRole } from '@logic/roles/has-sufficent-role';
+import { processSessionToken } from '@logic/token/process-session-token';
+import { BaseMiddleware } from '@root/common/base/base-middleware.class';
+import { NextFunction, Request, RequestHandler, Response } from "express";
+import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
+import { statusCodes } from '@root/common/constants/status-codes.constants';
+import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 
 export class RolesMiddleware extends BaseMiddleware<[UserRole]> {
 

@@ -1,5 +1,6 @@
 import request from 'supertest';
-import { createUser, testKit } from '@integration/utils';
+import { testKit } from '@integration/utils/testKit.util';
+import { createUser } from '@integration/utils/createUser.util';
 
 describe('GET /api/users/:id', () => {
     describe('Response', () => {

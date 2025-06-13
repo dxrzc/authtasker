@@ -1,4 +1,4 @@
-import { testKit } from '@integration/utils';
+import { testKit } from '@integration/utils/testKit.util';
 
 export const protectedRoutes = [
     // Users API

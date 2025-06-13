@@ -1,8 +1,8 @@
 import winston from "winston";
 import { AsyncLocalStorage } from "async_hooks";
-import { ConfigService } from "./config.service";
+import { ConfigService } from './config.service';
+import { IRequestFsLog } from '@root/interfaces/logs/request-fs.log.interface';
 import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
-import { IRequestFsLog } from "@root/interfaces";
 
 /*  
     WINSTON LEVELS

@@ -1,6 +1,6 @@
-import { IJwtPayload } from "@root/interfaces/token/jwt-payload.interface";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from 'uuid';
+import { IJwtPayload } from "@root/interfaces/token/jwt-payload.interface";
 
 export class JwtService {
 

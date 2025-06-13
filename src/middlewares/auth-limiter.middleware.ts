@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 import rateLimit from "express-rate-limit";
-import { ConfigService } from "@root/services";
-import { BaseMiddleware } from '@root/common/base';
+import { ConfigService } from '@root/services/config.service';
+import { BaseMiddleware } from '@root/common/base/base-middleware.class';
 
 export class AuthLimiterMiddleware extends BaseMiddleware {    
 

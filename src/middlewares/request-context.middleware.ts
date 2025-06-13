@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
-import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { AsyncLocalStorage } from 'async_hooks';
 import { LoggerService } from '@root/services/logger.service';
-import { BaseMiddleware } from '@root/common/base';
+import { BaseMiddleware } from '@root/common/base/base-middleware.class';
+import { NextFunction, Request, RequestHandler, Response } from 'express';
 
 export class RequestContextMiddleware extends BaseMiddleware {
 
