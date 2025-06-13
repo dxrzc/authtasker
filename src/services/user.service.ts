@@ -1,19 +1,16 @@
-import { JwtTypes } from '@root/enums/jwt-types.enum';
-import { JwtService } from '@root/services/jwt.service';
 import { HydratedDocument, Model, Types } from "mongoose";
 import { EmailService } from '@root/services/email.service';
 import { UserRole } from '@root/types/user/user-roles.type';
 import { IUser } from '@root/interfaces/user/user.interface';
 import { ConfigService } from '@root/services/config.service';
 import { LoggerService } from '@root/services/logger.service';
+import { SessionTokenService } from './session-token.service';
 import { ITasks } from '@root/interfaces/tasks/task.interface';
 import { HashingService } from '@root/services/hashing.service';
 import { paginationRules } from '@logic/others/pagination-rules';
-import { calculateTokenTTL } from '@logic/token/calculate-token-ttl';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
-import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
-import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
+import { EmailValidationTokenService } from './email-validation-token.service';
 import { UserFromRequest } from '@root/interfaces/user/user-from-request.interface';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
@@ -27,10 +24,10 @@ export class UserService {
         private readonly userModel: Model<IUser>,
         private readonly tasksModel: Model<ITasks>,
         private readonly hashingService: HashingService,
-        private readonly jwtService: JwtService,
-        private readonly jwtBlacklistService: JwtBlackListService,
         private readonly loggerService: LoggerService,
         private readonly emailService: EmailService,
+        private readonly sessionTokenService: SessionTokenService,
+        private readonly emailValidationTokenService: EmailValidationTokenService,
     ) {}
 
     private handleDbDuplicatedKeyError(error: any): never {
@@ -40,7 +37,7 @@ export class UserService {
         this.loggerService.error(`User with ${duplicatedKey} "${keyValue}" already exists`);
         throw HttpError.conflict(usersApiErrors.USER_ALREADY_EXISTS);
     }
-    
+
     private async getUserIfAuthorizedToModify(requestUserInfo: { id: string, role: UserRole }, userIdToUpdate: string): Promise<HydratedDocument<IUser> | null> {
         const userToModify = await this.findOne(userIdToUpdate);
         // admin users can modify other users (but not other admins)
@@ -52,48 +49,8 @@ export class UserService {
         return null;
     }
 
-    private async blacklistSessionToken(jti: string, tokenExpiresAtUnixSeconds: number) {
-        const remainingTokenTTLInSeconds = calculateTokenTTL(tokenExpiresAtUnixSeconds);
-        if (remainingTokenTTLInSeconds > 0) {
-            this.loggerService.info(`Session token "${jti}" blacklisted for ${remainingTokenTTLInSeconds} seconds`);
-            await this.jwtBlacklistService.blacklist(JwtTypes.session, jti, remainingTokenTTLInSeconds);
-        } else {
-            this.loggerService.info(`Session token "${jti}" already expired, skipping blacklisting`)
-        }
-    }
-
-    private async blacklistEmailValidationToken(jti: string, tokenExp: number) {
-        const remainingTokenTTL = calculateTokenTTL(tokenExp);
-        if (remainingTokenTTL > 0) {
-            this.loggerService.info(`Email validation token "${jti}" blacklisted`);
-            await this.jwtBlacklistService.blacklist(JwtTypes.emailValidation, jti, remainingTokenTTL);
-        } else {
-            this.loggerService.info(`Email validation token "${jti}" already expired, skipping blacklisting`)
-        }
-    }
-
-    private generateSessionToken(userId: string): string {
-        const expTime = this.configService.JWT_SESSION_EXP_TIME;
-        const { token, jti } = this.jwtService.generate(expTime, {
-            purpose: tokenPurposes.SESSION,
-            id: userId
-        });
-        this.loggerService.info(`Session token ${jti} generated, expires at ${expTime}`);
-        return token;
-    }
-
-    private generateEmailValidationToken(userEmail: string): string {
-        const expTime = this.configService.JWT_EMAIL_VALIDATION_EXP_TIME;
-        const { token, jti } = this.jwtService.generate(expTime, {
-            purpose: tokenPurposes.EMAIL_VALIDATION,
-            email: userEmail
-        });
-        this.loggerService.info(`Email validation token ${jti} generated, expires at ${expTime}`);
-        return token;
-    }
-
     private async sendEmailValidationLink(email: string): Promise<void> {
-        const token = this.generateEmailValidationToken(email);
+        const token = this.emailValidationTokenService.generate(email);
         // web url is appended with a default "/" when read
         const link = `${this.configService.WEB_URL}api/users/confirmEmailValidation/${token}`;
         await this.emailService.sendMail({
@@ -105,36 +62,6 @@ export class UserService {
             <a href= "${link}"> Validate your email ${email} </a>`,
         });
         this.loggerService.info(`Email validation sent to ${email}`);
-    }
-
-    private async consumeEmailValidationToken(token: string): Promise<string> {
-        // token was generated by this server
-        const payload = this.jwtService.verify<{ email: string }>(token);
-        if (!payload) {
-            this.loggerService.error('Invalid token, not generated by this server');
-            throw HttpError.badRequest(authErrors.INVALID_TOKEN);
-        }
-        // email must be in token
-        const emailInToken = payload.email;
-        if (!emailInToken) {
-            this.loggerService.error('Email not in token');
-            throw HttpError.badRequest(authErrors.INVALID_TOKEN);
-        }
-        // correct purpose
-        const validPurpose = payload.purpose === tokenPurposes.EMAIL_VALIDATION;
-        if (!validPurpose) {
-            this.loggerService.error(`Invalid token purpose: ${payload.purpose}`);
-            throw HttpError.badRequest(authErrors.INVALID_TOKEN);
-        }
-        // token is not blacklisted
-        const tokenIsBlacklisted = await this.jwtBlacklistService.tokenInBlacklist(JwtTypes.emailValidation, payload.jti)
-        if (tokenIsBlacklisted) {
-            this.loggerService.error('Token is blacklisted');
-            throw HttpError.badRequest(authErrors.INVALID_TOKEN);
-        }
-        // single-use token
-        await this.blacklistEmailValidationToken(payload.jti, payload.exp!);
-        return payload.email;
     }
 
     private async setUserDocumentNewProperties(userToUpdate: HydratedDocument<IUser>, propertiesUpdated: UpdateUserValidator) {
@@ -172,7 +99,7 @@ export class UserService {
     }
 
     async confirmEmailValidation(token: string): Promise<void> {
-        const emailInToken = await this.consumeEmailValidationToken(token);
+        const emailInToken = await this.emailValidationTokenService.consume(token);
         // check user existence
         const user = await this.userModel.findOne({ email: emailInToken }).exec();
         if (!user) {
@@ -194,7 +121,7 @@ export class UserService {
             // creation in db
             const created = await this.userModel.create(user);
             // token generation
-            const token = this.generateSessionToken(created.id);
+            const token = this.sessionTokenService.generate(created.id);
             this.loggerService.info(`User ${created.id} created`);
             return {
                 user: created,
@@ -222,7 +149,7 @@ export class UserService {
             throw HttpError.badRequest(authErrors.INVALID_CREDENTIALS);
         }
         // token generation
-        const token = this.generateSessionToken(userDb.id);
+        const token = this.sessionTokenService.generate(userDb.id);
         this.loggerService.info(`User ${userDb.id} logged in`);
         return {
             user: userDb,
@@ -231,7 +158,7 @@ export class UserService {
     }
 
     async logout(requestUserInfo: UserFromRequest): Promise<void> {
-        await this.blacklistSessionToken(requestUserInfo.jti, requestUserInfo.tokenExp);
+        await this.sessionTokenService.blacklist(requestUserInfo.jti, requestUserInfo.tokenExp);
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 

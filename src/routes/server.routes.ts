@@ -16,11 +16,13 @@ import { HashingService } from '@root/services/hashing.service';
 import { RolesMiddleware } from '@root/middlewares/roles.middleware';
 import { HealthController } from "@root/controllers/health.controller";
 import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
+import { SessionTokenService } from '@root/services/session-token.service';
 import { loadUserModel } from '@root/databases/mongo/models/user.model.load';
 import { loadTasksModel } from '@root/databases/mongo/models/tasks.model.load';
 import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
 import { AuthLimiterMiddleware } from '@root/middlewares/auth-limiter.middleware';
 import { RequestContextMiddleware } from '@root/middlewares/request-context.middleware';
+import { EmailValidationTokenService } from '@root/services/email-validation-token.service';
 import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
 
 export class AppRoutes {
@@ -37,6 +39,8 @@ export class AppRoutes {
     private readonly authLimiterMiddleware: AuthLimiterMiddleware;
     private readonly apiLimiterMiddleware: ApiLimiterMiddleware;
     private readonly healthController: HealthController;
+    private readonly sessionTokenService: SessionTokenService;
+    private readonly emailValidationTokenService: EmailValidationTokenService;
 
     constructor(
         private readonly configService: ConfigService,
@@ -52,6 +56,19 @@ export class AppRoutes {
         this.jwtService = new JwtService(this.configService.JWT_PRIVATE_KEY);
         this.hashingService = new HashingService(this.configService.BCRYPT_SALT_ROUNDS);
         this.jwtBlacklistService = new JwtBlackListService(this.redisService);
+        this.sessionTokenService = new SessionTokenService(
+            this.configService,
+            this.jwtService,
+            this.jwtBlacklistService,
+            this.loggerService,
+            this.userModel,
+        );
+        this.emailValidationTokenService = new EmailValidationTokenService(
+            this.configService,
+            this.jwtService,
+            this.jwtBlacklistService,
+            this.loggerService,        
+        );
         this.emailService = new EmailService({
             host: this.configService.MAIL_SERVICE_HOST,
             port: this.configService.MAIL_SERVICE_PORT,
@@ -63,10 +80,8 @@ export class AppRoutes {
         this.authLimiterMiddleware = new AuthLimiterMiddleware(this.configService);
         this.apiLimiterMiddleware = new ApiLimiterMiddleware(this.configService);
         this.rolesMiddleware = new RolesMiddleware(
-            this.userModel,
-            this.loggerService,
-            this.jwtService,
-            this.jwtBlacklistService,
+            this.sessionTokenService,
+            this.loggerService
         );
 
         // api services
@@ -75,10 +90,10 @@ export class AppRoutes {
             this.userModel,
             this.tasksModel,
             this.hashingService,
-            this.jwtService,
-            this.jwtBlacklistService,
             this.loggerService,
-            this.emailService
+            this.emailService,
+            this.sessionTokenService,
+            this.emailValidationTokenService,
         );
 
         this.tasksService = new TasksService(
