@@ -1,6 +1,6 @@
+import { Apis } from '@root/enums/apis.enum';
 import { HydratedDocument, Model, Types } from "mongoose";
 import { EmailService } from '@root/services/email.service';
-import { UserRole } from '@root/types/user/user-roles.type';
 import { IUser } from '@root/interfaces/user/user.interface';
 import { ConfigService } from '@root/services/config.service';
 import { LoggerService } from '@root/services/logger.service';
@@ -8,14 +8,18 @@ import { SessionTokenService } from './session-token.service';
 import { ITasks } from '@root/interfaces/tasks/task.interface';
 import { HashingService } from '@root/services/hashing.service';
 import { paginationRules } from '@logic/others/pagination-rules';
+import { UserDocument } from '@root/types/user/user-document.type';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { UserIdentity } from '@root/interfaces/user/user-indentity.interface';
 import { EmailValidationTokenService } from './email-validation-token.service';
 import { UserFromRequest } from '@root/interfaces/user/user-from-request.interface';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
+import { handleDuplicatedKeyInDb } from '@logic/errors/handle-duplicated-key-in-db';
+import { modificationAccessControl } from '@logic/roles/modification-access-control';
 
 export class UserService {
 
@@ -30,23 +34,17 @@ export class UserService {
         private readonly emailValidationTokenService: EmailValidationTokenService,
     ) {}
 
-    private handleDbDuplicatedKeyError(error: any): never {
-        // - keyValue: {name: 'user123'}
-        const duplicatedKey = Object.keys(error.keyValue).at(0);
-        const keyValue = Object.values(error.keyValue).at(0);
-        this.loggerService.error(`User with ${duplicatedKey} "${keyValue}" already exists`);
-        throw HttpError.conflict(usersApiErrors.USER_ALREADY_EXISTS);
-    }
-
-    private async getUserIfAuthorizedToModify(requestUserInfo: { id: string, role: UserRole }, userIdToUpdate: string): Promise<HydratedDocument<IUser> | null> {
-        const userToModify = await this.findOne(userIdToUpdate);
-        // admin users can modify other users (but not other admins)
-        if (requestUserInfo.role === 'admin' && userToModify.role !== 'admin')
-            return userToModify;
-        // users can modify themselves
-        if (requestUserInfo.id === userToModify.id)
-            return userToModify;
-        return null;
+    private async authorizeUserModification(requestUserInfo: UserIdentity, targetUserId: string): Promise<UserDocument> {
+        const targetUser = await this.findOne(targetUserId);
+        const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
+            role: targetUser.role,
+            id: targetUser.id
+        });
+        if (!isCurrentUserAuthorized) {
+            this.loggerService.error(`Not authorized to perform this action`);
+            throw HttpError.forbidden(authErrors.FORBIDDEN);
+        }
+        return targetUser;
     }
 
     private async sendEmailValidationLink(email: string): Promise<void> {
@@ -64,7 +62,7 @@ export class UserService {
         this.loggerService.info(`Email validation sent to ${email}`);
     }
 
-    private async setUserDocumentNewProperties(userToUpdate: HydratedDocument<IUser>, propertiesUpdated: UpdateUserValidator) {
+    private async setUserDocumentNewProperties(userToUpdate: UserDocument, propertiesUpdated: UpdateUserValidator) {
         // updating email
         if (propertiesUpdated.email) {
             if (userToUpdate.role !== 'admin') {
@@ -113,7 +111,7 @@ export class UserService {
         this.loggerService.info(`User ${user.id} email validated`);
     }
 
-    async create(user: CreateUserValidator): Promise<{ user: HydratedDocument<IUser>, token: string }> {
+    async create(user: CreateUserValidator): Promise<{ user: UserDocument, token: string }> {
         try {
             // password hashing
             const passwordHash = await this.hashingService.hash(user.password);
@@ -130,12 +128,12 @@ export class UserService {
 
         } catch (error: any) {
             if (error.code === 11000)
-                this.handleDbDuplicatedKeyError(error);
+                handleDuplicatedKeyInDb(Apis.users, error, this.loggerService);
             throw error;
         }
     }
 
-    async login(userToLogin: LoginUserValidator): Promise<{ user: HydratedDocument<IUser>, token: string }> {
+    async login(userToLogin: LoginUserValidator): Promise<{ user: UserDocument, token: string }> {
         // check user existence
         const userDb = await this.userModel.findOne({ email: userToLogin.email }).exec();
         if (!userDb) {
@@ -162,7 +160,7 @@ export class UserService {
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
-    async findOne(id: string): Promise<HydratedDocument<IUser>> {
+    async findOne(id: string): Promise<UserDocument> {
         let userDb;
         if (Types.ObjectId.isValid(id))
             userDb = await this.userModel.findById(id).exec();
@@ -174,7 +172,7 @@ export class UserService {
         return userDb;
     }
 
-    async findAll(limit: number, page: number): Promise<HydratedDocument<IUser>[]> {
+    async findAll(limit: number, page: number): Promise<UserDocument[]> {
         const offset = await paginationRules(limit, page, this.userModel);
         // no documents found
         if (offset instanceof Array)
@@ -187,37 +185,25 @@ export class UserService {
             .exec();
     }
 
-    async deleteOne(requestUserInfo: { id: string, role: UserRole }, id: string): Promise<void> {
-        // check if current user is authorized
-        const userToDelete = await this.getUserIfAuthorizedToModify(requestUserInfo, id);
-        if (!userToDelete) {
-            this.loggerService.error(`Not authorized to perform this action`);
-            throw HttpError.forbidden(authErrors.FORBIDDEN);
-        }
-        await userToDelete.deleteOne().exec();
-        this.loggerService.info(`User ${id} deleted`);
+    async deleteOne(requestUserInfo: UserIdentity, targetUserId: string): Promise<void> {
+        const targetUser = await this.authorizeUserModification(requestUserInfo, targetUserId);
+        await targetUser.deleteOne().exec();
+        this.loggerService.info(`User ${targetUserId} deleted`);
         // remove all tasks associated
-        const tasksRemoved = await this.tasksModel.deleteMany({ user: userToDelete.id });
+        const tasksRemoved = await this.tasksModel.deleteMany({ user: targetUser.id });
         this.loggerService.info(`${tasksRemoved.deletedCount} tasks associated to user removed`);
     }
 
-    async updateOne(requestUserInfo: { id: string, role: UserRole }, id: string, propertiesUpdated: UpdateUserValidator): Promise<HydratedDocument<IUser>> {
+    async updateOne(requestUserInfo: UserIdentity, targetUserId: string, propertiesUpdated: UpdateUserValidator): Promise<HydratedDocument<IUser>> {
+        const targetUser = await this.authorizeUserModification(requestUserInfo, targetUserId);
+        await this.setUserDocumentNewProperties(targetUser, propertiesUpdated);
         try {
-            // check if current user is authorized
-            const userToUpdate = await this.getUserIfAuthorizedToModify(requestUserInfo, id);
-            if (!userToUpdate) {
-                this.loggerService.error(`Not authorized to perform this action`);
-                throw HttpError.forbidden(authErrors.FORBIDDEN);
-            }
-            // set new properties requires specific logic
-            await this.setUserDocumentNewProperties(userToUpdate, propertiesUpdated);
-            await userToUpdate.save();
-            this.loggerService.info(`User ${id} updated`);
-            return userToUpdate;
-
+            await targetUser.save();
+            this.loggerService.info(`User ${targetUserId} updated`);
+            return targetUser;
         } catch (error: any) {
             if (error.code === 11000)
-                this.handleDbDuplicatedKeyError(error);
+                handleDuplicatedKeyInDb(Apis.users, error, this.loggerService);
             throw error;
         }
     }

@@ -1,15 +1,18 @@
+import { Apis } from '@root/enums/apis.enum';
 import { UserService } from '@root/services/user.service';
-import { HydratedDocument, Model, Types } from "mongoose";
-import { UserRole } from '@root/types/user/user-roles.type';
+import { Model, Types } from "mongoose";
 import { LoggerService } from '@root/services/logger.service';
 import { ITasks } from '@root/interfaces/tasks/task.interface';
 import { paginationRules } from '@logic/others/pagination-rules';
+import { TaskDocument } from '@root/types/tasks/task-document.type';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
+import { UserIdentity } from '@root/interfaces/user/user-indentity.interface';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { handleDuplicatedKeyInDb } from '@logic/errors/handle-duplicated-key-in-db';
+import { modificationAccessControl } from '@logic/roles/modification-access-control';
 import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
 import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
-
 
 export class TasksService {
 
@@ -19,27 +22,21 @@ export class TasksService {
         private readonly userService: UserService,
     ) {}
 
-    private handleDbDuplicatedKeyError(error: any): never {
-        const duplicatedKey = Object.keys(error.keyValue);
-        const keyValue = Object.values(error.keyValue);
-        this.loggerService.error(`Task with ${duplicatedKey}: "${keyValue}" already exists`);
-        throw HttpError.conflict(tasksApiErrors.taskAlreadyExists(duplicatedKey[0]));
-    }
-
-    private async getTaskIfUserAuthorizedToModify(requestUserInfo: { id: string, role: UserRole }, taskId: string): Promise<HydratedDocument<ITasks> | null> {
-        const task = await this.findOne(taskId);
-        // find task owner
+    private async authorizeTaskModification(requestUserInfo: UserIdentity, targetTaskId: string): Promise<TaskDocument> {
+        const task = await this.findOne(targetTaskId);
         const taskOwner = await this.userService.findOne(task.user.toString());
-        // administrators can not modify other administrators tasks
-        if (requestUserInfo.role === 'admin' && taskOwner.role !== 'admin')
-            return task;
-        // users can modify their own tasks
-        if (requestUserInfo.id === taskOwner.id)
-            return task;
-        return null;
-    }
+        const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
+            role: taskOwner.role,
+            id: taskOwner.id
+        });
+        if (!isCurrentUserAuthorized) {
+            this.loggerService.error(`Not authorized to perform this action`);
+            throw HttpError.forbidden(authErrors.FORBIDDEN);
+        }
+        return task;
+    };
 
-    async create(task: CreateTaskValidator, user: string): Promise<HydratedDocument<ITasks>> {
+    async create(task: CreateTaskValidator, user: string): Promise<TaskDocument> {
         try {
             const taskCreated = await this.tasksModel.create({ ...task, user });
             this.loggerService.info(`Task ${taskCreated.id} created`);
@@ -47,12 +44,12 @@ export class TasksService {
 
         } catch (error: any) {
             if (error.code === 11000)
-                this.handleDbDuplicatedKeyError(error);
+                handleDuplicatedKeyInDb(Apis.tasks, error, this.loggerService);
             throw error;
         }
     }
 
-    async findOne(id: string): Promise<HydratedDocument<ITasks>> {
+    async findOne(id: string): Promise<TaskDocument> {
         let taskFound;
         if (Types.ObjectId.isValid(id))
             taskFound = await this.tasksModel.findById(id).exec();
@@ -64,7 +61,7 @@ export class TasksService {
         return taskFound;
     }
 
-    async findAll(limit: number, page: number): Promise<HydratedDocument<ITasks>[]> {
+    async findAll(limit: number, page: number): Promise<TaskDocument[]> {
         const offset = await paginationRules(limit, page, this.tasksModel);
         // no documents found
         if (offset instanceof Array)
@@ -87,34 +84,23 @@ export class TasksService {
         return tasks;
     }
 
-    async deleteOne(requestUserInfo: { id: string, role: UserRole }, id: string): Promise<void> {
-        // check if current user is authorized
-        const task = await this.getTaskIfUserAuthorizedToModify(requestUserInfo, id);
-        if (!task) {
-            this.loggerService.error(`Not authorized to perform this action`);
-            throw HttpError.forbidden(authErrors.FORBIDDEN);
-        }
-        await task.deleteOne().exec();
-        this.loggerService.info(`Task ${id} deleted`);
+    async deleteOne(requestUserInfo: UserIdentity, taskId: string): Promise<void> {
+        const targetTask = await this.authorizeTaskModification(requestUserInfo, taskId);
+        await targetTask.deleteOne().exec();
+        this.loggerService.info(`Task ${taskId} deleted`);
     }
 
-    async updateOne(requestUserInfo: { id: string, role: UserRole }, id: string, task: UpdateTaskValidator): Promise<HydratedDocument<ITasks>> {
+    async updateOne(requestUserInfo: UserIdentity, targetTaskId: string, task: UpdateTaskValidator): Promise<TaskDocument> {
+        const targetTask = await this.authorizeTaskModification(requestUserInfo, targetTaskId);
+        // set new properties in document
+        Object.assign(targetTask, task);
         try {
-            // check if current user is authorized
-            const taskToUpdate = await this.getTaskIfUserAuthorizedToModify(requestUserInfo, id);
-            if (!taskToUpdate) {
-                this.loggerService.error(`Not authorized to perform this action`);
-                throw HttpError.forbidden(authErrors.FORBIDDEN);
-            }
-            // set new properties in document
-            Object.assign(taskToUpdate, task);
-            await taskToUpdate.save();
-            this.loggerService.info(`Task ${id} updated`);
-            return taskToUpdate;
-
+            await targetTask.save();
+            this.loggerService.info(`Task ${targetTaskId} updated`);
+            return targetTask;
         } catch (error: any) {
             if (error.code === 11000)
-                this.handleDbDuplicatedKeyError(error);
+                handleDuplicatedKeyInDb(Apis.tasks, error, this.loggerService);
             throw error;
         }
     }
