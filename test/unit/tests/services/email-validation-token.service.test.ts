@@ -1,12 +1,9 @@
-import { Model } from 'mongoose';
 import { faker } from '@faker-js/faker/.';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { JwtTypes } from '@root/enums/jwt-types.enum';
 import { JwtService } from '@root/services/jwt.service';
-import { IUser } from '@root/interfaces/user/user.interface';
 import { LoggerService } from '@root/services/logger.service';
 import { ConfigService } from '@root/services/config.service';
-import { NoReadonly } from '@unit/utils/types/no-read-only.type';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
@@ -16,8 +13,7 @@ import { EmailValidationTokenService } from '@root/services/email-validation-tok
 describe('EmailValidationTokenService', () => {
     let jwtService: JwtService;
     let jwtBlacklistService: MockProxy<JwtBlackListService>
-    let loggerService: MockProxy<LoggerService>
-    let userModel: MockProxy<Model<IUser>>;
+    let loggerService: MockProxy<LoggerService>    
     let configService: Partial<ConfigService>;
     let emailValidationTokenService: EmailValidationTokenService;
 
@@ -32,7 +28,6 @@ describe('EmailValidationTokenService', () => {
         // mocks
         jwtBlacklistService = mock<JwtBlackListService>();
         loggerService = mock<LoggerService>();
-        userModel = mock<Model<IUser>>();
 
         emailValidationTokenService = new EmailValidationTokenService(
             configService as ConfigService,
