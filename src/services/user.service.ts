@@ -1,6 +1,8 @@
+import { Model, Types } from "mongoose";
 import { Apis } from '@root/enums/apis.enum';
-import { HydratedDocument, Model, Types } from "mongoose";
+import { UsersCacheService } from './users-cache.service';
 import { EmailService } from '@root/services/email.service';
+import { UserRole } from '@root/types/user/user-roles.type';
 import { IUser } from '@root/interfaces/user/user.interface';
 import { ConfigService } from '@root/services/config.service';
 import { LoggerService } from '@root/services/logger.service';
@@ -8,18 +10,19 @@ import { SessionTokenService } from './session-token.service';
 import { ITasks } from '@root/interfaces/tasks/task.interface';
 import { HashingService } from '@root/services/hashing.service';
 import { paginationRules } from '@logic/others/pagination-rules';
+import { UserResponse } from '@root/types/user/user-response.type';
 import { UserDocument } from '@root/types/user/user-document.type';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { UserIdentity } from '@root/interfaces/user/user-indentity.interface';
 import { EmailValidationTokenService } from './email-validation-token.service';
 import { UserFromRequest } from '@root/interfaces/user/user-from-request.interface';
+import { handleDuplicatedKeyInDb } from '@logic/errors/handle-duplicated-key-in-db';
+import { modificationAccessControl } from '@logic/roles/modification-access-control';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
-import { handleDuplicatedKeyInDb } from '@logic/errors/handle-duplicated-key-in-db';
-import { modificationAccessControl } from '@logic/roles/modification-access-control';
 
 export class UserService {
 
@@ -32,19 +35,34 @@ export class UserService {
         private readonly emailService: EmailService,
         private readonly sessionTokenService: SessionTokenService,
         private readonly emailValidationTokenService: EmailValidationTokenService,
+        private readonly usersCacheService: UsersCacheService,
     ) {}
 
-    private async authorizeUserModification(requestUserInfo: UserIdentity, targetUserId: string): Promise<UserDocument> {
-        const targetUser = await this.findOne(targetUserId);
+    private async findOneNoCache(id: string): Promise<UserDocument> {
+        const validMongoId = Types.ObjectId.isValid(id);
+        if (!validMongoId) {
+            this.loggerService.error(`Invalid mongo id`)
+            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+        }
+        const userInDb = await this.userModel.findById(id).exec();
+        if (!userInDb) {
+            this.loggerService.error(`User ${id} not found`)
+            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+        }    
+        return userInDb;
+    }
+
+    private async authorizeUserModificationOrThrow(requestUserInfo: UserIdentity, targetUserId: string): Promise<UserDocument> {
+        const targetUserDocument = await this.findOneNoCache(targetUserId);
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
-            role: targetUser.role,
-            id: targetUser.id
+            id: targetUserId,
+            role: targetUserDocument.role
         });
         if (!isCurrentUserAuthorized) {
             this.loggerService.error(`Not authorized to perform this action`);
             throw HttpError.forbidden(authErrors.FORBIDDEN);
         }
-        return targetUser;
+        return targetUserDocument;
     }
 
     private async sendEmailValidationLink(email: string): Promise<void> {
@@ -62,24 +80,23 @@ export class UserService {
         this.loggerService.info(`Email validation sent to ${email}`);
     }
 
-    private async setUserDocumentNewProperties(userToUpdate: UserDocument, propertiesUpdated: UpdateUserValidator) {
+    private async setNewPropertiesInDocument(userDocument: UserDocument, propertiesUpdated: UpdateUserValidator): Promise<void> {
         // updating email
         if (propertiesUpdated.email) {
-            if (userToUpdate.role !== 'admin') {
-                userToUpdate.emailValidated = false;
-                userToUpdate.role = 'readonly';
+            if (userDocument.role !== 'admin') {
+                userDocument.emailValidated = false;
+                userDocument.role = 'readonly';
             }
-            userToUpdate.email = propertiesUpdated.email;
+            userDocument.email = propertiesUpdated.email;
         }
         // updating password
         if (propertiesUpdated.password) {
-            userToUpdate.password = await this.hashingService.hash(propertiesUpdated.password);
+            userDocument.password = await this.hashingService.hash(propertiesUpdated.password);
         }
         // updating name
         if (propertiesUpdated.name) {
-            userToUpdate.name = propertiesUpdated.name
+            userDocument.name = propertiesUpdated.name
         }
-        return userToUpdate;
     }
 
     async requestEmailValidation(id: string): Promise<void> {
@@ -111,7 +128,7 @@ export class UserService {
         this.loggerService.info(`User ${user.id} email validated`);
     }
 
-    async create(user: CreateUserValidator): Promise<{ user: UserDocument, token: string }> {
+    async create(user: CreateUserValidator): Promise<{ user: UserResponse, token: string }> {
         try {
             // password hashing
             const passwordHash = await this.hashingService.hash(user.password);
@@ -133,7 +150,7 @@ export class UserService {
         }
     }
 
-    async login(userToLogin: LoginUserValidator): Promise<{ user: UserDocument, token: string }> {
+    async login(userToLogin: LoginUserValidator): Promise<{ user: UserResponse, token: string }> {
         // check user existence
         const userDb = await this.userModel.findOne({ email: userToLogin.email }).exec();
         if (!userDb) {
@@ -160,19 +177,28 @@ export class UserService {
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
-    async findOne(id: string): Promise<UserDocument> {
-        let userDb;
-        if (Types.ObjectId.isValid(id))
-            userDb = await this.userModel.findById(id).exec();
-        // id is not valid / user not found
-        if (!userDb) {
+    async findOne(id: string): Promise<UserResponse> {
+        // validate id 
+        const validMongoId = Types.ObjectId.isValid(id);
+        if (!validMongoId) {
+            this.loggerService.error(`Invalid mongo id`)
+            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+        }
+        // check if user is cached
+        const userInCache = await this.usersCacheService.get(id);
+        if (userInCache)
+            return userInCache;
+        // user is not in cache
+        const userInDb = await this.userModel.findById(id).exec();
+        if (!userInDb) {
             this.loggerService.error(`User ${id} not found`)
             throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
         }
-        return userDb;
+        await this.usersCacheService.cache(userInDb);
+        return userInDb;
     }
 
-    async findAll(limit: number, page: number): Promise<UserDocument[]> {
+    async findAll(limit: number, page: number): Promise<UserResponse[]> {
         const offset = await paginationRules(limit, page, this.userModel);
         // no documents found
         if (offset instanceof Array)
@@ -186,21 +212,21 @@ export class UserService {
     }
 
     async deleteOne(requestUserInfo: UserIdentity, targetUserId: string): Promise<void> {
-        const targetUser = await this.authorizeUserModification(requestUserInfo, targetUserId);
-        await targetUser.deleteOne().exec();
+        await this.authorizeUserModificationOrThrow(requestUserInfo, targetUserId);
+        await this.userModel.deleteOne({ _id: targetUserId });
         this.loggerService.info(`User ${targetUserId} deleted`);
         // remove all tasks associated
-        const tasksRemoved = await this.tasksModel.deleteMany({ user: targetUser.id });
+        const tasksRemoved = await this.tasksModel.deleteMany({ user: targetUserId });
         this.loggerService.info(`${tasksRemoved.deletedCount} tasks associated to user removed`);
     }
 
-    async updateOne(requestUserInfo: UserIdentity, targetUserId: string, propertiesUpdated: UpdateUserValidator): Promise<HydratedDocument<IUser>> {
-        const targetUser = await this.authorizeUserModification(requestUserInfo, targetUserId);
-        await this.setUserDocumentNewProperties(targetUser, propertiesUpdated);
+    async updateOne(requestUserInfo: UserIdentity, targetUserId: string, propertiesUpdated: UpdateUserValidator): Promise<UserResponse> {
+        const userDocument = await this.authorizeUserModificationOrThrow(requestUserInfo, targetUserId);
+        await this.setNewPropertiesInDocument(userDocument, propertiesUpdated);
         try {
-            await targetUser.save();
+            await userDocument.save();
             this.loggerService.info(`User ${targetUserId} updated`);
-            return targetUser;
+            return userDocument;
         } catch (error: any) {
             if (error.code === 11000)
                 handleDuplicatedKeyInDb(Apis.users, error, this.loggerService);

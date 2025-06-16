@@ -15,6 +15,7 @@ import { ITasks } from '@root/interfaces/tasks/task.interface';
 import { HashingService } from '@root/services/hashing.service';
 import { RolesMiddleware } from '@root/middlewares/roles.middleware';
 import { HealthController } from "@root/controllers/health.controller";
+import { UsersCacheService } from '@root/services/users-cache.service';
 import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
 import { SessionTokenService } from '@root/services/session-token.service';
 import { loadUserModel } from '@root/databases/mongo/models/user.model.load';
@@ -41,6 +42,7 @@ export class AppRoutes {
     private readonly healthController: HealthController;
     private readonly sessionTokenService: SessionTokenService;
     private readonly emailValidationTokenService: EmailValidationTokenService;
+    private readonly usersCacheService: UsersCacheService;
 
     constructor(
         private readonly configService: ConfigService,
@@ -67,7 +69,7 @@ export class AppRoutes {
             this.configService,
             this.jwtService,
             this.jwtBlacklistService,
-            this.loggerService,        
+            this.loggerService,
         );
         this.emailService = new EmailService({
             host: this.configService.MAIL_SERVICE_HOST,
@@ -84,6 +86,13 @@ export class AppRoutes {
             this.loggerService
         );
 
+        this.usersCacheService = new UsersCacheService(
+            this.userModel,
+            this.loggerService,
+            this.redisService,
+            5,
+        );
+
         // api services
         this.userService = new UserService(
             this.configService,
@@ -94,6 +103,7 @@ export class AppRoutes {
             this.emailService,
             this.sessionTokenService,
             this.emailValidationTokenService,
+            this.usersCacheService
         );
 
         this.tasksService = new TasksService(
