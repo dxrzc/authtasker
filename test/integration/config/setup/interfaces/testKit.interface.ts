@@ -1,8 +1,13 @@
-import { ITasks, IUser } from '@root/interfaces';
-import { TasksDataGenerator, UserDataGenerator } from '@root/seed/generators';
-import { HashingService, JwtService, RedisService } from '@root/services';
 import { Express } from 'express';
 import { Model } from 'mongoose';
+import { JwtService } from '@root/services/jwt.service';
+import { RedisService } from '@root/services/redis.service';
+import { IUser } from '@root/interfaces/user/user.interface';
+import { ITasks } from '@root/interfaces/tasks/task.interface';
+import { HashingService } from '@root/services/hashing.service';
+import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
+import { UserDataGenerator } from '@root/seed/generators/user.generator';
+import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
 
 export interface ITestKit {
     
@@ -15,8 +20,9 @@ export interface ITestKit {
     server: Express;
     
     jwtService: JwtService;
+    jwtBlacklistService: JwtBlackListService;
     hashingService: HashingService;
-    redisService: RedisService;
+    // redisService: RedisService;
 
     endpoints: {
         usersAPI: string;

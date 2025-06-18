@@ -3,6 +3,7 @@ import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
+import { JwtTypes } from '@root/enums/jwt-types.enum';
 
 describe('POST /api/users/logout', () => {
     describe('Token operations', () => {
@@ -16,10 +17,10 @@ describe('POST /api/users/logout', () => {
                 .expect(status2xx);
 
             const payload = testKit.jwtService.verify(sessionToken);
-            const jti = payload!.jti!;
+            const jti = payload!.jti;
 
             // expect session token in blacklist
-            const token = await testKit.redisService.get(makeSessionTokenBlacklistKey(jti));
+            const token = await testKit.jwtBlacklistService.tokenInBlacklist(JwtTypes.session, jti);
             expect(token).not.toBeNull();
         });
     });

@@ -34,7 +34,7 @@ describe('POST /api/users/register', () => {
                 });
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-            expect(response.statusCode).toBe(expectedStatus);            
+            expect(response.statusCode).toBe(expectedStatus);
         });
     });
 
@@ -66,6 +66,7 @@ describe('POST /api/users/register', () => {
             expect(userInDb!.updatedAt).toBeDefined();
         });
 
+        // TODO: suspicious test (failing sometimes, consider remove "concurrent")
         test.concurrent('return 409 CONFLICT when user email already exists', async () => {
             const expectedStatus = 409;
             const expectedErrorMssg = usersApiErrors.USER_ALREADY_EXISTS;
@@ -76,6 +77,9 @@ describe('POST /api/users/register', () => {
                 .send(testKit.userDataGenerator.fullUser())
                 .expect(status2xx);
             const usedEmail = firstUser.body.user.email;
+            console.log({ usedEmail });
+            const userFound = await testKit.userModel.findOne({ email: usedEmail });
+            expect(userFound).not.toBeNull();
 
             // Create another user with same email
             const response = await request(testKit.server)
@@ -109,7 +113,7 @@ describe('POST /api/users/register', () => {
                 });
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-            expect(response.statusCode).toBe(expectedStatus);            
+            expect(response.statusCode).toBe(expectedStatus);
         });
     });
 
@@ -150,7 +154,7 @@ describe('POST /api/users/register', () => {
             // Verify the token
             const token = registerResponse.body.token;
             const payload = testKit.jwtService.verify(token);
-            expect(payload).not.toBeNull();            
+            expect(payload).not.toBeNull();
         });
     });
 });

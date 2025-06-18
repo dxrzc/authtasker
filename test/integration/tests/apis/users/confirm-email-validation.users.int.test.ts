@@ -11,6 +11,7 @@ import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
 import { makeEmailValidationBlacklistKey } from '@logic/token/make-email-validation-token-blacklist-key';
+import { JwtTypes } from '@root/enums/jwt-types.enum';
 
 // https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
 const { mock } = nodemailer as unknown as NodemailerMock;
@@ -61,14 +62,15 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // generate token
             const { userEmail } = await createUser('editor');
-            const sessionToken = testKit.jwtService.generate('10m', {
+            const { token: sessionToken } = testKit.jwtService.generate('10m', {
                 purpose: tokenPurposes.EMAIL_VALIDATION,
                 email: userEmail,
             });
             const jti = testKit.jwtService.verify(sessionToken)?.jti!;
+            expect(jti).not.toBeNull();
 
             // blacklist token
-            await testKit.redisService.set(makeEmailValidationBlacklistKey(jti), '1');
+            await testKit.jwtBlacklistService.blacklist(JwtTypes.emailValidation, jti, 10000);
 
             // confirm email validation using a blacklisted token
             const response = await request(testKit.server)
@@ -138,6 +140,8 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // Obtain token sent in url
             const tokenInEmail = getTokenFromMail(mock.getSentMail().at(0)?.html as string);
+            const payload = testKit.jwtService.verify(tokenInEmail);
+            const jti = payload!.jti;
 
             // Confirm email validation
             await request(testKit.server)
@@ -145,7 +149,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
                 .expect(status2xx);
 
             // expect token in blacklist
-            const blacklistedToken = testKit.redisService.get(makeSessionTokenBlacklistKey(tokenInEmail));
+            const blacklistedToken = await testKit.jwtBlacklistService.tokenInBlacklist(JwtTypes.emailValidation, jti)
             expect(blacklistedToken).toBeDefined();
         });
     });

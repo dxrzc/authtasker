@@ -16,6 +16,7 @@ import { RedisDatabase } from '@root/databases/redis/redis.database';
 import { IntegrationConfigService } from './types/config.service.type';
 import { UserDataGenerator } from '@root/seed/generators/user.generator';
 import { SystemLoggerService } from '@root/services/system-logger.service';
+import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
 import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
 import * as UserModelLoader from '@root/databases/mongo/models/user.model.load';
 import * as TasksModelLoader from '@root/databases/mongo/models/tasks.model.load';
@@ -60,16 +61,15 @@ beforeAll(async () => {
     mongoDatabase = new MongoDatabase(configService as ConfigService, loggerServiceMock);
     await mongoDatabase.connect();
 
-    const jwtService = new JwtService(configService.JWT_PRIVATE_KEY);
-    testKit.jwtService = jwtService;
-    
-    testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);
-
     // redis connection
     redisDatabase = new RedisDatabase(configService as ConfigService);
     const redisInstance = await redisDatabase.connect();
-    const redisService = new RedisService(redisInstance);
-    testKit.redisService = redisService;
+    const redisService = new RedisService(redisInstance);       
+    
+    // helpers
+    testKit.jwtService = new JwtService(configService.JWT_PRIVATE_KEY);
+    testKit.jwtBlacklistService = new JwtBlackListService(redisService);    
+    testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS); 
 
     // models (can not be compiled twice)
     const userModel = UserModelLoader.loadUserModel(configService as ConfigService);
