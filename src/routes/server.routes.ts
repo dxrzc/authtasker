@@ -5,6 +5,7 @@ import { TasksRoutes } from './tasks.routes';
 import { AsyncLocalStorage } from "async_hooks";
 import { JwtService } from '@root/services/jwt.service';
 import { UserService } from '@root/services/user.service';
+import { CacheService } from '@root/services/cache.service';
 import { EmailService } from '@root/services/email.service';
 import { RedisService } from '@root/services/redis.service';
 import { TasksService } from '@root/services/tasks.service';
@@ -13,9 +14,10 @@ import { LoggerService } from '@root/services/logger.service';
 import { ConfigService } from '@root/services/config.service';
 import { ITasks } from '@root/interfaces/tasks/task.interface';
 import { HashingService } from '@root/services/hashing.service';
+import { UserResponse } from '@root/types/user/user-response.type';
 import { RolesMiddleware } from '@root/middlewares/roles.middleware';
+import { makeUsersCacheKey } from '@logic/cache/make-users-cache-key';
 import { HealthController } from "@root/controllers/health.controller";
-import { UsersCacheService } from '@root/services/users-cache.service';
 import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
 import { SessionTokenService } from '@root/services/session-token.service';
 import { loadUserModel } from '@root/databases/mongo/models/user.model.load';
@@ -25,6 +27,7 @@ import { AuthLimiterMiddleware } from '@root/middlewares/auth-limiter.middleware
 import { RequestContextMiddleware } from '@root/middlewares/request-context.middleware';
 import { EmailValidationTokenService } from '@root/services/email-validation-token.service';
 import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
+
 
 export class AppRoutes {
 
@@ -42,7 +45,7 @@ export class AppRoutes {
     private readonly healthController: HealthController;
     private readonly sessionTokenService: SessionTokenService;
     private readonly emailValidationTokenService: EmailValidationTokenService;
-    private readonly usersCacheService: UsersCacheService;
+    private readonly usersCacheService: CacheService<UserResponse>;
 
     constructor(
         private readonly configService: ConfigService,
@@ -86,11 +89,12 @@ export class AppRoutes {
             this.loggerService
         );
 
-        this.usersCacheService = new UsersCacheService(
+        this.usersCacheService = new CacheService<UserResponse>(
             this.userModel,
             this.loggerService,
             this.redisService,
-            5,
+            10,
+            makeUsersCacheKey
         );
 
         // api services

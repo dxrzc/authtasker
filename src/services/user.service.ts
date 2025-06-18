@@ -1,8 +1,7 @@
 import { Model, Types } from "mongoose";
 import { Apis } from '@root/enums/apis.enum';
-import { UsersCacheService } from './users-cache.service';
+import { CacheService } from './cache.service';
 import { EmailService } from '@root/services/email.service';
-import { UserRole } from '@root/types/user/user-roles.type';
 import { IUser } from '@root/interfaces/user/user.interface';
 import { ConfigService } from '@root/services/config.service';
 import { LoggerService } from '@root/services/logger.service';
@@ -35,7 +34,7 @@ export class UserService {
         private readonly emailService: EmailService,
         private readonly sessionTokenService: SessionTokenService,
         private readonly emailValidationTokenService: EmailValidationTokenService,
-        private readonly usersCacheService: UsersCacheService,
+        private readonly cacheService: CacheService<UserResponse>,
     ) {}
 
     private async findOneNoCache(id: string): Promise<UserDocument> {
@@ -185,7 +184,7 @@ export class UserService {
             throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
         }
         // check if user is cached
-        const userInCache = await this.usersCacheService.get(id);
+        const userInCache = await this.cacheService.get(id);
         if (userInCache)
             return userInCache;
         // user is not in cache
@@ -194,7 +193,7 @@ export class UserService {
             this.loggerService.error(`User ${id} not found`)
             throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
         }
-        await this.usersCacheService.cache(userInDb);
+        await this.cacheService.cache(userInDb);
         return userInDb;
     }
 
