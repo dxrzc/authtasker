@@ -21,32 +21,18 @@ export class UserController extends BaseUserController {
     protected readonly create = async (req: Request, res: Response): Promise<void> => {
         this.loggerService.info('User creation attempt');
         const user = req.body;
-        const [error, validatedUser] = await this.createUserValidator.validateProperties(user);
-
-        if (!validatedUser) {
-            this.loggerService.error(`Data validation failed`);
-            res.status(statusCodes.BAD_REQUEST).json({ error });
-            return;
-        }
-
+        const validUser = await this.createUserValidator.validateAndTransform(user);
         this.loggerService.info(`Data successfully validated`);
-        const created = await this.userService.create(validatedUser);
+        const created = await this.userService.create(validUser);
         res.status(statusCodes.CREATED).json(created);
     }
 
     protected readonly login = async (req: Request, res: Response): Promise<void> => {
         this.loggerService.info('User login attempt');
         const user = req.body;
-        const [error, validatedUser] = await this.loginUserValidator.validate(user);
-
-        if (!validatedUser) {
-            this.loggerService.error(`Data validation failed`);
-            res.status(statusCodes.BAD_REQUEST).json({ error });
-            return;
-        }
-
+        const validUser = await this.loginUserValidator.validate(user);
         this.loggerService.info(`Data successfully validated`);
-        const loggedIn = await this.userService.login(validatedUser);
+        const loggedIn = await this.userService.login(validUser);
         res.status(statusCodes.OK).json(loggedIn);
     }
 
@@ -103,17 +89,10 @@ export class UserController extends BaseUserController {
         const userIdToUpdate = req.params.id;
         this.loggerService.info(`User ${userIdToUpdate} update attempt`);
         const propertiesToUpdate = req.body;
-        const [error, validProps] = await this.updateUserValidator.validateNewProperties(propertiesToUpdate);
-
-        if (!validProps) {
-            this.loggerService.error(`Data validation failed`);
-            res.status(statusCodes.BAD_REQUEST).json({ error });
-            return;
-        }
-
+        const validUpdate =  await this.updateUserValidator.validateNewAndTransform(propertiesToUpdate);
         this.loggerService.info(`Data successfully validated`);
         const requestUserInfo = this.getUserRequestInfo(req, res);
-        const updated = await this.userService.updateOne(requestUserInfo, userIdToUpdate, validProps);
+        const updated = await this.userService.updateOne(requestUserInfo, userIdToUpdate, validUpdate);
         res.status(statusCodes.OK).json(updated);
     }
 }

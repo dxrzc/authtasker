@@ -1,13 +1,13 @@
 import { plainToInstance, Transform } from 'class-transformer';
 import { tasksLimits } from '@root/common/constants/tasks.constants';
 import { TasksStatus, tasksStatus } from '@root/types/tasks/task-status.type';
-import { ValidationResult } from '@root/types/validation/validation-result.type';
 import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper';
 import { IsDefined, IsIn, MaxLength, MinLength, validate } from 'class-validator';
 import { tasksPriority, TasksPriority } from '@root/types/tasks/task-priority.type';
 import { validationOptionsConfig } from '@root/validators/config/validation.config';
 import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
 import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
+import { InvalidInputError } from '@root/common/errors/classes/invalid-input-error.class';
 
 export class CreateTaskValidator {
 
@@ -28,14 +28,14 @@ export class CreateTaskValidator {
     @IsIn(tasksPriority, { message: tasksApiErrors.INVALID_PRIORITY })
     priority!: TasksPriority;
 
-    async validateProperties(data: object): ValidationResult<CreateTaskValidator> {
+    async validateAndTransform(data: object): Promise<CreateTaskValidator> {
         const task = new CreateTaskValidator();
         Object.assign(task, data);
 
         const errors = await validate(task, validationOptionsConfig);
         if (errors.length > 0)
-            return [returnFirstError(errors), null];
+            throw new InvalidInputError(returnFirstError(errors));
         
-        return [null, plainToInstance(CreateTaskValidator, task)];
+        return plainToInstance(CreateTaskValidator, task)
     }
 }

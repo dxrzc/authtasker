@@ -1,11 +1,11 @@
 import { plainToInstance, Transform } from 'class-transformer';
 import { usersLimits } from '@root/common/constants/user.constants';
-import { ValidationResult } from '@root/types/validation/validation-result.type';
 import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper';
 import { validationOptionsConfig } from '@root/validators/config/validation.config';
 import { IsDefined, IsEmail, MaxLength, MinLength, validate } from 'class-validator';
 import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { InvalidInputError } from '@root/common/errors/classes/invalid-input-error.class';
 
 export class CreateUserValidator {
 
@@ -24,15 +24,14 @@ export class CreateUserValidator {
     @MaxLength(usersLimits.MAX_PASSWORD_LENGTH, { message: usersApiErrors.INVALID_PASSWORD_LENGTH })
     password!: string;
 
-    async validateProperties(data: object): ValidationResult<CreateUserValidator> {
+    async validateAndTransform(data: object): Promise<CreateUserValidator> {
         const user = new CreateUserValidator();
         Object.assign(user, data);
 
         const errors = await validate(user, validationOptionsConfig);
-
         if (errors.length > 0)
-            return [returnFirstError(errors), null];
+            throw new InvalidInputError(returnFirstError(errors));
 
-        return [null, plainToInstance(CreateUserValidator, user)];
+        return plainToInstance(CreateUserValidator, user);
     }
 }

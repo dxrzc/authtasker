@@ -18,17 +18,10 @@ export class TasksController extends BaseTasksController {
 
     protected readonly create = async (req: Request, res: Response) => {
         this.loggerService.info('Task creation attempt');        
-        const [error, validatedTask] = await this.createTaskValidator.validateProperties(req.body);
-
-        if (!validatedTask) {
-            this.loggerService.error('Data validation failed');
-            res.status(statusCodes.BAD_REQUEST).json({ error });
-            return;
-        }
-
+        const validTask = await this.createTaskValidator.validateAndTransform(req.body);
         this.loggerService.info('Data successfully validated');
         const requestUserInfo = this.getUserRequestInfo(req, res);
-        const created = await this.tasksService.create(validatedTask, requestUserInfo.id);
+        const created = await this.tasksService.create(validTask, requestUserInfo.id);
         res.status(statusCodes.CREATED).json(created);
     };
 
@@ -65,17 +58,10 @@ export class TasksController extends BaseTasksController {
     protected readonly updateOne = async (req: Request, res: Response) => {
         const id = req.params.id;
         this.loggerService.info(`Task ${id} update attempt`);
-        const [error, validatedTask] = await this.updateTaskValidator.validateNewProperties(req.body);
-
-        if (!validatedTask) {
-            this.loggerService.error('Data validation failed');
-            res.status(statusCodes.BAD_REQUEST).json({ error });
-            return;
-        }
-
+        const validUpdate = await this.updateTaskValidator.validateNewAndTransform(req.body);
         this.loggerService.info('Data successfully validated');
         const requestUserInfo = this.getUserRequestInfo(req, res);
-        const updated = await this.tasksService.updateOne(requestUserInfo, id, validatedTask);
+        const updated = await this.tasksService.updateOne(requestUserInfo, id, validUpdate);
         res.status(statusCodes.OK).json(updated);
     };
 }
