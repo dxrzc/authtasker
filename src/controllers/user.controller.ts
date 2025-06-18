@@ -53,11 +53,6 @@ export class UserController extends BaseUserController {
     protected readonly confirmEmailValidation = async (req: Request, res: Response): Promise<void> => {
         this.loggerService.info('Email confirmation attempt');
         const token = req.params.token;
-        if (!token) {
-            this.loggerService.error('Can not confirm email, no token provided');
-            res.status(statusCodes.BAD_REQUEST).json({ error: 'No token provided' });
-            return;
-        }
         await this.userService.confirmEmailValidation(token);
         res.status(statusCodes.OK).send({ message: 'Email successfully validated' });
     }
