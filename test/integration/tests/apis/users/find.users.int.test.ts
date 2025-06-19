@@ -26,6 +26,8 @@ describe('GET /api/users/:id', () => {
         usersIdSorted = sortedUsers.map((obj) => obj.userId);
     });
 
+    // TODO: test: do not call cache service if the provided id is not valid mongo id
+
     describe('Pagination Rules Wiring', () => {
         test('return status 400 BAD REQUEST when page exceeds the max possible page for the documents count', async () => {
             const expectedStatus = 400;
