@@ -110,7 +110,7 @@ export class ConfigService {
             .required()
             .asInt();
 
-        this.USERS_API_CACHE_TTL_SECONDS = env.get('USERS_API_CACHE_TTLS')
+        this.USERS_API_CACHE_TTL_SECONDS = env.get('USERS_API_CACHE_TTL_SECONDS')
             .required()
             .asInt();
 
