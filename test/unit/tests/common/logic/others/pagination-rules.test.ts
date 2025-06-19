@@ -2,7 +2,7 @@ import { Model, Query } from 'mongoose';
 import { mock } from 'jest-mock-extended';
 import { paginationErrors } from '@root/common/errors/messages/pagination.error.messages';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
-import { paginationRules } from '@logic/others/pagination-rules';
+import { paginationRules } from '@logic/pagination/pagination-rules';
 import { IUser } from '@root/interfaces/user/user.interface';
 
 describe('paginationRules', () => {

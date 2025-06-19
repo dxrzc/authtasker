@@ -1,56 +1,63 @@
 import request from 'supertest';
 import { testKit } from '@integration/utils/testKit.util';
-import { status2xx } from '@integration/utils/status2xx.util';
+import { Types } from 'mongoose';
+import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 import { createUser } from '@integration/utils/createUser.util';
-import { createTask } from '@integration/utils/createTask.util';
+import { getRandomRole } from '@integration/utils/get-random-role.util';
+import { paginationErrors } from '@root/common/errors/messages/pagination.error.messages';
+import { createUserMultipleTasks } from '@integration/utils/create-user-multiple-tasks-util';
 
 describe('GET /api/tasks/allByUser/:id', () => {
-    describe('Response', () => {
-        test.concurrent('return status 200 OK and all the tasks created by the user in ascending order (based on createdAt)', async () => {
-            const expectedStatus = 200;
-            const { userId, sessionToken } = await createUser('editor');
+    describe('User not found', () => {
+        test('return status 404 NOT FOUND', async () => {
+            const { sessionToken } = await createUser(getRandomRole());
+            const expectedStatus = 404;
+            const expectedErrorMssg = usersApiErrors.USER_NOT_FOUND;
 
-            // Create 6 tasks sequentially
-            let tasksId = new Array<string>();
-            for (let i = 0; i < 6; i++) {
-                const { taskId } = await createTask(sessionToken);
-                tasksId.push(taskId);
-            }            
-
-            // Get tasks full data
-            let tasksFullData = new Array();
-            for (const id of tasksId) {
-                const taskInDb = await testKit.tasksModel.findById(id);
-                tasksFullData.push({
-                    name: taskInDb!.name,
-                    description: taskInDb!.description,
-                    status: taskInDb!.status,
-                    priority: taskInDb!.priority,
-                    user: taskInDb!.user.toString(),
-                    createdAt: taskInDb!.createdAt.toISOString(),
-                    updatedAt: taskInDb!.updatedAt.toISOString(),
-                    id: taskInDb!.id,
-                });
-            }
-
+            const mongoId = new Types.ObjectId();
             const response = await request(testKit.server)
-                .get(`${testKit.endpoints.findAllTasksByUser}/${userId}`)
+                .get(`${testKit.endpoints.findAllTasksByUser}/${mongoId}`)
                 .set('Authorization', `Bearer ${sessionToken}`);
 
-            expect(response.statusCode).toBe(expectedStatus);            
-            expect(response.body).toStrictEqual(tasksFullData);
+            expect(response.statusCode).toBe(expectedStatus);
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
         });
+    });
 
-        test.concurrent('return empty array when user does not have any task', async () => {
-            const { userId } = await createUser('readonly');
-            const { sessionToken } = await createUser('readonly');
+    describe('Invalid mongo id', () => {
+        test('return status 404 NOT FOUND', async () => {
+            const { sessionToken } = await createUser(getRandomRole());
+            const expectedStatus = 404;
+            const expectedErrorMssg = usersApiErrors.USER_NOT_FOUND;
+
+            const invalidId = 'invalid-id';
+            const response = await request(testKit.server)
+                .get(`${testKit.endpoints.findAllTasksByUser}/${invalidId}`)
+                .set('Authorization', `Bearer ${sessionToken}`);
+
+            expect(response.statusCode).toBe(expectedStatus);
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+        });
+    });
+
+    describe('Pagination Rules Wiring', () => {
+        test('return status 400 BAD REQUEST when page exceeds the max possible page for the documents count', async () => {
+            const expectedStatus = 400;
+            const expectedErrorMssg = paginationErrors.PAGE_TOO_LARGE;
+
+            const { sessionToken } = await createUser('editor');
+            await createUserMultipleTasks(sessionToken, 7);
+
+            const limit = 3;
+            const invalidPage = 5;
 
             const response = await request(testKit.server)
-                .get(`${testKit.endpoints.findAllTasksByUser}/${userId}`)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .expect(status2xx);
+                .get(testKit.endpoints.usersAPI)
+                .query({ page: invalidPage, limit })
+                .set('Authorization', `Bearer ${sessionToken}`);
 
-            expect(response.body).toStrictEqual([]);
+            expect(response.statusCode).toBe(expectedStatus);
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
         });
     });
 });

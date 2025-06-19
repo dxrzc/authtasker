@@ -8,7 +8,7 @@ import { LoggerService } from '@root/services/logger.service';
 import { SessionTokenService } from './session-token.service';
 import { ITasks } from '@root/interfaces/tasks/task.interface';
 import { HashingService } from '@root/services/hashing.service';
-import { paginationRules } from '@logic/others/pagination-rules';
+import { paginationRules } from '@logic/pagination/pagination-rules';
 import { UserResponse } from '@root/types/user/user-response.type';
 import { UserDocument } from '@root/types/user/user-document.type';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
@@ -195,10 +195,9 @@ export class UserService {
     }
 
     async findAll(limit: number, page: number): Promise<UserDocument[]> {
-        const offset = await paginationRules(limit, page, this.userModel);
-        // no documents found
-        if (offset instanceof Array)
-            return [];
+        const totalDocuments = await this.userModel.countDocuments().exec();
+        if (totalDocuments === 0) return [];
+        const offset = await paginationRules(limit, page, totalDocuments);
         return await this.userModel
             .find()
             .skip(offset)

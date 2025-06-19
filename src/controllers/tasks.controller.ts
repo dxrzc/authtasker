@@ -45,7 +45,9 @@ export class TasksController extends BaseTasksController {
     protected readonly findAllByUser = async (req: Request, res: Response) => {
         const userId = req.params.id;
         this.loggerService.info(`Tasks by user ${userId} search attempt`);
-        const tasksFound = await this.tasksService.findAllByUser(userId);
+        const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
+        const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
+        const tasksFound = await this.tasksService.findAllByUser(userId, limit, page);
         res.status(statusCodes.OK).json(tasksFound);
     };
 

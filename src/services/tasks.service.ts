@@ -4,18 +4,18 @@ import { Model, Types } from "mongoose";
 import { CacheService } from './cache.service';
 import { LoggerService } from '@root/services/logger.service';
 import { ITasks } from '@root/interfaces/tasks/task.interface';
-import { paginationRules } from '@logic/others/pagination-rules';
+import { paginationRules } from '@logic/pagination/pagination-rules';
 import { TaskResponse } from '@root/types/tasks/task-response.type';
 import { TaskDocument } from '@root/types/tasks/task-document.type';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { UserIdentity } from '@root/interfaces/user/user-indentity.interface';
+import { ICacheOptions } from '@root/interfaces/cache/cache-options.interface';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { handleDuplicatedKeyInDb } from '@logic/errors/handle-duplicated-key-in-db';
 import { modificationAccessControl } from '@logic/roles/modification-access-control';
 import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
 import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
-import { ICacheOptions } from '@root/interfaces/cache/cache-options.interface';
 
 export class TasksService {
 
@@ -86,10 +86,9 @@ export class TasksService {
     }
 
     async findAll(limit: number, page: number): Promise<TaskDocument[]> {
-        const offset = await paginationRules(limit, page, this.tasksModel);
-        // no documents found
-        if (offset instanceof Array)
-            return [];
+        const totalDocuments = await this.tasksModel.countDocuments().exec();
+        if (totalDocuments === 0) return [];
+        const offset = await paginationRules(limit, page, totalDocuments);
         return await this.tasksModel
             .find()
             .skip(offset)
@@ -98,11 +97,16 @@ export class TasksService {
             .exec();
     }
 
-    async findAllByUser(userId: string) {
-        // verifies that user exists
+    async findAllByUser(userId: string, limit: number, page: number) {
+        // verifies that user exists or throws
         await this.userService.findOne(userId, { noStore: true });
+        const totalDocuments = await this.tasksModel.findById(userId).countDocuments().exec();
+        if (totalDocuments === 0) return [];
+        const offset = await paginationRules(limit, page, totalDocuments);
         const tasks = await this.tasksModel
             .find({ user: userId })
+            .skip(offset)
+            .limit(limit)
             .sort({ createdAt: 1 })
             .exec();
         return tasks;
