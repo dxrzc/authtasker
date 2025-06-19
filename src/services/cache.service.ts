@@ -20,10 +20,8 @@ export class CacheService<Data extends { id: string }> {
             .select('updatedAt')
             .exec();
         // resource not found
-        if (!query) {
-            await this.redisService.delete(this.cacheKeyMaker(id));
+        if (!query)
             return false;
-        }
         const updatedAtUnix = Math.floor((query.updatedAt.getTime()) / 1000);
         return cachedAtUnix > updatedAtUnix;
     }
