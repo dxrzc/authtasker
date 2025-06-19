@@ -65,9 +65,8 @@ describe('POST /api/users/register', () => {
             expect(userInDb!.createdAt).toBeDefined();
             expect(userInDb!.updatedAt).toBeDefined();
         });
-
-        // TODO: suspicious test (failing sometimes, consider remove "concurrent")
-        test.concurrent('return 409 CONFLICT when user email already exists', async () => {
+        
+        test('return 409 CONFLICT when user email already exists', async () => {
             const expectedStatus = 409;
             const expectedErrorMssg = usersApiErrors.USER_ALREADY_EXISTS;
 
@@ -77,9 +76,6 @@ describe('POST /api/users/register', () => {
                 .send(testKit.userDataGenerator.fullUser())
                 .expect(status2xx);
             const usedEmail = firstUser.body.user.email;
-            console.log({ usedEmail });
-            const userFound = await testKit.userModel.findOne({ email: usedEmail });
-            expect(userFound).not.toBeNull();
 
             // Create another user with same email
             const response = await request(testKit.server)
@@ -93,7 +89,7 @@ describe('POST /api/users/register', () => {
             expect(response.statusCode).toBe(expectedStatus);
         });
 
-        test.concurrent('return 409 CONFLICT when user name already exists', async () => {
+        test('return 409 CONFLICT when user name already exists', async () => {
             const expectedStatus = 409;
             const expectedErrorMssg = usersApiErrors.USER_ALREADY_EXISTS;
 
