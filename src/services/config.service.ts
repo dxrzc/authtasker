@@ -22,6 +22,7 @@ export class ConfigService {
     public readonly ADMIN_PASSWORD: string;
     public readonly API_MAX_REQ_PER_MINUTE: number;
     public readonly AUTH_MAX_REQ_PER_MINUTE: number;
+    public readonly USERS_API_CACHE_TTLS: number;
 
     constructor() {
         this.NODE_ENV = env.get('NODE_ENV')
@@ -105,6 +106,10 @@ export class ConfigService {
             .asInt();
 
         this.AUTH_MAX_REQ_PER_MINUTE = env.get('AUTH_MAX_REQ_PER_MINUTE')
+            .required()
+            .asInt();
+
+        this.USERS_API_CACHE_TTLS = env.get('USERS_API_CACHE_TTLS')
             .required()
             .asInt();
     }

@@ -93,7 +93,7 @@ export class AppRoutes {
             this.userModel,
             this.loggerService,
             this.redisService,
-            10,
+            configService.USERS_API_CACHE_TTLS,
             makeUsersCacheKey
         );
 
