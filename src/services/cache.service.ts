@@ -14,13 +14,16 @@ export class CacheService<Data extends { id: string }> {
     ) {}
 
     private async revalidate(id: string, cachedAtUnix: number): Promise<boolean> {
-        const { updatedAt } = await this.model
+        const query = await this.model
             .findById(id)
             .select('updatedAt')
             .exec();
         // resource not found
-        if (!updatedAt) return false;
-        const updatedAtUnix = Math.floor((updatedAt.getTime()) / 1000);
+        if (!query) {
+            await this.redisService.delete(this.cacheKeyMaker(id));
+            return false;
+        }
+        const updatedAtUnix = Math.floor((query.updatedAt.getTime()) / 1000);
         return cachedAtUnix > updatedAtUnix;
     }
 
