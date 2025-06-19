@@ -14,6 +14,7 @@ import { UserDocument } from '@root/types/user/user-document.type';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { UserIdentity } from '@root/interfaces/user/user-indentity.interface';
+import { ICacheOptions } from '@root/interfaces/cache/cache-options.interface';
 import { EmailValidationTokenService } from './email-validation-token.service';
 import { UserFromRequest } from '@root/interfaces/user/user-from-request.interface';
 import { handleDuplicatedKeyInDb } from '@logic/errors/handle-duplicated-key-in-db';
@@ -37,6 +38,16 @@ export class UserService {
         private readonly cacheService: CacheService<UserResponse>,
     ) {}
 
+    private async findUserInDb(id: string): Promise<UserDocument> {
+        const userInDb = await this.userModel.findById(id).exec();
+        if (!userInDb) {
+            this.loggerService.error(`User ${id} not found`)
+            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+        }
+        return userInDb;
+    }
+
+    // TODO: delete
     private async findOneNoCache(id: string): Promise<UserDocument> {
         const validMongoId = Types.ObjectId.isValid(id);
         if (!validMongoId) {
@@ -47,7 +58,7 @@ export class UserService {
         if (!userInDb) {
             this.loggerService.error(`User ${id} not found`)
             throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
-        }    
+        }
         return userInDb;
     }
 
@@ -176,25 +187,26 @@ export class UserService {
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
-    async findOne(id: string): Promise<UserResponse> {
+    async findOne(id: string, options: ICacheOptions): Promise<UserResponse> {
         // validate id 
         const validMongoId = Types.ObjectId.isValid(id);
         if (!validMongoId) {
             this.loggerService.error(`Invalid mongo id`)
             throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
         }
+        // bypass read-write in cache
+        if (options.noStore) {
+            this.loggerService.info(`Bypassing cache for user ${id}`);
+            return await this.findUserInDb(id);
+        }
         // check if user is cached
         const userInCache = await this.cacheService.get(id);
-        if (userInCache)
+        if (userInCache) 
             return userInCache;
         // user is not in cache
-        const userInDb = await this.userModel.findById(id).exec();
-        if (!userInDb) {
-            this.loggerService.error(`User ${id} not found`)
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
-        }
-        await this.cacheService.cache(userInDb);
-        return userInDb;
+        const userFound = await this.findUserInDb(id);
+        await this.cacheService.cache(userFound);
+        return userFound;
     }
 
     async findAll(limit: number, page: number): Promise<UserResponse[]> {

@@ -7,15 +7,16 @@ import { BaseUserController } from '@root/common/base/base-user-controller.class
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
+import { buildCacheOptions } from '@logic/cache/build-cache-options';
 
 export class UserController extends BaseUserController {
-    
+
     constructor(
         private readonly userService: UserService,
         private readonly loggerService: LoggerService,
         private readonly createUserValidator: CreateUserValidator,
         private readonly updateUserValidator: UpdateUserValidator,
-        private readonly loginUserValidator: LoginUserValidator,        
+        private readonly loginUserValidator: LoginUserValidator,
     ) { super(); }
 
     protected readonly create = async (req: Request, res: Response): Promise<void> => {
@@ -59,8 +60,9 @@ export class UserController extends BaseUserController {
 
     protected readonly findOne = async (req: Request, res: Response): Promise<void> => {
         const id = req.params.id;
+        const cacheOptions = buildCacheOptions(req);
         this.loggerService.info(`User ${id} search attempt`);
-        const userFound = await this.userService.findOne(id);
+        const userFound = await this.userService.findOne(id, cacheOptions);
         res.status(statusCodes.OK).json(userFound);
     }
 
@@ -84,7 +86,7 @@ export class UserController extends BaseUserController {
         const userIdToUpdate = req.params.id;
         this.loggerService.info(`User ${userIdToUpdate} update attempt`);
         const propertiesToUpdate = req.body;
-        const validUpdate =  await this.updateUserValidator.validateNewAndTransform(propertiesToUpdate);
+        const validUpdate = await this.updateUserValidator.validateNewAndTransform(propertiesToUpdate);
         this.loggerService.info(`Data successfully validated`);
         const requestUserInfo = this.getUserRequestInfo(req, res);
         const updated = await this.userService.updateOne(requestUserInfo, userIdToUpdate, validUpdate);

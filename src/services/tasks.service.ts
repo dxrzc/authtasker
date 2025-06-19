@@ -24,7 +24,7 @@ export class TasksService {
 
     private async authorizeTaskModification(requestUserInfo: UserIdentity, targetTaskId: string): Promise<TaskDocument> {
         const task = await this.findOne(targetTaskId);
-        const taskOwner = await this.userService.findOne(task.user.toString());
+        const taskOwner = await this.userService.findOne(task.user.toString(), { noStore: true });
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
             role: taskOwner.role,
             id: taskOwner.id
@@ -76,7 +76,7 @@ export class TasksService {
 
     async findAllByUser(userId: string) {
         // verifies that user exists
-        await this.userService.findOne(userId);
+        await this.userService.findOne(userId, { noStore: true });
         const tasks = await this.tasksModel
             .find({ user: userId })
             .sort({ createdAt: 1 })
