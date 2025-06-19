@@ -1,3 +1,4 @@
+import Redis from 'ioredis';
 import { Express } from 'express';
 import { Model } from 'mongoose';
 import { JwtService } from '@root/services/jwt.service';
@@ -8,8 +9,11 @@ import { HashingService } from '@root/services/hashing.service';
 import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
 import { UserDataGenerator } from '@root/seed/generators/user.generator';
 import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
+import { LoggerService } from '@root/services/logger.service';
 
 export interface ITestKit {
+    redisService: RedisService,
+    redisInstance: Redis,
     
     userModel: Model<IUser>;
     tasksModel: Model<ITasks>;
@@ -19,10 +23,10 @@ export interface ITestKit {
     
     server: Express;
     
+    loggerServiceMock: LoggerService;
     jwtService: JwtService;
     jwtBlacklistService: JwtBlackListService;
-    hashingService: HashingService;
-    // redisService: RedisService;
+    hashingService: HashingService;    
 
     endpoints: {
         usersAPI: string;

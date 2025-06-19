@@ -40,6 +40,7 @@ beforeAll(async () => {
 
     // disable http logs
     const loggerServiceMock = mock<LoggerService>();
+    testKit.loggerServiceMock = loggerServiceMock;
 
     // mongodb-memory-server
     mongoMemoryServer = await MongoMemoryServer.create();
@@ -56,6 +57,8 @@ beforeAll(async () => {
         JWT_SESSION_EXP_TIME: '30m',
         JWT_EMAIL_VALIDATION_EXP_TIME: '5m',
         JWT_PRIVATE_KEY: 'testkey',
+        USERS_API_CACHE_TTL_SECONDS: 60,
+        CACHE_HARD_TTL_SECONDS: 600,
         HTTP_LOGS: false,
     } as const;
     mongoDatabase = new MongoDatabase(configService as ConfigService, loggerServiceMock);
@@ -64,12 +67,14 @@ beforeAll(async () => {
     // redis connection
     redisDatabase = new RedisDatabase(configService as ConfigService);
     const redisInstance = await redisDatabase.connect();
-    const redisService = new RedisService(redisInstance);       
-    
+    const redisService = new RedisService(redisInstance);
+
     // helpers
+    testKit.redisService = redisService;
+    testKit.redisInstance = redisInstance;
     testKit.jwtService = new JwtService(configService.JWT_PRIVATE_KEY);
-    testKit.jwtBlacklistService = new JwtBlackListService(redisService);    
-    testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS); 
+    testKit.jwtBlacklistService = new JwtBlackListService(redisService);
+    testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);
 
     // models (can not be compiled twice)
     const userModel = UserModelLoader.loadUserModel(configService as ConfigService);
