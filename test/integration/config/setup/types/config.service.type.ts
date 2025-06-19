@@ -1,4 +1,4 @@
-import { ConfigService } from '@root/services';
+import { ConfigService } from '@root/services/config.service';
 
 export type IntegrationConfigService = Omit<ConfigService,
     | 'PORT'
