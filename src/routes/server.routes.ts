@@ -27,6 +27,8 @@ import { AuthLimiterMiddleware } from '@root/middlewares/auth-limiter.middleware
 import { RequestContextMiddleware } from '@root/middlewares/request-context.middleware';
 import { EmailValidationTokenService } from '@root/services/email-validation-token.service';
 import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
+import { TaskResponse } from '@root/types/tasks/task-response.type';
+import { makeTasksCacheKey } from '@logic/cache/make-tasks-cache-key';
 
 
 export class AppRoutes {
@@ -46,6 +48,7 @@ export class AppRoutes {
     private readonly sessionTokenService: SessionTokenService;
     private readonly emailValidationTokenService: EmailValidationTokenService;
     private readonly usersCacheService: CacheService<UserResponse>;
+    private readonly tasksCacheService: CacheService<TaskResponse>;
 
     constructor(
         private readonly configService: ConfigService,
@@ -111,10 +114,20 @@ export class AppRoutes {
             this.usersCacheService
         );
 
+        this.tasksCacheService = new CacheService<TaskResponse>(
+            this.tasksModel,
+            this.loggerService,
+            this.redisService,
+            configService.TASKS_API_CACHE_TTL_SECONDS,
+            configService.CACHE_HARD_TTL_SECONDS,
+            makeTasksCacheKey
+        )
+
         this.tasksService = new TasksService(
             this.loggerService,
             this.tasksModel,
             this.userService,
+            this.tasksCacheService
         );
 
         this.healthController = new HealthController(this.loggerService);

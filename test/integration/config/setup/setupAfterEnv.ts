@@ -58,6 +58,7 @@ beforeAll(async () => {
         JWT_EMAIL_VALIDATION_EXP_TIME: '5m',
         JWT_PRIVATE_KEY: 'testkey',
         USERS_API_CACHE_TTL_SECONDS: 60,
+        TASKS_API_CACHE_TTL_SECONDS: 60,
         CACHE_HARD_TTL_SECONDS: 600,
         HTTP_LOGS: false,
     } as const;

@@ -6,6 +6,7 @@ import { paginationSettings } from '@root/common/constants/pagination.constants'
 import { BaseTasksController } from '@root/common/base/base-tasks-controller.class';
 import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
+import { buildCacheOptions } from '@logic/cache/build-cache-options';
 
 export class TasksController extends BaseTasksController {
 
@@ -17,7 +18,7 @@ export class TasksController extends BaseTasksController {
     ) { super(); }
 
     protected readonly create = async (req: Request, res: Response) => {
-        this.loggerService.info('Task creation attempt');        
+        this.loggerService.info('Task creation attempt');
         const validTask = await this.createTaskValidator.validateAndTransform(req.body);
         this.loggerService.info('Data successfully validated');
         const requestUserInfo = this.getUserRequestInfo(req, res);
@@ -27,8 +28,9 @@ export class TasksController extends BaseTasksController {
 
     protected readonly findOne = async (req: Request, res: Response) => {
         const id = req.params.id;
+        const options = buildCacheOptions(req);
         this.loggerService.info(`Task ${id} search attempt`);
-        const taskFound = await this.tasksService.findOne(id);
+        const taskFound = await this.tasksService.findOne(id, options);
         res.status(statusCodes.OK).json(taskFound);
     };
 

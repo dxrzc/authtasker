@@ -1,9 +1,11 @@
 import { Apis } from '@root/enums/apis.enum';
 import { UserService } from '@root/services/user.service';
 import { Model, Types } from "mongoose";
+import { CacheService } from './cache.service';
 import { LoggerService } from '@root/services/logger.service';
 import { ITasks } from '@root/interfaces/tasks/task.interface';
 import { paginationRules } from '@logic/others/pagination-rules';
+import { TaskResponse } from '@root/types/tasks/task-response.type';
 import { TaskDocument } from '@root/types/tasks/task-document.type';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { UserIdentity } from '@root/interfaces/user/user-indentity.interface';
@@ -13,6 +15,7 @@ import { modificationAccessControl } from '@logic/roles/modification-access-cont
 import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
 import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
+import { ICacheOptions } from '@root/interfaces/cache/cache-options.interface';
 
 export class TasksService {
 
@@ -20,10 +23,21 @@ export class TasksService {
         private readonly loggerService: LoggerService,
         private readonly tasksModel: Model<ITasks>,
         private readonly userService: UserService,
+        private readonly cacheService: CacheService<TaskResponse>,
     ) {}
 
+    private async findTaskInDb(id: string): Promise<TaskDocument> {
+        const taskFound = await this.tasksModel.findById(id).exec();
+        // id is not valid / task not found
+        if (!taskFound) {
+            this.loggerService.error(`Task with id ${id} not found`)
+            throw HttpError.notFound(tasksApiErrors.TASK_NOT_FOUND);
+        }
+        return taskFound;
+    }
+
     private async authorizeTaskModification(requestUserInfo: UserIdentity, targetTaskId: string): Promise<TaskDocument> {
-        const task = await this.findOne(targetTaskId);
+        const task = await this.findOne(targetTaskId, { noStore: true }) as TaskDocument;
         const taskOwner = await this.userService.findOne(task.user.toString(), { noStore: true });
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
             role: taskOwner.role,
@@ -49,15 +63,25 @@ export class TasksService {
         }
     }
 
-    async findOne(id: string): Promise<TaskDocument> {
-        let taskFound;
-        if (Types.ObjectId.isValid(id))
-            taskFound = await this.tasksModel.findById(id).exec();
-        // id is not valid / task not found
-        if (!taskFound) {
-            this.loggerService.error(`Task with id ${id} not found`)
+    async findOne(id: string, options: ICacheOptions): Promise<TaskDocument | TaskResponse> {
+        // validate id 
+        const validMongoId = Types.ObjectId.isValid(id);
+        if (!validMongoId) {
+            this.loggerService.error(`Invalid mongo id`)
             throw HttpError.notFound(tasksApiErrors.TASK_NOT_FOUND);
         }
+        // bypass read-write in cache
+        if (options.noStore) {
+            this.loggerService.info(`Bypassing cache for task ${id}`);
+            return await this.findTaskInDb(id);
+        }
+        // check if user is cached
+        const taskInCache = await this.cacheService.get(id);
+        if (taskInCache)
+            return taskInCache;
+        // user is not in cache
+        const taskFound = await this.findTaskInDb(id);
+        await this.cacheService.cache(taskFound);
         return taskFound;
     }
 
