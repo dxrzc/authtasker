@@ -23,7 +23,8 @@ export class ConfigService {
     public readonly API_MAX_REQ_PER_MINUTE: number;
     public readonly AUTH_MAX_REQ_PER_MINUTE: number;
     public readonly USERS_API_CACHE_TTL_SECONDS: number;
-    public readonly CACHE_HARD_TTL_SECONDS: number;
+    public readonly TASKS_API_CACHE_TTL_SECONDS: number;
+    public readonly CACHE_HARD_TTL_SECONDS: number;    
 
     constructor() {
         this.NODE_ENV = env.get('NODE_ENV')
@@ -111,6 +112,10 @@ export class ConfigService {
             .asInt();
 
         this.USERS_API_CACHE_TTL_SECONDS = env.get('USERS_API_CACHE_TTL_SECONDS')
+            .required()
+            .asInt();
+
+        this.TASKS_API_CACHE_TTL_SECONDS = env.get('TASKS_API_CACHE_TTL_SECONDS')
             .required()
             .asInt();
 
