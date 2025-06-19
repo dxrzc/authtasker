@@ -35,7 +35,7 @@ export class CacheService<Data extends { id: string }> {
             this.loggerService.info(`No data in cache`);
             return null;
         }
-        const resourceExpired = await isDataInCacheExpired(resourceInCache.cachedAtUnix, this.ttls);
+        const resourceExpired = isDataInCacheExpired(resourceInCache.cachedAtUnix, this.ttls);
         // hit
         if (!resourceExpired) {
             this.loggerService.info('Cache hit');
