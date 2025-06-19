@@ -10,6 +10,7 @@ export class CacheService<Data extends { id: string }> {
         private readonly loggerService: LoggerService,
         private readonly redisService: RedisService,
         private readonly ttls: number,
+        private readonly hardTtls: number,
         private readonly cacheKeyMaker: (id: string) => string,
     ) {}
 
@@ -58,6 +59,6 @@ export class CacheService<Data extends { id: string }> {
             cachedAtUnix: Math.floor(Date.now() / 1000),
             data: data,
         };
-        await this.redisService.set(this.cacheKeyMaker(resourceID), dataInDB);
+        await this.redisService.set(this.cacheKeyMaker(resourceID), dataInDB, this.hardTtls);
     }
 }
