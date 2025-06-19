@@ -47,23 +47,8 @@ export class UserService {
         return userInDb;
     }
 
-    // TODO: delete
-    private async findOneNoCache(id: string): Promise<UserDocument> {
-        const validMongoId = Types.ObjectId.isValid(id);
-        if (!validMongoId) {
-            this.loggerService.error(`Invalid mongo id`)
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
-        }
-        const userInDb = await this.userModel.findById(id).exec();
-        if (!userInDb) {
-            this.loggerService.error(`User ${id} not found`)
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
-        }
-        return userInDb;
-    }
-
     private async authorizeUserModificationOrThrow(requestUserInfo: UserIdentity, targetUserId: string): Promise<UserDocument> {
-        const targetUserDocument = await this.findOneNoCache(targetUserId);
+        const targetUserDocument = await this.findOne(targetUserId, { noStore: true }) as UserDocument;
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
             id: targetUserId,
             role: targetUserDocument.role
@@ -138,7 +123,7 @@ export class UserService {
         this.loggerService.info(`User ${user.id} email validated`);
     }
 
-    async create(user: CreateUserValidator): Promise<{ user: UserResponse, token: string }> {
+    async create(user: CreateUserValidator): Promise<{ user: UserDocument, token: string }> {
         try {
             // password hashing
             const passwordHash = await this.hashingService.hash(user.password);
@@ -160,7 +145,7 @@ export class UserService {
         }
     }
 
-    async login(userToLogin: LoginUserValidator): Promise<{ user: UserResponse, token: string }> {
+    async login(userToLogin: LoginUserValidator): Promise<{ user: UserDocument, token: string }> {
         // check user existence
         const userDb = await this.userModel.findOne({ email: userToLogin.email }).exec();
         if (!userDb) {
@@ -187,7 +172,7 @@ export class UserService {
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
-    async findOne(id: string, options: ICacheOptions): Promise<UserResponse> {
+    async findOne(id: string, options: ICacheOptions): Promise<UserDocument | UserResponse> {
         // validate id 
         const validMongoId = Types.ObjectId.isValid(id);
         if (!validMongoId) {
@@ -201,7 +186,7 @@ export class UserService {
         }
         // check if user is cached
         const userInCache = await this.cacheService.get(id);
-        if (userInCache) 
+        if (userInCache)
             return userInCache;
         // user is not in cache
         const userFound = await this.findUserInDb(id);
@@ -209,7 +194,7 @@ export class UserService {
         return userFound;
     }
 
-    async findAll(limit: number, page: number): Promise<UserResponse[]> {
+    async findAll(limit: number, page: number): Promise<UserDocument[]> {
         const offset = await paginationRules(limit, page, this.userModel);
         // no documents found
         if (offset instanceof Array)
@@ -231,7 +216,7 @@ export class UserService {
         this.loggerService.info(`${tasksRemoved.deletedCount} tasks associated to user removed`);
     }
 
-    async updateOne(requestUserInfo: UserIdentity, targetUserId: string, propertiesUpdated: UpdateUserValidator): Promise<UserResponse> {
+    async updateOne(requestUserInfo: UserIdentity, targetUserId: string, propertiesUpdated: UpdateUserValidator): Promise<UserDocument> {
         const userDocument = await this.authorizeUserModificationOrThrow(requestUserInfo, targetUserId);
         await this.setNewPropertiesInDocument(userDocument, propertiesUpdated);
         try {
