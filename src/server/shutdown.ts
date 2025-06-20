@@ -1,19 +1,35 @@
-import { IShutdownParams } from '@root/interfaces/server/shutdown.interface';
+import { Server } from './server.init';
+import { MongoDatabase } from '@root/databases/mongo/mongo.database';
+import { RedisDatabase } from '@root/databases/redis/redis.database';
 import { SystemLoggerService } from '@root/services/system-logger.service';
+import { IShutdownParams } from '@root/interfaces/server/shutdown.interface';
 
-export async function shutdown(params: IShutdownParams): Promise<void> {
-    try {
-        if (params.isShuttingDown) return;
-        params.isShuttingDown = true;        
+export class ShutdownManager {
+    static isShuttingDown = false;
+    static server?: Server;
+    static mongoDb?: MongoDatabase;
+    static redisDb?: RedisDatabase;
 
-        SystemLoggerService.error(`Shutting down due to ${params.reason}`);
-        if (params.server) await params.server.close();
-        if (params.mongoDb) await params.mongoDb.disconnect();
-        if (params.redisDb) await params.redisDb.disconnect()
-        process.exit(0);
+    static async shutdown(params: IShutdownParams): Promise<void> {
+        try {
+            if (ShutdownManager.isShuttingDown)
+                return;
 
-    } catch (error) {
-        SystemLoggerService.error(`Error during shutdown: ${error}`);
-        process.exit(1);
+            ShutdownManager.isShuttingDown = true;
+            SystemLoggerService.error(`Shutting down due to ${params.cause}`, params.stack);
+
+            if (this.server)
+                await this.server.close();
+            if (this.mongoDb)
+                await this.mongoDb.disconnect();
+            if (this.redisDb)
+                await this.redisDb.disconnect()
+
+            process.exitCode = params.exitCode;
+
+        } catch (error: any) {
+            SystemLoggerService.error(`Error during shutdown: ${error}`, error.stack);
+            process.exitCode = 1;
+        }
     }
 }

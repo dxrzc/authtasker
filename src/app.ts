@@ -1,83 +1,79 @@
-import { shutdown } from './server/shutdown';
 import { Server } from "./server/server.init";
 import { AsyncLocalStorage } from "async_hooks";
 import { AppRoutes } from './routes/server.routes';
+import { ShutdownManager } from './server/shutdown';
 import { RedisService } from './services/redis.service';
 import { LoggerService } from '@root/services/logger.service';
 import { ConfigService } from '@root/services/config.service';
 import { MongoDatabase } from "./databases/mongo/mongo.database";
 import { RedisDatabase } from './databases/redis/redis.database';
-import { IShutdownParams } from './interfaces/server/shutdown.interface';
+import { SystemLoggerService } from './services/system-logger.service';
 import { ErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
 import { IAsyncLocalStorageStore } from './interfaces/common/async-local-storage.interface';
-import { SystemLoggerService } from './services/system-logger.service';
 
-let server: Server | null = null;
-let mongoDb: MongoDatabase | null = null;
-let redisDb: RedisDatabase | null = null;
-
-const shutdownParams: IShutdownParams = {
-    server,
-    mongoDb,
-    redisDb,
-    isShuttingDown: false,
-    reason: ''
-};
-
-process.on('SIGINT', () => {
-    shutdownParams.reason = 'SIGINT';
-    shutdown(shutdownParams);
+process.on('SIGINT', async () => {
+    await ShutdownManager.shutdown({
+        cause: 'SIGINT',
+        exitCode: 0
+    });
 });
 
-process.on('SIGTERM', () => {
-    shutdownParams.reason = 'SIGTERM';
-    shutdown(shutdownParams);
+process.on('SIGTERM', async () => {
+    await ShutdownManager.shutdown({
+        cause: 'SIGTERM',
+        exitCode: 0
+    });
 });
 
-process.on('unhandledRejection', (reason: string) => {
-    shutdownParams.reason = reason;
-    shutdown(shutdownParams);
+process.on('unhandledRejection', async (reason: any) => {
+    await ShutdownManager.shutdown({
+        cause: `unhandledRejection: ${reason}`,
+        exitCode: 1,
+        stack: reason.stack
+    });
 });
 
-process.on('uncaughtException', (err) => {
-    shutdownParams.reason = `${err}`;
-    shutdown(shutdownParams);
+process.on('uncaughtException', async (err) => {
+    await ShutdownManager.shutdown({
+        cause: `uncaughtException: ${err.message}`,
+        exitCode: 1,
+        stack: err.stack
+    });
 });
 
 async function main() {
-    try {
-        const configService = new ConfigService();
-        SystemLoggerService.info(`Starting application in ${configService.NODE_ENV} MODE`);
+    // envs
+    const configService = new ConfigService();
+    SystemLoggerService.info(`Starting application in ${configService.NODE_ENV} mode`);
 
-        const asyncLocalStorage = new AsyncLocalStorage<IAsyncLocalStorageStore>();
-        const loggerService = new LoggerService(configService, asyncLocalStorage);
+    // http-logger
+    const asyncLocalStorage = new AsyncLocalStorage<IAsyncLocalStorageStore>();
+    const loggerService = new LoggerService(configService, asyncLocalStorage);
 
-        mongoDb = new MongoDatabase(configService, loggerService);
-        await mongoDb.connect();
-        shutdownParams.mongoDb = mongoDb;
+    // mongo
+    const mongoDb = new MongoDatabase(configService, loggerService);
+    await mongoDb.connect();
+    ShutdownManager.mongoDb = mongoDb;
 
-        redisDb = new RedisDatabase(configService);
-        const redisInstance = await redisDb.connect();
-        const redisService = new RedisService(redisInstance);
-        shutdownParams.redisDb = redisDb;
+    // redis
+    const redisDb = new RedisDatabase(configService);
+    const redisInstance = await redisDb.connect();
+    const redisService = new RedisService(redisInstance);
+    ShutdownManager.redisDb = redisDb;
 
-        server = new Server(
-            configService.PORT,
-            await new AppRoutes(
-                configService,
-                loggerService,
-                asyncLocalStorage,
-                redisService
-            ).buildApp(),
-            new ErrorHandlerMiddleware(loggerService)
-        );
-        await server.start();
-        shutdownParams.server = server;
-
-    } catch (error: any) {
-        SystemLoggerService.error(`Startup failure: ${error}`, 'this is my stack trace');
-        process.exit(1);
-    }
+    // server
+    const server = new Server(
+        configService.PORT,
+        await new AppRoutes(
+            configService,
+            loggerService,
+            asyncLocalStorage,
+            redisService
+        ).buildApp(),
+        new ErrorHandlerMiddleware(loggerService)
+    );
+    await server.start();
+    ShutdownManager.server = server;
 }
 
 main();
