@@ -17,4 +17,7 @@ export const protectedRoutes = [
     { method: 'get', url: testKit.endpoints.tasksAPI, },
     { method: 'get', url: `${testKit.endpoints.findAllTasksByUser}/123`, },
     { method: 'patch', url: `${testKit.endpoints.tasksAPI}/123`, },
+
+    //others
+    { method: 'get', url: testKit.endpoints.health }
 ] as const;
