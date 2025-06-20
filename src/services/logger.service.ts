@@ -36,7 +36,7 @@ export class LoggerService {
                     const colorizer = winston.format.colorize().colorize;
 
                     const finalMessage = (() => {
-                        let mssg = (message as string).toLowerCase();
+                        let mssg = (message as string);
                         return mssg[0].toUpperCase() + mssg.slice(1);
                     })();
 

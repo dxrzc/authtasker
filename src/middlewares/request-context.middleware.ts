@@ -15,8 +15,8 @@ export class RequestContextMiddleware extends BaseMiddleware {
         return async (req: Request, res: Response, next: NextFunction) => {
             const url = req.originalUrl;
             const method = req.method;
-            const requestId = uuidv4();
-
+            const requestId = uuidv4();                
+            
             const store = {
                 requestId,
                 method,
@@ -41,6 +41,7 @@ export class RequestContextMiddleware extends BaseMiddleware {
             res.setHeader("Request-Id", requestId);
 
             this.asyncLocalStorage.run(store, () => {
+                this.loggerService.info(`Incoming request ${url}`);
                 next();
             });
         }

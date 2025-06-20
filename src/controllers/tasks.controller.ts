@@ -17,8 +17,7 @@ export class TasksController extends BaseTasksController {
         private readonly updateTaskValidator: UpdateTaskValidator
     ) { super(); }
 
-    protected readonly create = async (req: Request, res: Response) => {
-        this.loggerService.info('Task creation attempt');
+    protected readonly create = async (req: Request, res: Response) => {        
         const validTask = await this.createTaskValidator.validateAndTransform(req.body);
         this.loggerService.info('Data successfully validated');
         const requestUserInfo = this.getUserRequestInfo(req, res);
@@ -28,14 +27,12 @@ export class TasksController extends BaseTasksController {
 
     protected readonly findOne = async (req: Request, res: Response) => {
         const id = req.params.id;
-        const options = buildCacheOptions(req);
-        this.loggerService.info(`Task ${id} search attempt`);
+        const options = buildCacheOptions(req);        
         const taskFound = await this.tasksService.findOne(id, options);
         res.status(statusCodes.OK).json(taskFound);
     };
 
-    protected readonly findAll = async (req: Request, res: Response) => {
-        this.loggerService.info('Tasks search attempt');
+    protected readonly findAll = async (req: Request, res: Response) => {        
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
         const tasksFound = await this.tasksService.findAll(limit, page);
@@ -43,8 +40,7 @@ export class TasksController extends BaseTasksController {
     };
 
     protected readonly findAllByUser = async (req: Request, res: Response) => {
-        const userId = req.params.id;
-        this.loggerService.info(`Tasks by user ${userId} search attempt`);
+        const userId = req.params.id;        
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
         const tasksFound = await this.tasksService.findAllByUser(userId, limit, page);
@@ -52,16 +48,14 @@ export class TasksController extends BaseTasksController {
     };
 
     protected readonly deleteOne = async (req: Request, res: Response) => {
-        const id = req.params.id;
-        this.loggerService.info(`Task ${id} deletion attempt`);
+        const id = req.params.id;        
         const requestUserInfo = this.getUserRequestInfo(req, res);
         await this.tasksService.deleteOne(requestUserInfo, id);
         res.status(statusCodes.NO_CONTENT).end();
     };
 
     protected readonly updateOne = async (req: Request, res: Response) => {
-        const id = req.params.id;
-        this.loggerService.info(`Task ${id} update attempt`);
+        const id = req.params.id;        
         const validUpdate = await this.updateTaskValidator.validateNewAndTransform(req.body);
         this.loggerService.info('Data successfully validated');
         const requestUserInfo = this.getUserRequestInfo(req, res);
