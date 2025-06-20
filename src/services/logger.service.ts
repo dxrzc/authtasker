@@ -68,8 +68,8 @@ export class LoggerService {
                 filename: `${folder}/http-messages.log`,
                 // add timestamp in filesystem logs
                 format: winston.format.combine(
-                    winston.format.timestamp(),
-                    winston.format.json(),
+                    winston.format.timestamp(),                    
+                    winston.format.prettyPrint(),
                 )
             })]
         });
@@ -85,7 +85,8 @@ export class LoggerService {
                     winston.format.timestamp(),
                     winston.format.printf(({ level, timestamp, message, ...meta }) => {
                         return JSON.stringify({ timestamp, message, ...meta });
-                    })
+                    }),
+                    winston.format.prettyPrint(),
                 ),
             })]
         });
