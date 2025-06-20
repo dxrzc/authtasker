@@ -88,7 +88,7 @@ export class TasksService {
     async findAll(limit: number, page: number): Promise<TaskDocument[]> {
         const totalDocuments = await this.tasksModel.countDocuments().exec();
         if (totalDocuments === 0) return [];
-        const offset = await paginationRules(limit, page, totalDocuments);
+        const offset = paginationRules(limit, page, totalDocuments);
         return await this.tasksModel
             .find()
             .skip(offset)
@@ -102,7 +102,7 @@ export class TasksService {
         await this.userService.findOne(userId, { noStore: true });
         const totalDocuments = await this.tasksModel.findById(userId).countDocuments().exec();
         if (totalDocuments === 0) return [];
-        const offset = await paginationRules(limit, page, totalDocuments);
+        const offset = paginationRules(limit, page, totalDocuments);
         const tasks = await this.tasksModel
             .find({ user: userId })
             .skip(offset)

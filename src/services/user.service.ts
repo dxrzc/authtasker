@@ -197,7 +197,7 @@ export class UserService {
     async findAll(limit: number, page: number): Promise<UserDocument[]> {
         const totalDocuments = await this.userModel.countDocuments().exec();
         if (totalDocuments === 0) return [];
-        const offset = await paginationRules(limit, page, totalDocuments);
+        const offset = paginationRules(limit, page, totalDocuments);
         return await this.userModel
             .find()
             .skip(offset)
