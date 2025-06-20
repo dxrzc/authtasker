@@ -1,62 +1,83 @@
+import { shutdown } from './server/shutdown';
 import { Server } from "./server/server.init";
 import { AsyncLocalStorage } from "async_hooks";
 import { AppRoutes } from './routes/server.routes';
 import { RedisService } from './services/redis.service';
 import { LoggerService } from '@root/services/logger.service';
 import { ConfigService } from '@root/services/config.service';
-import { ApplicationEvents } from "./events/application.events";
 import { MongoDatabase } from "./databases/mongo/mongo.database";
 import { RedisDatabase } from './databases/redis/redis.database';
-import { SystemLoggerService } from './services/system-logger.service';
+import { IShutdownParams } from './interfaces/server/shutdown.interface';
 import { ErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
 import { IAsyncLocalStorageStore } from './interfaces/common/async-local-storage.interface';
+import { SystemLoggerService } from './services/system-logger.service';
+
+let server: Server | null = null;
+let mongoDb: MongoDatabase | null = null;
+let redisDb: RedisDatabase | null = null;
+
+const shutdownParams: IShutdownParams = {
+    server,
+    mongoDb,
+    redisDb,
+    isShuttingDown: false,
+    reason: ''
+};
+
+process.on('SIGINT', () => {
+    shutdownParams.reason = 'SIGINT';
+    shutdown(shutdownParams);
+});
+
+process.on('SIGTERM', () => {
+    shutdownParams.reason = 'SIGTERM';
+    shutdown(shutdownParams);
+});
+
+process.on('unhandledRejection', (reason: string) => {
+    shutdownParams.reason = reason;
+    shutdown(shutdownParams);
+});
+
+process.on('uncaughtException', (err) => {
+    shutdownParams.reason = `${err}`;
+    shutdown(shutdownParams);
+});
 
 async function main() {
-    process.on('unhandledRejection', (reason, promise) => {
-        SystemLoggerService.error(`Unhandled rejection: ${reason}`);
-    });
+    try {
+        const configService = new ConfigService();
+        SystemLoggerService.info(`Starting application in ${configService.NODE_ENV} MODE`);
 
-    const configService = new ConfigService();
-    SystemLoggerService.info(`Starting application in ${configService.NODE_ENV} MODE`);
+        const asyncLocalStorage = new AsyncLocalStorage<IAsyncLocalStorageStore>();
+        const loggerService = new LoggerService(configService, asyncLocalStorage);
 
-    const asyncLocalStorage = new AsyncLocalStorage<IAsyncLocalStorageStore>();
-    const loggerService = new LoggerService(configService, asyncLocalStorage);
+        mongoDb = new MongoDatabase(configService, loggerService);
+        await mongoDb.connect();
+        shutdownParams.mongoDb = mongoDb;
 
-    // mongo connection
-    const mongoDatabase = new MongoDatabase(
-        configService,
-        loggerService
-    );
-    await mongoDatabase.connect();
+        redisDb = new RedisDatabase(configService);
+        const redisInstance = await redisDb.connect();
+        const redisService = new RedisService(redisInstance);
+        shutdownParams.redisDb = redisDb;
 
-    // redis connection
-    const redisDatabase = new RedisDatabase(configService);
-    const redisInstance = await redisDatabase.connect();
-    const redisService = new RedisService(redisInstance);
-
-    // server connection
-    const server = new Server(
-        configService.PORT,
-        await new AppRoutes(
-            configService,
-            loggerService,
-            asyncLocalStorage,
-            redisService
-        ).buildApp(),
-        new ErrorHandlerMiddleware(loggerService)
-    );
-    server.start();
-
-    // function called in case mongodb reconnects after a disconnection
-    ApplicationEvents.resumeApplication(async () => {
+        server = new Server(
+            configService.PORT,
+            await new AppRoutes(
+                configService,
+                loggerService,
+                asyncLocalStorage,
+                redisService
+            ).buildApp(),
+            new ErrorHandlerMiddleware(loggerService)
+        );
         await server.start();
-        await redisDatabase.connect();
-    });
+        shutdownParams.server = server;
 
-    // function called in case redis or mongo connection fails
-    ApplicationEvents.closeApplication(async () => {
-        await server.close();
-    });
+    } catch (error: any) {
+        SystemLoggerService.error(`Startup failure: ${error}`, 'this is my stack trace');
+        process.exit(1);
+    }
 }
 
 main();
