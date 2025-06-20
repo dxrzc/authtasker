@@ -130,7 +130,7 @@ export class AppRoutes {
             this.tasksCacheService
         );
 
-        this.healthController = new HealthController(this.loggerService);
+        this.healthController = new HealthController();
     }
 
     private buildGlobalMiddlewares() {

@@ -1,15 +1,13 @@
 import { Request, Response } from 'express';
-import { LoggerService } from '@root/services/logger.service';
 import { BaseController } from '@root/common/base/base-controller.class';
 import { statusCodes } from '@root/common/constants/status-codes.constants';
 
 export class HealthController extends BaseController {
 
-    constructor(private readonly loggerService: LoggerService) {
+    constructor() {
         super();
     }
 
-    // TODO: logging
     readonly getServerHealth = this.forwardError(async (req: Request, res: Response): Promise<void> => {
         const health = {
             status: 'UP',
