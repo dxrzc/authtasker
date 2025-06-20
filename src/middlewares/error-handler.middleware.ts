@@ -11,7 +11,7 @@ export class ErrorHandlerMiddleware {
     constructor(private readonly loggerService: LoggerService) {}
 
     middleware() {
-        return (err: Error, req: Request, res: Response, next: NextFunction) => {
+        return (err: Error, req: Request, res: Response, next: NextFunction) => {            
             if (err instanceof HttpError) {
                 res.status(err.statusCode).json({ error: err.message });
                 return;
@@ -23,8 +23,8 @@ export class ErrorHandlerMiddleware {
                 return;
             };
             // internal
-            this.loggerService.error(err.stack || err.message);
-            SystemLoggerService.error(err.stack || err.message);
+            this.loggerService.error(err.message);
+            SystemLoggerService.error(err.message, err.stack);
             res.status(500).json({ error: commonErrors.INTERNAL_SERVER_ERROR });
         }
     }
