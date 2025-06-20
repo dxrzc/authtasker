@@ -3,6 +3,7 @@ import { ITestKit } from '@integration/config/setup/interfaces/testKit.interface
 export const testKit: ITestKit = {
     endpoints: {
         usersAPI: '/api/users',
+        myProfile: '/api/users/me',
         register: `/api/users/register`,
         login: `/api/users/login`,
         logout: `/api/users/logout`,

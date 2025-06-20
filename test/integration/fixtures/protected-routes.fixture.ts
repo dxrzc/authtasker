@@ -8,6 +8,7 @@ export const protectedRoutes = [
     { method: 'patch', url: `${testKit.endpoints.usersAPI}/123` },
     { method: 'get', url: `${testKit.endpoints.usersAPI}/123` },
     { method: 'get', url: testKit.endpoints.usersAPI },
+    { method: 'get', url: testKit.endpoints.myProfile },
 
     // Tasks API
     { method: 'post', url: testKit.endpoints.createTask, },

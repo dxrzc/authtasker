@@ -30,6 +30,7 @@ export interface ITestKit {
 
     endpoints: {
         usersAPI: string;
+        myProfile: string;
         register: string;
         login: string;
         logout: string;

@@ -53,6 +53,12 @@ export class UserRoutes {
 
         const router = Router();
 
+        router.get('/me',
+            this.apiLimiterMiddleware.middleware(),
+            this.rolesMiddleware.middleware('readonly'),
+            this.userController.meFwdErr()
+        );
+
         router.post('/register',
             this.authLimiterMiddleware.middleware(),
             this.userController.createFwdErr()

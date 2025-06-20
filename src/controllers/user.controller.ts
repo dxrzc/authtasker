@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { UserService } from "@root/services/user.service";
 import { LoggerService } from "@root/services/logger.service";
+import { buildCacheOptions } from '@logic/cache/build-cache-options';
 import { statusCodes } from '@root/common/constants/status-codes.constants';
 import { paginationSettings } from '@root/common/constants/pagination.constants';
 import { BaseUserController } from '@root/common/base/base-user-controller.class';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
-import { buildCacheOptions } from '@logic/cache/build-cache-options';
 
 export class UserController extends BaseUserController {
 
@@ -18,6 +18,13 @@ export class UserController extends BaseUserController {
         private readonly updateUserValidator: UpdateUserValidator,
         private readonly loginUserValidator: LoginUserValidator,
     ) { super(); }
+
+    protected readonly me = async (req: Request, res: Response): Promise<void> => {
+        const { id } = this.getUserRequestInfo(req, res);
+        this.loggerService.info(`Profile request for user ${id}`);
+        const me = await this.userService.findOne(id, { noStore: true });
+        res.status(statusCodes.OK).json(me);
+    }
 
     protected readonly create = async (req: Request, res: Response): Promise<void> => {
         this.loggerService.info('User creation attempt');
