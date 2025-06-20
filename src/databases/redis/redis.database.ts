@@ -1,8 +1,12 @@
 import Redis from 'ioredis';
+import { EventManager } from '@root/events/eventManager';
 import { ConfigService } from '@root/services/config.service';
+import { Events } from '@root/common/constants/events.constants';
 import { SystemLoggerService } from '@root/services/system-logger.service';
 
 export class RedisDatabase {
+
+    private disconnectedManually = false;
     private redis: Redis;
 
     constructor(private readonly configService: ConfigService) {
@@ -12,6 +16,17 @@ export class RedisDatabase {
             host: configService.REDIS_HOST,
             password: configService.REDIS_PASSWORD,
             db: 0,
+            // disables reconnections
+            retryStrategy: null as any
+        });
+        this.connectionEvents();
+    }
+
+    connectionEvents() {        
+        this.redis.on('end', () => {
+            if (!this.disconnectedManually) {                
+                EventManager.emit(Events.REDIS_CONNECTION_ERROR);
+            }
         });
     }
 
@@ -26,6 +41,7 @@ export class RedisDatabase {
     async disconnect(): Promise<void> {
         if (this.redis.status === 'ready') {
             await this.redis.quit();
+            this.disconnectedManually = true;
             SystemLoggerService.warn('Disconnected from Redis database');
         }
     }

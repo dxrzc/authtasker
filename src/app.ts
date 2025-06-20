@@ -10,6 +10,8 @@ import { RedisDatabase } from './databases/redis/redis.database';
 import { SystemLoggerService } from './services/system-logger.service';
 import { ErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
 import { IAsyncLocalStorageStore } from './interfaces/common/async-local-storage.interface';
+import { EventManager } from './events/eventManager';
+import { Events } from './common/constants/events.constants';
 
 process.on('SIGINT', async () => {
     await ShutdownManager.shutdown({
@@ -38,6 +40,20 @@ process.on('uncaughtException', async (err) => {
         cause: `uncaughtException: ${err.message}`,
         exitCode: 1,
         stack: err.stack
+    });
+});
+
+EventManager.listen(Events.MONGO_CONNECTION_ERROR, async () => {
+    await ShutdownManager.shutdown({
+        cause: 'Mongo database connection lost',
+        exitCode: 1
+    });
+});
+
+EventManager.listen(Events.REDIS_CONNECTION_ERROR, async () => {
+    await ShutdownManager.shutdown({
+        cause: 'Redis database connection lost',
+        exitCode: 1
     });
 });
 
