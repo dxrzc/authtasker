@@ -16,7 +16,7 @@ export class MongoDatabase {
         }
     }
 
-    async connect(): Promise<void> {        
+    async connect(): Promise<void> {                
         await mongoose.connect(this.configService.MONGO_URI);
         SystemLoggerService.info(`Connected to mongo database`)
     }

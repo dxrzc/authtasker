@@ -14,9 +14,13 @@ export class ShutdownManager {
         try {
             if (ShutdownManager.isShuttingDown)
                 return;
-
             ShutdownManager.isShuttingDown = true;
-            SystemLoggerService.error(`Shutting down due to ${params.cause}`, params.stack);
+
+            const logMessage = `Shutting down due to ${params.cause}`;
+            if (params.exitCode === 1)
+                SystemLoggerService.error(logMessage, params.stack);
+            else
+                SystemLoggerService.warn(logMessage);
 
             if (this.server)
                 await this.server.close();
