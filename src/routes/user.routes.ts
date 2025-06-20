@@ -30,8 +30,7 @@ export class UserRoutes {
         private readonly apiLimiterMiddleware: ApiLimiterMiddleware,
     ) {
         this.userController = new UserController(
-            this.userService,
-            this.loggerService,
+            this.userService,            
             new CreateUserValidator(),
             new UpdateUserValidator(),
             new LoginUserValidator(),

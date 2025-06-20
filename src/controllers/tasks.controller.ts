@@ -11,15 +11,13 @@ import { buildCacheOptions } from '@logic/cache/build-cache-options';
 export class TasksController extends BaseTasksController {
 
     constructor(
-        private readonly tasksService: TasksService,
-        private readonly loggerService: LoggerService,
+        private readonly tasksService: TasksService,        
         private readonly createTaskValidator: CreateTaskValidator,
         private readonly updateTaskValidator: UpdateTaskValidator
     ) { super(); }
 
     protected readonly create = async (req: Request, res: Response) => {        
-        const validTask = await this.createTaskValidator.validateAndTransform(req.body);
-        this.loggerService.info('Data successfully validated');
+        const validTask = await this.createTaskValidator.validateAndTransform(req.body);        
         const requestUserInfo = this.getUserRequestInfo(req, res);
         const created = await this.tasksService.create(validTask, requestUserInfo.id);
         res.status(statusCodes.CREATED).json(created);
@@ -56,8 +54,7 @@ export class TasksController extends BaseTasksController {
 
     protected readonly updateOne = async (req: Request, res: Response) => {
         const id = req.params.id;        
-        const validUpdate = await this.updateTaskValidator.validateNewAndTransform(req.body);
-        this.loggerService.info('Data successfully validated');
+        const validUpdate = await this.updateTaskValidator.validateNewAndTransform(req.body);        
         const requestUserInfo = this.getUserRequestInfo(req, res);
         const updated = await this.tasksService.updateOne(requestUserInfo, id, validUpdate);
         res.status(statusCodes.OK).json(updated);

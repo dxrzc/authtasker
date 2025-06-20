@@ -12,8 +12,7 @@ import { LoginUserValidator } from '@root/validators/models/user/login-user.vali
 export class UserController extends BaseUserController {
 
     constructor(
-        private readonly userService: UserService,
-        private readonly loggerService: LoggerService,
+        private readonly userService: UserService,        
         private readonly createUserValidator: CreateUserValidator,
         private readonly updateUserValidator: UpdateUserValidator,
         private readonly loginUserValidator: LoginUserValidator,
@@ -27,16 +26,14 @@ export class UserController extends BaseUserController {
 
     protected readonly create = async (req: Request, res: Response): Promise<void> => {        
         const user = req.body;
-        const validUser = await this.createUserValidator.validateAndTransform(user);
-        this.loggerService.info(`Data successfully validated`);
+        const validUser = await this.createUserValidator.validateAndTransform(user);        
         const created = await this.userService.create(validUser);
         res.status(statusCodes.CREATED).json(created);
     }
 
     protected readonly login = async (req: Request, res: Response): Promise<void> => {        
         const user = req.body;
-        const validUser = await this.loginUserValidator.validate(user);
-        this.loggerService.info(`Data successfully validated`);
+        const validUser = await this.loginUserValidator.validate(user);        
         const loggedIn = await this.userService.login(validUser);
         res.status(statusCodes.OK).json(loggedIn);
     }
@@ -83,8 +80,7 @@ export class UserController extends BaseUserController {
     protected readonly updateOne = async (req: Request, res: Response): Promise<void> => {
         const userIdToUpdate = req.params.id;        
         const propertiesToUpdate = req.body;
-        const validUpdate = await this.updateUserValidator.validateNewAndTransform(propertiesToUpdate);
-        this.loggerService.info(`Data successfully validated`);
+        const validUpdate = await this.updateUserValidator.validateNewAndTransform(propertiesToUpdate);        
         const requestUserInfo = this.getUserRequestInfo(req, res);
         const updated = await this.userService.updateOne(requestUserInfo, userIdToUpdate, validUpdate);
         res.status(statusCodes.OK).json(updated);

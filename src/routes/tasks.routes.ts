@@ -19,8 +19,7 @@ export class TasksRoutes {
         private readonly apiLimiterMiddleware: ApiLimiterMiddleware,
     ) {
         this.tasksController = new TasksController(
-            this.tasksService,
-            this.loggerService,
+            this.tasksService,            
             new CreateTaskValidator(),
             new UpdateTaskValidator()
         );
