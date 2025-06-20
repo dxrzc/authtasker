@@ -18,7 +18,7 @@ export class SystemLoggerService {
 
                             const coloredLevel = colorizer(level, `[${(level as string).toUpperCase()}]`);
                             const coloredTimestamp = colorizer(level, `[${timestamp}]`);
-                            const finalMessage = (message as any).toUpperCase();
+                            const finalMessage = (message as any);
 
                             const coloredMessage = colorizer(level, finalMessage);
 
