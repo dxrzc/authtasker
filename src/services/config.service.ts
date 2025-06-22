@@ -1,3 +1,4 @@
+import { E } from '@faker-js/faker/dist/airline-BLb3y-7w';
 import * as env from "env-var";
 
 export class ConfigService {
@@ -7,7 +8,9 @@ export class ConfigService {
     public readonly BCRYPT_SALT_ROUNDS: number;
     public readonly JWT_SESSION_EXP_TIME: string;
     public readonly JWT_EMAIL_VALIDATION_EXP_TIME: string;
+    public readonly JWT_REFRESH_EXP_TIME: string;
     public readonly JWT_PRIVATE_KEY: string;
+    public readonly JWT_REFRESH_PRIVATE_KEY: string;
     public readonly MAIL_SERVICE_HOST: string;
     public readonly MAIL_SERVICE_PORT: number;
     public readonly MAIL_SERVICE_USER: string;
@@ -24,7 +27,7 @@ export class ConfigService {
     public readonly AUTH_MAX_REQ_PER_MINUTE: number;
     public readonly USERS_API_CACHE_TTL_SECONDS: number;
     public readonly TASKS_API_CACHE_TTL_SECONDS: number;
-    public readonly CACHE_HARD_TTL_SECONDS: number;    
+    public readonly CACHE_HARD_TTL_SECONDS: number;
 
     constructor() {
         this.NODE_ENV = env.get('NODE_ENV')
@@ -48,6 +51,10 @@ export class ConfigService {
             .asInt();
 
         this.JWT_SESSION_EXP_TIME = env.get('JWT_SESSION_EXP_TIME')
+            .required()
+            .asString();
+
+        this.JWT_REFRESH_EXP_TIME = env.get('JWT_REFRESH_EXP_TIME')
             .required()
             .asString();
 
@@ -122,5 +129,9 @@ export class ConfigService {
         this.CACHE_HARD_TTL_SECONDS = env.get('CACHE_HARD_TTL_SECONDS')
             .required()
             .asInt();
+
+        this.JWT_REFRESH_PRIVATE_KEY = env.get('JWT_REFRESH_PRIVATE_KEY')
+            .required()
+            .asString();
     }
 }
