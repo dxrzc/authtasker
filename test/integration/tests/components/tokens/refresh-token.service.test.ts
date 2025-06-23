@@ -82,13 +82,6 @@ describe('Refresh Token Service', () => {
             expect(newTokenTTLInRedis).toBe(oldTokenTTLSeconds);
         });
 
-        // describe('Token is expired', () => {
-        //     test('throw HttpError UNAUTHORIZED and invalid token message', async () => {
-        //         const { userId } = await createUser(getRandomRole());
-
-        //     });            
-        // });
-
         describe('Token is not in redis database', () => {
             test('throw HttpError UNAUTHORIZED and invalid token message', async () => {
                 // valid token but never saved in redis db
@@ -97,6 +90,19 @@ describe('Refresh Token Service', () => {
                     id: userId
                 });
                 await expect(refreshTokenService.rotate(invalidToken))
+                    .rejects
+                    .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+            });
+        });
+
+        describe('Token is expired', () => {
+            test('throw HttpError UNAUTHORIZED and invalid token message', async () => {
+                jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 1000000000)
+                const { userId } = await createUser(getRandomRole());
+                const { token: expiredToken } = testKit.refreshJwt.generate('10s', {
+                    id: userId
+                });
+                await expect(refreshTokenService.rotate(expiredToken))
                     .rejects
                     .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
             });
