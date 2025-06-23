@@ -23,6 +23,7 @@ import { usersApiErrors } from '@root/common/errors/messages/users-api.error.mes
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
+import { RefreshTokenService } from './refresh-token.service';
 
 export class UserService {
 
@@ -34,6 +35,7 @@ export class UserService {
         private readonly loggerService: LoggerService,
         private readonly emailService: EmailService,
         private readonly sessionTokenService: SessionTokenService,
+        private readonly refreshTokenService: RefreshTokenService,
         private readonly emailValidationTokenService: EmailValidationTokenService,
         private readonly cacheService: CacheService<UserResponse>,
     ) {}
@@ -123,21 +125,23 @@ export class UserService {
         this.loggerService.info(`User ${user.id} email validated`);
     }
 
-    async create(user: CreateUserValidator): Promise<{ user: UserDocument, token: string }> {
+    async create(user: CreateUserValidator) {
         try {
             // password hashing
             const passwordHash = await this.hashingService.hash(user.password);
             user.password = passwordHash;
             // creation in db
             const created = await this.userModel.create(user);
-            // token generation
-            const token = this.sessionTokenService.generate(created.id);
-            this.loggerService.info(`User ${created.id} created`);
+            const userId = created.id;
+            this.loggerService.info(`User ${userId} created`);
+            // tokens
+            const sessionToken = this.sessionTokenService.generate(userId);
+            const refreshToken = await this.refreshTokenService.generate(userId);
             return {
                 user: created,
-                token,
+                sessionToken,
+                refreshToken,
             };
-
         } catch (error: any) {
             if (error.code === 11000)
                 handleDuplicatedKeyInDb(Apis.users, error, this.loggerService);
@@ -145,7 +149,7 @@ export class UserService {
         }
     }
 
-    async login(userToLogin: LoginUserValidator): Promise<{ user: UserDocument, token: string }> {
+    async login(userToLogin: LoginUserValidator) {
         // check user existence
         const userDb = await this.userModel.findOne({ email: userToLogin.email }).exec();
         if (!userDb) {
@@ -158,12 +162,14 @@ export class UserService {
             this.loggerService.error('Password does not match');
             throw HttpError.badRequest(authErrors.INVALID_CREDENTIALS);
         }
-        // token generation
-        const token = this.sessionTokenService.generate(userDb.id);
+        // tokens 
+        const sessionToken = this.sessionTokenService.generate(userDb.id);
+        const refreshToken = await this.refreshTokenService.generate(userDb.id);
         this.loggerService.info(`User ${userDb.id} logged in`);
         return {
             user: userDb,
-            token,
+            sessionToken,
+            refreshToken,
         };
     }
 

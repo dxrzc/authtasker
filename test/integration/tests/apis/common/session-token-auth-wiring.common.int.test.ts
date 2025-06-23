@@ -22,7 +22,7 @@ describe('Session Token Auth Wiring', () => {
             .post(testKit.endpoints.register)
             .send(testKit.userDataGenerator.fullUser())
             .expect(status2xx);
-        const sessionToken = registerResponse.body.token;
+        const sessionToken = registerResponse.body.sessionToken;
 
         // logout
         await request(testKit.server)

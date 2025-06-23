@@ -14,19 +14,20 @@ import { LoggerService } from '@root/services/logger.service';
 export interface ITestKit {
     redisService: RedisService,
     redisInstance: Redis,
-    
+
     userModel: Model<IUser>;
     tasksModel: Model<ITasks>;
-    
+
     userDataGenerator: UserDataGenerator;
     tasksDataGenerator: TasksDataGenerator;
-    
+
     server: Express;
-    
+
     loggerServiceMock: LoggerService;
-    jwtService: JwtService;
+    sessionJwt: JwtService;
+    refreshJwt: JwtService;
     jwtBlacklistService: JwtBlackListService;
-    hashingService: HashingService;    
+    hashingService: HashingService;
 
     endpoints: {
         usersAPI: string;
@@ -38,9 +39,9 @@ export interface ITestKit {
         confirmEmailValidation: string;
 
         tasksAPI: string;
-        createTask: string;  
-        findAllTasksByUser: string;    
-        
+        createTask: string;
+        findAllTasksByUser: string;
+
         health: string;
     };
 };

@@ -134,23 +134,26 @@ describe('POST /api/users/register', () => {
                     updatedAt: userInDb!.updatedAt.toISOString(),
                     id: userInDb!.id,
                 },
-                token: expect.any(String)
+                sessionToken: expect.any(String),
+                refreshToken: expect.any(String)
             });
             expect(response.statusCode).toBe(expectedStatus);
         });
 
-        test.concurrent('return a valid session token', async () => {
+        test.concurrent('return a valid session and refresh token', async () => {
             const user = testKit.userDataGenerator.fullUser();
-
             // Create user
             const registerResponse = await request(testKit.server)
                 .post(testKit.endpoints.register)
                 .send(user);
-
-            // Verify the token
-            const token = registerResponse.body.token;
-            const payload = testKit.jwtService.verify(token);
-            expect(payload).not.toBeNull();
+            // session
+            const sessionToken = registerResponse.body.sessionToken;
+            expect(sessionToken).toBeDefined();
+            expect(testKit.sessionJwt.verify(sessionToken)).not.toBeNull();
+            // refresh
+            const refreshToken = registerResponse.body.refreshToken;
+            expect(refreshToken).toBeDefined();
+            expect(testKit.refreshJwt.verify(refreshToken)).not.toBeNull();
         });
     });
 });

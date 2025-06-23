@@ -29,11 +29,13 @@ import { EmailValidationTokenService } from '@root/services/email-validation-tok
 import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
 import { TaskResponse } from '@root/types/tasks/task-response.type';
 import { makeTasksCacheKey } from '@logic/cache/make-tasks-cache-key';
+import { RefreshTokenService } from '@root/services/refresh-token.service';
 
 
 export class AppRoutes {
 
-    private readonly jwtService: JwtService;
+    private readonly sessionJwt: JwtService;
+    private readonly refreshJwt: JwtService;
     private readonly hashingService: HashingService;
     private readonly emailService?: EmailService;
     private readonly userModel: Model<IUser>;
@@ -46,6 +48,7 @@ export class AppRoutes {
     private readonly apiLimiterMiddleware: ApiLimiterMiddleware;
     private readonly healthController: HealthController;
     private readonly sessionTokenService: SessionTokenService;
+    private readonly refreshTokenService: RefreshTokenService;
     private readonly emailValidationTokenService: EmailValidationTokenService;
     private readonly usersCacheService: CacheService<UserResponse>;
     private readonly tasksCacheService: CacheService<TaskResponse>;
@@ -61,19 +64,26 @@ export class AppRoutes {
         this.tasksModel = loadTasksModel(this.configService);
 
         // services
-        this.jwtService = new JwtService(this.configService.JWT_PRIVATE_KEY);
+        this.sessionJwt = new JwtService(this.configService.JWT_PRIVATE_KEY);
+        this.refreshJwt = new JwtService(this.configService.JWT_REFRESH_PRIVATE_KEY);
         this.hashingService = new HashingService(this.configService.BCRYPT_SALT_ROUNDS);
         this.jwtBlacklistService = new JwtBlackListService(this.redisService);
+        this.refreshTokenService = new RefreshTokenService(
+            this.configService,
+            this.refreshJwt,
+            this.loggerService,
+            this.redisService
+        );
         this.sessionTokenService = new SessionTokenService(
             this.configService,
-            this.jwtService,
+            this.sessionJwt,
             this.jwtBlacklistService,
             this.loggerService,
             this.userModel,
         );
         this.emailValidationTokenService = new EmailValidationTokenService(
             this.configService,
-            this.jwtService,
+            this.sessionJwt,
             this.jwtBlacklistService,
             this.loggerService,
         );
@@ -110,6 +120,7 @@ export class AppRoutes {
             this.loggerService,
             this.emailService,
             this.sessionTokenService,
+            this.refreshTokenService,
             this.emailValidationTokenService,
             this.usersCacheService
         );

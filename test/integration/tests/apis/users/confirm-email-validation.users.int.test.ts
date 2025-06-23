@@ -24,7 +24,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // generate token
             const { userEmail } = await createUser('admin');
-            const sessionToken = testKit.jwtService.generate('10m', {
+            const sessionToken = testKit.sessionJwt.generate('10m', {
                 purpose: tokenPurposes.SESSION,
                 email: userEmail,
             });
@@ -62,11 +62,11 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // generate token
             const { userEmail } = await createUser('editor');
-            const { token: sessionToken } = testKit.jwtService.generate('10m', {
+            const { token: sessionToken } = testKit.sessionJwt.generate('10m', {
                 purpose: tokenPurposes.EMAIL_VALIDATION,
                 email: userEmail,
             });
-            const jti = testKit.jwtService.verify(sessionToken)?.jti!;
+            const jti = testKit.sessionJwt.verify(sessionToken)?.jti!;
             expect(jti).not.toBeNull();
 
             // blacklist token
@@ -140,7 +140,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // Obtain token sent in url
             const tokenInEmail = getTokenFromMail(mock.getSentMail().at(0)?.html as string);
-            const payload = testKit.jwtService.verify(tokenInEmail);
+            const payload = testKit.sessionJwt.verify(tokenInEmail);
             const jti = payload!.jti;
 
             // Confirm email validation

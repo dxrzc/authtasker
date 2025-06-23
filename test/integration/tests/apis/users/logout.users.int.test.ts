@@ -16,7 +16,7 @@ describe('POST /api/users/logout', () => {
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .expect(status2xx);
 
-            const payload = testKit.jwtService.verify(sessionToken);
+            const payload = testKit.sessionJwt.verify(sessionToken);
             const jti = payload!.jti;
 
             // expect session token in blacklist

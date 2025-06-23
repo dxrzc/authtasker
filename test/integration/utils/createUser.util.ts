@@ -9,7 +9,7 @@ export const createUser = async (role: UserRole) => {
         .send(testKit.userDataGenerator.fullUser())
         .expect(status2xx);
 
-    const sessionToken = response.body.token;
+    const sessionToken = response.body.sessionToken;
     const userId = response.body.user.id;
     const userEmail = response.body.user.email;
     const userName = response.body.user.name;

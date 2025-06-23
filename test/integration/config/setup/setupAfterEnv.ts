@@ -61,6 +61,8 @@ beforeAll(async () => {
         TASKS_API_CACHE_TTL_SECONDS: 60,
         CACHE_HARD_TTL_SECONDS: 600,
         HTTP_LOGS: false,
+        JWT_REFRESH_EXP_TIME: '10d',
+        JWT_REFRESH_PRIVATE_KEY: 'testkey2',
     } as const;
     mongoDatabase = new MongoDatabase(configService as ConfigService, loggerServiceMock);
     await mongoDatabase.connect();
@@ -73,7 +75,8 @@ beforeAll(async () => {
     // helpers
     testKit.redisService = redisService;
     testKit.redisInstance = redisInstance;
-    testKit.jwtService = new JwtService(configService.JWT_PRIVATE_KEY);
+    testKit.sessionJwt = new JwtService(configService.JWT_PRIVATE_KEY);
+    testKit.refreshJwt = new JwtService(configService.JWT_REFRESH_PRIVATE_KEY);
     testKit.jwtBlacklistService = new JwtBlackListService(redisService);
     testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);
 
