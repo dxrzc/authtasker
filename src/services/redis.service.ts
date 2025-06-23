@@ -22,7 +22,16 @@ export class RedisService {
         return null;
     }
 
+    async getAllKeysByPattern(pattern: string): Promise<string[]> {
+        const keys = await this.redis.keys(pattern);
+        return keys;
+    }
+
     async delete(key: string): Promise<void> {
         await this.redis.del(key);
+    }
+
+    async deleteKeys(keys: string[]): Promise<void> {
+        await this.redis.del(keys);
     }
 }

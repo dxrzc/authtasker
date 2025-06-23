@@ -72,7 +72,8 @@ export class AppRoutes {
             this.configService,
             this.refreshJwt,
             this.loggerService,
-            this.redisService
+            this.redisService,
+            this.userModel
         );
         this.sessionTokenService = new SessionTokenService(
             this.configService,

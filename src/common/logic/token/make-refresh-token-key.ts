@@ -1,2 +1,2 @@
 
-export const makeRefreshTokenKey = (jti: string) => `token:refresh:${jti}`;
+export const makeRefreshTokenKey = (userId: string, jti: string) => `jwt:${userId}:refresh:${jti}`;

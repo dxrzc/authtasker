@@ -73,6 +73,7 @@ beforeAll(async () => {
     const redisService = new RedisService(redisInstance);
 
     // helpers
+    testKit.configService = configService as ConfigService;
     testKit.redisService = redisService;
     testKit.redisInstance = redisInstance;
     testKit.sessionJwt = new JwtService(configService.JWT_PRIVATE_KEY);
