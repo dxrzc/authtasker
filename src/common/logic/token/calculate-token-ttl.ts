@@ -1,6 +1,6 @@
 
-export const calculateTokenTTL = (expiresAtUnixSeconds: number) => {
+export const calculateTokenTTL = (expirationDateUnix: number) => {
     const currentTimeInSeconds = Math.floor(Date.now() / 1000);
-    const remainingTokenTTLInSeconds = expiresAtUnixSeconds - currentTimeInSeconds;
+    const remainingTokenTTLInSeconds = expirationDateUnix - currentTimeInSeconds;
     return remainingTokenTTLInSeconds;
 }

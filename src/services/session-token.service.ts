@@ -30,8 +30,8 @@ export class SessionTokenService {
         return token;
     }
 
-    async blacklist(jti: string, tokenExpiresAtUnixSeconds: number): Promise<void> {
-        const remainingTokenTTLInSeconds = calculateTokenTTL(tokenExpiresAtUnixSeconds);
+    async blacklist(jti: string, tokenExpirationDateUnix: number): Promise<void> {
+        const remainingTokenTTLInSeconds = calculateTokenTTL(tokenExpirationDateUnix);
         if (remainingTokenTTLInSeconds > 0) {
             this.loggerService.info(`Session token "${jti}" blacklisted for ${remainingTokenTTLInSeconds} seconds`);
             await this.jwtBlacklistService.blacklist(JwtTypes.session, jti, remainingTokenTTLInSeconds);

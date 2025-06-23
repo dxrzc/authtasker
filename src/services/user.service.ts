@@ -173,8 +173,9 @@ export class UserService {
         };
     }
 
-    async logout(requestUserInfo: UserFromRequest): Promise<void> {
-        await this.sessionTokenService.blacklist(requestUserInfo.jti, requestUserInfo.tokenExp);
+    async logout(requestUserInfo: UserFromRequest): Promise<void> {        
+        const expirationDateUnix = requestUserInfo.tokenExp;
+        await this.sessionTokenService.blacklist(requestUserInfo.jti, expirationDateUnix);
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
