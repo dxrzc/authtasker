@@ -11,6 +11,7 @@ export class ConfigService {
     public readonly JWT_REFRESH_EXP_TIME: string;
     public readonly JWT_PRIVATE_KEY: string;
     public readonly JWT_REFRESH_PRIVATE_KEY: string;
+    public readonly USER_MAX_SESSIONS: number;
     public readonly MAIL_SERVICE_HOST: string;
     public readonly MAIL_SERVICE_PORT: number;
     public readonly MAIL_SERVICE_USER: string;
@@ -112,19 +113,19 @@ export class ConfigService {
 
         this.API_MAX_REQ_PER_MINUTE = env.get('API_MAX_REQ_PER_MINUTE')
             .required()
-            .asInt();
+            .asIntPositive();
 
         this.AUTH_MAX_REQ_PER_MINUTE = env.get('AUTH_MAX_REQ_PER_MINUTE')
             .required()
-            .asInt();
+            .asIntPositive();
 
         this.USERS_API_CACHE_TTL_SECONDS = env.get('USERS_API_CACHE_TTL_SECONDS')
             .required()
-            .asInt();
+            .asIntPositive();
 
         this.TASKS_API_CACHE_TTL_SECONDS = env.get('TASKS_API_CACHE_TTL_SECONDS')
             .required()
-            .asInt();
+            .asIntPositive();
 
         this.CACHE_HARD_TTL_SECONDS = env.get('CACHE_HARD_TTL_SECONDS')
             .required()
@@ -133,5 +134,9 @@ export class ConfigService {
         this.JWT_REFRESH_PRIVATE_KEY = env.get('JWT_REFRESH_PRIVATE_KEY')
             .required()
             .asString();
+
+        this.USER_MAX_SESSIONS = env.get('USER_MAX_SESSIONS')
+            .required()
+            .asIntPositive();
     }
 }
