@@ -5,7 +5,7 @@ import { testKit } from '@integration/utils/testKit.util';
 import { calculateTokenTTL } from '@logic/token/calculate-token-ttl';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
-import { makeSessionIndexKey } from '@logic/token/make-session-index-key';
+import { makeRefreshTokenCountKey } from '@logic/token/make-refresh-token-count-key';
 import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
 import { RefreshTokenService } from '@root/services/refresh-token.service';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
@@ -33,6 +33,15 @@ describe('Refresh Token Service', () => {
         return { userId: userCreated.id };
     }
 
+    // describe('Token expiration', () => {
+    //     test('decrement user sessions index automatically when token gets expired', async () => {
+    //         const { userId } = await createUser();
+    //         const { token } = testKit.refreshJwt.generate('0', {
+    //             id: new Types.ObjectId()
+    //         });
+    //     });
+    // });
+
     describe('generate', () => {
         test('store token in redis database with the configured exp time in envs', async () => {
             // get a valid token jti
@@ -50,7 +59,7 @@ describe('Refresh Token Service', () => {
         test('increment the sessions index for the user', async () => {
             const { userId } = await createUser();
             await refreshTokenService.generate(userId);
-            const userActiveSessions = await testKit.redisService.get(makeSessionIndexKey(userId));
+            const userActiveSessions = await testKit.redisService.get(makeRefreshTokenCountKey(userId));
             expect(userActiveSessions).toBe(1);
         });
     });
