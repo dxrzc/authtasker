@@ -8,9 +8,8 @@ import { IUser } from '@root/interfaces/user/user.interface';
 import { calculateTokenTTL } from '@logic/token/calculate-token-ttl';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
-import { convertExpTimeToUniux } from '@logic/token/convert-exp-time-to-unix';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
-import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
+import { convertExpTimeToSeconds } from '@logic/token/convert-exp-time-to-unix';
 
 export class RefreshTokenService {
 
@@ -22,32 +21,40 @@ export class RefreshTokenService {
         private readonly userModel: Model<IUser>
     ) {}
 
-    private async storeNewTokenInDb(userId: string, jti: string): Promise<void> {
-        const expTimeUnix = convertExpTimeToUniux(this.configService.JWT_REFRESH_EXP_TIME as StringValue);
-        await this.redisService.set(makeRefreshTokenKey(userId, jti), '1', expTimeUnix);
+    private async deleteToken(userId: string, jti: string): Promise<void> {
+        await Promise.all([
+            // from String db
+            this.redisService.delete(makeRefreshTokenKey(userId, jti)),            
+        ]);
     }
 
-    // token rotation
-    private async replaceRefreshToken(oldJti: string, oldTokenExpDateUnix: number, userId: string) {
-        // delete previous token
-        await this.redisService.delete(makeRefreshTokenKey(userId, oldJti));
-        // generate a new token with the remaning exp time of the previous one
-        const remainingTTLseconds = calculateTokenTTL(oldTokenExpDateUnix);
-        const { token, jti } = this.jwtService.generate(`${remainingTTLseconds}s`, {
+    private async storeToken(userId: string, jti: string, expiresInSeconds: number): Promise<void> {        
+        await Promise.all([
+            // in String db
+            this.redisService.set(makeRefreshTokenKey(userId, jti), '1', expiresInSeconds),
+        ]);
+    }
+
+    private generateToken(userId: string, expiresIn: string | number): { token: string, jti: string } {
+        const expTime = (typeof expiresIn === 'number') ? `${expiresIn}s` : expiresIn;
+        return this.jwtService.generate(expTime, {
             id: userId
         });
-        // save new one in db
-        await this.redisService.set(makeRefreshTokenKey(userId, jti), '1', remainingTTLseconds);
-        return { token, jti, expiresInSeconds: remainingTTLseconds };
+    }
+
+    private async replaceRefreshToken(oldJti: string, oldTokenExpDateUnix: number, userId: string) {
+        await this.deleteToken(userId, oldJti);
+        // generate a new token with the remaning exp time of the previous one
+        const expiresInSeconds = calculateTokenTTL(oldTokenExpDateUnix);
+        const { token, jti } = this.generateToken(userId, expiresInSeconds);
+        await this.storeToken(userId, jti, expiresInSeconds);
+        return { token, jti, expiresInSeconds };
     }
 
     async generate(userId: string): Promise<string> {
         const expTime = this.configService.JWT_REFRESH_EXP_TIME;
-        const { token, jti } = this.jwtService.generate(expTime, {
-            // purpose???
-            id: userId
-        });
-        await this.storeNewTokenInDb(userId, jti);
+        const { token, jti } = this.generateToken(userId, expTime);
+        await this.storeToken(userId, jti, convertExpTimeToSeconds(this.configService.JWT_REFRESH_EXP_TIME as StringValue));
         this.loggerService.info(`Refresh token ${jti} generated, expires at ${expTime}`);
         return token;
     }
@@ -84,7 +91,7 @@ export class RefreshTokenService {
     }
 
     async revokeAllTokens(userId: string) {
-        const keys = await this.redisService.getAllKeysByPattern(makeRefreshTokenKey(userId, '*'));        
+        const keys = await this.redisService.getAllKeysByPattern(makeRefreshTokenKey(userId, '*'));
         if (keys && keys.length > 0) {
             await this.redisService.deleteKeys(keys);
             this.loggerService.info(`All user refresh token srevoked of user "${userId}"`)
