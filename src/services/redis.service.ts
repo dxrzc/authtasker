@@ -31,6 +31,14 @@ export class RedisService {
         await this.redis.del(key);
     }
 
+    async increment(key: string): Promise<void> {
+        await this.redis.incr(key);
+    }
+
+    async decrement(key:string): Promise<void> {
+        await this.redis.decr(key);
+    }
+
     async deleteKeys(keys: string[]): Promise<void> {
         await this.redis.del(keys);
     }

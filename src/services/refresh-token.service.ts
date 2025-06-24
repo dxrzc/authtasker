@@ -10,6 +10,7 @@ import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { convertExpTimeToSeconds } from '@logic/token/convert-exp-time-to-unix';
+import { makeSessionIndexKey } from '@logic/token/make-session-index-key';
 
 export class RefreshTokenService {
 
@@ -22,16 +23,16 @@ export class RefreshTokenService {
     ) {}
 
     private async deleteToken(userId: string, jti: string): Promise<void> {
-        await Promise.all([
-            // from String db
-            this.redisService.delete(makeRefreshTokenKey(userId, jti)),            
+        await Promise.all([            
+            this.redisService.delete(makeRefreshTokenKey(userId, jti)),
+            this.redisService.decrement(makeSessionIndexKey(userId))
         ]);
     }
 
-    private async storeToken(userId: string, jti: string, expiresInSeconds: number): Promise<void> {        
+    private async storeToken(userId: string, jti: string, expiresInSeconds: number): Promise<void> {
         await Promise.all([
-            // in String db
             this.redisService.set(makeRefreshTokenKey(userId, jti), '1', expiresInSeconds),
+            this.redisService.increment(makeSessionIndexKey(userId))
         ]);
     }
 

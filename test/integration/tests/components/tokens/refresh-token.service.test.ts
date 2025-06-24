@@ -1,14 +1,14 @@
+import { Types } from 'mongoose';
 import ms, { StringValue } from 'ms';
+import { JwtService } from '@root/services/jwt.service';
 import { testKit } from '@integration/utils/testKit.util';
-import { createUser } from '@integration/utils/createUser.util';
 import { calculateTokenTTL } from '@logic/token/calculate-token-ttl';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
+import { HttpError } from '@root/common/errors/classes/http-error.class';
+import { makeSessionIndexKey } from '@logic/token/make-session-index-key';
 import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
 import { RefreshTokenService } from '@root/services/refresh-token.service';
-import { JwtService } from '@root/services/jwt.service';
-import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
-import { Types } from 'mongoose';
 
 let refreshTokenService: RefreshTokenService;
 
@@ -23,10 +23,20 @@ describe('Refresh Token Service', () => {
         );
     });
 
+    async function createUser() {
+        const role = getRandomRole();
+        const userCreated = await testKit.userModel.create({
+            ...testKit.userDataGenerator.fullUser(),
+            emailValidated: (role !== 'readonly'),
+            role,
+        });
+        return { userId: userCreated.id };
+    }
+
     describe('generate', () => {
         test('store token in redis database with the configured exp time in envs', async () => {
             // get a valid token jti
-            const { userId } = await createUser(getRandomRole());
+            const { userId } = await createUser();
             const token = await refreshTokenService.generate(userId);
             const payload = testKit.refreshJwt.verify(token)!;
             expect(payload).toBeDefined();
@@ -36,11 +46,18 @@ describe('Refresh Token Service', () => {
             expect(ttlInSecondsFromRedis).toBeDefined();
             expect(expTimeEnvInSeconds).toBe(ttlInSecondsFromRedis);
         });
+
+        test('increment the sessions index for the user', async () => {
+            const { userId } = await createUser();
+            await refreshTokenService.generate(userId);
+            const userActiveSessions = await testKit.redisService.get(makeSessionIndexKey(userId));
+            expect(userActiveSessions).toBe(1);
+        });
     });
 
     describe('rotate', () => {
         test('return a new refresh token with the same exp date as the previous one', async () => {
-            const { userId } = await createUser(getRandomRole());
+            const { userId } = await createUser();
             // generate old token
             const oldToken = await refreshTokenService.generate(userId);
             const oldTokenExpDateUnix = testKit.refreshJwt.verify(oldToken)?.exp!;
@@ -52,7 +69,7 @@ describe('Refresh Token Service', () => {
         });
 
         test('delete the previous token from redis database', async () => {
-            const { userId } = await createUser(getRandomRole());
+            const { userId } = await createUser();
             // generate old token
             const oldToken = await refreshTokenService.generate(userId);
             const oldTokenPayload = testKit.refreshJwt.verify(oldToken)!;
@@ -68,7 +85,7 @@ describe('Refresh Token Service', () => {
         });
 
         test('store the new token jti in redis database with the same ttl as the previous one', async () => {
-            const { userId } = await createUser(getRandomRole());
+            const { userId } = await createUser();
             // generate old token
             const oldToken = await refreshTokenService.generate(userId);
             const oldTokenExpDateUnix = testKit.refreshJwt.verify(oldToken)?.exp!;
@@ -85,7 +102,7 @@ describe('Refresh Token Service', () => {
         describe('Token is not in redis database', () => {
             test('throw HttpError UNAUTHORIZED and invalid token message', async () => {
                 // valid token but never saved in redis db
-                const { userId } = await createUser(getRandomRole());
+                const { userId } = await createUser();
                 const { token: invalidToken } = testKit.refreshJwt.generate('20m', {
                     id: userId
                 });
@@ -98,7 +115,7 @@ describe('Refresh Token Service', () => {
         describe('Token is expired', () => {
             test('throw HttpError UNAUTHORIZED and invalid token message', async () => {
                 jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 1000000000)
-                const { userId } = await createUser(getRandomRole());
+                const { userId } = await createUser();
                 const { token: expiredToken } = testKit.refreshJwt.generate('10s', {
                     id: userId
                 });
@@ -110,7 +127,7 @@ describe('Refresh Token Service', () => {
 
         describe('Token is not signed by this server', () => {
             test('throw HttpError UNAUTHORIZED and invalid token message', async () => {
-                const { userId } = await createUser(getRandomRole());
+                const { userId } = await createUser();
                 // generate a token with another key
                 const jwtService = new JwtService('badkey');
                 const { token: invalidToken } = jwtService.generate('20m', {
@@ -146,7 +163,7 @@ describe('Refresh Token Service', () => {
 
     describe('revokeToken', () => {
         test('delete token from redis database', async () => {
-            const { userId } = await createUser(getRandomRole());
+            const { userId } = await createUser();
             const token = await refreshTokenService.generate(userId);
             const payload = testKit.refreshJwt.verify(token);
             expect(payload).toBeDefined();
@@ -160,7 +177,7 @@ describe('Refresh Token Service', () => {
     describe('revokeAllToken', () => {
         test('deleted all the tokens asocciated to user in redis database', async () => {
             // create 3 tokens for this user
-            const { userId } = await createUser(getRandomRole());
+            const { userId } = await createUser();
             const token1 = await refreshTokenService.generate(userId);
             const token2 = await refreshTokenService.generate(userId);
             const token3 = await refreshTokenService.generate(userId);
