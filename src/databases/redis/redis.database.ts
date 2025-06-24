@@ -3,6 +3,7 @@ import { EventManager } from '@root/events/eventManager';
 import { ConfigService } from '@root/services/config.service';
 import { Events } from '@root/common/constants/events.constants';
 import { SystemLoggerService } from '@root/services/system-logger.service';
+import { getRedisOptions } from './redis.options';
 
 export class RedisDatabase {
 
@@ -10,21 +11,13 @@ export class RedisDatabase {
     private redis: Redis;
 
     constructor(private readonly configService: ConfigService) {
-        this.redis = new Redis({
-            lazyConnect: true,
-            port: configService.REDIS_PORT,
-            host: configService.REDIS_HOST,
-            password: configService.REDIS_PASSWORD,
-            db: 0,
-            // disables reconnections
-            retryStrategy: null as any
-        });
+        this.redis = new Redis(getRedisOptions(configService));
         this.connectionEvents();
     }
 
-    connectionEvents() {        
+    connectionEvents() {
         this.redis.on('end', () => {
-            if (!this.disconnectedManually) {                
+            if (!this.disconnectedManually) {
                 EventManager.emit(Events.REDIS_CONNECTION_ERROR);
             }
         });

@@ -12,6 +12,7 @@ import { ErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
 import { IAsyncLocalStorageStore } from './interfaces/common/async-local-storage.interface';
 import { EventManager } from './events/eventManager';
 import { Events } from './common/constants/events.constants';
+import { RedisSuscriber } from './databases/redis/redis.suscriber';
 
 process.on('SIGINT', async () => {
     await ShutdownManager.shutdown({
@@ -75,6 +76,7 @@ async function main() {
     const redisDb = new RedisDatabase(configService);
     const redisInstance = await redisDb.connect();
     const redisService = new RedisService(redisInstance);
+    const redisSuscriber = new RedisSuscriber(configService, redisInstance);
     ShutdownManager.redisDb = redisDb;
 
     // server
