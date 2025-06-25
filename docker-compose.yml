@@ -19,4 +19,9 @@ services:
     - REDIS_PASSWORD=${REDIS_PASSWORD}    
     volumes:
       - ./docker-volumes/redis-${NODE_ENV}:/data
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+      - ./redis/conf:/usr/local/etc/redis
+    command: 
+      - redis-server
+      - /usr/local/etc/redis/redis.conf 
+      - --requirepass
+      - ${REDIS_PASSWORD}

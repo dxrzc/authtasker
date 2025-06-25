@@ -1,6 +1,8 @@
-import { ConfigService } from '@root/services/config.service';
 import Redis from 'ioredis';
 import { getRedisOptions } from './redis.options';
+import { ConfigService } from '@root/services/config.service';
+import { SystemLoggerService } from '@root/services/system-logger.service';
+import { makeRefreshTokenCountKey } from '@logic/token/make-refresh-token-count-key';
 
 export class RedisSuscriber {
     constructor(
@@ -11,26 +13,17 @@ export class RedisSuscriber {
         const expiredKeyPattern = '__keyevent@0__:expired';
 
         subscriber.subscribe(expiredKeyPattern, (err, count) => {
-            if (err) {
-                console.error('Failed to subscribe: ', err);
-            } else {
-                console.log(`Subscribed to ${expiredKeyPattern}`);
-            }
+            if (err)
+                SystemLoggerService.error(`Failed to subscribe: ${err}`);
+            else
+                SystemLoggerService.info(`Suscribed to redis event: ${expiredKeyPattern}`);
         });
 
         subscriber.on('message', async (channel, expiredKey) => {
-            console.log('Expired key:', expiredKey);
-
-            // message in log
-
-            // // Example: if key is `refresh:12345:jti-abc`
-            // const refreshKeyRegex = /^refresh:(?<userId>[^:]+):(?<jti>.+)$/;
-            // const match = expiredKey.match(refreshKeyRegex);
-            // if (match?.groups) {
-            //     const { userId, jti } = match.groups;
-            //     await this.redisInstance.decr(makeSessionIndexKey(userId));
-            //     console.log(`Cleaned up expired token jti=${jti} for user ${userId}`);
-            // }
+            const userId = expiredKey.split(':').at(2);
+            if (!userId)
+                throw new Error('Can not get the user id from the expired key');
+            await this.redisInstance.decr(makeRefreshTokenCountKey(userId));
         });
     }
 }
