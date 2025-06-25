@@ -2,7 +2,6 @@ import Redis from 'ioredis';
 import { getRedisOptions } from './redis.options';
 import { ConfigService } from '@root/services/config.service';
 import { SystemLoggerService } from '@root/services/system-logger.service';
-import { makeRefreshTokenCountKey } from '@logic/token/make-refresh-token-count-key';
 
 export class RedisSuscriber {
     constructor(
@@ -20,12 +19,7 @@ export class RedisSuscriber {
         });
 
         subscriber.on('message', async (channel, expiredKey) => {
-            if (expiredKey.startsWith('jwt:refresh')) {
-                const userId = expiredKey.split(':').at(2);
-                if (!userId)
-                    throw new Error('Can not get the user id from the expired key');
-                await this.redisInstance.decr(makeRefreshTokenCountKey(userId));
-            }
+            // TODO:
         });
     }
 }

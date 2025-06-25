@@ -10,7 +10,6 @@ import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { convertExpTimeToSeconds } from '@logic/token/convert-exp-time-to-unix';
-import { makeRefreshTokenCountKey } from '@logic/token/make-refresh-token-count-key';
 
 interface RefreshTokenMetadata {
     token: string;
@@ -31,15 +30,13 @@ export class RefreshTokenService {
 
     private async deleteToken(userId: string, jti: string): Promise<void> {
         await Promise.all([
-            this.redisService.delete(makeRefreshTokenKey(userId, jti)),
-            this.redisService.decrement(makeRefreshTokenCountKey(userId))
+            this.redisService.delete(makeRefreshTokenKey(userId, jti)),            
         ]);
     }
 
     private async storeToken(userId: string, jti: string, expiresInSeconds: number): Promise<void> {
         await Promise.all([
-            this.redisService.set(makeRefreshTokenKey(userId, jti), '1', expiresInSeconds),
-            this.redisService.increment(makeRefreshTokenCountKey(userId))
+            this.redisService.set(makeRefreshTokenKey(userId, jti), '1', expiresInSeconds),            
         ]);
     }
 
@@ -108,15 +105,7 @@ export class RefreshTokenService {
         return (!options?.meta) ? newTokenData.token : newTokenData;
     }
 
-    async revokeAllTokens(userId: string) {
-        const keys = await this.redisService.getAllKeysByPattern(makeRefreshTokenKey(userId, '*'));
-        if (keys && keys.length > 0) {
-            await this.redisService.deleteKeys(keys);
-            this.loggerService.info(`All user refresh token srevoked of user "${userId}"`)
-        } else {
-            this.loggerService.info('User does not have refresh tokens to revoke');
-        }
-    }
+    // TODO: revoke all tokens
 
     async revokeToken(userId: string, jti: string) {
         await this.redisService.delete(makeRefreshTokenKey(userId, jti));
