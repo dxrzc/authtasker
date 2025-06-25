@@ -12,6 +12,13 @@ import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { convertExpTimeToSeconds } from '@logic/token/convert-exp-time-to-unix';
 import { makeRefreshTokenCountKey } from '@logic/token/make-refresh-token-count-key';
 
+interface RefreshTokenMetadata {
+    token: string;
+    jti: string;
+    id: string;
+    expSeconds: number;
+};
+
 export class RefreshTokenService {
 
     constructor(
@@ -23,7 +30,7 @@ export class RefreshTokenService {
     ) {}
 
     private async deleteToken(userId: string, jti: string): Promise<void> {
-        await Promise.all([            
+        await Promise.all([
             this.redisService.delete(makeRefreshTokenKey(userId, jti)),
             this.redisService.decrement(makeRefreshTokenCountKey(userId))
         ]);
@@ -43,24 +50,34 @@ export class RefreshTokenService {
         });
     }
 
-    private async replaceRefreshToken(oldJti: string, oldTokenExpDateUnix: number, userId: string) {
+    private async replaceRefreshToken(oldJti: string, oldTokenExpDateUnix: number, userId: string): Promise<RefreshTokenMetadata> {
         await this.deleteToken(userId, oldJti);
         // generate a new token with the remaning exp time of the previous one
-        const expiresInSeconds = calculateTokenTTL(oldTokenExpDateUnix);
-        const { token, jti } = this.generateToken(userId, expiresInSeconds);
-        await this.storeToken(userId, jti, expiresInSeconds);
-        return { token, jti, expiresInSeconds };
+        const expSeconds = calculateTokenTTL(oldTokenExpDateUnix);
+        const { token, jti } = this.generateToken(userId, expSeconds);
+        await this.storeToken(userId, jti, expSeconds);
+        return { token, jti, expSeconds, id: userId };
     }
 
-    async generate(userId: string): Promise<string> {
+    async generate(userId: string): Promise<string>;
+    async generate(userId: string, options: { meta: true }): Promise<RefreshTokenMetadata>;
+    async generate(userId: string, options?: { meta?: boolean }): Promise<string | RefreshTokenMetadata> {
         const expTime = this.configService.JWT_REFRESH_EXP_TIME;
+        const expSeconds = convertExpTimeToSeconds(expTime as StringValue);
         const { token, jti } = this.generateToken(userId, expTime);
-        await this.storeToken(userId, jti, convertExpTimeToSeconds(this.configService.JWT_REFRESH_EXP_TIME as StringValue));
+        await this.storeToken(userId, jti, expSeconds);
         this.loggerService.info(`Refresh token ${jti} generated, expires at ${expTime}`);
-        return token;
+        return (!options?.meta) ? token : {
+            token,
+            jti,
+            id: userId,
+            expSeconds
+        };
     }
 
-    async rotate(token: string): Promise<string> {
+    async rotate(token: string): Promise<string>
+    async rotate(token: string, options: { meta: true }): Promise<RefreshTokenMetadata>
+    async rotate(token: string, options?: { meta?: boolean }): Promise<string | RefreshTokenMetadata> {
         // token expired or not signed
         const payload = this.jwtService.verify<{ id: string }>(token);
         if (!payload) {
@@ -87,8 +104,8 @@ export class RefreshTokenService {
             throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
         }
         const newTokenData = await this.replaceRefreshToken(payload.jti, payload.exp!, user.id);
-        this.loggerService.info(`New refresh token generated: "${newTokenData.token}" for token rotation expires in ${newTokenData.expiresInSeconds} seconds`)
-        return newTokenData.token;
+        this.loggerService.info(`New refresh token generated: "${newTokenData.token}" for token rotation expires in ${newTokenData.expSeconds}s`)
+        return (!options?.meta) ? newTokenData.token : newTokenData;
     }
 
     async revokeAllTokens(userId: string) {

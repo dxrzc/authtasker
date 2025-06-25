@@ -2,7 +2,6 @@ import { Types } from 'mongoose';
 import ms, { StringValue } from 'ms';
 import { JwtService } from '@root/services/jwt.service';
 import { testKit } from '@integration/utils/testKit.util';
-import { calculateTokenTTL } from '@logic/token/calculate-token-ttl';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { makeRefreshTokenCountKey } from '@logic/token/make-refresh-token-count-key';
@@ -33,34 +32,16 @@ describe('Refresh Token Service', () => {
         return { userId: userCreated.id };
     }
 
-    // describe('Token expiration', () => {
-    //     test('decrement user sessions index automatically when token gets expired', async () => {
-    //         const { userId } = await createUser();
-    //         const { token } = testKit.refreshJwt.generate('0', {
-    //             id: new Types.ObjectId()
-    //         });
-    //     });
-    // });
-
     describe('generate', () => {
         test('store token in redis database with the configured exp time in envs', async () => {
             // get a valid token jti
             const { userId } = await createUser();
-            const token = await refreshTokenService.generate(userId);
-            const payload = testKit.refreshJwt.verify(token)!;
-            expect(payload).toBeDefined();
+            const { jti, id } = await refreshTokenService.generate(userId, { meta: true });
             // calculate token exp
             const expTimeEnvInSeconds = Math.floor(ms(testKit.configService.JWT_REFRESH_EXP_TIME as StringValue) / 1000);
-            const ttlInSecondsFromRedis = await testKit.redisInstance.ttl(makeRefreshTokenKey(payload.id, payload!.jti));
+            const ttlInSecondsFromRedis = await testKit.redisInstance.ttl(makeRefreshTokenKey(id, jti));
             expect(ttlInSecondsFromRedis).toBeDefined();
             expect(expTimeEnvInSeconds).toBe(ttlInSecondsFromRedis);
-        });
-
-        test('increment the sessions index for the user', async () => {
-            const { userId } = await createUser();
-            await refreshTokenService.generate(userId);
-            const userActiveSessions = await testKit.redisService.get(makeRefreshTokenCountKey(userId));
-            expect(userActiveSessions).toBe(1);
         });
     });
 
@@ -79,33 +60,27 @@ describe('Refresh Token Service', () => {
 
         test('delete the previous token from redis database', async () => {
             const { userId } = await createUser();
-            // generate old token
-            const oldToken = await refreshTokenService.generate(userId);
-            const oldTokenPayload = testKit.refreshJwt.verify(oldToken)!;
-            expect(oldTokenPayload).toBeDefined();
-            // old token in redis
-            const inRedis = await testKit.redisService.get(makeRefreshTokenKey(oldTokenPayload.id, oldTokenPayload.jti));
+            // generate a token
+            const { jti, id, token } = await refreshTokenService.generate(userId, { meta: true });
+            // token in redis
+            const inRedis = await testKit.redisService.get(makeRefreshTokenKey(id, jti));
             expect(inRedis).not.toBeNull()
             // rotate
-            await refreshTokenService.rotate(oldToken);
-            // old token shouldn't be in redis anymore
-            const oldTokenInRedis = await testKit.redisService.get(makeRefreshTokenKey(oldTokenPayload.id, oldTokenPayload.jti));
+            await refreshTokenService.rotate(token);
+            // previously token shouldn't be in redis anymore
+            const oldTokenInRedis = await testKit.redisService.get(makeRefreshTokenKey(id, jti));
             expect(oldTokenInRedis).toBeNull();
         });
 
         test('store the new token jti in redis database with the same ttl as the previous one', async () => {
             const { userId } = await createUser();
             // generate old token
-            const oldToken = await refreshTokenService.generate(userId);
-            const oldTokenExpDateUnix = testKit.refreshJwt.verify(oldToken)?.exp!;
-            const oldTokenTTLSeconds = calculateTokenTTL(oldTokenExpDateUnix);
+            const { token: oldToken, expSeconds: oldTokenExpSeconds } = await refreshTokenService.generate(userId, { meta: true });
             // rotate token
-            const newToken = await refreshTokenService.rotate(oldToken);
-            const newTokenPayload = testKit.refreshJwt.verify(newToken)!;
-            expect(newTokenPayload).toBeDefined();
-            // new token stored for oldTokenTTLSeconds
-            const newTokenTTLInRedis = await testKit.redisInstance.ttl(makeRefreshTokenKey(newTokenPayload.id, newTokenPayload.jti));
-            expect(newTokenTTLInRedis).toBe(oldTokenTTLSeconds);
+            const { id: newTokenUserId, jti: newTokenJti } = await refreshTokenService.rotate(oldToken, { meta: true });
+            // new token stored for oldTokenExpSeconds
+            const newTokenTTLInRedis = await testKit.redisInstance.ttl(makeRefreshTokenKey(newTokenUserId, newTokenJti));
+            expect(newTokenTTLInRedis).toBe(oldTokenExpSeconds);
         });
 
         describe('Token is not in redis database', () => {
@@ -173,12 +148,10 @@ describe('Refresh Token Service', () => {
     describe('revokeToken', () => {
         test('delete token from redis database', async () => {
             const { userId } = await createUser();
-            const token = await refreshTokenService.generate(userId);
-            const payload = testKit.refreshJwt.verify(token);
-            expect(payload).toBeDefined();
+            const { id, jti } = await refreshTokenService.generate(userId, { meta: true });
             // revoke
-            await refreshTokenService.revokeToken(payload!.id, payload!.jti);
-            const tokenInRedis = await testKit.redisService.get(makeRefreshTokenKey(payload!.id, payload!.jti));
+            await refreshTokenService.revokeToken(id, jti);
+            const tokenInRedis = await testKit.redisService.get(makeRefreshTokenKey(id, jti));
             expect(tokenInRedis).toBeNull();
         });
     });
@@ -187,18 +160,15 @@ describe('Refresh Token Service', () => {
         test('deleted all the tokens asocciated to user in redis database', async () => {
             // create 3 tokens for this user
             const { userId } = await createUser();
-            const token1 = await refreshTokenService.generate(userId);
-            const token2 = await refreshTokenService.generate(userId);
-            const token3 = await refreshTokenService.generate(userId);
-            const token1Payload = testKit.refreshJwt.verify(token1)!;
-            const token2Payload = testKit.refreshJwt.verify(token2)!;
-            const token3Payload = testKit.refreshJwt.verify(token3)!;
+            const { id: token1UserId, jti: token1Jti } = await refreshTokenService.generate(userId, { meta: true });
+            const { id: token2UserId, jti: token2Jti } = await refreshTokenService.generate(userId, { meta: true });
+            const { id: token3UserId, jti: token3Jti } = await refreshTokenService.generate(userId, { meta: true });
             // revoke all refresh tokens
             await refreshTokenService.revokeAllTokens(userId);
             // tokens shouldn't exist in redis db
-            await expect(testKit.redisService.get(makeRefreshTokenKey(token1Payload.id, token1Payload.jti))).resolves.toBeNull()
-            await expect(testKit.redisService.get(makeRefreshTokenKey(token2Payload.id, token2Payload.jti))).resolves.toBeNull()
-            await expect(testKit.redisService.get(makeRefreshTokenKey(token3Payload.id, token3Payload.jti))).resolves.toBeNull()
+            await expect(testKit.redisService.get(makeRefreshTokenKey(token1UserId, token1Jti))).resolves.toBeNull()
+            await expect(testKit.redisService.get(makeRefreshTokenKey(token2UserId, token2Jti))).resolves.toBeNull()
+            await expect(testKit.redisService.get(makeRefreshTokenKey(token3UserId, token3Jti))).resolves.toBeNull()
         });
     });
 });
