@@ -20,10 +20,12 @@ export class RedisSuscriber {
         });
 
         subscriber.on('message', async (channel, expiredKey) => {
-            const userId = expiredKey.split(':').at(2);
-            if (!userId)
-                throw new Error('Can not get the user id from the expired key');
-            await this.redisInstance.decr(makeRefreshTokenCountKey(userId));
+            if (expiredKey.startsWith('jwt:refresh')) {
+                const userId = expiredKey.split(':').at(2);
+                if (!userId)
+                    throw new Error('Can not get the user id from the expired key');
+                await this.redisInstance.decr(makeRefreshTokenCountKey(userId));
+            }
         });
     }
 }
