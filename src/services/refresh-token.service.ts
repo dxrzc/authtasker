@@ -11,7 +11,6 @@ import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { convertExpTimeToSeconds } from '@logic/token/convert-exp-time-to-unix';
 import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
-import { IJwtPayload } from '@root/interfaces/token/jwt-payload.interface';
 
 interface RefreshTokenMetadata {
     token: string;
