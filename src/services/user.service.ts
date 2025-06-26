@@ -195,6 +195,22 @@ export class UserService {
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
+    async refresh(refreshToken: string) {
+        // refresh not provided
+        if (!refreshToken) {
+            this.loggerService.error('Refresh token was not sent');
+            throw HttpError.badRequest(authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY);
+        }
+        // provided refresh token is valid
+        const { userId } = await this.refreshTokenService.validateToken(refreshToken);
+        const newRefreshToken = await this.refreshTokenService.rotate(refreshToken);
+        const newSessionToken = this.sessionTokenService.generate(userId);
+        return {
+            refreshToken: newRefreshToken,
+            sessionToken: newSessionToken
+        };
+    }
+
     async findOne(id: string, options: ICacheOptions): Promise<UserDocument | UserResponse> {
         // validate id 
         const validMongoId = Types.ObjectId.isValid(id);

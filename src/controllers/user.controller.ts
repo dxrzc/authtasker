@@ -32,7 +32,8 @@ export class UserController extends BaseUserController {
     }
 
     protected readonly refresh = async (req: Request, res: Response): Promise<void> => {
-
+        const tokens = await this.userService.refresh(req.body.refreshToken);
+        res.status(statusCodes.OK).json(tokens);
     }
 
     protected readonly login = async (req: Request, res: Response): Promise<void> => {

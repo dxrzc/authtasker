@@ -30,7 +30,7 @@ export class UserRoutes {
         private readonly apiLimiterMiddleware: ApiLimiterMiddleware,
     ) {
         this.userController = new UserController(
-            this.userService,            
+            this.userService,
             new CreateUserValidator(),
             new UpdateUserValidator(),
             new LoginUserValidator(),
@@ -66,6 +66,11 @@ export class UserRoutes {
         router.post('/login',
             this.authLimiterMiddleware.middleware(),
             this.userController.loginFwdErr()
+        );
+
+        router.post('/refresh-token',
+            this.authLimiterMiddleware.middleware(),
+            this.userController.refreshFwdErr()
         );
 
         router.post('/requestEmailValidation',

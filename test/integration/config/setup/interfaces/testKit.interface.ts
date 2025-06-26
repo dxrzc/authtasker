@@ -46,6 +46,7 @@ export interface ITestKit {
         tasksAPI: string;
         createTask: string;
         findAllTasksByUser: string;
+        refreshToken: string;
 
         health: string;
     };

@@ -12,6 +12,7 @@ export abstract class BaseUserController extends BaseController {
     protected abstract deleteOne(req: Request, res: Response): Promise<void>;
     protected abstract updateOne(req: Request, res: Response): Promise<void>;
     protected abstract me(req: Request, res: Response): Promise<void>;
+    protected abstract refresh(req: Request, res: Response): Promise<void>;
 
     readonly createFwdErr = (): RequestHandler => this.forwardError(this.create);
     readonly loginFwdErr = (): RequestHandler => this.forwardError(this.login);
@@ -23,4 +24,5 @@ export abstract class BaseUserController extends BaseController {
     readonly deleteOneFwdErr = (): RequestHandler => this.forwardError(this.deleteOne);
     readonly updateOneFwdErr = (): RequestHandler => this.forwardError(this.updateOne);
     readonly meFwdErr = (): RequestHandler => this.forwardError(this.me);
+    readonly refreshFwdErr = (): RequestHandler => this.forwardError(this.refresh);
 }
