@@ -11,6 +11,7 @@ import { HashingService } from '@root/services/hashing.service';
 import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
 import { UserDataGenerator } from '@root/seed/generators/user.generator';
 import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
+import { RefreshTokenService } from '@root/services/refresh-token.service';
 
 export interface ITestKit {
     configService: ConfigService;
@@ -31,6 +32,7 @@ export interface ITestKit {
     refreshJwt: JwtService;
     jwtBlacklistService: JwtBlackListService;
     hashingService: HashingService;
+    refreshTokenService: RefreshTokenService;
 
     endpoints: {
         usersAPI: string;

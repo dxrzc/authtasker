@@ -2,7 +2,10 @@ import request from 'supertest';
 import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
+import { getRandomRole } from '@integration/utils/get-random-role.util';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
+import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
 
 describe('DELETE /api/users/:id', () => {
     describe('Modification Access Rules Wiring', () => {
@@ -20,9 +23,9 @@ describe('DELETE /api/users/:id', () => {
             const response = await request(testKit.server)
                 .delete(`${testKit.endpoints.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`);
-                
+
             expect(response.statusCode).toBe(expectedStatus);
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg });            
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
         });
 
         test.concurrent('admins are authorized to delete readonly accounts', async () => {
@@ -35,8 +38,48 @@ describe('DELETE /api/users/:id', () => {
             // Attempt to delete the target user
             await request(testKit.server)
                 .delete(`${testKit.endpoints.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)                
+                .set('Authorization', `Bearer ${currentUserSessionToken}`)
                 .expect(status2xx);
+        });
+    });
+
+    describe('Tokens', () => {
+        test.concurrent('delete all refresh tokens belonging to user from redis (refresh tokens db)', async () => {
+            // create assigns a refresh token
+            const { userId, sessionToken, refreshToken } = await createUser(getRandomRole());
+            const jti1 = testKit.refreshJwt.verify(refreshToken)?.jti!;
+            // create an extra token
+            const { jti: jti2 } = await testKit.refreshTokenService.generate(userId, { meta: true });
+            // 2 tokens assigned
+            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, jti1))).resolves.not.toBeNull();
+            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, jti2))).resolves.not.toBeNull();
+            // delete user
+            await request(testKit.server)
+                .delete(`${testKit.endpoints.usersAPI}/${userId}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            // tokens should have been deleted
+            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, jti1))).resolves.toBeNull();
+            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, jti2))).resolves.toBeNull();
+        });
+
+        test.concurrent('delete the user refresh tokens count set', async () => {
+            // create assigns a refresh token
+            const { userId, sessionToken } = await createUser(getRandomRole());
+            // create 2 extra tokens
+            await Promise.all([
+                testKit.refreshTokenService.generate(userId, { meta: true }),
+                testKit.refreshTokenService.generate(userId, { meta: true }),
+            ]);
+            // 3 tokens in set
+            await expect(testKit.redisService.setSize(makeRefreshTokenIndexKey(userId))).resolves.toBe(3);
+            // delete user
+            await request(testKit.server)
+                .delete(`${testKit.endpoints.usersAPI}/${userId}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            // set (refresh jtis index) should have been deleted
+            await expect(testKit.redisService.get(makeRefreshTokenIndexKey(userId))).resolves.toBeNull();
         });
     });
 

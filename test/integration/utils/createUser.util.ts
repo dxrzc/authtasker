@@ -9,6 +9,7 @@ export const createUser = async (role: UserRole) => {
         .send(testKit.userDataGenerator.fullUser())
         .expect(status2xx);
 
+    const refreshToken = response.body.refreshToken;
     const sessionToken = response.body.sessionToken;
     const userId = response.body.user.id;
     const userEmail = response.body.user.email;
@@ -18,6 +19,7 @@ export const createUser = async (role: UserRole) => {
         await testKit.userModel.findByIdAndUpdate(userId, { role, emailValidated: true });
 
     return {
+        refreshToken,
         sessionToken,
         userId,
         userEmail,

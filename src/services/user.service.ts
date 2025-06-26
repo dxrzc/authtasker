@@ -173,7 +173,7 @@ export class UserService {
         };
     }
 
-    async logout(requestUserInfo: UserFromRequest): Promise<void> {        
+    async logout(requestUserInfo: UserFromRequest): Promise<void> {
         const expirationDateUnix = requestUserInfo.tokenExp;
         await this.sessionTokenService.blacklist(requestUserInfo.jti, expirationDateUnix);
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
@@ -215,7 +215,10 @@ export class UserService {
 
     async deleteOne(requestUserInfo: UserIdentity, targetUserId: string): Promise<void> {
         await this.authorizeUserModificationOrThrow(requestUserInfo, targetUserId);
-        await this.userModel.deleteOne({ _id: targetUserId });
+        await Promise.all([
+            this.userModel.deleteOne({ _id: targetUserId }),
+            this.refreshTokenService.revokeAll(targetUserId)
+        ])
         this.loggerService.info(`User ${targetUserId} deleted`);
         // remove all tasks associated
         const tasksRemoved = await this.tasksModel.deleteMany({ user: targetUserId });

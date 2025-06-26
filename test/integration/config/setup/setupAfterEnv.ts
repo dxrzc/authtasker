@@ -21,6 +21,7 @@ import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
 import * as UserModelLoader from '@root/databases/mongo/models/user.model.load';
 import * as TasksModelLoader from '@root/databases/mongo/models/tasks.model.load';
 import { ErrorHandlerMiddleware } from '@root/middlewares/error-handler.middleware';
+import { RefreshTokenService } from '@root/services/refresh-token.service';
 
 let mongoMemoryServer: MongoMemoryServer;
 let mongoDatabase: MongoDatabase;
@@ -73,6 +74,14 @@ beforeAll(async () => {
     const redisInstance = await redisDatabase.connect();
     const redisService = new RedisService(redisInstance);
 
+    // models (can not be compiled twice)
+    const userModel = UserModelLoader.loadUserModel(configService as ConfigService);
+    const tasksModel = TasksModelLoader.loadTasksModel(configService as ConfigService);
+    jest.spyOn(UserModelLoader, 'loadUserModel').mockReturnValue(userModel);
+    jest.spyOn(TasksModelLoader, 'loadTasksModel').mockReturnValue(tasksModel);
+    testKit.userModel = userModel;
+    testKit.tasksModel = tasksModel;
+
     // helpers
     testKit.configService = configService as ConfigService;
     testKit.redisService = redisService;
@@ -81,14 +90,13 @@ beforeAll(async () => {
     testKit.refreshJwt = new JwtService(configService.JWT_REFRESH_PRIVATE_KEY);
     testKit.jwtBlacklistService = new JwtBlackListService(redisService);
     testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);
-
-    // models (can not be compiled twice)
-    const userModel = UserModelLoader.loadUserModel(configService as ConfigService);
-    const tasksModel = TasksModelLoader.loadTasksModel(configService as ConfigService);
-    jest.spyOn(UserModelLoader, 'loadUserModel').mockReturnValue(userModel);
-    jest.spyOn(TasksModelLoader, 'loadTasksModel').mockReturnValue(tasksModel);
-    testKit.userModel = userModel;
-    testKit.tasksModel = tasksModel;
+    testKit.refreshTokenService = new RefreshTokenService(
+        configService as ConfigService,
+        testKit.refreshJwt,
+        loggerServiceMock,
+        redisService,
+        userModel,
+    )
 
     // data generators
     const userDataGenerator = new UserDataGenerator();
