@@ -161,7 +161,7 @@ export class UserService {
         if (!passwordOk) {
             this.loggerService.error('Password does not match');
             throw HttpError.badRequest(authErrors.INVALID_CREDENTIALS);
-        }        
+        }
         // refresh token per user limit
         const userRefreshTokens = await this.refreshTokenService.countUserTokens(userDb.id);
         if (userRefreshTokens === this.configService.MAX_REFRESH_TOKENS_PER_USER) {
@@ -234,6 +234,11 @@ export class UserService {
     async updateOne(requestUserInfo: UserIdentity, targetUserId: string, propertiesUpdated: UpdateUserValidator): Promise<UserDocument> {
         const userDocument = await this.authorizeUserModificationOrThrow(requestUserInfo, targetUserId);
         await this.setNewPropertiesInDocument(userDocument, propertiesUpdated);
+        // revoke all refresh tokens and blacklist session token
+        if (propertiesUpdated.email || propertiesUpdated.password) {
+            await this.refreshTokenService.revokeAll(targetUserId);
+            this.loggerService.info(`All tokens of user ${targetUserId} were revoked due to email/password update`);
+        }
         try {
             await userDocument.save();
             this.loggerService.info(`User ${targetUserId} updated`);

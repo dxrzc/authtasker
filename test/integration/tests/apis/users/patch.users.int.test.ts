@@ -4,6 +4,9 @@ import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { commonErrors } from '@root/common/errors/messages/common.error.messages';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { getRandomRole } from '@integration/utils/get-random-role.util';
+import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
+import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
 
 describe('PATCH /api/users/:id', () => {
     describe('Input sanitization Wiring', () => {
@@ -70,6 +73,34 @@ describe('PATCH /api/users/:id', () => {
                 .set('Authorization', `Bearer ${currentUserSessionToken}`)
                 .send({ name: testKit.userDataGenerator.name(), })
                 .expect(status2xx);
+        });
+    });
+
+    describe('Tokens', () => {
+        test.concurrent.each(
+            ['email', 'password'] as const
+        )('revoke all the refresh tokens belonging to user from redis databases in %s update', async (prop: 'email' | 'password') => {
+            // create assigns a refresh token
+            const { refreshToken, userId, userEmail: email, unhashedPassword: password, sessionToken } = await createUser(getRandomRole());
+            const refresh1Jti = testKit.refreshJwt.verify(refreshToken)?.jti!;
+            // login to obtain an extra token
+            const login = await request(testKit.server)
+                .post(testKit.endpoints.login)
+                .send({ email, password })
+                .expect(status2xx);
+            const refresh2Jti = testKit.refreshJwt.verify(login.body.refreshToken)?.jti!;
+            // update the user email
+            const update = await request(testKit.server)
+                .patch(`${testKit.endpoints.usersAPI}/${userId}`)
+                .send({ [prop]: testKit.userDataGenerator[prop]() }) // password, email
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            // tokens not in refresh tokens count set
+            await expect(testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), refresh1Jti)).resolves.toBeFalsy();
+            await expect(testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), refresh2Jti)).resolves.toBeFalsy();
+            // tokens not in refresh-tokens database
+            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, refresh1Jti))).resolves.toBeNull();
+            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, refresh2Jti))).resolves.toBeNull();
         });
     });
 
