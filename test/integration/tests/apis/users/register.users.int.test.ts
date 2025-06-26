@@ -65,26 +65,25 @@ describe('POST /api/users/register', () => {
             expect(userInDb!.createdAt).toBeDefined();
             expect(userInDb!.updatedAt).toBeDefined();
         });
-        
+
         test('return 409 CONFLICT when user email already exists', async () => {
             const expectedStatus = 409;
             const expectedErrorMssg = usersApiErrors.USER_ALREADY_EXISTS;
-
-            // Create user
+            // create 
             const firstUser = await request(testKit.server)
                 .post(testKit.endpoints.register)
                 .send(testKit.userDataGenerator.fullUser())
                 .expect(status2xx);
             const usedEmail = firstUser.body.user.email;
-
-            // Create another user with same email
+            // add some delay
+            await new Promise((res) => setTimeout(res, 500));
+            // create another user with same email
             const response = await request(testKit.server)
                 .post(testKit.endpoints.register)
                 .send({
                     ...testKit.userDataGenerator.fullUser(),
                     email: usedEmail
                 });
-
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
         });
@@ -92,22 +91,21 @@ describe('POST /api/users/register', () => {
         test('return 409 CONFLICT when user name already exists', async () => {
             const expectedStatus = 409;
             const expectedErrorMssg = usersApiErrors.USER_ALREADY_EXISTS;
-
-            // Create user
+            // create
             const firstUser = await request(testKit.server)
                 .post(testKit.endpoints.register)
                 .send(testKit.userDataGenerator.fullUser())
                 .expect(status2xx);
             const usedName = firstUser.body.user.name;
-
-            // Create another user with same name
+            // add some delay
+            await new Promise((res) => setTimeout(res, 500));
+            // create another user with same name
             const response = await request(testKit.server)
                 .post(testKit.endpoints.register)
                 .send({
                     ...testKit.userDataGenerator.fullUser(),
                     name: usedName
                 });
-
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
         });
