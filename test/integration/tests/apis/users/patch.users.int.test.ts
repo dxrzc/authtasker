@@ -89,7 +89,7 @@ describe('PATCH /api/users/:id', () => {
                 .send({ email, password })
                 .expect(status2xx);
             const refresh2Jti = testKit.refreshJwt.verify(login.body.refreshToken)?.jti!;
-            // update the user email
+            // update the user %s
             const update = await request(testKit.server)
                 .patch(`${testKit.endpoints.usersAPI}/${userId}`)
                 .send({ [prop]: testKit.userDataGenerator[prop]() }) // password, email
