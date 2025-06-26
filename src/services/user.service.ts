@@ -3,6 +3,7 @@ import { Apis } from '@root/enums/apis.enum';
 import { CacheService } from './cache.service';
 import { EmailService } from '@root/services/email.service';
 import { IUser } from '@root/interfaces/user/user.interface';
+import { RefreshTokenService } from './refresh-token.service';
 import { ConfigService } from '@root/services/config.service';
 import { LoggerService } from '@root/services/logger.service';
 import { SessionTokenService } from './session-token.service';
@@ -13,7 +14,6 @@ import { UserResponse } from '@root/types/user/user-response.type';
 import { UserDocument } from '@root/types/user/user-document.type';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
-import { UserIdentity } from '@root/interfaces/user/user-indentity.interface';
 import { ICacheOptions } from '@root/interfaces/cache/cache-options.interface';
 import { EmailValidationTokenService } from './email-validation-token.service';
 import { UserFromRequest } from '@root/interfaces/user/user-from-request.interface';
@@ -23,7 +23,6 @@ import { usersApiErrors } from '@root/common/errors/messages/users-api.error.mes
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
-import { RefreshTokenService } from './refresh-token.service';
 
 export class UserService {
 
@@ -49,7 +48,7 @@ export class UserService {
         return userInDb;
     }
 
-    private async authorizeUserModificationOrThrow(requestUserInfo: UserIdentity, targetUserId: string): Promise<UserDocument> {
+    private async authorizeUserModificationOrThrow(requestUserInfo: UserFromRequest, targetUserId: string): Promise<UserDocument> {
         const targetUserDocument = await this.findOne(targetUserId, { noStore: true }) as UserDocument;
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
             id: targetUserId,
@@ -219,7 +218,7 @@ export class UserService {
             .exec();
     }
 
-    async deleteOne(requestUserInfo: UserIdentity, targetUserId: string): Promise<void> {
+    async deleteOne(requestUserInfo: UserFromRequest, targetUserId: string): Promise<void> {
         await this.authorizeUserModificationOrThrow(requestUserInfo, targetUserId);
         await Promise.all([
             this.userModel.deleteOne({ _id: targetUserId }),
@@ -231,7 +230,7 @@ export class UserService {
         this.loggerService.info(`${tasksRemoved.deletedCount} tasks associated to user removed`);
     }
 
-    async updateOne(requestUserInfo: UserIdentity, targetUserId: string, propertiesUpdated: UpdateUserValidator): Promise<UserDocument> {
+    async updateOne(requestUserInfo: UserFromRequest, targetUserId: string, propertiesUpdated: UpdateUserValidator): Promise<UserDocument> {
         const userDocument = await this.authorizeUserModificationOrThrow(requestUserInfo, targetUserId);
         await this.setNewPropertiesInDocument(userDocument, propertiesUpdated);
         // revoke all refresh tokens and blacklist session token
