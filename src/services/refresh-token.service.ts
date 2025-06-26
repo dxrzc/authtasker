@@ -43,7 +43,7 @@ export class RefreshTokenService {
         ]);
     }
 
-    async validateToken(token: string) {
+    async validateOrThrow(token: string) {
         // token expired or not signed
         const payload = this.jwtService.verify<{ id: string }>(token);
         if (!payload) {
@@ -111,7 +111,7 @@ export class RefreshTokenService {
     async rotate(token: string): Promise<string>
     async rotate(token: string, options: { meta: true }): Promise<RefreshTokenMetadata>
     async rotate(token: string, options?: { meta?: boolean }): Promise<string | RefreshTokenMetadata> {
-        const { jti, expDateUnix, userId } = await this.validateToken(token);
+        const { jti, expDateUnix, userId } = await this.validateOrThrow(token);
         const newTokenData = await this.replaceRefreshToken(jti, expDateUnix, userId);
         this.loggerService.info(`New refresh token generated: "${newTokenData.token}" for token rotation expires in ${newTokenData.expSeconds}s`)
         return (!options?.meta) ? newTokenData.token : newTokenData;

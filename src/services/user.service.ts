@@ -185,7 +185,7 @@ export class UserService {
             throw HttpError.badRequest(authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY);
         }
         // provided refresh token is valid
-        const { jti: refreshJti } = await this.refreshTokenService.validateToken(refreshToken);
+        const { jti: refreshJti } = await this.refreshTokenService.validateOrThrow(refreshToken);
         const sessionTokenExpDateUnix = requestUserInfo.tokenExp;
         // disable session and refresh tokens
         await Promise.all([
@@ -202,7 +202,7 @@ export class UserService {
             throw HttpError.badRequest(authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY);
         }
         // provided refresh token is valid
-        const { userId } = await this.refreshTokenService.validateToken(refreshToken);
+        const { userId } = await this.refreshTokenService.validateOrThrow(refreshToken);
         const newRefreshToken = await this.refreshTokenService.rotate(refreshToken);
         const newSessionToken = this.sessionTokenService.generate(userId);
         return {
