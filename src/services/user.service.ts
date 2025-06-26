@@ -48,6 +48,11 @@ export class UserService {
         return userInDb;
     }
 
+    private handleRefreshTokenNotInBody(): never {
+        this.loggerService.error('Refresh token was not sent');
+        throw HttpError.badRequest(authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY);
+    }
+
     private async authorizeUserModificationOrThrow(requestUserInfo: UserFromRequest, targetUserId: string): Promise<UserDocument> {
         const targetUserDocument = await this.findOne(targetUserId, { noStore: true }) as UserDocument;
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
@@ -178,12 +183,10 @@ export class UserService {
         };
     }
 
-    async logout(requestUserInfo: UserFromRequest, refreshToken: string): Promise<void> {
+    async logout(requestUserInfo: UserFromRequest, refreshToken?: string): Promise<void> {
         // refresh not provided
-        if (!refreshToken) {
-            this.loggerService.error('Refresh token was not sent');
-            throw HttpError.badRequest(authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY);
-        }
+        if (!refreshToken)
+            this.handleRefreshTokenNotInBody();
         // provided refresh token is valid
         const { jti: refreshJti } = await this.refreshTokenService.validateOrThrow(refreshToken);
         const sessionTokenExpDateUnix = requestUserInfo.tokenExp;
@@ -195,14 +198,13 @@ export class UserService {
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
-    async refresh(refreshToken: string) {
+    async refresh(refreshToken?: string) {
         // refresh not provided
-        if (!refreshToken) {
-            this.loggerService.error('Refresh token was not sent');
-            throw HttpError.badRequest(authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY);
-        }
+        if (!refreshToken)
+            this.handleRefreshTokenNotInBody();
         // provided refresh token is valid
         const { userId } = await this.refreshTokenService.validateOrThrow(refreshToken);
+        // generate new tokens
         const newRefreshToken = await this.refreshTokenService.rotate(refreshToken);
         const newSessionToken = this.sessionTokenService.generate(userId);
         return {
