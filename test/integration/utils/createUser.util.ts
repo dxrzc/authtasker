@@ -4,9 +4,10 @@ import { status2xx } from './status2xx.util';
 import { UserRole } from '@root/types/user/user-roles.type';
 
 export const createUser = async (role: UserRole) => {
+    const userData = testKit.userDataGenerator.fullUser();
     const response = await request(testKit.server)
         .post(testKit.endpoints.register)
-        .send(testKit.userDataGenerator.fullUser())
+        .send(userData)
         .expect(status2xx);
 
     const refreshToken = response.body.refreshToken;
@@ -24,5 +25,6 @@ export const createUser = async (role: UserRole) => {
         userId,
         userEmail,
         userName,
+        unhashedPassword: userData.password
     };
 };

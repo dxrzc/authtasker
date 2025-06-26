@@ -117,4 +117,8 @@ export class RefreshTokenService {
         await this.deleteToken(userId, jti);
         this.loggerService.info(`Refresh token revoked of user "${userId}"`)
     }
+
+    async countUserTokens(userId: string): Promise<number> {
+        return await this.redisService.setSize(makeRefreshTokenIndexKey(userId));
+    }
 }

@@ -150,17 +150,23 @@ export class UserService {
     }
 
     async login(userToLogin: LoginUserValidator) {
-        // check user existence
+        // user existence
         const userDb = await this.userModel.findOne({ email: userToLogin.email }).exec();
         if (!userDb) {
             this.loggerService.error(`User ${userToLogin.email} not found`);
             throw HttpError.badRequest(authErrors.INVALID_CREDENTIALS);
         }
-        // check password
+        // password hashing
         const passwordOk = await this.hashingService.compare(userToLogin.password, userDb.password);
         if (!passwordOk) {
             this.loggerService.error('Password does not match');
             throw HttpError.badRequest(authErrors.INVALID_CREDENTIALS);
+        }        
+        // refresh token per user limit
+        const userRefreshTokens = await this.refreshTokenService.countUserTokens(userDb.id);
+        if (userRefreshTokens === this.configService.MAX_REFRESH_TOKENS_PER_USER) {
+            this.loggerService.error('User has reached the maximum of active refresh tokens');
+            throw HttpError.forbidden(authErrors.REFRESH_TOKEN_LIMIT_EXCEEDED);
         }
         // tokens 
         const sessionToken = this.sessionTokenService.generate(userDb.id);

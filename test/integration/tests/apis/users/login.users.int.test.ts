@@ -5,6 +5,10 @@ import { status2xx } from '@integration/utils/status2xx.util';
 import { usersLimits } from '@root/common/constants/user.constants';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { createUser } from '@integration/utils/createUser.util';
+import { getRandomRole } from '@integration/utils/get-random-role.util';
+import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
+import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
 
 describe('POST /api/users/login', () => {
     describe('Input sanitization Wiring', () => {
@@ -36,6 +40,64 @@ describe('POST /api/users/login', () => {
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
+        });
+    });
+
+    describe('Tokens', () => {
+        describe('User exceeds the maximum active refresh tokens per user', () => {
+            test('return status 403 FORBIDDEN and the configured message', async () => {
+                const expectedStatus = 403;
+                const maxRefresh = testKit.configService.MAX_REFRESH_TOKENS_PER_USER;
+                const user = testKit.userDataGenerator.fullUser();
+                const loginInfo = {
+                    email: user.email,
+                    password: user.password
+                };
+                // create assigns one refresh token
+                await request(testKit.server)
+                    .post(testKit.endpoints.register)
+                    .send(user)
+                    .expect(status2xx);
+                // assign more tokens to reach the limit
+                for (let i = 0; i < maxRefresh - 1; i++) {
+                    await request(testKit.server)
+                        .post(testKit.endpoints.login)
+                        .send(loginInfo)
+                        .expect(status2xx);
+                }
+                // limit exceeded here
+                const response = await request(testKit.server)
+                    .post(testKit.endpoints.login)
+                    .send(loginInfo);
+                expect(response.body).toStrictEqual({ error: authErrors.REFRESH_TOKEN_LIMIT_EXCEEDED });
+                expect(response.statusCode).toBe(expectedStatus);
+            });
+        });
+
+        test('Store the returned refresh token id in refreshs-tokens db (redis)', async () => {
+            const { unhashedPassword: password, userEmail: email, userId } = await createUser(getRandomRole());
+            const response = await request(testKit.server)
+                .post(testKit.endpoints.login)
+                .send({ email, password })
+                .expect(status2xx);
+            // jti in redis db
+            const refreshJti = testKit.refreshJwt.verify(response.body.refreshToken)?.jti!;
+            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, refreshJti)))
+                .resolves
+                .not.toBeNull();
+        });
+
+        test('Store the returned refresh token in user count set (redis)', async () => {
+            const { unhashedPassword: password, userEmail: email, userId } = await createUser(getRandomRole());
+            const response = await request(testKit.server)
+                .post(testKit.endpoints.login)
+                .send({ email, password })
+                .expect(status2xx);
+            // jti in user set
+            const refreshJti = testKit.refreshJwt.verify(response.body.refreshToken)?.jti!;
+            await expect(testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), refreshJti))
+                .resolves
+                .toBeTruthy();
         });
     });
 
