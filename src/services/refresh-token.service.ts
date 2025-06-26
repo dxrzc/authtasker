@@ -11,6 +11,7 @@ import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { convertExpTimeToSeconds } from '@logic/token/convert-exp-time-to-unix';
 import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
+import { IJwtPayload } from '@root/interfaces/token/jwt-payload.interface';
 
 interface RefreshTokenMetadata {
     token: string;
@@ -41,6 +42,39 @@ export class RefreshTokenService {
             this.redisService.set(makeRefreshTokenKey(userId, jti), '1', expiresInSeconds),
             this.redisService.addToSet(makeRefreshTokenIndexKey(userId), jti)
         ]);
+    }
+
+    async validateToken(token: string) {
+        // token expired or not signed
+        const payload = this.jwtService.verify<{ id: string }>(token);
+        if (!payload) {
+            this.loggerService.error('Refresh token is not valid (expired or not signed by this server)');
+            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
+        }
+        // user id not in token        
+        const userId = payload.id;
+        if (!userId) {
+            this.loggerService.error('User id not in token');
+            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
+        }
+        // user does not exist        
+        const user = await this.userModel.findById(userId).exec();
+        if (!user) {
+            const errorMsg = 'User in token does not exist';
+            this.loggerService.error(errorMsg);
+            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
+        }
+        // verify token is in database (not revoked)
+        const tokenInRedis = await this.redisService.get(makeRefreshTokenKey(payload.id, payload.jti));
+        if (!tokenInRedis) {
+            this.loggerService.error('Refresh token has been revoked');
+            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
+        }
+        return {
+            jti: payload.jti,
+            userId: payload.id,
+            expDateUnix: payload.exp!
+        };
     }
 
     private generateToken(userId: string, expiresIn: string | number): { token: string, jti: string } {
@@ -78,32 +112,8 @@ export class RefreshTokenService {
     async rotate(token: string): Promise<string>
     async rotate(token: string, options: { meta: true }): Promise<RefreshTokenMetadata>
     async rotate(token: string, options?: { meta?: boolean }): Promise<string | RefreshTokenMetadata> {
-        // token expired or not signed
-        const payload = this.jwtService.verify<{ id: string }>(token);
-        if (!payload) {
-            this.loggerService.error('Refresh token is not valid (expired or not signed by this server)');
-            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
-        }
-        // user id not in token        
-        const userId = payload.id;
-        if (!userId) {
-            this.loggerService.error('User id not in token');
-            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
-        }
-        // user does not exist        
-        const user = await this.userModel.findById(userId).exec();
-        if (!user) {
-            const errorMsg = 'User in token does not exist';
-            this.loggerService.error(errorMsg);
-            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
-        }
-        // verify token is in database (not revoked)
-        const tokenInRedis = await this.redisService.get(makeRefreshTokenKey(payload.id, payload.jti));
-        if (!tokenInRedis) {
-            this.loggerService.error('Refresh token has been revoked');
-            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
-        }
-        const newTokenData = await this.replaceRefreshToken(payload.jti, payload.exp!, user.id);
+        const { jti, expDateUnix, userId } = await this.validateToken(token);
+        const newTokenData = await this.replaceRefreshToken(jti, expDateUnix, userId);
         this.loggerService.info(`New refresh token generated: "${newTokenData.token}" for token rotation expires in ${newTokenData.expSeconds}s`)
         return (!options?.meta) ? newTokenData.token : newTokenData;
     }

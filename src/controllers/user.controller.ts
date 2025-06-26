@@ -32,7 +32,7 @@ export class UserController extends BaseUserController {
     }
 
     protected readonly refresh = async (req: Request, res: Response): Promise<void> => {
-        
+
     }
 
     protected readonly login = async (req: Request, res: Response): Promise<void> => {
@@ -44,7 +44,8 @@ export class UserController extends BaseUserController {
 
     protected readonly logout = async (req: Request, res: Response): Promise<void> => {
         const requestUserInfo = this.getUserRequestInfo(req, res);
-        await this.userService.logout(requestUserInfo);
+        const refreshToken = req.body.refreshToken;
+        await this.userService.logout(requestUserInfo, refreshToken);
         res.status(statusCodes.NO_CONTENT).end();
     }
 

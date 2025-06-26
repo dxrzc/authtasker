@@ -178,9 +178,20 @@ export class UserService {
         };
     }
 
-    async logout(requestUserInfo: UserFromRequest): Promise<void> {
-        const expirationDateUnix = requestUserInfo.tokenExp;
-        await this.sessionTokenService.blacklist(requestUserInfo.jti, expirationDateUnix);
+    async logout(requestUserInfo: UserFromRequest, refreshToken: string): Promise<void> {
+        // refresh not provided
+        if (!refreshToken) {
+            this.loggerService.error('Refresh token was not sent');
+            throw HttpError.badRequest(authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY);
+        }
+        // provided refresh token is valid
+        const { jti: refreshJti } = await this.refreshTokenService.validateToken(refreshToken);
+        const sessionTokenExpDateUnix = requestUserInfo.tokenExp;
+        // disable session and refresh tokens
+        await Promise.all([
+            this.sessionTokenService.blacklist(requestUserInfo.jti, sessionTokenExpDateUnix),
+            this.refreshTokenService.revokeToken(requestUserInfo.id, refreshJti)
+        ]);
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
