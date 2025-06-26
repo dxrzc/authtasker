@@ -11,7 +11,7 @@ export class ConfigService {
     public readonly JWT_REFRESH_EXP_TIME: string;
     public readonly JWT_PRIVATE_KEY: string;
     public readonly JWT_REFRESH_PRIVATE_KEY: string;
-    public readonly USER_MAX_SESSIONS: number;
+    public readonly MAX_REFRESH_TOKENS_PER_USER: number;
     public readonly MAIL_SERVICE_HOST: string;
     public readonly MAIL_SERVICE_PORT: number;
     public readonly MAIL_SERVICE_USER: string;
@@ -135,7 +135,7 @@ export class ConfigService {
             .required()
             .asString();
 
-        this.USER_MAX_SESSIONS = env.get('USER_MAX_SESSIONS')
+        this.MAX_REFRESH_TOKENS_PER_USER = env.get('MAX_REFRESH_TOKENS_PER_USER')
             .required()
             .asIntPositive();
     }
