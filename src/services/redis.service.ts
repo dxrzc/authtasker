@@ -22,6 +22,26 @@ export class RedisService {
         return null;
     }
 
+    async addToSet(key: string, member: string): Promise<void> {
+        await this.redis.sadd(key, member);
+    }
+
+    async deleteFromSet(key: string, member: string): Promise<void> {
+        await this.redis.srem(key, member);
+    }
+
+    async belongsToSet(key: string, member: string): Promise<boolean> {
+        return (await this.redis.sismember(key, member) === 1);
+    }
+
+    async getAllSetMembers(key: string): Promise<Array<string>> {
+        return await this.redis.smembers(key);
+    }
+
+    async setSize(key: string): Promise<number> {
+        return await this.redis.scard(key);
+    }
+
     async getAllKeysByPattern(pattern: string): Promise<string[]> {
         const keys = await this.redis.keys(pattern);
         return keys;

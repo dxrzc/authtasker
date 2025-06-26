@@ -10,6 +10,7 @@ import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { convertExpTimeToSeconds } from '@logic/token/convert-exp-time-to-unix';
+import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
 
 interface RefreshTokenMetadata {
     token: string;
@@ -30,13 +31,15 @@ export class RefreshTokenService {
 
     private async deleteToken(userId: string, jti: string): Promise<void> {
         await Promise.all([
-            this.redisService.delete(makeRefreshTokenKey(userId, jti)),            
+            this.redisService.delete(makeRefreshTokenKey(userId, jti)),
+            this.redisService.deleteFromSet(makeRefreshTokenIndexKey(userId), jti)
         ]);
     }
 
     private async storeToken(userId: string, jti: string, expiresInSeconds: number): Promise<void> {
         await Promise.all([
-            this.redisService.set(makeRefreshTokenKey(userId, jti), '1', expiresInSeconds),            
+            this.redisService.set(makeRefreshTokenKey(userId, jti), '1', expiresInSeconds),
+            this.redisService.addToSet(makeRefreshTokenIndexKey(userId), jti)
         ]);
     }
 
@@ -105,10 +108,13 @@ export class RefreshTokenService {
         return (!options?.meta) ? newTokenData.token : newTokenData;
     }
 
-    // TODO: revoke all tokens
+    async revokeAll(userId: string) {
+        const jtis = await this.redisService.getAllSetMembers(makeRefreshTokenIndexKey(userId));
+        jtis.forEach(jti => this.revokeToken(userId, jti));
+    }
 
     async revokeToken(userId: string, jti: string) {
-        await this.redisService.delete(makeRefreshTokenKey(userId, jti));
+        await this.deleteToken(userId, jti);
         this.loggerService.info(`Refresh token revoked of user "${userId}"`)
     }
 }

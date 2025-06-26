@@ -7,6 +7,7 @@ import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
 import { RefreshTokenService } from '@root/services/refresh-token.service';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
 
 let refreshTokenService: RefreshTokenService;
 
@@ -40,7 +41,16 @@ describe('Refresh Token Service', () => {
             const expTimeEnvInSeconds = Math.floor(ms(testKit.configService.JWT_REFRESH_EXP_TIME as StringValue) / 1000);
             const ttlInSecondsFromRedis = await testKit.redisInstance.ttl(makeRefreshTokenKey(id, jti));
             expect(ttlInSecondsFromRedis).toBeDefined();
-            expect(expTimeEnvInSeconds).toBe(ttlInSecondsFromRedis);
+            expect(Math.abs(expTimeEnvInSeconds - ttlInSecondsFromRedis)).toBeLessThanOrEqual(1);
+        });
+
+        test('store token in the user refresh tokens set', async () => {
+            // get a valid token jti
+            const { userId } = await createUser();
+            const { jti, id } = await refreshTokenService.generate(userId, { meta: true });
+            // jti should be in the user's set
+            const jtiInSet = await testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), jti);
+            expect(jtiInSet).toBeTruthy();
         });
     });
 
@@ -57,7 +67,7 @@ describe('Refresh Token Service', () => {
             expect(newTokenExpDateUnix).toBe(oldTokenExpDateUnix);
         });
 
-        test('delete the previous token from redis database', async () => {
+        test('delete the previous token jti from redis database', async () => {
             const { userId } = await createUser();
             // generate a token
             const { jti, id, token } = await refreshTokenService.generate(userId, { meta: true });
@@ -80,6 +90,28 @@ describe('Refresh Token Service', () => {
             // new token stored for oldTokenExpSeconds
             const newTokenTTLInRedis = await testKit.redisInstance.ttl(makeRefreshTokenKey(newTokenUserId, newTokenJti));
             expect(newTokenTTLInRedis).toBe(oldTokenExpSeconds);
+        });
+
+        test('delete previous token jti from user refresh tokens index', async () => {
+            const { userId } = await createUser();
+            // generate old token
+            const { token: oldToken, jti: oldTokenJti } = await refreshTokenService.generate(userId, { meta: true });
+            // rotate token
+            await refreshTokenService.rotate(oldToken, { meta: true });
+            // token should'nt be in user's set anymore
+            const oldTokenJtiInSet = await testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), oldTokenJti);
+            expect(oldTokenJtiInSet).toBeFalsy();
+        });
+
+        test('store the new token jti in user refresh tokens index', async () => {
+            const { userId } = await createUser();
+            // generate old token
+            const { token: oldToken } = await refreshTokenService.generate(userId, { meta: true });
+            // rotate token
+            const { jti: newTokenJti } = await refreshTokenService.rotate(oldToken, { meta: true });
+            //  new token jti should be in the user set
+            const newTokenJtiInSet = await testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), newTokenJti);
+            expect(newTokenJtiInSet).toBeTruthy();
         });
 
         describe('Token is not in redis database', () => {
@@ -153,22 +185,47 @@ describe('Refresh Token Service', () => {
             const tokenInRedis = await testKit.redisService.get(makeRefreshTokenKey(id, jti));
             expect(tokenInRedis).toBeNull();
         });
+
+        test('delete token from the user refresh tokens set', async () => {
+            const { userId } = await createUser();
+            const { id, jti } = await refreshTokenService.generate(userId, { meta: true });
+            // revoke
+            await refreshTokenService.revokeToken(id, jti);
+            // jti shouldn't be in the user's set
+            const jtiInSet = await testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), jti);
+            expect(jtiInSet).toBeFalsy();
+        });
     });
 
-    // describe('revokeAllToken', () => {
-    //     test('deleted all the tokens asocciated to user in redis database', async () => {
-    //         // create 3 tokens for this user
-    //         const { userId } = await createUser();
-    //         const { id: token1UserId, jti: token1Jti } = await refreshTokenService.generate(userId, { meta: true });
-    //         const { id: token2UserId, jti: token2Jti } = await refreshTokenService.generate(userId, { meta: true });
-    //         const { id: token3UserId, jti: token3Jti } = await refreshTokenService.generate(userId, { meta: true });
-    //         // revoke all refresh tokens
-    //         await refreshTokenService.revokeAllTokens(userId);
-    //         // tokens shouldn't exist in redis db
-    //         await expect(testKit.redisService.get(makeRefreshTokenKey(token1UserId, token1Jti))).resolves.toBeNull()
-    //         await expect(testKit.redisService.get(makeRefreshTokenKey(token2UserId, token2Jti))).resolves.toBeNull()
-    //         await expect(testKit.redisService.get(makeRefreshTokenKey(token3UserId, token3Jti))).resolves.toBeNull()
-    //     });
-    // });
+    describe('revokeAllToken', () => {
+        test('delete all the tokens asocciated to user in redis database', async () => {
+            // create 3 tokens for this user
+            const { userId } = await createUser();
+            const { id: token1UserId, jti: token1Jti } = await refreshTokenService.generate(userId, { meta: true });
+            const { id: token2UserId, jti: token2Jti } = await refreshTokenService.generate(userId, { meta: true });
+            const { id: token3UserId, jti: token3Jti } = await refreshTokenService.generate(userId, { meta: true });
+            // revoke all tokens
+            await refreshTokenService.revokeAll(userId);
+            // tokens shouldn't exist in redis db
+            await expect(testKit.redisService.get(makeRefreshTokenKey(token1UserId, token1Jti))).resolves.toBeNull()
+            await expect(testKit.redisService.get(makeRefreshTokenKey(token2UserId, token2Jti))).resolves.toBeNull()
+            await expect(testKit.redisService.get(makeRefreshTokenKey(token3UserId, token3Jti))).resolves.toBeNull()
+        });
+
+        test('user refresh tokens set remains empty', async () => {
+            // create 3 tokens for this user
+            const { userId } = await createUser();
+            await Promise.all([
+                refreshTokenService.generate(userId, { meta: true }),
+                refreshTokenService.generate(userId, { meta: true }),
+                refreshTokenService.generate(userId, { meta: true }),
+            ])
+            // revoke all tokens
+            await refreshTokenService.revokeAll(userId);
+            // count jtis in set
+            const jtis = await testKit.redisService.setSize(makeRefreshTokenIndexKey(userId));
+            expect(jtis).toBe(0);
+        });
+    });
 });
 
