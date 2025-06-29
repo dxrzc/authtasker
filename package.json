@@ -7,7 +7,7 @@
   },
   "scripts": {
     "type-check": "tspc --noEmit src/app.ts",
-    "dev": "npm run type-check && dotenvx run -f envs/.env.dev -- tsx watch -r tsconfig-paths/register src/app.ts",
+    "dev": "npm run type-check && cross-env NODE_ENV=development dotenvx run -f envs/.env.dev -- tsx watch -r tsconfig-paths/register src/app.ts",
     "containers:dev": "docker compose --env-file envs/.env.dev -p authtasker-dev up -d",
     "containers:test:e2e": "docker compose --env-file envs/.env.e2e -p authtasker-e2e up -d",
     "containers:all": "npm run containers:dev && npm run containers:test:int && npm run containers:test:e2e",
