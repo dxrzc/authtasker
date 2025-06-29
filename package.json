@@ -17,7 +17,7 @@
     "build": "rimraf ./dist && tspc -p tsconfig.build.json",
     "start": "dotenvx run -f envs/.env.prod -- node dist/app.js",
     "server:e2e": "cross-env NODE_ENV=e2e dotenvx run -f envs/.env.e2e -- tsx -r tsconfig-paths/register src/app.ts",
-    "test:e2e": "dotenvx run -f envs/.env.e2e -- node -r tsconfig-paths/register -- ./node_modules/jest/bin/jest.js --config jest/jest.e2e.config.ts",
+    "test:e2e": "cross-env NODE_ENV=e2e dotenvx run -f envs/.env.e2e -- node -r tsconfig-paths/register -- ./node_modules/jest/bin/jest.js --config test/e2e/config/jest.config.ts",
     "test:e2e:parallel": "npm run containers:test:e2e && conc \"npm run server:e2e\" \"npm run test:e2e\""
   },
   "keywords": [],
