@@ -1,7 +1,7 @@
 {
   "name": "authtasker",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "app.ts",
   "engines": {
     "node": "22.x"
   },
