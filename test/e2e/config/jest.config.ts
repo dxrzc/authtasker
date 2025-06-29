@@ -3,9 +3,12 @@ import type { Config } from 'jest';
 const config: Config = {
     rootDir: process.cwd(), // workidr  
 
+    // setup
     setupFilesAfterEnv: [
         "<rootDir>/test/e2e/config/setup/setupAfterEnv.ts",
     ],
+    globalSetup: "<rootDir>/test/e2e/config/setup/global-setup.ts",
+    globalTeardown: "<rootDir>/test/e2e/config/setup/global-teardown.ts",    
 
     // coverage
     collectCoverage: false,

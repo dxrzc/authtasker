@@ -8,6 +8,7 @@ export interface IE2EKit {
     userDataGenerator: UserDataGenerator,
     tasksDataGenerator: TasksDataGenerator,
     client: Axios,
+    adminSessionToken: string;
     endpoints: {
         usersAPI: string;
         myProfile: string;

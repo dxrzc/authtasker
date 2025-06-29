@@ -4,6 +4,7 @@ import { ConfigService } from '@root/services/config.service';
 import { UserDataGenerator } from '@root/seed/generators/user.generator';
 import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
 import { handleAxiosError } from '@e2e/utils/handle-axios-error.util';
+import { readAdminSessionToken } from '@e2e/helpers/admin-token/read-admin-session-token.helper';
 
 beforeAll(() => {
     e2eKit.client = axios.create();
@@ -32,4 +33,6 @@ beforeAll(() => {
     e2eKit.endpoints.findAllTasksByUser = `${webUrl}api/tasks/allByUser`;
     e2eKit.endpoints.refreshToken = `${webUrl}api/users/refresh-token`;
     e2eKit.endpoints.health = `${webUrl}/health`;
+
+    e2eKit.adminSessionToken = readAdminSessionToken();
 });
