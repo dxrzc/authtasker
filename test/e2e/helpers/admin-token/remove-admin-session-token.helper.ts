@@ -3,7 +3,7 @@ import { fileExistsSync } from "tsconfig-paths/lib/filesystem";
 import { SystemLoggerService } from "@root/services/system-logger.service";
 
 export const removeAdminSessionTokenIfExists = () => {
-    const tokenPath = `${__dirname}/admin-token.txt`;
+    const tokenPath = `${__dirname}/admin-session-token.txt`;
     if (fileExistsSync(tokenPath)) {
         rmSync(tokenPath);
         SystemLoggerService.info('Admin token removed');
