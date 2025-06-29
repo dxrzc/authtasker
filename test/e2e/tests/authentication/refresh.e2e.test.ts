@@ -3,15 +3,14 @@ import { expectRequestToFail } from '@e2e/utils/expect-request-to-fail.util';
 
 describe('Authentication', () => {
     describe('Refresh', () => {
-        test('old refresh token is not longer valid', async () => {
+        test.concurrent('old refresh token is not longer valid', async () => {
             const expectedStatus = 401;
 
             const createdUserResponse = await e2eKit.client.post(
                 e2eKit.endpoints.register,
                 e2eKit.userDataGenerator.fullUser()
             );
-            const refreshToken = createdUserResponse.data.refreshToken;
-            const sessionToken = createdUserResponse.data.sessionToken;
+            const refreshToken = createdUserResponse.data.refreshToken;            
 
             // get a new refresh token
             await e2eKit.client.post(
@@ -29,13 +28,12 @@ describe('Authentication', () => {
             });
         });
 
-        test('returned session token can be used to access other protected resources', async () => {
+        test.concurrent('returned session token can be used to access other protected resources', async () => {
             const createdUserResponse = await e2eKit.client.post(
                 e2eKit.endpoints.register,
                 e2eKit.userDataGenerator.fullUser()
             );
-            const refreshToken = createdUserResponse.data.refreshToken;
-            const sessionToken = createdUserResponse.data.sessionToken;
+            const refreshToken = createdUserResponse.data.refreshToken;            
 
             // refresh
             const refreshResponse = await e2eKit.client.post(
