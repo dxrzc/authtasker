@@ -17,7 +17,6 @@ describe('Authentication', () => {
             await e2eKit.client.post(
                 e2eKit.endpoints.refreshToken,
                 { refreshToken },
-                { headers: { Authorization: `Bearer ${sessionToken}` } }
             );
 
             // refreshing fails when a disabled refresh token is sent
@@ -26,7 +25,6 @@ describe('Authentication', () => {
                 request: e2eKit.client.post(
                     e2eKit.endpoints.refreshToken,
                     { refreshToken },
-                    { headers: { Authorization: `Bearer ${sessionToken}` } }
                 )
             });
         });
@@ -43,7 +41,6 @@ describe('Authentication', () => {
             const refreshResponse = await e2eKit.client.post(
                 e2eKit.endpoints.refreshToken,
                 { refreshToken },
-                { headers: { Authorization: `Bearer ${sessionToken}` } }
             );
 
             const newSessionToken = refreshResponse.data.sessionToken;
