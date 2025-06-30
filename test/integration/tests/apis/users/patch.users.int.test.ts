@@ -2,11 +2,12 @@ import request from 'supertest';
 import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
-import { commonErrors } from '@root/common/errors/messages/common.error.messages';
-import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
-import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
 import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
+import { commonErrors } from '@root/common/errors/messages/common.error.messages';
+import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
+import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
 
 describe('PATCH /api/users/:id', () => {
     describe('Input sanitization Wiring', () => {
@@ -101,6 +102,22 @@ describe('PATCH /api/users/:id', () => {
             // tokens not in refresh-tokens database
             await expect(testKit.redisService.get(makeRefreshTokenKey(userId, refresh1Jti))).resolves.toBeNull();
             await expect(testKit.redisService.get(makeRefreshTokenKey(userId, refresh2Jti))).resolves.toBeNull();
+        });
+
+        test.concurrent.each(
+            ['email', 'password'] as const
+        )('blacklist the provided session token in %s update', async (prop: 'email' | 'password') => {
+            const { sessionToken, userId } = await createUser(getRandomRole());
+            const sessionTokenJti = testKit.sessionJwt.verify(sessionToken)?.jti!;
+            // update the user %s
+            const update = await request(testKit.server)
+                .patch(`${testKit.endpoints.usersAPI}/${userId}`)
+                .send({ [prop]: testKit.userDataGenerator[prop]() }) // password, email
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            // session token should be blacklisted
+            await expect(testKit.redisService.get(makeSessionTokenBlacklistKey(sessionTokenJti)))
+                .resolves.not.toBeNull();
         });
     });
 

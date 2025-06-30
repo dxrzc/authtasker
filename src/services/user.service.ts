@@ -265,7 +265,8 @@ export class UserService {
         // revoke all refresh tokens and blacklist session token
         if (propertiesUpdated.email || propertiesUpdated.password) {
             await this.refreshTokenService.revokeAll(targetUserId);
-            this.loggerService.info(`All tokens of user ${targetUserId} were revoked due to email/password update`);
+            await this.sessionTokenService.blacklist(requestUserInfo.jti, requestUserInfo.tokenExp);
+            this.loggerService.info(`All refresh tokens of user ${targetUserId} were revoked due to email/password update`);
         }
         try {
             await userDocument.save();
