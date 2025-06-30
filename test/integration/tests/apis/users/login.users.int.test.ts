@@ -8,6 +8,7 @@ import { usersApiErrors } from '@root/common/errors/messages/users-api.error.mes
 import { createUser } from '@integration/utils/createUser.util';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
 import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
+import { commonErrors } from '@root/common/errors/messages/common.error.messages';
 import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
 
 describe('POST /api/users/login', () => {
@@ -138,6 +139,26 @@ describe('POST /api/users/login', () => {
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
+        });
+    });
+
+    describe('Max Auth-API rate limit reached', () => {
+        test.concurrent('return 429 TOO MANY REQUESTS and the configured error message', async () => {
+            const expectedStatus = 429;
+            const expectedErrorMssg = commonErrors.TOO_MANY_REQUESTS;
+            const maxRequests = testKit.configService.AUTH_MAX_REQ_PER_MINUTE;
+            const { userEmail } = await createUser(getRandomRole());
+            // fail login requests until the rate limit is reached
+            for (let i = 0; i < maxRequests; i++) {
+                await request(testKit.server)
+                    .post(testKit.endpoints.login)
+                    .send({ email: userEmail, password: 'bad-password' });
+            }
+            const response = await request(testKit.server)
+                .post(testKit.endpoints.login)
+                .send({ email: userEmail, password: 'bad-password' });
+            expect(response.statusCode).toBe(expectedStatus);
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
         });
     });
 
