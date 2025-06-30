@@ -15,21 +15,20 @@ import { ConfigService } from '@root/services/config.service';
 import { ITasks } from '@root/interfaces/tasks/task.interface';
 import { HashingService } from '@root/services/hashing.service';
 import { UserResponse } from '@root/types/user/user-response.type';
+import { TaskResponse } from '@root/types/tasks/task-response.type';
 import { RolesMiddleware } from '@root/middlewares/roles.middleware';
 import { makeUsersCacheKey } from '@logic/cache/make-users-cache-key';
 import { HealthController } from "@root/controllers/health.controller";
 import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
+import { RefreshTokenService } from '@root/services/refresh-token.service';
 import { SessionTokenService } from '@root/services/session-token.service';
 import { loadUserModel } from '@root/databases/mongo/models/user.model.load';
 import { loadTasksModel } from '@root/databases/mongo/models/tasks.model.load';
 import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
-import { AuthLimiterMiddleware } from '@root/middlewares/auth-limiter.middleware';
 import { RequestContextMiddleware } from '@root/middlewares/request-context.middleware';
 import { EmailValidationTokenService } from '@root/services/email-validation-token.service';
 import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
-import { TaskResponse } from '@root/types/tasks/task-response.type';
 import { makeTasksCacheKey } from '@logic/cache/make-tasks-cache-key';
-import { RefreshTokenService } from '@root/services/refresh-token.service';
 
 
 export class AppRoutes {
@@ -43,8 +42,7 @@ export class AppRoutes {
     private readonly jwtBlacklistService: JwtBlackListService;
     private readonly userService: UserService;
     private readonly tasksService: TasksService;
-    private readonly rolesMiddleware: RolesMiddleware;
-    private readonly authLimiterMiddleware: AuthLimiterMiddleware;
+    private readonly rolesMiddleware: RolesMiddleware;    
     private readonly apiLimiterMiddleware: ApiLimiterMiddleware;
     private readonly healthController: HealthController;
     private readonly sessionTokenService: SessionTokenService;
@@ -95,8 +93,7 @@ export class AppRoutes {
             pass: this.configService.MAIL_SERVICE_PASS,
         });
 
-        // Middlewares
-        this.authLimiterMiddleware = new AuthLimiterMiddleware(this.configService);
+        // Middlewares        
         this.apiLimiterMiddleware = new ApiLimiterMiddleware(this.configService);
         this.rolesMiddleware = new RolesMiddleware(
             this.sessionTokenService,
@@ -163,8 +160,7 @@ export class AppRoutes {
             this.userModel,
             this.hashingService,
             this.loggerService,
-            this.rolesMiddleware,
-            this.authLimiterMiddleware,
+            this.rolesMiddleware,            
             this.apiLimiterMiddleware,
         );
         return await userRoutes.build();

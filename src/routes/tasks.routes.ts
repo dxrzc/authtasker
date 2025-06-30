@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { ApiType } from '@root/enums/api-type.enum';
 import { TasksService } from '@root/services/tasks.service';
 import { LoggerService } from '@root/services/logger.service';
 import { TasksController } from '@root/controllers/tasks.controller';
@@ -29,7 +30,7 @@ export class TasksRoutes {
 
     async build(): Promise<Router> {
         const router = Router();
-        router.use(this.apiLimiterMiddleware.middleware());
+        router.use(this.apiLimiterMiddleware.middleware(ApiType.coreApi));
 
         router.post(
             '/create',
