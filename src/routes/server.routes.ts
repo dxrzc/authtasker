@@ -94,7 +94,7 @@ export class AppRoutes {
         });
 
         // Middlewares        
-        this.apiLimiterMiddleware = new ApiLimiterMiddleware(this.configService);
+        this.apiLimiterMiddleware = new ApiLimiterMiddleware(this.configService, this.loggerService);
         this.rolesMiddleware = new RolesMiddleware(
             this.sessionTokenService,
             this.loggerService
