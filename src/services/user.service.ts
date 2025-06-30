@@ -188,11 +188,10 @@ export class UserService {
         if (!refreshToken)
             this.handleRefreshTokenNotInBody();
         // provided refresh token is valid
-        const { jti: refreshJti } = await this.refreshTokenService.validateOrThrow(refreshToken);
-        const sessionTokenExpDateUnix = requestUserInfo.tokenExp;
+        const { jti: refreshJti } = await this.refreshTokenService.validateOrThrow(refreshToken);        
         // disable session and refresh tokens
         await Promise.all([
-            this.sessionTokenService.blacklist(requestUserInfo.jti, sessionTokenExpDateUnix),
+            this.sessionTokenService.blacklist(requestUserInfo.sessionJti, requestUserInfo.sessionTokenExpUnix),
             this.refreshTokenService.revokeToken(requestUserInfo.id, refreshJti)
         ]);
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
@@ -265,7 +264,7 @@ export class UserService {
         // revoke all refresh tokens and blacklist session token
         if (propertiesUpdated.email || propertiesUpdated.password) {
             await this.refreshTokenService.revokeAll(targetUserId);
-            await this.sessionTokenService.blacklist(requestUserInfo.jti, requestUserInfo.tokenExp);
+            await this.sessionTokenService.blacklist(requestUserInfo.sessionJti, requestUserInfo.sessionTokenExpUnix);
             this.loggerService.info(`All refresh tokens of user ${targetUserId} were revoked due to email/password update`);
         }
         try {

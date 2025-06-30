@@ -80,8 +80,8 @@ export class SessionTokenService {
         return {
             id: user.id,
             role: user.role,
-            jti: payload.jti,
-            tokenExp: payload.exp!,
+            sessionJti: payload.jti,
+            sessionTokenExpUnix: payload.exp!,
         }
     }
 }

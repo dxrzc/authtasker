@@ -7,15 +7,15 @@ export abstract class BaseController extends BaseHttpComponent {
     protected getUserRequestInfo(req: Request & Partial<UserFromRequest>, res: Response): UserFromRequest | never {
         const role = req.role;
         const id = req.id;
-        const jti = req.jti;
-        const tokenExp = req.tokenExp;
-        if (!role || !id || !jti || !tokenExp)
+        const sessionJti = req.sessionJti;
+        const sessionTokenExpUnix = req.sessionTokenExpUnix;
+        if (!role || !id || !sessionJti || !sessionTokenExpUnix)
             throw new Error('role, id, jti and tokenExp are expected');
         return {
             id,
             role,
-            jti,
-            tokenExp
+            sessionJti,
+            sessionTokenExpUnix
         };
     }
 }
