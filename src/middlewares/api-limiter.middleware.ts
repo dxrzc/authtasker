@@ -29,7 +29,7 @@ export class ApiLimiterMiddleware extends BaseMiddleware<[ApiType]> {
         return rateLimit({
             message: () => {
                 this.loggerService.error('Too many requests from this IP');
-                return message;
+                return { error: message };
             },
             max: this.configService.API_MAX_REQ_PER_MINUTE,
             windowMs: 1 * 60 * 1000,
