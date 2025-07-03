@@ -15,7 +15,7 @@ export class RedisDatabase {
         this.connectionEvents();
     }
 
-    connectionEvents() {
+    connectionEvents() {        
         this.redis.on('end', () => {
             if (!this.disconnectedManually) {
                 EventManager.emit(Events.REDIS_CONNECTION_ERROR);
@@ -24,6 +24,7 @@ export class RedisDatabase {
     }
 
     async connect(): Promise<Redis> {
+        await this.redis.config('SET', 'notify-keyspace-events', 'Ex');        
         if (!['reconnecting', 'connecting', 'connect', 'ready'].includes(this.redis.status)) {
             await this.redis.connect();
             SystemLoggerService.info('Connected to Redis database');
