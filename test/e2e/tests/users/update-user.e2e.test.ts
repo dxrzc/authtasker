@@ -1,8 +1,9 @@
 import { e2eKit } from '@e2e/utils/e2eKit.util';
 import { expectRequestToFail } from '@e2e/utils/expect-request-to-fail.util';
+import { getEmailConfirmationFromLink } from '@e2e/utils/get-email-confirmation-link.util';
 
 describe('Users API', () => {
-    describe('update user', () => {
+    describe('Update user', () => {
         test.concurrent('user can login with new updated data', async () => {
             const createdUserResponse = await e2eKit.client.post(
                 e2eKit.endpoints.register,
@@ -84,6 +85,52 @@ describe('Users API', () => {
                     request: e2eKit.client.get(
                         `${e2eKit.endpoints.usersAPI}/${userID}`,
                         { headers: { Authorization: `Bearer ${sessionToken}` } }
+                    )
+                });
+            });
+        });
+
+        describe('User with role "editor" changes their email', () => {
+            test.concurrent('user can not create tasks anymore', async () => {
+                // create user
+                const user = e2eKit.userDataGenerator.fullUser();
+                const createdUserResponse = await e2eKit.client.post(
+                    e2eKit.endpoints.register,
+                    user
+                );
+                const userID = createdUserResponse.data.user.id;
+                const sessionToken = createdUserResponse.data.sessionToken;
+                const userEmail = createdUserResponse.data.user.email;
+
+                // validate email
+                await e2eKit.client.post(
+                    e2eKit.endpoints.requestEmailValidation, {},
+                    { headers: { Authorization: `Bearer ${sessionToken}` } }
+                );
+                await e2eKit.client.get(await getEmailConfirmationFromLink(e2eKit.emailClient, userEmail));
+
+                // change email
+                const newEmail = e2eKit.userDataGenerator.email();
+                await e2eKit.client.patch(
+                    `${e2eKit.endpoints.usersAPI}/${userID}`,
+                    { email: newEmail },
+                    { headers: { Authorization: `Bearer ${sessionToken}` } }
+                );
+
+                // login to get a new session token
+                const loginResponse = await e2eKit.client.post(
+                    e2eKit.endpoints.login,
+                    { email: newEmail, password: user.password }
+                );
+                const newSessionToken = loginResponse.data.sessionToken;
+
+                // try to crete a task
+                expectRequestToFail({
+                    expectedStatus: 403,
+                    request: e2eKit.client.post(
+                        e2eKit.endpoints.createTask,
+                        e2eKit.tasksDataGenerator.fullTask(),
+                        { headers: { Authorization: `Bearer ${newSessionToken}` } }
                     )
                 });
             });
