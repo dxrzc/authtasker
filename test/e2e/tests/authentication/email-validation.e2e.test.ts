@@ -4,32 +4,6 @@ import { getEmailConfirmationFromLink } from '@e2e/utils/get-email-confirmation-
 
 describe('Authentication', () => {
     describe('Email validation', () => {
-        let client: ImapFlow;
-
-        beforeAll(async () => {
-            client = new ImapFlow({
-                logger: false,
-                connectionTimeout: 10000,
-                host: 'imap.ethereal.email',
-                port: 993,
-                secure: true,
-                auth: {
-                    user: e2eKit.configService.MAIL_SERVICE_USER,
-                    pass: e2eKit.configService.MAIL_SERVICE_PASS,
-                }
-            });
-            await client.connect();
-        });
-
-        afterAll(async () => {
-            await client.logout();
-        });
-
-        // close the inbox in order to refresh it the next time is opened
-        afterEach(async () => {
-            await client.mailboxClose();
-        });
-
         describe('Email is successfully validated', () => {
             test('User can create tasks', async () => {
                 // create user
@@ -46,9 +20,9 @@ describe('Authentication', () => {
                         Authorization: `Bearer ${sessionToken}`
                     }
                 });
-                
+
                 // confirm email validation                
-                await e2eKit.client.get(await getEmailConfirmationFromLink(client, userEmail));
+                await e2eKit.client.get(await getEmailConfirmationFromLink(e2eKit.emailClient, userEmail));
 
                 // create task
                 await e2eKit.client.post(

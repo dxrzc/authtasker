@@ -5,32 +5,6 @@ import { expectRequestToFail } from '@e2e/utils/expect-request-to-fail.util';
 
 describe('Users API', () => {
     describe('Delete user', () => {
-        let client: ImapFlow;
-
-        beforeAll(async () => {
-            client = new ImapFlow({
-                logger: false,
-                connectionTimeout: 10000,
-                host: 'imap.ethereal.email',
-                port: 993,
-                secure: true,
-                auth: {
-                    user: e2eKit.configService.MAIL_SERVICE_USER,
-                    pass: e2eKit.configService.MAIL_SERVICE_PASS,
-                }
-            });
-            await client.connect();
-        });
-
-        afterAll(async () => {
-            await client.logout();
-        });
-
-        // close the inbox in order to refresh it the next time is opened
-        afterEach(async () => {
-            await client.mailboxClose();
-        });
-
         describe('User is upgraded to editor', () => {
             describe('User create some tasks', () => {
                 describe('User is deleted', () => {
@@ -50,7 +24,7 @@ describe('Users API', () => {
                             null,
                             { headers: { Authorization: `Bearer ${sessionToken}` } }
                         );
-                        await e2eKit.client.get(await getEmailConfirmationFromLink(client, userEmail));
+                        await e2eKit.client.get(await getEmailConfirmationFromLink(e2eKit.emailClient, userEmail));
                         
                         // task 1
                         const createdTask1Res = await e2eKit.client.post(
