@@ -9,7 +9,7 @@ export class RedisSuscriber {
         private readonly configService: ConfigService,
         private readonly redisInstance: Redis
     ) {
-        const subscriber = new Redis(getRedisOptions(this.configService));
+        const subscriber = new Redis(this.configService.REDIS_URI, getRedisOptions());
         const expiredKeyPattern = '__keyevent@0__:expired';
 
         subscriber.subscribe(expiredKeyPattern, (err, count) => {
