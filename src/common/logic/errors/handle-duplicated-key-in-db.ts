@@ -4,7 +4,7 @@ import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 
-export const handleDuplicatedKeyInDb = (api: Apis, error: { keyValue: string }, loggerService: LoggerService) => {
+export const handleDuplicatedKeyInDb = (api: Apis, error: { keyValue: any }, loggerService: LoggerService) => {
     // - keyValue: {name: 'user123'}
     const duplicatedKey = Object.keys(error.keyValue);
     const keyValue = Object.values(error.keyValue);
