@@ -48,6 +48,7 @@ beforeAll(async () => {
 
     // integration testing envs
     const configService: IntegrationConfigService = {
+        NODE_ENV: 'integration',
         MONGO_URI: mongoMemoryServer.getUri(),
         API_MAX_REQ_PER_MINUTE: 200,
         AUTH_MAX_REQ_PER_MINUTE: 200,

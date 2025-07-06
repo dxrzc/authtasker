@@ -2,7 +2,6 @@ import { ConfigService } from '@root/services/config.service';
 
 export type IntegrationConfigService = Omit<ConfigService,
     | 'PORT'
-    | 'NODE_ENV'
     | 'MAIL_SERVICE_HOST' // replaced by nodemailer-mock
     | 'MAIL_SERVICE_PORT'
     | 'MAIL_SERVICE_USER'
