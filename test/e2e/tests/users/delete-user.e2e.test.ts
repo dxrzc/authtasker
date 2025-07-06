@@ -1,4 +1,3 @@
-import { ImapFlow } from 'imapflow';
 import { e2eKit } from '@e2e/utils/e2eKit.util';
 import { getEmailConfirmationFromLink } from '@e2e/utils/get-email-confirmation-link.util';
 import { expectRequestToFail } from '@e2e/utils/expect-request-to-fail.util';
