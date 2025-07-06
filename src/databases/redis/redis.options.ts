@@ -1,14 +1,11 @@
-import { ConfigService } from '@root/services/config.service';
+import { RedisOptions } from 'ioredis';
 
 // makes sure we use the same redis options for suscriber and publisher
-export function getRedisOptions(configService: ConfigService) {
+export function getRedisOptions(): RedisOptions {
     return {
-        lazyConnect: true,
-        port: configService.REDIS_PORT,
-        host: configService.REDIS_HOST,
-        password: configService.REDIS_PASSWORD,
+        lazyConnect: true,             
         db: 0,
-        // disable reconnects
+        // disable reconnection
         retryStrategy: null as any, 
     };
 }

@@ -1,9 +1,9 @@
 import Redis from 'ioredis';
+import { getRedisOptions } from './redis.options';
 import { EventManager } from '@root/events/eventManager';
 import { ConfigService } from '@root/services/config.service';
 import { Events } from '@root/common/constants/events.constants';
 import { SystemLoggerService } from '@root/services/system-logger.service';
-import { getRedisOptions } from './redis.options';
 
 export class RedisDatabase {
 
@@ -11,7 +11,7 @@ export class RedisDatabase {
     private redis: Redis;
 
     constructor(private readonly configService: ConfigService) {
-        this.redis = new Redis(getRedisOptions(configService));
+        this.redis = new Redis(configService.REDIS_URI, getRedisOptions());
         this.connectionEvents();
     }
 
