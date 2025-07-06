@@ -1,9 +1,9 @@
-import { E } from '@faker-js/faker/dist/airline-BLb3y-7w';
 import * as env from "env-var";
 
 export class ConfigService {
     public readonly NODE_ENV: string;
     public readonly MONGO_URI: string;
+    public readonly REDIS_URI: string;
     public readonly PORT: number;
     public readonly BCRYPT_SALT_ROUNDS: number;
     public readonly JWT_SESSION_EXP_TIME: string;
@@ -18,9 +18,6 @@ export class ConfigService {
     public readonly MAIL_SERVICE_PASS: string;
     public readonly WEB_URL: string;
     public readonly HTTP_LOGS: boolean;
-    public readonly REDIS_PORT: number;
-    public readonly REDIS_HOST: string;
-    public readonly REDIS_PASSWORD: string;
     public readonly ADMIN_NAME: string;
     public readonly ADMIN_EMAIL: string;
     public readonly ADMIN_PASSWORD: string;
@@ -42,6 +39,8 @@ export class ConfigService {
         this.MONGO_URI = env.get('MONGO_URI')
             .required()
             .asUrlString();
+
+        this.REDIS_URI = env.get('REDIS_URI').required().asUrlString();
 
         this.PORT = env.get('PORT')
             .default(3000)
@@ -86,18 +85,6 @@ export class ConfigService {
         this.WEB_URL = env.get('WEB_URL')
             .required()
             .asUrlString();
-
-        this.REDIS_PORT = env.get('REDIS_PORT')
-            .required()
-            .asPortNumber();
-
-        this.REDIS_HOST = env.get('REDIS_HOST')
-            .default('127.0.0.1')
-            .asString();
-
-        this.REDIS_PASSWORD = env.get('REDIS_PASSWORD')
-            .required()
-            .asString();
 
         this.ADMIN_NAME = env.get('ADMIN_NAME')
             .required()
