@@ -111,6 +111,12 @@ export class AppRoutes {
             makeUsersCacheKey
         );
 
+        this.paginationCacheService = new PaginationCacheService(
+            this.loggerService,
+            this.redisService,
+            this.configService
+        );
+
         // api services
         this.userService = new UserService(
             this.configService,
@@ -122,7 +128,8 @@ export class AppRoutes {
             this.sessionTokenService,
             this.refreshTokenService,
             this.emailValidationTokenService,
-            this.usersCacheService
+            this.usersCacheService,
+            this.paginationCacheService
         );
 
         this.tasksCacheService = new CacheService<TaskResponse>(
@@ -133,12 +140,6 @@ export class AppRoutes {
             configService.CACHE_HARD_TTL_SECONDS,
             makeTasksCacheKey
         )
-
-        this.paginationCacheService = new PaginationCacheService(
-            this.loggerService,
-            this.redisService,
-            this.configService
-        );
 
         this.tasksService = new TasksService(
             this.loggerService,

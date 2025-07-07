@@ -23,6 +23,7 @@ import { usersApiErrors } from '@root/common/errors/messages/users-api.error.mes
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
+import { PaginationCacheService } from './pagination-cache.service';
 
 export class UserService {
 
@@ -37,6 +38,7 @@ export class UserService {
         private readonly refreshTokenService: RefreshTokenService,
         private readonly emailValidationTokenService: EmailValidationTokenService,
         private readonly cacheService: CacheService<UserResponse>,
+        private readonly paginationCache: PaginationCacheService,
     ) {}
 
     private async findUserInDb(id: string): Promise<UserDocument> {
@@ -188,7 +190,7 @@ export class UserService {
         if (!refreshToken)
             this.handleRefreshTokenNotInBody();
         // provided refresh token is valid
-        const { jti: refreshJti } = await this.refreshTokenService.validateOrThrow(refreshToken);        
+        const { jti: refreshJti } = await this.refreshTokenService.validateOrThrow(refreshToken);
         // disable session and refresh tokens
         await Promise.all([
             this.sessionTokenService.blacklist(requestUserInfo.sessionJti, requestUserInfo.sessionTokenExpUnix),
@@ -234,17 +236,37 @@ export class UserService {
         return userFound;
     }
 
-    async findAll(limit: number, page: number): Promise<UserDocument[]> {
+    async findAll(limit: number, page: number, options: ICacheOptions): Promise<UserDocument[]> {
+        // validate limit and page
         const totalDocuments = await this.userModel.countDocuments().exec();
         if (totalDocuments === 0) return [];
         const offset = paginationRules(limit, page, totalDocuments);
-        return await this.userModel
+        // bypass read-write in cache
+        if (options.noStore) {
+            this.loggerService.info(`Bypassing cache for users page=${page} limit=${limit}`);
+            return await this.userModel
+                .find()
+                .skip(offset)
+                .limit(limit)
+                .sort({ createdAt: 1 })
+                .exec();
+        }
+        // check if combination of limit and page is cached
+        const chunk = await this.paginationCache.get<UserDocument[]>(Apis.users, page, limit);
+        if (chunk)
+            return chunk;
+        // data is not cached
+        const data = await this.userModel
             .find()
             .skip(offset)
             .limit(limit)
-            .sort({ name: 'asc' })
+            .sort({ createdAt: 1 })
             .exec();
+        // cache pagination obtained
+        await this.paginationCache.cache(Apis.users, page, limit, data);
+        return data;
     }
+
 
     async deleteOne(requestUserInfo: UserFromRequest, targetUserId: string): Promise<void> {
         await this.authorizeUserModificationOrThrow(requestUserInfo, targetUserId);
