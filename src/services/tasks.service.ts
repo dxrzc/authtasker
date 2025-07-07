@@ -94,7 +94,7 @@ export class TasksService {
         const offset = paginationRules(limit, page, totalDocuments);
         // bypass read-write in cache
         if (options.noStore) {
-            this.loggerService.info(`Bypassing cache for tasks page: ${page} limit: ${limit}`);
+            this.loggerService.info(`Bypassing cache for tasks page=${page} limit=${limit}`);
             return await this.tasksModel
                 .find()
                 .skip(offset)
