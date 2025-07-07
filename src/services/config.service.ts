@@ -26,6 +26,7 @@ export class ConfigService {
     public readonly USERS_API_CACHE_TTL_SECONDS: number;
     public readonly TASKS_API_CACHE_TTL_SECONDS: number;
     public readonly CACHE_HARD_TTL_SECONDS: number;
+    public readonly PAGINATION_CACHE_TTLS_SECONDS: number;
 
     constructor() {
         // environment
@@ -68,5 +69,6 @@ export class ConfigService {
         this.CACHE_HARD_TTL_SECONDS = env.get('CACHE_HARD_TTL_SECONDS').required().asInt();
         this.TASKS_API_CACHE_TTL_SECONDS = env.get('TASKS_API_CACHE_TTL_SECONDS').required().asIntPositive();
         this.USERS_API_CACHE_TTL_SECONDS = env.get('USERS_API_CACHE_TTL_SECONDS').required().asIntPositive();
+        this.PAGINATION_CACHE_TTLS_SECONDS = env.get('PAGINATION_CACHE_TTLS_SECONDS').required().asIntPositive();
     }
 }

@@ -1,8 +1,10 @@
 import request from 'supertest';
+import { Apis } from '@root/enums/apis.enum';
 import { testKit } from '@integration/utils/testKit.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { createTask } from '@integration/utils/createTask.util';
 import { paginationErrors } from '@root/common/errors/messages/pagination.error.messages';
+import { makePaginationCacheKey } from '@logic/cache/make-pagination-cache-key';
 
 describe('GET /api/tasks/', () => {
     let tasksIdSorted = new Array<string>();
@@ -28,6 +30,51 @@ describe('GET /api/tasks/', () => {
 
         // One more for user1
         tasksIdSorted.push((await createTask(user1SessionToken)).taskId)
+    });
+
+    describe('Caching', () => {
+        describe('"Cache-Control: no-store" is provided in request ', () => {
+            test('do not store the data in redis database', async () => {
+                const page = 3;
+                const limit = 2;
+                const response = await request(testKit.server)
+                    .get(testKit.endpoints.tasksAPI)
+                    .query({ page, limit })
+                    .set('Cache-Control', 'no-store')
+                    .set('Authorization', `Bearer ${sessionToken}`);
+                const dataInRedis = await testKit.redisService.get(makePaginationCacheKey(Apis.tasks, page, limit));
+                expect(dataInRedis).toBeNull();
+            });
+        });
+
+        describe('No Cache-Control header is provided', () => {
+            test('cache the response in redis database', async () => {
+                const page = 2;
+                const limit = 3;
+                const response = await request(testKit.server)
+                    .get(testKit.endpoints.tasksAPI)
+                    .query({ page, limit })
+                    .set('Authorization', `Bearer ${sessionToken}`);
+                const dataInRedis = await testKit.redisService.get(makePaginationCacheKey(Apis.tasks, page, limit));
+                expect(dataInRedis).toBeDefined();
+            });
+        });
+
+        describe('Pagination in cache', () => {
+            test('return data in cache', async () => {
+                const page = 2;
+                const limit = 1;
+                // mock data in cache
+                const fakeData = 'fakeData';
+                await testKit.redisService.set(makePaginationCacheKey(Apis.tasks, page, limit), fakeData);
+                // find 
+                const response = await request(testKit.server)
+                    .get(testKit.endpoints.tasksAPI)
+                    .query({ page, limit })
+                    .set('Authorization', `Bearer ${sessionToken}`);
+                expect(response.body).toStrictEqual(fakeData);
+            });
+        });
     });
 
     describe('Pagination Rules Wiring', () => {
