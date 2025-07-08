@@ -1,0 +1,12 @@
+node_modules
+docker-volumes
+coverage
+dist
+logs
+envs
+Dockerfile
+docker-compose.yml
+README.md
+.gitignore
+.git
+.vscode

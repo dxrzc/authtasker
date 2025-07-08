@@ -6,12 +6,11 @@
     "node": "22.x"
   },
   "scripts": {
-    "type-check": "tspc --noEmit src/app.ts",
-    "dev": "npm run type-check && cross-env NODE_ENV=development dotenvx run -f envs/.env.dev -- tsx watch -r tsconfig-paths/register src/app.ts",
-    "containers:dev": "cross-env STATE=dev docker compose --env-file envs/.env.dev -p authtasker-dev up -d",
-    "containers:test:e2e": "cross-env STATE=e2e docker compose --env-file envs/.env.e2e -p authtasker-e2e up -d",
+    "dev": "docker compose --env-file envs/.env.dev up --attach server ",  
+        
     "test:unit": "jest --config  test/unit/config/jest.config.ts",    
     "test:int": "cross-env NODE_ENV=integration node -r tsconfig-paths/register -- ./node_modules/jest/bin/jest.js --config test/integration/config/jest.config.ts",
+    
     "build": "rimraf ./dist && tspc -p tsconfig.build.json",
     "start": "dotenvx run -f envs/.env.prod -- node dist/app.js",
     "server:e2e": "cross-env NODE_ENV=e2e dotenvx run -f envs/.env.e2e -- tsx -r tsconfig-paths/register src/app.ts",

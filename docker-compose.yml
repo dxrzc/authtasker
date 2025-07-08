@@ -1,21 +1,64 @@
 services:
+  server:
+    build:
+      context: .
+      target: development
+    ports:
+      - 3000:3000    
+    volumes:
+      - ./src:/usr/src/app/src
+      - ./logs:/usr/src/app/logs
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+    depends_on:
+      - mongo-db
+      - redis-db
+    environment:     
+      HTTP_LOGS: ${HTTP_LOGS}
+      WEB_URL: ${WEB_URL}
+      PORT: ${PORT}
+      API_MAX_REQ_PER_MINUTE: ${API_MAX_REQ_PER_MINUTE}
+      AUTH_MAX_REQ_PER_MINUTE: ${AUTH_MAX_REQ_PER_MINUTE}
+      USERS_API_CACHE_TTL_SECONDS: ${USERS_API_CACHE_TTL_SECONDS}
+      TASKS_API_CACHE_TTL_SECONDS: ${TASKS_API_CACHE_TTL_SECONDS}
+      CACHE_HARD_TTL_SECONDS: ${CACHE_HARD_TTL_SECONDS}
+      BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS}
+      JWT_SESSION_EXP_TIME: ${JWT_SESSION_EXP_TIME}
+      JWT_EMAIL_VALIDATION_EXP_TIME: ${JWT_EMAIL_VALIDATION_EXP_TIME}
+      JWT_REFRESH_EXP_TIME: ${JWT_REFRESH_EXP_TIME}
+      MAX_REFRESH_TOKENS_PER_USER: ${MAX_REFRESH_TOKENS_PER_USER}
+      MAIL_SERVICE_HOST: ${MAIL_SERVICE_HOST}
+      MAIL_SERVICE_PORT: ${MAIL_SERVICE_PORT}
+      MAIL_SERVICE_USER: ${MAIL_SERVICE_USER}
+      MAIL_SERVICE_PASS: ${MAIL_SERVICE_PASS}
+      ADMIN_NAME: ${ADMIN_NAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD} ###
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      USER_MAX_SESSIONS: ${USER_MAX_SESSIONS}
+      # TODO: secrets
+      REDIS_URI: ${REDIS_URI}
+      MONGO_URI: ${MONGO_URI}
+      JWT_REFRESH_PRIVATE_KEY: ${JWT_REFRESH_PRIVATE_KEY}
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+
   mongo-db:
     image: mongo:7.0.20
     restart: always    
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      # TODO: secrets
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - ./docker-volumes/mongo-${STATE}:/data/db
     ports:
       - ${MONGO_PORT}:27017
 
-  redis:
+  redis-db:
     image: redis:8.0.1       
     restart: always
     ports:
     - ${REDIS_PORT}:6379
     environment:
+    # TODO:secrets
     - REDIS_PASSWORD=${REDIS_PASSWORD}    
     volumes:
       - ./docker-volumes/redis-${STATE}:/data      
