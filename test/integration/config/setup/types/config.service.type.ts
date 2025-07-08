@@ -10,4 +10,5 @@ export type IntegrationConfigService = Omit<ConfigService,
     | 'REDIS_HOST'
     | 'REDIS_PASSWORD'
     | 'WEB_URL'
+    | 'REDIS_URI'
 >
