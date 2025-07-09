@@ -5,7 +5,7 @@ dist
 logs
 envs
 Dockerfile
-docker-compose.yml
+compose.yml
 README.md
 .gitignore
 .git
