@@ -17,6 +17,7 @@ import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.mes
 import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
 import { PaginationCacheService } from './pagination-cache.service';
+import { makeTasksByUserPaginationCacheKey } from '@logic/cache/make-tasks-by-users-pag-cache-key';
 
 export class TasksService {
 
@@ -118,18 +119,32 @@ export class TasksService {
         return data;
     }
 
-    async findAllByUser(userId: string, limit: number, page: number) {
-        // verifies that user exists or throws
-        await this.userService.findOne(userId, { noStore: true });
-        const totalDocuments = await this.tasksModel.findById(userId).countDocuments().exec();
+    async findAllByUser(userId: string, limit: number, page: number, options: ICacheOptions) {
+        // validate limit and page
+        const totalDocuments = await this.tasksModel.find({user: userId}).countDocuments().exec();
         if (totalDocuments === 0) return [];
         const offset = paginationRules(limit, page, totalDocuments);
-        const tasks = await this.tasksModel
+        // mongoose query
+        const allByUserQuery = this.tasksModel
             .find({ user: userId })
             .skip(offset)
             .limit(limit)
             .sort({ createdAt: 1 })
             .exec();
+        // bypass read-write in cache
+        if (options.noStore) {
+            this.loggerService.info(`Bypassing cache for tasks by user ${userId}, page=${page} limit=${limit}`)
+            return await allByUserQuery;
+        }
+        // check if combination of limit and page is cached
+        const cacheKey = makeTasksByUserPaginationCacheKey(userId, page, limit);
+        const chunk = await this.paginationCache.getWithKey<TaskDocument[]>(cacheKey);
+        if (chunk)
+            return chunk;
+        // tasks not cached
+        const tasks = await allByUserQuery;
+        // cache pagination obtained
+        await this.paginationCache.cacheWithKey(cacheKey, tasks);
         return tasks;
     }
 

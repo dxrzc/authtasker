@@ -42,7 +42,8 @@ export class TasksController extends BaseTasksController {
         const userId = req.params.id;        
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
-        const tasksFound = await this.tasksService.findAllByUser(userId, limit, page);
+        const cacheOptions = buildCacheOptions(req);
+        const tasksFound = await this.tasksService.findAllByUser(userId, limit, page, cacheOptions);
         res.status(statusCodes.OK).json(tasksFound);
     };
 
