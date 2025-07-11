@@ -55,8 +55,8 @@ describe('GET /api/tasks/', () => {
                     .get(testKit.endpoints.tasksAPI)
                     .query({ page, limit })
                     .set('Authorization', `Bearer ${sessionToken}`);
-                const dataInRedis = await testKit.redisService.get(makePaginationCacheKey(Apis.tasks, page, limit));
-                expect(dataInRedis).toBeDefined();
+                const dataInRedis = await testKit.redisService.get(makePaginationCacheKey(Apis.tasks, page, limit));                
+                expect(dataInRedis).not.toBeNull();
             });
         });
 

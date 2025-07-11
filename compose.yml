@@ -40,6 +40,7 @@ services:
       ADMIN_NAME: ${ADMIN_NAME}      
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       USER_MAX_SESSIONS: ${USER_MAX_SESSIONS}      
+      PAGINATION_CACHE_TTLS_SECONDS: ${PAGINATION_CACHE_TTLS_SECONDS}
 
   mongo-db:
     image: mongo:7.0.20
