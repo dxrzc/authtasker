@@ -16,8 +16,7 @@ export class Server {
         private readonly errorHandlerMiddleware: ErrorHandlerMiddleware,
     ) {
         this.app.use(express.json({ limit: '10kb' }));
-        this.app.use(helmet());
-        this.app.use(timeout('5s')); // maybe just nginx timeout is enough ??
+        this.app.use(helmet());    
         this.app.use(this.routes);
         this.app.use(this.errorHandlerMiddleware.middleware());
     }
