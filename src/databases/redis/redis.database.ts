@@ -21,6 +21,11 @@ export class RedisDatabase {
                 EventManager.emit(Events.REDIS_CONNECTION_ERROR);
             }
         });
+
+        this.redis.on('error', (error: Error) => {
+            SystemLoggerService.error(`Redis connection error: ${error.message}`);
+            EventManager.emit(Events.REDIS_CONNECTION_ERROR, error);
+        });
     }
 
     async connect(): Promise<Redis> {
