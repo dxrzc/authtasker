@@ -120,8 +120,10 @@ export class TasksService {
     }
 
     async findAllByUser(userId: string, limit: number, page: number, options: ICacheOptions) {
+        // verifies that user exists or throws
+        await this.userService.findOne(userId, { noStore: true });
         // validate limit and page
-        const totalDocuments = await this.tasksModel.find({user: userId}).countDocuments().exec();
+        const totalDocuments = await this.tasksModel.find({ user: userId }).countDocuments().exec();
         if (totalDocuments === 0) return [];
         const offset = paginationRules(limit, page, totalDocuments);
         // mongoose query

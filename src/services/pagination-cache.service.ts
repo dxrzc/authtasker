@@ -12,8 +12,8 @@ export class PaginationCacheService {
         private readonly configService: ConfigService,
     ) {}
 
-    async cacheWithKey(key: string, data : object){
-        await this.redisService.set(key, data);
+    async cacheWithKey(key: string, data : object){        
+        await this.redisService.set(key, data, this.configService.PAGINATION_CACHE_TTLS_SECONDS);        
         this.loggerService.info(`Pagination ${key} cached`);
     }
 
