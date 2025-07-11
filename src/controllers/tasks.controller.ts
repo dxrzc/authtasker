@@ -33,7 +33,8 @@ export class TasksController extends BaseTasksController {
     protected readonly findAll = async (req: Request, res: Response) => {        
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
-        const tasksFound = await this.tasksService.findAll(limit, page);
+        const options = buildCacheOptions(req);
+        const tasksFound = await this.tasksService.findAll(limit, page, options);
         res.status(statusCodes.OK).json(tasksFound);
     };
 

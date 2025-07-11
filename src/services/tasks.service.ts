@@ -16,6 +16,7 @@ import { modificationAccessControl } from '@logic/roles/modification-access-cont
 import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
 import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
+import { PaginationCacheService } from './pagination-cache.service';
 
 export class TasksService {
 
@@ -24,6 +25,7 @@ export class TasksService {
         private readonly tasksModel: Model<ITasks>,
         private readonly userService: UserService,
         private readonly cacheService: CacheService<TaskResponse>,
+        private readonly paginationCache: PaginationCacheService,
     ) {}
 
     private async findTaskInDb(id: string): Promise<TaskDocument> {
@@ -85,16 +87,35 @@ export class TasksService {
         return taskFound;
     }
 
-    async findAll(limit: number, page: number): Promise<TaskDocument[]> {
+    async findAll(limit: number, page: number, options: ICacheOptions): Promise<TaskDocument[]> {
+        // validate limit and page
         const totalDocuments = await this.tasksModel.countDocuments().exec();
         if (totalDocuments === 0) return [];
         const offset = paginationRules(limit, page, totalDocuments);
-        return await this.tasksModel
+        // bypass read-write in cache
+        if (options.noStore) {
+            this.loggerService.info(`Bypassing cache for tasks page=${page} limit=${limit}`);
+            return await this.tasksModel
+                .find()
+                .skip(offset)
+                .limit(limit)
+                .sort({ createdAt: 1 })
+                .exec();
+        }
+        // check if combination of limit and page is cached
+        const chunk = await this.paginationCache.get<TaskDocument[]>(Apis.tasks, page, limit);
+        if (chunk)
+            return chunk;
+        // data is not cached
+        const data = await this.tasksModel
             .find()
             .skip(offset)
             .limit(limit)
             .sort({ createdAt: 1 })
             .exec();
+        // cache pagination obtained
+        await this.paginationCache.cache(Apis.tasks, page, limit, data);
+        return data;
     }
 
     async findAllByUser(userId: string, limit: number, page: number) {

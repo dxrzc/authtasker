@@ -13,7 +13,8 @@ import { UserDataGenerator } from '@root/seed/generators/user.generator';
 import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
 import { RefreshTokenService } from '@root/services/refresh-token.service';
 
-export interface ITestKit {
+export interface ITestKit {    
+
     configService: ConfigService;
 
     redisService: RedisService,
@@ -35,6 +36,9 @@ export interface ITestKit {
     refreshTokenService: RefreshTokenService;
 
     endpoints: {
+        seedUsers: string;
+        seedTasks: string;
+
         usersAPI: string;
         myProfile: string;
         register: string;

@@ -6,9 +6,7 @@ export type IntegrationConfigService = Omit<ConfigService,
     | 'MAIL_SERVICE_PORT'
     | 'MAIL_SERVICE_USER'
     | 'MAIL_SERVICE_PASS'
-    | 'REDIS_PORT' // replaced by ioredis-mock
-    | 'REDIS_HOST'
-    | 'REDIS_PASSWORD'
+    | 'REDIS_URI' // replaced by ioredis-mock    
     | 'WEB_URL'
     | 'REDIS_URI'
 >

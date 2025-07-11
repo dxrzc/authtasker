@@ -29,6 +29,7 @@ import { RequestContextMiddleware } from '@root/middlewares/request-context.midd
 import { EmailValidationTokenService } from '@root/services/email-validation-token.service';
 import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
 import { makeTasksCacheKey } from '@logic/cache/make-tasks-cache-key';
+import { PaginationCacheService } from '@root/services/pagination-cache.service';
 
 
 export class AppRoutes {
@@ -42,7 +43,7 @@ export class AppRoutes {
     private readonly jwtBlacklistService: JwtBlackListService;
     private readonly userService: UserService;
     private readonly tasksService: TasksService;
-    private readonly rolesMiddleware: RolesMiddleware;    
+    private readonly rolesMiddleware: RolesMiddleware;
     private readonly apiLimiterMiddleware: ApiLimiterMiddleware;
     private readonly healthController: HealthController;
     private readonly sessionTokenService: SessionTokenService;
@@ -50,6 +51,7 @@ export class AppRoutes {
     private readonly emailValidationTokenService: EmailValidationTokenService;
     private readonly usersCacheService: CacheService<UserResponse>;
     private readonly tasksCacheService: CacheService<TaskResponse>;
+    private readonly paginationCacheService: PaginationCacheService;
 
     constructor(
         private readonly configService: ConfigService,
@@ -109,6 +111,12 @@ export class AppRoutes {
             makeUsersCacheKey
         );
 
+        this.paginationCacheService = new PaginationCacheService(
+            this.loggerService,
+            this.redisService,
+            this.configService
+        );
+
         // api services
         this.userService = new UserService(
             this.configService,
@@ -120,7 +128,8 @@ export class AppRoutes {
             this.sessionTokenService,
             this.refreshTokenService,
             this.emailValidationTokenService,
-            this.usersCacheService
+            this.usersCacheService,
+            this.paginationCacheService
         );
 
         this.tasksCacheService = new CacheService<TaskResponse>(
@@ -136,7 +145,8 @@ export class AppRoutes {
             this.loggerService,
             this.tasksModel,
             this.userService,
-            this.tasksCacheService
+            this.tasksCacheService,
+            this.paginationCacheService
         );
 
         this.healthController = new HealthController();
@@ -160,7 +170,7 @@ export class AppRoutes {
             this.userModel,
             this.hashingService,
             this.loggerService,
-            this.rolesMiddleware,            
+            this.rolesMiddleware,
             this.apiLimiterMiddleware,
         );
         return await userRoutes.build();
@@ -168,8 +178,7 @@ export class AppRoutes {
 
     private async buildTasksRoutes(): Promise<Router> {
         const tasksRoutes = new TasksRoutes(
-            this.tasksService,
-            this.loggerService,
+            this.tasksService,            
             this.rolesMiddleware,
             this.apiLimiterMiddleware,
         );

@@ -2,6 +2,8 @@ import { ITestKit } from '@integration/config/setup/interfaces/testKit.interface
 
 export const testKit: ITestKit = {
     endpoints: {
+        seedUsers: '/seed/users',
+        seedTasks: '/seed/tasks',
         usersAPI: '/api/users',
         myProfile: '/api/users/me',
         register: `/api/users/register`,

@@ -35,52 +35,6 @@ describe('GET /api/users/:id', () => {
             });
         });
 
-        describe('Max API rate limit reached', () => {
-            describe('User is found', () => {
-                test.concurrent('return 429 TOO MANY REQUESTS and the configured error message', async () => {
-                    const expectedStatus = 429;
-                    const expectedErrorMssg = commonErrors.TOO_MANY_REQUESTS;
-                    const maxRequests = testKit.configService.API_MAX_REQ_PER_MINUTE;
-                    // create user to get a valid session token
-                    const { userId, sessionToken } = await createUser(getRandomRole());
-                    // send requests to the endpoint until the rate limit is reached
-                    for (let i = 0; i < maxRequests; i++) {
-                        await request(testKit.server)
-                            .get(`${testKit.endpoints.usersAPI}/${userId}`)
-                            .set('Authorization', `Bearer ${sessionToken}`);
-                    }
-                    // last request should fail with 429 status code
-                    const response = await request(testKit.server)
-                        .get(`${testKit.endpoints.usersAPI}/${userId}`)
-                        .set('Authorization', `Bearer ${sessionToken}`);
-                    expect(response.statusCode).toBe(expectedStatus);
-                    expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-                });
-            });
-
-            describe('User is not found', () => {
-                test.concurrent('return 429 TOO MANY REQUESTS and the configured error message (even when user is not found)', async () => {
-                    const expectedStatus = 429;
-                    const expectedErrorMssg = commonErrors.TOO_MANY_REQUESTS;
-                    const maxRequests = testKit.configService.API_MAX_REQ_PER_MINUTE;
-                    // create user to get a valid session token
-                    const { sessionToken } = await createUser(getRandomRole());
-                    // send requests to the endpoint until the rate limit is reached
-                    for (let i = 0; i < maxRequests; i++) {
-                        await request(testKit.server)
-                            .get(`${testKit.endpoints.usersAPI}/non-existing-id`)
-                            .set('Authorization', `Bearer ${sessionToken}`);
-                    }
-                    // last request should fail with 429 status code
-                    const response = await request(testKit.server)
-                        .get(`${testKit.endpoints.usersAPI}/non-existing-id`)
-                        .set('Authorization', `Bearer ${sessionToken}`);
-                    expect(response.statusCode).toBe(expectedStatus);
-                    expect(response.body).toStrictEqual({ error: expectedErrorMssg });
-                });
-            });
-        });
-
         describe('No Cache-Control header is provided', () => {
             test.concurrent('cache the response in redis cache database', async () => {
                 const { userId, sessionToken } = await createUser(getRandomRole());
@@ -90,6 +44,52 @@ describe('GET /api/users/:id', () => {
 
                 const userInCache = await testKit.redisService.get<UserResponse>(makeUsersCacheKey(userId));
                 expect(userInCache).toBeDefined();
+            });
+        });
+    });
+    
+    describe('Max API rate limit reached', () => {
+        describe('User is found', () => {
+            test.concurrent('return 429 TOO MANY REQUESTS and the configured error message', async () => {
+                const expectedStatus = 429;
+                const expectedErrorMssg = commonErrors.TOO_MANY_REQUESTS;
+                const maxRequests = testKit.configService.API_MAX_REQ_PER_MINUTE;
+                // create user to get a valid session token
+                const { userId, sessionToken } = await createUser(getRandomRole());
+                // send requests to the endpoint until the rate limit is reached
+                for (let i = 0; i < maxRequests; i++) {
+                    await request(testKit.server)
+                        .get(`${testKit.endpoints.usersAPI}/${userId}`)
+                        .set('Authorization', `Bearer ${sessionToken}`);
+                }
+                // last request should fail with 429 status code
+                const response = await request(testKit.server)
+                    .get(`${testKit.endpoints.usersAPI}/${userId}`)
+                    .set('Authorization', `Bearer ${sessionToken}`);
+                expect(response.statusCode).toBe(expectedStatus);
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
+            });
+        });
+
+        describe('User is not found', () => {
+            test.concurrent('return 429 TOO MANY REQUESTS and the configured error message (even when user is not found)', async () => {
+                const expectedStatus = 429;
+                const expectedErrorMssg = commonErrors.TOO_MANY_REQUESTS;
+                const maxRequests = testKit.configService.API_MAX_REQ_PER_MINUTE;
+                // create user to get a valid session token
+                const { sessionToken } = await createUser(getRandomRole());
+                // send requests to the endpoint until the rate limit is reached
+                for (let i = 0; i < maxRequests; i++) {
+                    await request(testKit.server)
+                        .get(`${testKit.endpoints.usersAPI}/non-existing-id`)
+                        .set('Authorization', `Bearer ${sessionToken}`);
+                }
+                // last request should fail with 429 status code
+                const response = await request(testKit.server)
+                    .get(`${testKit.endpoints.usersAPI}/non-existing-id`)
+                    .set('Authorization', `Bearer ${sessionToken}`);
+                expect(response.statusCode).toBe(expectedStatus);
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             });
         });
     });

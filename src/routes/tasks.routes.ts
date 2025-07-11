@@ -14,8 +14,7 @@ export class TasksRoutes {
     private readonly tasksController: TasksController;
 
     constructor(
-        private readonly tasksService: TasksService,
-        private readonly loggerService: LoggerService,
+        private readonly tasksService: TasksService,        
         private readonly rolesMiddleware: RolesMiddleware,
         private readonly apiLimiterMiddleware: ApiLimiterMiddleware,
     ) {

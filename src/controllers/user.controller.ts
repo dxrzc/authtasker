@@ -72,7 +72,8 @@ export class UserController extends BaseUserController {
     protected readonly findAll = async (req: Request, res: Response): Promise<void> => {
         const limit = (req.query.limit) ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = (req.query.page) ? +req.query.page : paginationSettings.DEFAULT_PAGE;
-        const usersFound = await this.userService.findAll(limit, page);
+        const cacheOptions = buildCacheOptions(req);
+        const usersFound = await this.userService.findAll(limit, page, cacheOptions);
         res.status(statusCodes.OK).json(usersFound);
     }
 

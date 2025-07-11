@@ -62,6 +62,7 @@ beforeAll(async () => {
         USERS_API_CACHE_TTL_SECONDS: 60,
         TASKS_API_CACHE_TTL_SECONDS: 60,
         CACHE_HARD_TTL_SECONDS: 600,
+        PAGINATION_CACHE_TTLS_SECONDS: 20,
         HTTP_LOGS: false,
         JWT_REFRESH_EXP_TIME: '10d',
         JWT_REFRESH_PRIVATE_KEY: 'testkey2',
