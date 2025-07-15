@@ -102,6 +102,15 @@ export class UserService {
         }
     }
 
+    private async passwordsMatchOrThrow(hashedPassword: string, incomingPassword: string): Promise<void | never>{
+        // password hashing
+        const passwordOk = await this.hashingService.compare(incomingPassword, hashedPassword);
+        if (!passwordOk) {
+            this.loggerService.error('Password does not match');
+            throw HttpError.badRequest(authErrors.INVALID_CREDENTIALS);
+        }
+    }
+
     async requestEmailValidation(id: string): Promise<void> {
         const user = await this.userModel.findById(id).exec();
         if (!user) {
@@ -162,12 +171,8 @@ export class UserService {
             this.loggerService.error(`User ${userToLogin.email} not found`);
             throw HttpError.badRequest(authErrors.INVALID_CREDENTIALS);
         }
-        // password hashing
-        const passwordOk = await this.hashingService.compare(userToLogin.password, userDb.password);
-        if (!passwordOk) {
-            this.loggerService.error('Password does not match');
-            throw HttpError.badRequest(authErrors.INVALID_CREDENTIALS);
-        }
+        // password comparison
+        await this.passwordsMatchOrThrow(userDb.password, userToLogin.password);
         // refresh token per user limit
         const userRefreshTokens = await this.refreshTokenService.countUserTokens(userDb.id);
         if (userRefreshTokens === this.configService.MAX_REFRESH_TOKENS_PER_USER) {
@@ -197,6 +202,17 @@ export class UserService {
             this.refreshTokenService.revokeToken(requestUserInfo.id, refreshJti)
         ]);
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
+    }
+
+    async logoutFromAll(userId: string, userPassword: string) {
+        const userData = await this.userModel.findById(userId).select('password').exec();        
+        if (!userData){
+            this.loggerService.error(`User ${userId} not found`)
+            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+        }
+        await this.passwordsMatchOrThrow(userData.password, userPassword);
+        await this.refreshTokenService.revokeAll(userId);
+        this.loggerService.info(`All refresh tokens of user ${userId} have been revoked`);
     }
 
     async refresh(refreshToken?: string) {
@@ -267,7 +283,6 @@ export class UserService {
         return data;
     }
 
-
     async deleteOne(requestUserInfo: UserFromRequest, targetUserId: string): Promise<void> {
         await this.authorizeUserModificationOrThrow(requestUserInfo, targetUserId);
         await Promise.all([
@@ -285,6 +300,7 @@ export class UserService {
         await this.setNewPropertiesInDocument(userDocument, propertiesUpdated);
         // revoke all refresh tokens and blacklist session token
         if (propertiesUpdated.email || propertiesUpdated.password) {
+            // TODO: use promise.all
             await this.refreshTokenService.revokeAll(targetUserId);
             await this.sessionTokenService.blacklist(requestUserInfo.sessionJti, requestUserInfo.sessionTokenExpUnix);
             this.loggerService.info(`All refresh tokens of user ${targetUserId} were revoked due to email/password update`);

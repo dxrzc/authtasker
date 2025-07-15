@@ -9,6 +9,7 @@ export const testKit: ITestKit = {
         register: `/api/users/register`,
         login: `/api/users/login`,
         logout: `/api/users/logout`,
+        logoutFromAll: '/api/users/logoutFromAll',
         requestEmailValidation: `/api/users/requestEmailValidation`,
         confirmEmailValidation: `/api/users/confirmEmailValidation`,
         tasksAPI: '/api/tasks',

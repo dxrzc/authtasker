@@ -4,6 +4,7 @@ export const protectedRoutes = [
     // Users API
     { method: 'post', url: testKit.endpoints.requestEmailValidation },
     { method: 'post', url: testKit.endpoints.logout },
+    { method: 'post', url: testKit.endpoints.logoutFromAll },
     { method: 'delete', url: `${testKit.endpoints.usersAPI}/123` },
     { method: 'patch', url: `${testKit.endpoints.usersAPI}/123` },
     { method: 'get', url: `${testKit.endpoints.usersAPI}/123` },

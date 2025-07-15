@@ -50,6 +50,14 @@ export class UserController extends BaseUserController {
         res.status(statusCodes.NO_CONTENT).end();
     }
 
+    protected readonly logoutFromAll = async (req: Request, res: Response) : Promise<void> => {
+        const requestUserInfo = this.getUserRequestInfo(req, res);
+        // TODO: password validator
+        const userPassword = req.body.password;
+        await this.userService.logoutFromAll(requestUserInfo.id, userPassword);
+        res.status(statusCodes.NO_CONTENT).end();
+    }
+
     protected readonly requestEmailValidation = async (req: Request, res: Response): Promise<void> => {
         const requestUserInfo = this.getUserRequestInfo(req, res);
         await this.userService.requestEmailValidation(requestUserInfo.id);
