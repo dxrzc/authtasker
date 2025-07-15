@@ -5,9 +5,10 @@ import { buildCacheOptions } from '@logic/cache/build-cache-options';
 import { statusCodes } from '@root/common/constants/status-codes.constants';
 import { paginationSettings } from '@root/common/constants/pagination.constants';
 import { BaseUserController } from '@root/common/base/base-user-controller.class';
+import { PasswordValidator } from '@root/validators/models/user/password.validator';
+import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
-import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 
 export class UserController extends BaseUserController {
 
@@ -16,6 +17,7 @@ export class UserController extends BaseUserController {
         private readonly createUserValidator: CreateUserValidator,
         private readonly updateUserValidator: UpdateUserValidator,
         private readonly loginUserValidator: LoginUserValidator,
+        private readonly passwordValidator: PasswordValidator,
     ) { super(); }
 
     protected readonly me = async (req: Request, res: Response): Promise<void> => {
@@ -47,6 +49,13 @@ export class UserController extends BaseUserController {
         const requestUserInfo = this.getUserRequestInfo(req, res);
         const refreshToken = req.body.refreshToken;
         await this.userService.logout(requestUserInfo, refreshToken);
+        res.status(statusCodes.NO_CONTENT).end();
+    }
+
+    protected readonly logoutFromAll = async (req: Request, res: Response) : Promise<void> => {
+        const requestUserInfo = this.getUserRequestInfo(req, res);                
+        const passwordInBody = await this.passwordValidator.validate(req.body.password);
+        await this.userService.logoutFromAll(requestUserInfo, passwordInBody);
         res.status(statusCodes.NO_CONTENT).end();
     }
 

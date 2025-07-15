@@ -44,6 +44,7 @@ export interface ITestKit {
         register: string;
         login: string;
         logout: string;
+        logoutFromAll: string;
         requestEmailValidation: string;
         confirmEmailValidation: string;
 

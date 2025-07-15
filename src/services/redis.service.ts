@@ -38,7 +38,7 @@ export class RedisService {
         return await this.redis.smembers(key);
     }
 
-    async setSize(key: string): Promise<number> {
+    async getSetSize(key: string): Promise<number> {
         return await this.redis.scard(key);
     }
 

@@ -14,6 +14,7 @@ import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
+import { PasswordValidator } from '@root/validators/models/user/password.validator';
 
 export class UserRoutes {
 
@@ -33,6 +34,7 @@ export class UserRoutes {
             new CreateUserValidator(),
             new UpdateUserValidator(),
             new LoginUserValidator(),
+            new PasswordValidator(),
         );
 
         SystemLoggerService.info('User routes loaded');
@@ -82,6 +84,12 @@ export class UserRoutes {
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
             this.rolesMiddleware.middleware('readonly'),
             this.userController.logoutFwdErr()
+        );
+
+        router.post('/logoutFromAll', 
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.rolesMiddleware.middleware('readonly'),
+            this.userController.logoutFromAllFwdErr()
         );
 
         router.get('/confirmEmailValidation/:token',

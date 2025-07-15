@@ -5,6 +5,7 @@ export abstract class BaseUserController extends BaseController {
     protected abstract create(req: Request, res: Response): Promise<void>;
     protected abstract login(req: Request, res: Response): Promise<void>;
     protected abstract logout(req: Request, res: Response): Promise<void>;
+    protected abstract logoutFromAll(req: Request, res: Response): Promise<void>;
     protected abstract requestEmailValidation(req: Request, res: Response): Promise<void>;
     protected abstract confirmEmailValidation(req: Request, res: Response): Promise<void>;
     protected abstract findOne(req: Request, res: Response): Promise<void>;
@@ -17,6 +18,7 @@ export abstract class BaseUserController extends BaseController {
     readonly createFwdErr = (): RequestHandler => this.forwardError(this.create);
     readonly loginFwdErr = (): RequestHandler => this.forwardError(this.login);
     readonly logoutFwdErr = (): RequestHandler => this.forwardError(this.logout);
+    readonly logoutFromAllFwdErr = (): RequestHandler => this.forwardError(this.logoutFromAll);
     readonly requestEmailValidationFwdErr = (): RequestHandler => this.forwardError(this.requestEmailValidation);
     readonly confirmEmailValidationFwdErr = (): RequestHandler => this.forwardError(this.confirmEmailValidation);
     readonly findOneFwdErr = (): RequestHandler => this.forwardError(this.findOne);
