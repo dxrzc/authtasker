@@ -128,6 +128,6 @@ export class RefreshTokenService {
     }
 
     async countUserTokens(userId: string): Promise<number> {
-        return await this.redisService.setSize(makeRefreshTokenIndexKey(userId));
+        return await this.redisService.getSetSize(makeRefreshTokenIndexKey(userId));
     }
 }
