@@ -9,56 +9,51 @@ import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
-import { JwtTypes } from '@root/enums/jwt-types.enum';
 
-describe('Log out from all', () => {
-    describe('Password is not provided', () => {
-        test('return status 400 BAD REQUEST and PASSWORD_NOT_PROVIDED error message', async () => {
-            const expectedStatus = 400;
-            const { sessionToken } = await createUser(getRandomRole());
-            const response = await request(testKit.server)
-                .post(testKit.endpoints.logoutFromAll)
-                .set(`Authorization`, `Bearer ${sessionToken}`);
-            expect(response.body).toStrictEqual({ error: usersApiErrors.PASSWORD_NOT_PROVIDED });
-            expect(response.statusCode).toBe(expectedStatus);
+describe('Logout from all', () => {
+    describe('Success', () => {
+        describe('User email and password are provided in request body', () => {
+            test.concurrent('return status 204 NO CONTENT', async () => {
+                const expectedStatus = 204;
+                const { userEmail, unhashedPassword } = await createUser(getRandomRole());
+                const response = await request(testKit.server)
+                    .post(testKit.endpoints.logoutFromAll)
+                    .send({ email: userEmail, password: unhashedPassword })
+                    .expect(expectedStatus);                
+            });
         });
     });
 
-    describe('Invalid password length', () => {
-        test('return status 400 BAD REQUEST and INVALID_PASSWORD_LENGTH error message', async () => {
-            const expectedStatus = 400;
-            const { sessionToken } = await createUser(getRandomRole());
-            const response = await request(testKit.server)
-                .post(testKit.endpoints.logoutFromAll)
-                .set(`Authorization`, `Bearer ${sessionToken}`)
-                .send({ password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1) });
-            expect(response.body).toStrictEqual({ error: usersApiErrors.INVALID_PASSWORD_LENGTH });
-            expect(response.statusCode).toBe(expectedStatus);
+    describe('Input sanitization (wiring)', () => {
+        describe('Invalid password length', () => {
+            test.concurrent('return status 400 BAD REQUEST and INVALID_PASSWORD_LENGTH error message', async () => {
+                const expectedStatus = 400;
+                const { userEmail } = await createUser(getRandomRole());
+                const response = await request(testKit.server)
+                    .post(testKit.endpoints.logoutFromAll)
+                    .send({
+                        email: userEmail,
+                        password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1)
+                    });
+                expect(response.body).toStrictEqual({ error: usersApiErrors.INVALID_PASSWORD_LENGTH });
+                expect(response.statusCode).toBe(expectedStatus);
+            });
         });
     });
 
-    describe('Password does not match', () => {
-        test('return status 400 BAD REQUEST and INVALID_CREDENTIALS error message', async () => {
+    describe('Password does not match user in email', () => {
+        test.concurrent('return status 400 BAD REQUEST and INVALID_CREDENTIALS error message', async () => {
             const expectedStatus = 400;
-            const { sessionToken } = await createUser(getRandomRole());
+            const { userEmail } = await createUser(getRandomRole());
             const response = await request(testKit.server)
                 .post(testKit.endpoints.logoutFromAll)
-                .set(`Authorization`, `Bearer ${sessionToken}`)
-                .send({ password: testKit.userDataGenerator.password() });
+                .send({
+                    email: userEmail,
+                    password: testKit.userDataGenerator.password()
+                });
             expect(response.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
             expect(response.statusCode).toBe(expectedStatus);
         });
-    });
-
-    test.only('blacklist session token', async () => {
-        const { sessionToken } = await createUser(getRandomRole());
-        const response = await request(testKit.server)
-            .post(testKit.endpoints.logoutFromAll)
-            .set(`Authorization`, `Bearer ${sessionToken}`)
-            .send({ password: testKit.userDataGenerator.password() });
-        const sessionTokenJti = testKit.sessionJwt.verify(sessionToken)?.jti!;
-        const blacklisted = testKit.jwtBlacklistService.tokenInBlacklist(JwtTypes.session, sessionTokenJti);
-        expect(blacklisted).toBeTruthy();
     });
 
     describe('User has reached the max number of refresh tokens', () => {
@@ -67,7 +62,7 @@ describe('Log out from all', () => {
             let userId: string;
             beforeAll(async () => {
                 // create user and get the first token
-                const { refreshToken, unhashedPassword, sessionToken, userId: id } = await createUser(getRandomRole());
+                const { refreshToken, unhashedPassword, userEmail, userId: id } = await createUser(getRandomRole());
                 const refreshTokenID = testKit.refreshJwt.verify(refreshToken)?.jti!;
                 refreshTokensIDS.push(refreshTokenID);
                 userId = id;
@@ -87,22 +82,21 @@ describe('Log out from all', () => {
                 // logout from all, revoking all the refresh tokens
                 await request(testKit.server)
                     .post(testKit.endpoints.logoutFromAll)
-                    .set(`Authorization`, `Bearer ${sessionToken}`)
-                    .send({ password: unhashedPassword })
+                    .send({ password: unhashedPassword, email: userEmail })
                     .expect(status2xx);
             });
 
-            test('all the refresh tokens are deleted from redis database', async () => {
+            test.concurrent('all the refresh tokens are deleted from redis database', async () => {
                 for (const refreshId of refreshTokensIDS) {
                     const tokenInRedis = await testKit.redisService.get(makeRefreshTokenKey(userId, refreshId));
                     expect(tokenInRedis).toBeNull();
                 }
             });
 
-            test('user refresh-tokens count is set to 0', async () => {
+            test.concurrent('user refresh-tokens count is set to 0', async () => {
                 const refreshTokensCount = await testKit.redisService.getSetSize(makeRefreshTokenIndexKey(userId));
                 expect(refreshTokensCount).toBe(0);
             });
         });
-    });    
+    });
 });

@@ -69,6 +69,11 @@ export class UserRoutes {
             this.userController.loginFwdErr()
         );
 
+        router.post('/logoutFromAll',
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.userController.logoutFromAllFwdErr()
+        );
+
         router.post('/refresh-token',
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
             this.userController.refreshFwdErr()
@@ -84,13 +89,7 @@ export class UserRoutes {
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
             this.rolesMiddleware.middleware('readonly'),
             this.userController.logoutFwdErr()
-        );
-
-        router.post('/logoutFromAll', 
-            this.apiLimiterMiddleware.middleware(ApiType.authApi),
-            this.rolesMiddleware.middleware('readonly'),
-            this.userController.logoutFromAllFwdErr()
-        );
+        );        
 
         router.get('/confirmEmailValidation/:token',
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
