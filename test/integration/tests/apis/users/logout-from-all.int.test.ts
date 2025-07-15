@@ -1,25 +1,49 @@
 import request from 'supertest';
+import { faker } from '@faker-js/faker/.';
 import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
+import { usersLimits } from '@root/common/constants/user.constants';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
 import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
-import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
+import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 
 describe('Logout from all', () => {
-    // TODO: 
-    // describe('Password is not provided', () => {
-    // });
+    describe('Password is not provided', () => {
+        test('return status 400 BAD REQUEST and PASSWORD_NOT_PROVIDED error message', async () => {
+            const expectedStatus = 400;
+            const { sessionToken } = await createUser(getRandomRole());
+            const response = await request(testKit.server)
+                .post(testKit.endpoints.logoutFromAll)
+                .set(`Authorization`, `Bearer ${sessionToken}`);
+            expect(response.body).toStrictEqual({ error: usersApiErrors.PASSWORD_NOT_PROVIDED });
+            expect(response.statusCode).toBe(expectedStatus);
+        });
+    });
+
+    describe('Invalid password length', () => {
+        test('return status 400 BAD REQUEST and INVALID_PASSWORD_LENGTH error message', async () => {
+            const expectedStatus = 400;
+            const { sessionToken } = await createUser(getRandomRole());
+            const response = await request(testKit.server)
+                .post(testKit.endpoints.logoutFromAll)
+                .set(`Authorization`, `Bearer ${sessionToken}`)
+                .send({ password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1) });
+            expect(response.body).toStrictEqual({ error: usersApiErrors.INVALID_PASSWORD_LENGTH });
+            expect(response.statusCode).toBe(expectedStatus);
+        });
+    });
 
     describe('Password does not match', () => {
         test('return status 400 BAD REQUEST and INVALID_CREDENTIALS error message', async () => {
             const expectedStatus = 400;
-            const { unhashedPassword, userId, sessionToken } = await createUser(getRandomRole());
+            const { sessionToken } = await createUser(getRandomRole());
             const response = await request(testKit.server)
                 .post(testKit.endpoints.logoutFromAll)
                 .set(`Authorization`, `Bearer ${sessionToken}`)
-                .send({ password: unhashedPassword.concat('123') });
+                .send({ password: testKit.userDataGenerator.password() });
             expect(response.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
             expect(response.statusCode).toBe(expectedStatus);
         });

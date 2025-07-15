@@ -5,9 +5,10 @@ import { buildCacheOptions } from '@logic/cache/build-cache-options';
 import { statusCodes } from '@root/common/constants/status-codes.constants';
 import { paginationSettings } from '@root/common/constants/pagination.constants';
 import { BaseUserController } from '@root/common/base/base-user-controller.class';
+import { PasswordValidator } from '@root/validators/models/user/password.validator';
+import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
-import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 
 export class UserController extends BaseUserController {
 
@@ -16,6 +17,7 @@ export class UserController extends BaseUserController {
         private readonly createUserValidator: CreateUserValidator,
         private readonly updateUserValidator: UpdateUserValidator,
         private readonly loginUserValidator: LoginUserValidator,
+        private readonly passwordValidator: PasswordValidator,
     ) { super(); }
 
     protected readonly me = async (req: Request, res: Response): Promise<void> => {
@@ -51,9 +53,8 @@ export class UserController extends BaseUserController {
     }
 
     protected readonly logoutFromAll = async (req: Request, res: Response) : Promise<void> => {
-        const requestUserInfo = this.getUserRequestInfo(req, res);
-        // TODO: password validator
-        const userPassword = req.body.password;
+        const requestUserInfo = this.getUserRequestInfo(req, res);                
+        const userPassword = await this.passwordValidator.validate(req.body.password);
         await this.userService.logoutFromAll(requestUserInfo.id, userPassword);
         res.status(statusCodes.NO_CONTENT).end();
     }
