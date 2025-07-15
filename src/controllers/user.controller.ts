@@ -54,8 +54,8 @@ export class UserController extends BaseUserController {
 
     protected readonly logoutFromAll = async (req: Request, res: Response) : Promise<void> => {
         const requestUserInfo = this.getUserRequestInfo(req, res);                
-        const userPassword = await this.passwordValidator.validate(req.body.password);
-        await this.userService.logoutFromAll(requestUserInfo.id, userPassword);
+        const passwordInBody = await this.passwordValidator.validate(req.body.password);
+        await this.userService.logoutFromAll(requestUserInfo, passwordInBody);
         res.status(statusCodes.NO_CONTENT).end();
     }
 

@@ -9,8 +9,9 @@ import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { JwtTypes } from '@root/enums/jwt-types.enum';
 
-describe('Logout from all', () => {
+describe('Log out from all', () => {
     describe('Password is not provided', () => {
         test('return status 400 BAD REQUEST and PASSWORD_NOT_PROVIDED error message', async () => {
             const expectedStatus = 400;
@@ -49,8 +50,19 @@ describe('Logout from all', () => {
         });
     });
 
+    test.only('blacklist session token', async () => {
+        const { sessionToken } = await createUser(getRandomRole());
+        const response = await request(testKit.server)
+            .post(testKit.endpoints.logoutFromAll)
+            .set(`Authorization`, `Bearer ${sessionToken}`)
+            .send({ password: testKit.userDataGenerator.password() });
+        const sessionTokenJti = testKit.sessionJwt.verify(sessionToken)?.jti!;
+        const blacklisted = testKit.jwtBlacklistService.tokenInBlacklist(JwtTypes.session, sessionTokenJti);
+        expect(blacklisted).toBeTruthy();
+    });
+
     describe('User has reached the max number of refresh tokens', () => {
-        describe('User revokes all', () => {
+        describe('User logs out from all', () => {
             let refreshTokensIDS = new Array<string>;
             let userId: string;
             beforeAll(async () => {
@@ -92,5 +104,5 @@ describe('Logout from all', () => {
                 expect(refreshTokensCount).toBe(0);
             });
         });
-    });
+    });    
 });

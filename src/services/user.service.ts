@@ -102,7 +102,7 @@ export class UserService {
         }
     }
 
-    private async passwordsMatchOrThrow(hashedPassword: string, incomingPassword: string): Promise<void | never>{
+    private async passwordsMatchOrThrow(hashedPassword: string, incomingPassword: string): Promise<void | never> {
         // password hashing
         const passwordOk = await this.hashingService.compare(incomingPassword, hashedPassword);
         if (!passwordOk) {
@@ -204,14 +204,19 @@ export class UserService {
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
-    async logoutFromAll(userId: string, userPassword: string) {
-        const userData = await this.userModel.findById(userId).select('password').exec();        
-        if (!userData){
+    async logoutFromAll(requestUserInfo: UserFromRequest, passwordInBody: string) {
+        const userId = requestUserInfo.id;
+        const userData = await this.userModel.findById(userId).select('password').exec();
+        if (!userData) {
             this.loggerService.error(`User ${userId} not found`)
             throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
         }
-        await this.passwordsMatchOrThrow(userData.password, userPassword);
-        await this.refreshTokenService.revokeAll(userId);
+        await this.passwordsMatchOrThrow(userData.password, passwordInBody);
+        // revoke tokens
+        await Promise.all([
+            this.sessionTokenService.blacklist(requestUserInfo.sessionJti, requestUserInfo.sessionTokenExpUnix),
+            this.refreshTokenService.revokeAll(userId)
+        ]);
         this.loggerService.info(`All refresh tokens of user ${userId} have been revoked`);
     }
 
