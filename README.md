@@ -72,7 +72,7 @@ Backend application designed to manage user authentication, authorization and ta
 When a request is completed, it's registered in the filesystem as follows:
 
 
-```json
+```javascript
 {
   message: 'Request completed',
   ip: '::ffff:192.168.65.1',
