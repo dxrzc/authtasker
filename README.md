@@ -48,7 +48,7 @@ Backend application designed to manage user authentication, authorization and ta
 - Logs are saved in filesystem
 - Three levels: info, error, warn
 
-![Image](https://github.com/user-attachments/assets/7766983d-b9bc-4791-8709-9e6de809ddd2)
+<img width="1054" height="336" alt="Screenshot from 2025-07-20 13-39-23" src="https://github.com/user-attachments/assets/97accb96-d124-485b-8bbf-92c5856d9e30" />
 
 #### Http logs
 - Logs are saved in filesystem
@@ -57,7 +57,8 @@ Backend application designed to manage user authentication, authorization and ta
 - Four levels: info, error, debug, warn
 - Set HTTP_LOGS env to false to disable these logs
 
-![Image](https://github.com/user-attachments/assets/b928b138-0481-4884-b6a2-3a7c53daff86)
+<img width="1565" height="204" alt="image" src="https://github.com/user-attachments/assets/c5e4ffd7-0469-46c7-8d43-3d00f024172e" />
+
 
 #### Request completed
 When a request is completed is registered in filesystem as follows
