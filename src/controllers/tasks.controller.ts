@@ -1,119 +1,64 @@
 import { Request, Response } from "express";
-import { CreateTaskValidator, UpdateTaskValidator } from "@root/rules/validators/models/tasks";
-import { getUserInfoOrHandleError } from "./handlers/get-user-info.handler";
-import { handleError } from "@root/common/handlers/error.handler";
-import { HTTP_STATUS_CODE, PAGINATION_SETTINGS } from "@root/rules/constants";
-import { LoggerService, TasksService } from "@root/services";
+import { TasksService } from '@root/services/tasks.service';
+import { LoggerService } from '@root/services/logger.service';
+import { statusCodes } from '@root/common/constants/status-codes.constants';
+import { paginationSettings } from '@root/common/constants/pagination.constants';
+import { BaseTasksController } from '@root/common/base/base-tasks-controller.class';
+import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
+import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
+import { buildCacheOptions } from '@logic/cache/build-cache-options';
 
-export class TasksController {
+export class TasksController extends BaseTasksController {
 
     constructor(
-        private readonly tasksService: TasksService,
-        private readonly loggerService: LoggerService,
-    ) {}
+        private readonly tasksService: TasksService,        
+        private readonly createTaskValidator: CreateTaskValidator,
+        private readonly updateTaskValidator: UpdateTaskValidator
+    ) { super(); }
 
-    readonly create = async (req: Request, res: Response): Promise<void> => {
-        try {
-            this.loggerService.info('Task creation attempt');
-            const [error, validatedTask] = await CreateTaskValidator
-                .validateAndTransform(req.body);
+    protected readonly create = async (req: Request, res: Response) => {        
+        const validTask = await this.createTaskValidator.validateAndTransform(req.body);        
+        const requestUserInfo = this.getUserRequestInfo(req, res);
+        const created = await this.tasksService.create(validTask, requestUserInfo.id);
+        res.status(statusCodes.CREATED).json(created);
+    };
 
-            if (validatedTask) {
-                this.loggerService.info('Data successfully validated');
-                const requestUserInfo = getUserInfoOrHandleError(req, res);
+    protected readonly findOne = async (req: Request, res: Response) => {
+        const id = req.params.id;
+        const options = buildCacheOptions(req);        
+        const taskFound = await this.tasksService.findOne(id, options);
+        res.status(statusCodes.OK).json(taskFound);
+    };
 
-                if (requestUserInfo) {
-                    const created = await this.tasksService.create(validatedTask, requestUserInfo.id);
-                    res.status(HTTP_STATUS_CODE.CREATED).json(created);
-                    return;
-                }
+    protected readonly findAll = async (req: Request, res: Response) => {        
+        const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
+        const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
+        const options = buildCacheOptions(req);
+        const tasksFound = await this.tasksService.findAll(limit, page, options);
+        res.status(statusCodes.OK).json(tasksFound);
+    };
 
-            } else {
-                this.loggerService.error('Data validation failed'); 
-                res.status(HTTP_STATUS_CODE.BADREQUEST).json({ error });
-                return;
-            }
+    protected readonly findAllByUser = async (req: Request, res: Response) => {
+        const userId = req.params.id;        
+        const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
+        const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
+        const cacheOptions = buildCacheOptions(req);
+        const tasksFound = await this.tasksService.findAllByUser(userId, limit, page, cacheOptions);
+        res.status(statusCodes.OK).json(tasksFound);
+    };
 
-        } catch (error) {
-            handleError(res, error, this.loggerService);
-        }
-    }
+    protected readonly deleteOne = async (req: Request, res: Response) => {
+        const id = req.params.id;        
+        const requestUserInfo = this.getUserRequestInfo(req, res);
+        await this.tasksService.deleteOne(requestUserInfo, id);
+        res.status(statusCodes.NO_CONTENT).end();
+    };
 
-    readonly findOne = async (req: Request, res: Response): Promise<void> => {
-        try {            
-            const id = req.params.id;
-            this.loggerService.info(`Task ${id} search attempt`);            
-            const taskFound = await this.tasksService.findOne(id);
-            res.status(HTTP_STATUS_CODE.OK).json(taskFound);
-        } catch (error) {
-            handleError(res, error, this.loggerService);
-        }
-    }
-
-    readonly findAll = async (req: Request, res: Response): Promise<void> => {
-        try {
-            this.loggerService.info('Tasks search attempt');
-            const limit = (req.query.limit) ? +req.query.limit : PAGINATION_SETTINGS.DEFAULT_LIMIT;
-            const page = (req.query.page) ? +req.query.page : PAGINATION_SETTINGS.DEFAULT_PAGE;
-            const tasksFound = await this.tasksService.findAll(limit, page);
-            res.status(HTTP_STATUS_CODE.OK).json(tasksFound);
-        } catch (error) {
-            handleError(res, error, this.loggerService);
-        }
-    }
-
-    readonly findAllByUser = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const userId = req.params.id;
-            this.loggerService.info(`Tasks by user ${userId} search attempt`);
-            const tasksFound = await this.tasksService.findAllByUser(userId);
-            res.status(HTTP_STATUS_CODE.OK).json(tasksFound);
-        } catch (error) {
-            handleError(res, error,this.loggerService);
-        }
-    }
-
-    readonly deleteOne = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const id = req.params.id;
-            this.loggerService.info(`Task ${id} deletion attempt`);
-            const requestUserInfo = getUserInfoOrHandleError(req, res);
-
-            if (requestUserInfo) {
-                await this.tasksService.deleteOne(requestUserInfo, id);
-                res.status(HTTP_STATUS_CODE.NO_CONTENT).end()
-                return;
-            }
-
-        } catch (error) {
-            handleError(res, error, this.loggerService);
-        }
-    }
-
-    readonly updateOne = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const id = req.params.id;
-            this.loggerService.info(`Task ${id} update attempt`);
-            const [error, validatedTask] = await UpdateTaskValidator
-                .validateAndTransform(req.body);
-
-            if (validatedTask) {
-                this.loggerService.info('Data successfully validated');
-                const requestUserInfo = getUserInfoOrHandleError(req, res);
-
-                if (requestUserInfo) {
-                    const updated = await this.tasksService.updateOne(requestUserInfo, id, validatedTask);
-                    res.status(HTTP_STATUS_CODE.OK).json(updated);
-                    return;
-                }
-
-            } else {
-                this.loggerService.error('Data validation failed'); 
-                res.status(HTTP_STATUS_CODE.BADREQUEST).json({ error });
-                return;
-            }
-        } catch (error) {
-            handleError(res, error, this.loggerService);
-        }
-    }
+    protected readonly updateOne = async (req: Request, res: Response) => {
+        const id = req.params.id;        
+        const validUpdate = await this.updateTaskValidator.validateNewAndTransform(req.body);        
+        const requestUserInfo = this.getUserRequestInfo(req, res);
+        const updated = await this.tasksService.updateOne(requestUserInfo, id, validUpdate);
+        res.status(statusCodes.OK).json(updated);
+    };
 }

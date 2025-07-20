@@ -1,0 +1,86 @@
+services:
+  server:
+    restart: always
+    build:
+      context: .
+      target: development
+    ports:
+      - 3000:3000    
+    volumes:
+      - ./src:/usr/src/app/src
+      - ./logs:/usr/src/app/logs
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+    depends_on:
+      - mongo-db
+      - redis-db    
+    secrets:
+      - jwt-private-key
+      - jwt-refresh-private-key
+      - redis-uri
+      - mongo-uri
+      - admin-password
+      - mail-service-pass
+    environment:           
+      HTTP_LOGS: ${HTTP_LOGS}
+      WEB_URL: ${WEB_URL}
+      PORT: ${PORT}
+      API_MAX_REQ_PER_MINUTE: ${API_MAX_REQ_PER_MINUTE}
+      AUTH_MAX_REQ_PER_MINUTE: ${AUTH_MAX_REQ_PER_MINUTE}
+      USERS_API_CACHE_TTL_SECONDS: ${USERS_API_CACHE_TTL_SECONDS}
+      TASKS_API_CACHE_TTL_SECONDS: ${TASKS_API_CACHE_TTL_SECONDS}
+      CACHE_HARD_TTL_SECONDS: ${CACHE_HARD_TTL_SECONDS}
+      BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS}
+      JWT_SESSION_EXP_TIME: ${JWT_SESSION_EXP_TIME}
+      JWT_EMAIL_VALIDATION_EXP_TIME: ${JWT_EMAIL_VALIDATION_EXP_TIME}
+      JWT_REFRESH_EXP_TIME: ${JWT_REFRESH_EXP_TIME}
+      MAX_REFRESH_TOKENS_PER_USER: ${MAX_REFRESH_TOKENS_PER_USER}
+      MAIL_SERVICE_HOST: ${MAIL_SERVICE_HOST}
+      MAIL_SERVICE_PORT: ${MAIL_SERVICE_PORT}
+      MAIL_SERVICE_USER: ${MAIL_SERVICE_USER}      
+      ADMIN_NAME: ${ADMIN_NAME}      
+      ADMIN_EMAIL: ${ADMIN_EMAIL}          
+      PAGINATION_CACHE_TTLS_SECONDS: ${PAGINATION_CACHE_TTLS_SECONDS}
+
+  mongo-db:
+    image: mongo:7.0.20
+    restart: always    
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}      
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - ${MONGO_PORT}:27017
+
+  redis-db:
+    image: redis:8.0.1       
+    restart: always
+    ports:
+    - ${REDIS_PORT}:6379
+    environment:
+    - REDIS_PASSWORD=${REDIS_PASSWORD}    
+    volumes:
+      - redis_data:/data      
+    command:     
+      - --requirepass
+      - ${REDIS_PASSWORD}
+
+secrets:
+  jwt-private-key:
+    environment: JWT_PRIVATE_KEY 
+  jwt-refresh-private-key:
+    environment: JWT_REFRESH_PRIVATE_KEY
+  redis-uri:
+    environment: REDIS_URI
+  mongo-uri:
+    environment: MONGO_URI
+  admin-password: 
+    environment: ADMIN_PASSWORD
+  mail-service-pass:
+    environment: MAIL_SERVICE_PASS
+
+volumes:
+  mongo_data:
+    external: false
+  redis_data:
+    external: false

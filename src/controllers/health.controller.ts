@@ -1,16 +1,21 @@
-import { HTTP_STATUS_CODE } from '@root/rules/constants/http-status-codes.constants';
 import { Request, Response } from 'express';
+import { BaseController } from '@root/common/base/base-controller.class';
+import { statusCodes } from '@root/common/constants/status-codes.constants';
 
-export class HealthController {    
+export class HealthController extends BaseController {
 
-    readonly getServerHealth = async (req: Request, res: Response): Promise<void> => {        
+    constructor() {
+        super();
+    }
+
+    readonly getServerHealth = this.forwardError(async (req: Request, res: Response): Promise<void> => {
         const health = {
             status: 'UP',
             uptime: process.uptime(),
-            memoryUsage: process.memoryUsage(), 
+            memoryUsage: process.memoryUsage(),
             cpuUsage: process.cpuUsage(),
             timestamp: new Date(),
         };
-        res.status(HTTP_STATUS_CODE.OK).json(health);
-    }
+        res.status(statusCodes.OK).json(health);
+    });
 }

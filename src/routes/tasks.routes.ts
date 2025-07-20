@@ -1,21 +1,27 @@
 import { Router } from "express";
-import { LoggerService, SystemLoggerService, TasksService } from "@root/services";
-import { RequestLimiterMiddlewares, RolesMiddlewares } from "@root/types/middlewares";
-import { TasksController } from "@root/controllers";
+import { ApiType } from '@root/enums/api-type.enum';
+import { TasksService } from '@root/services/tasks.service';
+import { LoggerService } from '@root/services/logger.service';
+import { TasksController } from '@root/controllers/tasks.controller';
+import { RolesMiddleware } from '@root/middlewares/roles.middleware';
+import { SystemLoggerService } from '@root/services/system-logger.service';
+import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
+import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
+import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
 
 export class TasksRoutes {
 
     private readonly tasksController: TasksController;
 
     constructor(
-        private readonly tasksService: TasksService,
-        private readonly loggerService: LoggerService,
-        private readonly rolesMiddlewares: RolesMiddlewares,
-        private readonly requestLimiterMiddlewares: RequestLimiterMiddlewares,
+        private readonly tasksService: TasksService,        
+        private readonly rolesMiddleware: RolesMiddleware,
+        private readonly apiLimiterMiddleware: ApiLimiterMiddleware,
     ) {
         this.tasksController = new TasksController(
-            this.tasksService,
-            this.loggerService
+            this.tasksService,            
+            new CreateTaskValidator(),
+            new UpdateTaskValidator()
         );
 
         SystemLoggerService.info('Task routes loaded');
@@ -23,42 +29,42 @@ export class TasksRoutes {
 
     async build(): Promise<Router> {
         const router = Router();
-        router.use(this.requestLimiterMiddlewares.apiLimiter);
+        router.use(this.apiLimiterMiddleware.middleware(ApiType.coreApi));
 
         router.post(
             '/create',
-            this.rolesMiddlewares.editor,
-            this.tasksController.create
+            this.rolesMiddleware.middleware('editor'),
+            this.tasksController.createFwdErr()
         );
 
         router.delete(
             '/:id',
-            this.rolesMiddlewares.editor,
-            this.tasksController.deleteOne
+            this.rolesMiddleware.middleware('editor'),
+            this.tasksController.deleteOneFwdErr()
         );
 
         router.get(
             '/:id',
-            this.rolesMiddlewares.readonly,
-            this.tasksController.findOne
+            this.rolesMiddleware.middleware('readonly'),
+            this.tasksController.findOneFwdErr()
         );
 
         router.get(
             '/',
-            this.rolesMiddlewares.readonly,
-            this.tasksController.findAll
+            this.rolesMiddleware.middleware('readonly'),
+            this.tasksController.findAllFwdErr()
         );
 
         router.get(
             '/allByUser/:id',
-            this.rolesMiddlewares.readonly,
-            this.tasksController.findAllByUser
+            this.rolesMiddleware.middleware('readonly'),
+            this.tasksController.findAllByUserFwdErr()
         );
 
         router.patch(
             '/:id',
-            this.rolesMiddlewares.editor,
-            this.tasksController.updateOne
+            this.rolesMiddleware.middleware('editor'),
+            this.tasksController.updateOneFwdErr()
         );
 
         return router;

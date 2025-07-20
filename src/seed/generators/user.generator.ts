@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { USER_CONSTANTS as CONSTS } from "@root/rules/constants/user.constants";
+import { usersLimits } from '@root/common/constants/user.constants';
 
 export class UserDataGenerator {
 
@@ -25,8 +25,8 @@ export class UserDataGenerator {
         do {
             name = this.generateRandomName();
         } while (
-            name.length > CONSTS.MAX_NAME_LENGTH ||
-            name.length < CONSTS.MIN_NAME_LENGTH
+            name.length > usersLimits.MAX_NAME_LENGTH ||
+            name.length < usersLimits.MIN_NAME_LENGTH
         )
 
         return name
@@ -44,7 +44,15 @@ export class UserDataGenerator {
         return faker
             .internet
             .password({
-                length: CONSTS.MAX_PASSWORD_LENGTH
+                length: usersLimits.MAX_PASSWORD_LENGTH
             });
+    }
+
+    fullUser() {
+        return {
+            name: this.name(),
+            email: this.email(),
+            password: this.password()
+        }
     }
 }

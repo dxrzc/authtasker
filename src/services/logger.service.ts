@@ -1,8 +1,8 @@
 import winston from "winston";
 import { AsyncLocalStorage } from "async_hooks";
-import { ConfigService } from "./config.service";
+import { ConfigService } from './config.service';
+import { IRequestFsLog } from '@root/interfaces/logs/request-fs.log.interface';
 import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
-import { IRequestFsLog } from "@root/interfaces";
 
 /*  
     WINSTON LEVELS
@@ -19,7 +19,7 @@ export class LoggerService {
 
     private consoleLogger: winston.Logger;
     private requestCompletedFileLogger: winston.Logger
-    private httpMessageFileLogger: winston.Logger;
+    private fileLogger: winston.Logger;
 
     constructor(
         private readonly configService: ConfigService,
@@ -36,7 +36,7 @@ export class LoggerService {
                     const colorizer = winston.format.colorize().colorize;
 
                     const finalMessage = (() => {
-                        let mssg = (message as string).toLowerCase();
+                        let mssg = (message as string);
                         return mssg[0].toUpperCase() + mssg.slice(1);
                     })();
 
@@ -61,15 +61,15 @@ export class LoggerService {
         const folder = currentEnv === 'production' ?
             prodLogsFolder : devLogsFolder;
 
-        this.httpMessageFileLogger = winston.createLogger({
+        this.fileLogger = winston.createLogger({
             transports: [new winston.transports.File({
                 // no debug messages in fs
                 level: 'info',
                 filename: `${folder}/http-messages.log`,
                 // add timestamp in filesystem logs
                 format: winston.format.combine(
-                    winston.format.timestamp(),
-                    winston.format.json(),
+                    winston.format.timestamp(),                    
+                    winston.format.prettyPrint(),
                 )
             })]
         });
@@ -85,7 +85,8 @@ export class LoggerService {
                     winston.format.timestamp(),
                     winston.format.printf(({ level, timestamp, message, ...meta }) => {
                         return JSON.stringify({ timestamp, message, ...meta });
-                    })
+                    }),
+                    winston.format.prettyPrint(),
                 ),
             })]
         });
@@ -107,7 +108,7 @@ export class LoggerService {
                 requestId,                
             });
 
-            this.httpMessageFileLogger.log({
+            this.fileLogger.log({
                 level,
                 message,
                 requestId,

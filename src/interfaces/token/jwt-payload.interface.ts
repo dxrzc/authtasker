@@ -1,7 +1,7 @@
-import { TOKEN_PURPOSES } from "@root/rules/constants/token-purposes.constants";
 import { JwtPayload } from "jsonwebtoken";
+import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
 
 export interface IJwtPayload extends JwtPayload {
     jti: string;
-    purpose: typeof TOKEN_PURPOSES[keyof typeof TOKEN_PURPOSES];
+    purpose: typeof tokenPurposes[keyof typeof tokenPurposes];
 }

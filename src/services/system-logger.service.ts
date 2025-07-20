@@ -16,9 +16,9 @@ export class SystemLoggerService {
                         winston.format.printf(({ level, message, timestamp }) => {
                             const colorizer = winston.format.colorize().colorize;
 
-                            const coloredLevel = colorizer(level, `[${(level as string).toUpperCase()}]`);                            
+                            const coloredLevel = colorizer(level, `[${(level as string).toUpperCase()}]`);
                             const coloredTimestamp = colorizer(level, `[${timestamp}]`);
-                            const finalMessage = (message as any).toUpperCase();
+                            const finalMessage = (message as any);
 
                             const coloredMessage = colorizer(level, finalMessage);
 
@@ -26,9 +26,14 @@ export class SystemLoggerService {
                         }),
                     )
                 }),
+                // add timestamp in file
                 new winston.transports.File({
                     filename: process.env.NODE_ENV === 'production'
                         ? prodLogsFilename : devLogsFilename,
+                    format: winston.format.combine(
+                        winston.format.timestamp(),
+                        winston.format.prettyPrint()
+                    )
                 }),
             ]
         });

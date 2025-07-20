@@ -1,10 +1,20 @@
-import { Model } from "mongoose";
 import { Router } from "express";
-import { ConfigService, HashingService, LoggerService, SystemLoggerService, UserService } from "@root/services";
-import { createAdmin } from "@root/admin/create-admin";
-import { IUser } from "@root/interfaces";
-import { RequestLimiterMiddlewares, RolesMiddlewares } from "@root/types/middlewares";
-import { UserController } from "@root/controllers";
+import { Model } from "mongoose";
+import { ApiType } from '@root/enums/api-type.enum';
+import { createAdmin } from '@root/admin/create-admin';
+import { UserService } from '@root/services/user.service';
+import { IUser } from '@root/interfaces/user/user.interface';
+import { ConfigService } from '@root/services/config.service';
+import { LoggerService } from '@root/services/logger.service';
+import { HashingService } from '@root/services/hashing.service';
+import { UserController } from '@root/controllers/user.controller';
+import { RolesMiddleware } from '@root/middlewares/roles.middleware';
+import { SystemLoggerService } from '@root/services/system-logger.service';
+import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
+import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
+import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
+import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
+import { PasswordValidator } from '@root/validators/models/user/password.validator';
 
 export class UserRoutes {
 
@@ -16,12 +26,15 @@ export class UserRoutes {
         private readonly userModel: Model<IUser>,
         private readonly hashingService: HashingService,
         private readonly loggerService: LoggerService,
-        private readonly rolesMiddlewares: RolesMiddlewares,
-        private readonly requestLimiterMiddlewares: RequestLimiterMiddlewares,
+        private readonly rolesMiddleware: RolesMiddleware,        
+        private readonly apiLimiterMiddleware: ApiLimiterMiddleware,
     ) {
         this.userController = new UserController(
             this.userService,
-            this.loggerService
+            new CreateUserValidator(),
+            new UpdateUserValidator(),
+            new LoginUserValidator(),
+            new PasswordValidator(),
         );
 
         SystemLoggerService.info('User routes loaded');
@@ -40,65 +53,71 @@ export class UserRoutes {
 
         const router = Router();
 
-        router.post(
-            '/register',
-            this.requestLimiterMiddlewares.authLimiter,
-            this.userController.create
+        router.get('/me',
+            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.rolesMiddleware.middleware('readonly'),
+            this.userController.meFwdErr()
         );
 
-        router.post(
-            '/login',
-            this.requestLimiterMiddlewares.authLimiter,
-            this.userController.login
+        router.post('/register',
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.userController.createFwdErr()
         );
 
-        router.post(
-            '/requestEmailValidation',
-            this.requestLimiterMiddlewares.authLimiter,
-            this.rolesMiddlewares.readonly,
-            this.userController.requestEmailValidation
+        router.post('/login',
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.userController.loginFwdErr()
         );
 
-        router.post(
-            '/logout',
-            this.requestLimiterMiddlewares.authLimiter,
-            this.rolesMiddlewares.readonly,
-            this.userController.logout
+        router.post('/logoutFromAll',
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.userController.logoutFromAllFwdErr()
         );
 
-        router.delete(
-            '/:id',
-            this.requestLimiterMiddlewares.apiLimiter,
-            this.rolesMiddlewares.readonly,
-            this.userController.deleteOne
+        router.post('/refresh-token',
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.userController.refreshFwdErr()
         );
 
-        router.patch(
-            '/:id',
-            this.requestLimiterMiddlewares.apiLimiter,
-            this.rolesMiddlewares.readonly,
-            this.userController.updateOne
+        router.post('/requestEmailValidation',
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.rolesMiddleware.middleware('readonly'),
+            this.userController.requestEmailValidationFwdErr()
         );
 
-        router.get(
-            '/confirmEmailValidation/:token',
-            this.requestLimiterMiddlewares.apiLimiter,
-            this.requestLimiterMiddlewares.authLimiter,
-            this.userController.confirmEmailValidation
+        router.post('/logout',
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.rolesMiddleware.middleware('readonly'),
+            this.userController.logoutFwdErr()
+        );        
+
+        router.get('/confirmEmailValidation/:token',
+            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.userController.confirmEmailValidationFwdErr()
         );
 
-        router.get(
-            '/:id',
-            this.requestLimiterMiddlewares.apiLimiter,
-            this.rolesMiddlewares.readonly,
-            this.userController.findOne
+        router.delete('/:id',
+            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.rolesMiddleware.middleware('readonly'),
+            this.userController.deleteOneFwdErr()
         );
 
-        router.get(
-            '/',
-            this.requestLimiterMiddlewares.apiLimiter,
-            this.rolesMiddlewares.readonly,
-            this.userController.findAll
+        router.patch('/:id',
+            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.rolesMiddleware.middleware('readonly'),
+            this.userController.updateOneFwdErr()
+        );
+
+        router.get('/:id',
+            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.rolesMiddleware.middleware('readonly'),
+            this.userController.findOneFwdErr()
+        );
+
+        router.get('/',
+            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.rolesMiddleware.middleware('readonly'),
+            this.userController.findAllFwdErr()
         );
 
         return router;

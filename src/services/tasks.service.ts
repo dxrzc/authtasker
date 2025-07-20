@@ -1,12 +1,23 @@
-import { HydratedDocument, Model, Types } from "mongoose";
-import { CreateTaskValidator } from "@root/rules/validators/models/tasks/create-task.validator";
-import { FORBIDDEN_MESSAGE } from "@root/rules/errors/messages/error.messages";
-import { HttpError } from "@root/rules/errors/http.error";
-import { ITasks } from "@root/interfaces/tasks/task.interface";
-import { LoggerService } from "./logger.service";
-import { UpdateTaskValidator } from "@root/rules/validators/models/tasks/update-task.validator";
-import { UserRole } from "@root/types/user/user-roles.type";
-import { UserService } from "./user.service";
+import { Apis } from '@root/enums/apis.enum';
+import { UserService } from '@root/services/user.service';
+import { Model, Types } from "mongoose";
+import { CacheService } from './cache.service';
+import { LoggerService } from '@root/services/logger.service';
+import { ITasks } from '@root/interfaces/tasks/task.interface';
+import { paginationRules } from '@logic/pagination/pagination-rules';
+import { TaskResponse } from '@root/types/tasks/task-response.type';
+import { TaskDocument } from '@root/types/tasks/task-document.type';
+import { HttpError } from '@root/common/errors/classes/http-error.class';
+import { UserIdentity } from '@root/interfaces/user/user-indentity.interface';
+import { ICacheOptions } from '@root/interfaces/cache/cache-options.interface';
+import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { handleDuplicatedKeyInDb } from '@logic/errors/handle-duplicated-key-in-db';
+import { modificationAccessControl } from '@logic/roles/modification-access-control';
+import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
+import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
+import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
+import { PaginationCacheService } from './pagination-cache.service';
+import { makeTasksByUserPaginationCacheKey } from '@logic/cache/make-tasks-by-users-pag-cache-key';
 
 export class TasksService {
 
@@ -14,150 +25,149 @@ export class TasksService {
         private readonly loggerService: LoggerService,
         private readonly tasksModel: Model<ITasks>,
         private readonly userService: UserService,
+        private readonly cacheService: CacheService<TaskResponse>,
+        private readonly paginationCache: PaginationCacheService,
     ) {}
 
-    private handlePossibleDuplicatedKeyError(error: any): never {
-        if (error.code && error.code === 11000) {
-            const duplicatedKey = Object.keys(error.keyValue);
-            const keyValue = Object.values(error.keyValue);
-            const message = `Task with ${duplicatedKey} "${keyValue}" already exists`;
-            this.loggerService.error(message);
-            throw HttpError.badRequest(message);
-        } else {
-            // rethrowing        
+    private async findTaskInDb(id: string): Promise<TaskDocument> {
+        const taskFound = await this.tasksModel.findById(id).exec();
+        // id is not valid / task not found
+        if (!taskFound) {
+            this.loggerService.error(`Task with id ${id} not found`)
+            throw HttpError.notFound(tasksApiErrors.TASK_NOT_FOUND);
+        }
+        return taskFound;
+    }
+
+    private async authorizeTaskModification(requestUserInfo: UserIdentity, targetTaskId: string): Promise<TaskDocument> {
+        const task = await this.findOne(targetTaskId, { noStore: true }) as TaskDocument;
+        const taskOwner = await this.userService.findOne(task.user.toString(), { noStore: true });
+        const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
+            role: taskOwner.role,
+            id: taskOwner.id
+        });
+        if (!isCurrentUserAuthorized) {
+            this.loggerService.error(`Not authorized to perform this action`);
+            throw HttpError.forbidden(authErrors.FORBIDDEN);
+        }
+        return task;
+    };
+
+    async create(task: CreateTaskValidator, user: string): Promise<TaskDocument> {
+        try {
+            const taskCreated = await this.tasksModel.create({ ...task, user });
+            this.loggerService.info(`Task ${taskCreated.id} created`);
+            return taskCreated;
+
+        } catch (error: any) {
+            if (error.code === 11000)
+                handleDuplicatedKeyInDb(Apis.tasks, error, this.loggerService);
             throw error;
         }
     }
 
-    private async isModificationAuthorized(requestUserInfo: { id: string, role: UserRole }, taskId: string): Promise<HydratedDocument<ITasks> | null> {
-        const task = await this.findOne(taskId);
-
-        const taskCreatorId = task.user.toString();
-        const taskCreator = await this.userService.findOne(taskCreatorId);
-
-        let isTaskCreator = (requestUserInfo.id === taskCreatorId);
-
-        if (isTaskCreator) {
-            return task;
-        } else {
-            // administrators can not modify other administrators tasks
-            if (requestUserInfo.role === 'admin') {
-                return (taskCreator.role === 'admin') ? null : task;
-            }
+    async findOne(id: string, options: ICacheOptions): Promise<TaskDocument | TaskResponse> {
+        // validate id 
+        const validMongoId = Types.ObjectId.isValid(id);
+        if (!validMongoId) {
+            this.loggerService.error(`Invalid mongo id`)
+            throw HttpError.notFound(tasksApiErrors.TASK_NOT_FOUND);
         }
-
-        return null;
-    }
-
-    async create(task: CreateTaskValidator, user: string): Promise<HydratedDocument<ITasks>> {
-        try {
-            const taskCreated = await this.tasksModel.create({
-                ...task,
-                user,
-            });
-
-            this.loggerService.info(`Task ${taskCreated.id} created`);
-            return taskCreated;
-
-        } catch (error) {
-            this.handlePossibleDuplicatedKeyError(error);
+        // bypass read-write in cache
+        if (options.noStore) {
+            this.loggerService.info(`Bypassing cache for task ${id}`);
+            return await this.findTaskInDb(id);
         }
-    }
-
-    async findOne(id: string): Promise<HydratedDocument<ITasks>> {
-        let taskFound;
-
-        if (Types.ObjectId.isValid(id)) {
-            taskFound = await this.tasksModel
-                .findById(id)
-                .exec();
-        }
-
-        // id is not valid / task not found
-        if (!taskFound) {
-            const error = `Task with id ${id} not found`;
-            this.loggerService.error(error)
-            throw HttpError.notFound(error);
-        }
-
+        // check if user is cached
+        const taskInCache = await this.cacheService.get(id);
+        if (taskInCache)
+            return taskInCache;
+        // user is not in cache
+        const taskFound = await this.findTaskInDb(id);
+        await this.cacheService.cache(taskFound);
         return taskFound;
     }
 
-    async findAll(limit: number, page: number): Promise<HydratedDocument<ITasks>[]> {
-        if (limit <= 0) {
-            throw HttpError.badRequest('Limit must be a valid number');
+    async findAll(limit: number, page: number, options: ICacheOptions): Promise<TaskDocument[]> {
+        // validate limit and page
+        const totalDocuments = await this.tasksModel.countDocuments().exec();
+        if (totalDocuments === 0) return [];
+        const offset = paginationRules(limit, page, totalDocuments);
+        // bypass read-write in cache
+        if (options.noStore) {
+            this.loggerService.info(`Bypassing cache for tasks page=${page} limit=${limit}`);
+            return await this.tasksModel
+                .find()
+                .skip(offset)
+                .limit(limit)
+                .sort({ createdAt: 1 })
+                .exec();
         }
-
-        if (limit > 100) {
-            throw HttpError.badRequest('Limit is too large');
-        }
-
-        const totalDocuments = await this.tasksModel
-            .countDocuments()
-            .exec();
-
-        if (totalDocuments === 0) {
-            return [];
-        }
-
-        const totalPages = Math.ceil(totalDocuments / limit);
-
-        if (page <= 0) {
-            throw HttpError.badRequest('Page must be a valid number');
-        }
-
-        if (page > totalPages) {
-            throw HttpError.badRequest('Invalid page');
-        }
-
-        const offset = (page - 1) * limit;
-
-        return await this.tasksModel
+        // check if combination of limit and page is cached
+        const chunk = await this.paginationCache.get<TaskDocument[]>(Apis.tasks, page, limit);
+        if (chunk)
+            return chunk;
+        // data is not cached
+        const data = await this.tasksModel
             .find()
             .skip(offset)
             .limit(limit)
+            .sort({ createdAt: 1 })
             .exec();
+        // cache pagination obtained
+        await this.paginationCache.cache(Apis.tasks, page, limit, data);
+        return data;
     }
 
-    async findAllByUser(userId: string) {
-        const userExists = await this.userService.findOne(userId);
-
-        const tasks = await this.tasksModel
+    async findAllByUser(userId: string, limit: number, page: number, options: ICacheOptions) {
+        // verifies that user exists or throws
+        await this.userService.findOne(userId, { noStore: true });
+        // validate limit and page
+        const totalDocuments = await this.tasksModel.find({ user: userId }).countDocuments().exec();
+        if (totalDocuments === 0) return [];
+        const offset = paginationRules(limit, page, totalDocuments);
+        // mongoose query
+        const allByUserQuery = this.tasksModel
             .find({ user: userId })
+            .skip(offset)
+            .limit(limit)
+            .sort({ createdAt: 1 })
             .exec();
-
+        // bypass read-write in cache
+        if (options.noStore) {
+            this.loggerService.info(`Bypassing cache for tasks by user ${userId}, page=${page} limit=${limit}`)
+            return await allByUserQuery;
+        }
+        // check if combination of limit and page is cached
+        const cacheKey = makeTasksByUserPaginationCacheKey(userId, page, limit);
+        const chunk = await this.paginationCache.getWithKey<TaskDocument[]>(cacheKey);
+        if (chunk)
+            return chunk;
+        // tasks not cached
+        const tasks = await allByUserQuery;
+        // cache pagination obtained
+        await this.paginationCache.cacheWithKey(cacheKey, tasks);
         return tasks;
     }
 
-    async deleteOne(requestUserInfo: { id: string, role: UserRole }, id: string): Promise<void> {
-        const task = await this.isModificationAuthorized(requestUserInfo, id);
-
-        if (!task) {
-            this.loggerService.error(`Not authorized to perform this action`);
-            throw HttpError.forbidden(FORBIDDEN_MESSAGE);
-        }
-
-        await task.deleteOne().exec();
-        this.loggerService.info(`Task ${id} deleted`);
+    async deleteOne(requestUserInfo: UserIdentity, taskId: string): Promise<void> {
+        const targetTask = await this.authorizeTaskModification(requestUserInfo, taskId);
+        await targetTask.deleteOne().exec();
+        this.loggerService.info(`Task ${taskId} deleted`);
     }
 
-    async updateOne(requestUserInfo: { id: string, role: UserRole }, id: string, task: UpdateTaskValidator): Promise<HydratedDocument<ITasks>> {
+    async updateOne(requestUserInfo: UserIdentity, targetTaskId: string, task: UpdateTaskValidator): Promise<TaskDocument> {
+        const targetTask = await this.authorizeTaskModification(requestUserInfo, targetTaskId);
+        // set new properties in document
+        Object.assign(targetTask, task);
         try {
-            const taskToUpdate = await this.isModificationAuthorized(requestUserInfo, id);
-
-            if (!taskToUpdate) {
-                this.loggerService.error(`Not authorized to perform this action`);
-                throw HttpError.forbidden(FORBIDDEN_MESSAGE);
-            }
-
-            Object.assign(taskToUpdate, task);
-            await taskToUpdate.save();
-
-            this.loggerService.info(`Task ${id} updated`);
-            return taskToUpdate;
-
-        } catch (error) {
-            this.handlePossibleDuplicatedKeyError(error);
+            await targetTask.save();
+            this.loggerService.info(`Task ${targetTaskId} updated`);
+            return targetTask;
+        } catch (error: any) {
+            if (error.code === 11000)
+                handleDuplicatedKeyInDb(Apis.tasks, error, this.loggerService);
+            throw error;
         }
     }
 }

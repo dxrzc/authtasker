@@ -1,104 +1,48 @@
 # Authtasker
 Backend application designed to manage user authentication, authorization and task management. Built with NodeJS, Typescript and Express.  
 
-## Features
-- Authentication based on bearer token
-- Role-based access control (readonly, editor, admin)
-- Secure password hashing
-- Email validation for role upgrade (readonly->editor)
-- Health endpoint (only admin)
-- Error handling and validation
-- Logging and monitoring (http and system logs)
-- Unit, integration and e2e tests
-- Seed data (only in development mode)
-- Token blacklisting using redis
-- Input sanitization and validation
-- API rate limiting, max request size and max request timeout to prevent abuse
-- Administrator user creation when the server is started
+## 🚀 Features
+### 🔒 Authentication/Authorization
+- **Bearer token authentication** with short-lived session tokens and long-lived refresh tokens.
+- **Refresh token limiting**: restrict users to a max number of active sessions
+- **Session token blacklisting** using Redis
+- **Role-based access** (`readonly`, `editor`, `admin`)
+- **Email validation for role upgrade** (`readonly`->`editor`)
+- **Secure password hashing**
 
-### Users API
-- Register 
-- Login 
-- Logout 
-- Request email validation
-- Confirm emai validation
-- Update by id
-- Delete by id
-- Find find by id
-- Find all using pagination (limit, page)
+### ⚡ Caching
+- **Revalidation caching**: on-demand data re-check with Redis + DB fallback
+- **Pagination caching** using Redis with hard TTL
 
-### Tasks API
-- Create
-- Update by id
-- Delete by id
-- Find by id
-- Find all using pagination (limit, page)
-- Get all tasks created by user
+### 🐳 Docker
+- **Dockerized** environment for development
+- **Dockerfile** image for production and development
 
-## Build and run
+### 🔑 Secrets
+- **Sensitive secrets** (JWT keys, DB URIs, credentials) are securely loaded via Docker secrets
 
-### Clone the repository
-```
-git clone https://github.com/dxrzc/authtasker.git
-cd authtasker
-```
-### Install dependencies
-```
-npm install
-```
-### Create env files
-Copy the .env.template file and create the following files
-- .env.dev (development)
-- .env.e2e (e2e server for testing)
-- .env.int: (integration tests)
-- .env.prod (production)
+### 🧪 Testing
+- **Unit, integration** and **e2e** tests
 
-### Run in development mode
-```
-npm run dev
-```
+### 🛡 Security
+- **Administrator user creation** when the server is started
+- **Input sanitization and validation** using `class-validator`
+- **API rate limiting** to prevent abuse
 
-### Build production
-```
-npm run build
-```
+### 📊 Monitoring & Maintenance
+- **Health endpoint** (restricted to `admin` users)
+- **Logging and monitoring** of HTTP requests and system events
 
-### Run production
-```
-npm run start
-```
+## 📜 Scripts
 
-## Testing
+| Command            | Description                                      |
+|--------------------|--------------------------------------------------|
+| `npm run dev`      | Starts the development server with Docker Compose using `.env.dev` |
+| `npm run test:unit`| Runs unit tests using Jest                       |
+| `npm run test:int` | Runs integration tests with environment setup    |
+| `npm run build`    | Builds the project using `tsc` with `tsconfig.build.json` |
+| `npm start`        | Runs the built app in production using `dotenvx` and `.env.prod` |
 
-### unit
-```
-npm run test:unit
-```
-
-###  integration
-This command starts the needed docker container as well
-```
-npm run test:int
-```
-
-### e2e
-Run on different consoles
-- Starts the server, it is the same application but using the .env.e2e file
-    ```
-    npm run server:e2e 
-    ```
-- Run the tests
-    ```
-    npm run test:e2e 
-    ```
-
-
-Or run both in parallel. 
-Make sure to disable HTTP_LOGS env , otherwise
-you will see a lot of logs being printed at the same time as the tests results
-```
-npm run test:e2e:parallel
-```
 ## Logs
 #### System logs
 - Logs are saved in filesystem

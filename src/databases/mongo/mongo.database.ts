@@ -1,56 +1,42 @@
 import mongoose from "mongoose";
-import { ConfigService, LoggerService, SystemLoggerService } from "@root/services";
 import { EventManager } from "@root/events/eventManager";
-
-// The MongoDatabase emits the signal "fatalServiceConnectionError"
-// immediately when the mongo service disconnects. It also emits the signal
-// "serviceConnectionResumed" when the connection is reestablished.
+import { ConfigService } from '@root/services/config.service';
+import { LoggerService } from '@root/services/logger.service';
+import { Events } from '@root/common/constants/events.constants';
+import { SystemLoggerService } from '@root/services/system-logger.service';
 
 export class MongoDatabase {
 
-    private firstConnectionSuccess = false;
+    private disconnectedManually = false;
 
     constructor(
         private readonly configService: ConfigService,
         private readonly loggerService: LoggerService,
     ) {
         if (configService.NODE_ENV === 'development' || configService.NODE_ENV === 'e2e') {
-            this.listenConnectionEvents();
             this.listModelEvents('user');
             this.listModelEvents('task')
         }
+        this.connectionEvents();
     }
 
     async connect(): Promise<void> {
         await mongoose.connect(this.configService.MONGO_URI);
+        SystemLoggerService.info(`Connected to mongo database`)
     }
 
     async disconnect(): Promise<void> {
         if (mongoose.connection.readyState === 1) {
             await mongoose.disconnect();
+            this.disconnectedManually = true;
+            SystemLoggerService.warn(`Disconnected from mongo database`)
         }
     }
 
-    listenConnectionEvents(): void {
-        mongoose.connection.on('connected', () => {
-            if (!this.firstConnectionSuccess) {
-                // handles first connection
-                SystemLoggerService.info(`Connected to mongo database`);
-                this.firstConnectionSuccess = true;
-            } else {
-                // handles reconnection
-                SystemLoggerService.info('Reconnected to mongo database, starting server again...');
-                EventManager.emit('serviceConnectionResumed');
-            }
-        });
-
+    connectionEvents() {
         mongoose.connection.on('disconnected', () => {
-            EventManager.emit('fatalServiceConnectionError');
-            SystemLoggerService.error(`Disconnected from mongo database`);
-        });
-
-        mongoose.connection.on('error', (err) => {
-            SystemLoggerService.error(`Mongoose connection error - ${err}`);
+            if (!this.disconnectedManually)
+                EventManager.emit(Events.MONGO_CONNECTION_ERROR)
         });
     }
 
