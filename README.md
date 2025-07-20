@@ -43,27 +43,48 @@ Backend application designed to manage user authentication, authorization and ta
 | `npm run build`    | Builds the project using `tsc` with `tsconfig.build.json` |
 | `npm start`        | Runs the built app in production using `dotenvx` and `.env.prod` |
 
-## Logs
-#### System logs
-- Logs are saved in filesystem
-- Three levels: info, error, warn
+## 📂 Logs
 
-<img width="1054" height="336" alt="Screenshot from 2025-07-20 13-39-23" src="https://github.com/user-attachments/assets/97accb96-d124-485b-8bbf-92c5856d9e30" />
+### 🛠️ System Logs
+- Logs are saved in the filesystem
+- Three levels: `info`, `error`, `warn`
 
-#### Http logs
-- Logs are saved in filesystem
-- Debug messages are disabled in production mode.
-- Debug messages are not saved in filesystem
-- Four levels: info, error, debug, warn
-- Set HTTP_LOGS env to false to disable these logs
+<p align="center">
+  <img width="1054" height="336" alt="System logs screenshot" src="https://github.com/user-attachments/assets/97accb96-d124-485b-8bbf-92c5856d9e30" />
+</p>
 
-<img width="1565" height="204" alt="image" src="https://github.com/user-attachments/assets/c5e4ffd7-0469-46c7-8d43-3d00f024172e" />
+---
+
+### 🌐 HTTP Logs
+- Logs are saved in the filesystem
+- `debug` messages are **disabled in production mode**
+- `debug` messages are **not saved** in the filesystem
+- Four levels: `info`, `error`, `debug`, `warn`
+- Set the `HTTP_LOGS` environment variable to `false` to disable logs on console
+
+<p align="center">
+  <img width="1565" height="204" alt="HTTP logs screenshot" src="https://github.com/user-attachments/assets/c5e4ffd7-0469-46c7-8d43-3d00f024172e" />
+</p>
+
+---
+
+### ✅ Request Completed
+When a request is completed, it's registered in the filesystem as follows:
 
 
-#### Request completed
-When a request is completed is registered in filesystem as follows
-
-![Image](https://github.com/user-attachments/assets/7c37f338-5820-4eb6-8210-d503ca0c0d99)
+```json
+{
+  message: 'Request completed',
+  ip: '::ffff:192.168.65.1',
+  method: 'POST',
+  requestId: '40d86af4-dfd3-4b7b-8476-c8a74d48ec54',
+  responseTime: 80.415644,
+  statusCode: 200,
+  url: '/api/users/login',
+  level: 'info',
+  timestamp: '2025-07-20T17:39:54.272Z'
+}
+```
 
 ## Api documentation
 https://authtaskerdocs.apidog.io
