@@ -338,7 +338,7 @@ export class UserService {
         let userEmail: string;
 
         if (input.username) {
-            const userInDb = await this.userModel.findOne({ username: input.username });
+            const userInDb = await this.userModel.findOne({ username: input.username }).exec();
             if (!userInDb) {
                 this.loggerService.info(`User with username "${input.username}" not found, skipping password recovery`);
                 return;
