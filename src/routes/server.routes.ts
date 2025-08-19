@@ -30,6 +30,7 @@ import { EmailValidationTokenService } from '@root/services/email-validation-tok
 import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
 import { makeTasksCacheKey } from '@logic/cache/make-tasks-cache-key';
 import { PaginationCacheService } from '@root/services/pagination-cache.service';
+import { PasswordRecoveryTokenService } from '@root/services/password-recovery-token.service';
 
 
 export class AppRoutes {
@@ -52,6 +53,7 @@ export class AppRoutes {
     private readonly usersCacheService: CacheService<UserResponse>;
     private readonly tasksCacheService: CacheService<TaskResponse>;
     private readonly paginationCacheService: PaginationCacheService;
+    private readonly passwordRecoverTokenService: PasswordRecoveryTokenService;
 
     constructor(
         private readonly configService: ConfigService,
@@ -117,6 +119,13 @@ export class AppRoutes {
             this.configService
         );
 
+        this.passwordRecoverTokenService = new PasswordRecoveryTokenService(
+            this.configService,
+            this.sessionJwt,
+            this.jwtBlacklistService,
+            this.loggerService,
+        );
+
         // api services
         this.userService = new UserService(
             this.configService,
@@ -129,7 +138,8 @@ export class AppRoutes {
             this.refreshTokenService,
             this.emailValidationTokenService,
             this.usersCacheService,
-            this.paginationCacheService
+            this.paginationCacheService,
+            this.passwordRecoverTokenService,
         );
 
         this.tasksCacheService = new CacheService<TaskResponse>(
@@ -169,7 +179,6 @@ export class AppRoutes {
             this.configService,
             this.userModel,
             this.hashingService,
-            this.loggerService,
             this.rolesMiddleware,
             this.apiLimiterMiddleware,
         );
