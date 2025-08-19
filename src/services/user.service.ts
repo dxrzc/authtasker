@@ -24,6 +24,8 @@ import { LoginUserValidator } from '@root/validators/models/user/login-user.vali
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
 import { PaginationCacheService } from './pagination-cache.service';
+import { ForgotPasswordValidator } from '@root/validators/models/user/forgot-password.validator';
+import { PasswordRecoveryTokenService } from './password-recovery-token.service';
 
 export class UserService {
 
@@ -39,6 +41,7 @@ export class UserService {
         private readonly emailValidationTokenService: EmailValidationTokenService,
         private readonly cacheService: CacheService<UserResponse>,
         private readonly paginationCache: PaginationCacheService,
+        private readonly passwordRecoveryTokenService: PasswordRecoveryTokenService,
     ) {}
 
     private async findUserInDb(id: string): Promise<UserDocument> {
@@ -315,5 +318,35 @@ export class UserService {
                 handleDuplicatedKeyInDb(Apis.users, error, this.loggerService);
             throw error;
         }
+    }
+
+    private async sendForgotPasswordLink(email: string): Promise<void> {
+        const token = this.passwordRecoveryTokenService.generate(email);
+        const link = `${this.configService.WEB_URL}api/users/reset-password?token=${token}`;
+        await this.emailService.sendMail({
+            to: email,
+            subject: 'Password recovery',
+            html: `
+            <h1> Password Recovery </h1>
+            <p> Click below to recover your password </p>
+            <a href= "${link}"> Recover your password ${email} </a>`,
+        });
+        this.loggerService.info(`Password recovery email sent to ${email}`)
+    }
+
+    async requestPasswordRecovery(input: ForgotPasswordValidator): Promise<void> {
+        let userEmail: string;
+
+        if (input.username) {
+            const userInDb = await this.userModel.findOne({ username: input.username });
+            if (!userInDb) {
+                this.loggerService.info(`User with username "${input.username}" not found, skipping password recovery`);
+                return;
+            }
+            userEmail = userInDb.email
+        } else {
+            userEmail = input.email as string;
+        }
+        await this.sendForgotPasswordLink(userEmail);
     }
 }
