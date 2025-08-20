@@ -6,12 +6,12 @@ import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { extractTokenFromResetPasswordLink } from '@integration/utils/extract-token-from-reset-password-link.util';
 
 // https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
 const { mock } = nodemailer as unknown as NodemailerMock;
 
 describe('POST /api/users/forgot-password', () => {
-
     describe('Input sanitization (wiring test)', () => {
         describe('Email is not a valid email address', () => {
             test('return status 400 BAD REQUEST and INVALID_EMAIL error message', async () => {
@@ -22,6 +22,26 @@ describe('POST /api/users/forgot-password', () => {
                 expect(res.body)
                     .toStrictEqual({ error: usersApiErrors.INVALID_EMAIL })
             });
+        });
+    });
+
+    describe('Email successfully sent', () => {
+        test('email should contain a token generated with the secret: JWT_PASSWORD_RECOVERY_PRIVATE_KEY', async () => {
+            // create user            
+            const { userEmail } = await createUser(getRandomRole());
+
+            // forgot-password endpoint
+            await request(testKit.server)
+                .post(testKit.endpoints.forgotPassword)
+                .send({ email: userEmail })
+                .expect(status2xx);
+
+            // obtain token
+            const sentEmails = mock.getSentMail();
+            expect(sentEmails.length).toBe(1);                
+            const tokenInLink = extractTokenFromResetPasswordLink(sentEmails[0])            
+
+            expect(testKit.passwordRecovJwt.verify(tokenInLink)).not.toBeNull()
         });
     });
 
