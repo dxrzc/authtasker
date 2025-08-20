@@ -35,7 +35,7 @@ describe('Logout from all', () => {
                         email: userEmail,
                         password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1)
                     });
-                expect(response.body).toStrictEqual({ error: usersApiErrors.INVALID_PASSWORD_LENGTH });
+                expect(response.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
                 expect(response.statusCode).toBe(expectedStatus);
             });
         });
