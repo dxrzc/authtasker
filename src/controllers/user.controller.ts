@@ -10,6 +10,7 @@ import { UpdateUserValidator } from '@root/validators/models/user/update-user.va
 import { ForgotPasswordValidator } from '@root/validators/models/user/forgot-password.validator';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { ResetPasswordValidator } from '@root/validators/models/user/reset-password.validator';
 
 export class UserController extends BaseUserController {
 
@@ -19,6 +20,7 @@ export class UserController extends BaseUserController {
         private readonly updateUserValidator: UpdateUserValidator,
         private readonly loginUserValidator: LoginUserValidator,
         private readonly forgotPasswordValidator: ForgotPasswordValidator,
+        private readonly resetPasswordValidator: ResetPasswordValidator,
     ) { super(); }
 
     protected readonly me = async (req: Request, res: Response): Promise<void> => {
@@ -108,13 +110,16 @@ export class UserController extends BaseUserController {
         res.status(statusCodes.OK).send('If that account exists, you will receive an email.');
     }
 
-    protected readonly resetPasswordd = async (req: Request, res: Response): Promise<void> => {        
-        console.log(req.body);
-        res.status(200).send('ok');
+    protected readonly resetPasswordd = async (req: Request, res: Response): Promise<void> => {
+        const token = req.body.token;
+        const rawPassword = req.body.newPassword;
+        const { password } = await this.resetPasswordValidator.validate({ password: rawPassword });
+        await this.userService.resetPassword(token, password);
+        res.status(statusCodes.OK).send('Password successfully changed');
     }
 
     protected readonly resetPasswordForm = async (req: Request, res: Response): Promise<void> => {
-        const { token } = req.query;        
+        const { token } = req.query;
         if (!token)
             throw HttpError.badRequest(authErrors.INVALID_TOKEN);
 

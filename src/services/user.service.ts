@@ -320,6 +320,21 @@ export class UserService {
         }
     }
 
+    async resetPassword(token: string, password: string): Promise<void> {
+        const emailInToken = await this.passwordRecoveryTokenService.consume(token);
+        const user = await this.userModel.findOne({ email: emailInToken }).exec();
+        if (!user) {
+            this.loggerService.error(`User ${emailInToken} not found`);
+            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+        }
+        user.password = await this.hashingService.hash(password);
+        await user.save();
+        this.loggerService.info(`User ${user.id} password updated`);
+        // logout all
+        await this.refreshTokenService.revokeAll(user.id);
+        this.loggerService.info(`All refresh tokens of user ${user.id} have been revoked due to password reset`);
+    }
+
     private async sendForgotPasswordLink(email: string): Promise<void> {
         const token = this.passwordRecoveryTokenService.generate(email);
         const link = `${this.configService.WEB_URL}api/users/reset-password?token=${token}`;

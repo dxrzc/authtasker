@@ -14,6 +14,7 @@ import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
+import { ResetPasswordValidator } from '@root/validators/models/user/reset-password.validator';
 import { ForgotPasswordValidator } from '@root/validators/models/user/forgot-password.validator';
 
 export class UserRoutes {
@@ -34,6 +35,7 @@ export class UserRoutes {
             new UpdateUserValidator(),
             new LoginUserValidator(),
             new ForgotPasswordValidator(),
+            new ResetPasswordValidator(),
         );
 
         SystemLoggerService.info('User routes loaded');
