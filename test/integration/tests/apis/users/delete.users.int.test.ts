@@ -72,7 +72,7 @@ describe('DELETE /api/users/:id', () => {
                 testKit.refreshTokenService.generate(userId, { meta: true }),
             ]);
             // 3 tokens in set
-            await expect(testKit.redisService.setSize(makeRefreshTokenIndexKey(userId))).resolves.toBe(3);
+            await expect(testKit.redisService.getSetSize(makeRefreshTokenIndexKey(userId))).resolves.toBe(3);
             // delete user
             await request(testKit.server)
                 .delete(`${testKit.endpoints.usersAPI}/${userId}`)

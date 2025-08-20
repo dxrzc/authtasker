@@ -67,6 +67,7 @@ beforeAll(async () => {
         JWT_REFRESH_EXP_TIME: '10d',
         JWT_REFRESH_PRIVATE_KEY: 'testkey2',
         MAX_REFRESH_TOKENS_PER_USER: 3,
+        JWT_PASSWORD_RECOVERY_EXP_TIME: '20m'
     } as const;
     mongoDatabase = new MongoDatabase(configService as ConfigService, loggerServiceMock);
     await mongoDatabase.connect();

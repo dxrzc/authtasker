@@ -223,7 +223,7 @@ describe('Refresh Token Service', () => {
             // revoke all tokens
             await refreshTokenService.revokeAll(userId);
             // count jtis in set
-            const jtis = await testKit.redisService.setSize(makeRefreshTokenIndexKey(userId));
+            const jtis = await testKit.redisService.getSetSize(makeRefreshTokenIndexKey(userId));
             expect(jtis).toBe(0);
         });
     });
