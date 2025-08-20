@@ -14,7 +14,13 @@ export abstract class BaseUserController extends BaseController {
     protected abstract updateOne(req: Request, res: Response): Promise<void>;
     protected abstract me(req: Request, res: Response): Promise<void>;
     protected abstract refresh(req: Request, res: Response): Promise<void>;
+    protected abstract requestPasswordRecovery(req: Request, res: Response): Promise<void>;
+    protected abstract resetPasswordd(req: Request, res: Response): Promise<void>;
+    protected abstract resetPasswordForm(req: Request, res: Response): Promise<void>;
 
+    readonly resetPasswordFormFwdErr = (): RequestHandler => this.forwardError(this.resetPasswordForm);
+    readonly resetPasswordFwdErr = (): RequestHandler => this.forwardError(this.resetPasswordd);
+    readonly requestPasswordRecoveryFwdErr = (): RequestHandler => this.forwardError(this.requestPasswordRecovery);
     readonly createFwdErr = (): RequestHandler => this.forwardError(this.create);
     readonly loginFwdErr = (): RequestHandler => this.forwardError(this.login);
     readonly logoutFwdErr = (): RequestHandler => this.forwardError(this.logout);

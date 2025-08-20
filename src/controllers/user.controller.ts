@@ -1,14 +1,16 @@
 import { Request, Response } from "express";
 import { UserService } from "@root/services/user.service";
-import { LoggerService } from "@root/services/logger.service";
 import { buildCacheOptions } from '@logic/cache/build-cache-options';
 import { statusCodes } from '@root/common/constants/status-codes.constants';
 import { paginationSettings } from '@root/common/constants/pagination.constants';
 import { BaseUserController } from '@root/common/base/base-user-controller.class';
-import { PasswordValidator } from '@root/validators/models/user/password.validator';
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
+import { ForgotPasswordValidator } from '@root/validators/models/user/forgot-password.validator';
+import { HttpError } from '@root/common/errors/classes/http-error.class';
+import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { ResetPasswordValidator } from '@root/validators/models/user/reset-password.validator';
 
 export class UserController extends BaseUserController {
 
@@ -17,7 +19,8 @@ export class UserController extends BaseUserController {
         private readonly createUserValidator: CreateUserValidator,
         private readonly updateUserValidator: UpdateUserValidator,
         private readonly loginUserValidator: LoginUserValidator,
-        private readonly passwordValidator: PasswordValidator,
+        private readonly forgotPasswordValidator: ForgotPasswordValidator,
+        private readonly resetPasswordValidator: ResetPasswordValidator,
     ) { super(); }
 
     protected readonly me = async (req: Request, res: Response): Promise<void> => {
@@ -52,7 +55,7 @@ export class UserController extends BaseUserController {
         res.status(statusCodes.NO_CONTENT).end();
     }
 
-    protected readonly logoutFromAll = async (req: Request, res: Response) : Promise<void> => {        
+    protected readonly logoutFromAll = async (req: Request, res: Response): Promise<void> => {
         const sanitizedCredentials = await this.loginUserValidator.validate(req.body);
         await this.userService.logoutFromAll(sanitizedCredentials);
         res.status(statusCodes.NO_CONTENT).end();
@@ -99,5 +102,40 @@ export class UserController extends BaseUserController {
         const requestUserInfo = this.getUserRequestInfo(req, res);
         const updated = await this.userService.updateOne(requestUserInfo, userIdToUpdate, validUpdate);
         res.status(statusCodes.OK).json(updated);
+    }
+
+    protected readonly requestPasswordRecovery = async (req: Request, res: Response): Promise<void> => {
+        const nameOrEmail = await this.forgotPasswordValidator.validate(req.body);
+        await this.userService.requestPasswordRecovery(nameOrEmail);
+        res.status(statusCodes.OK).send('If that account exists, you will receive an email.');
+    }
+
+    protected readonly resetPasswordd = async (req: Request, res: Response): Promise<void> => {
+        const token = req.body.token;
+        const rawPassword = req.body.newPassword;
+        const { password } = await this.resetPasswordValidator.validate({ password: rawPassword });
+        await this.userService.resetPassword(password, token);
+        res.status(statusCodes.OK).send('Password successfully changed');
+    }
+
+    protected readonly resetPasswordForm = async (req: Request, res: Response): Promise<void> => {
+        const { token } = req.query;
+        if (!token)
+            throw HttpError.badRequest(authErrors.INVALID_TOKEN);
+
+        res.send(`
+          <html>
+            <body>
+              <h2>Reset your password</h2>
+              <form method="POST" action="/api/users/reset-password">
+                <input type="hidden" name="token" value="${token}" />
+                <label>New Password:</label>
+                <input type="password" name="newPassword" required />
+                <button type="submit">Reset Password</button>
+              </form>
+            </body>
+          </html>
+        `
+        );
     }
 }

@@ -22,6 +22,7 @@ import * as UserModelLoader from '@root/databases/mongo/models/user.model.load';
 import * as TasksModelLoader from '@root/databases/mongo/models/tasks.model.load';
 import { ErrorHandlerMiddleware } from '@root/middlewares/error-handler.middleware';
 import { RefreshTokenService } from '@root/services/refresh-token.service';
+import { PasswordRecoveryTokenService } from '@root/services/password-recovery-token.service';
 
 let mongoMemoryServer: MongoMemoryServer;
 let mongoDatabase: MongoDatabase;
@@ -67,6 +68,8 @@ beforeAll(async () => {
         JWT_REFRESH_EXP_TIME: '10d',
         JWT_REFRESH_PRIVATE_KEY: 'testkey2',
         MAX_REFRESH_TOKENS_PER_USER: 3,
+        JWT_PASSWORD_RECOVERY_EXP_TIME: '20m',
+        JWT_PASSWORD_RECOVERY_PRIVATE_KEY: 'passwordRecov123Key'
     } as const;
     mongoDatabase = new MongoDatabase(configService as ConfigService, loggerServiceMock);
     await mongoDatabase.connect();
@@ -90,6 +93,8 @@ beforeAll(async () => {
     testKit.redisInstance = redisInstance;
     testKit.sessionJwt = new JwtService(configService.JWT_PRIVATE_KEY);
     testKit.refreshJwt = new JwtService(configService.JWT_REFRESH_PRIVATE_KEY);
+    testKit.passwordRecovJwt = new JwtService(configService.JWT_PASSWORD_RECOVERY_PRIVATE_KEY);
+
     testKit.jwtBlacklistService = new JwtBlackListService(redisService);
     testKit.hashingService = new HashingService(configService.BCRYPT_SALT_ROUNDS);
     testKit.refreshTokenService = new RefreshTokenService(
@@ -98,7 +103,13 @@ beforeAll(async () => {
         loggerServiceMock,
         redisService,
         userModel,
-    )
+    );
+    testKit.passwordRecoveryTokenService = new PasswordRecoveryTokenService(
+        configService as ConfigService,
+        testKit.passwordRecovJwt,
+        testKit.jwtBlacklistService,
+        testKit.loggerServiceMock
+    );
 
     // data generators
     const userDataGenerator = new UserDataGenerator();

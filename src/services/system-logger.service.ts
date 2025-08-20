@@ -13,7 +13,7 @@ export class SystemLoggerService {
                 new winston.transports.Console({
                     format: winston.format.combine(
                         winston.format.timestamp(),
-                        winston.format.printf(({ level, message, timestamp }) => {
+                        winston.format.printf(({ level, message, timestamp, stackTrace }) => {
                             const colorizer = winston.format.colorize().colorize;
 
                             const coloredLevel = colorizer(level, `[${(level as string).toUpperCase()}]`);
@@ -22,6 +22,9 @@ export class SystemLoggerService {
 
                             const coloredMessage = colorizer(level, finalMessage);
 
+                            if (stackTrace)
+                                return `${coloredTimestamp} ${coloredLevel}: ${coloredMessage} ${stackTrace}`;
+                            
                             return `${coloredTimestamp} ${coloredLevel}: ${coloredMessage}`;
                         }),
                     )
