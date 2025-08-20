@@ -12,8 +12,9 @@ import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
 import { UserDataGenerator } from '@root/seed/generators/user.generator';
 import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
 import { RefreshTokenService } from '@root/services/refresh-token.service';
+import { PasswordRecoveryTokenService } from '@root/services/password-recovery-token.service';
 
-export interface ITestKit {    
+export interface ITestKit {
 
     configService: ConfigService;
 
@@ -31,9 +32,12 @@ export interface ITestKit {
     loggerServiceMock: LoggerService;
     sessionJwt: JwtService;
     refreshJwt: JwtService;
+    passwordRecovJwt: JwtService;
     jwtBlacklistService: JwtBlackListService;
     hashingService: HashingService;
     refreshTokenService: RefreshTokenService;
+
+    passwordRecoveryTokenService: PasswordRecoveryTokenService;
 
     endpoints: {
         seedUsers: string;
@@ -47,6 +51,9 @@ export interface ITestKit {
         logoutFromAll: string;
         requestEmailValidation: string;
         confirmEmailValidation: string;
+
+        resetPassword: string;
+        forgotPassword: string;
 
         tasksAPI: string;
         createTask: string;

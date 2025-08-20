@@ -8,9 +8,11 @@ export class ConfigService {
     public readonly PORT: number;
     public readonly BCRYPT_SALT_ROUNDS: number;
     public readonly JWT_SESSION_EXP_TIME: string;
+    public readonly JWT_PASSWORD_RECOVERY_EXP_TIME: string;
     public readonly JWT_EMAIL_VALIDATION_EXP_TIME: string;
     public readonly JWT_REFRESH_EXP_TIME: string;
     public readonly JWT_PRIVATE_KEY: string;
+    public readonly JWT_PASSWORD_RECOVERY_PRIVATE_KEY: string;
     public readonly JWT_REFRESH_PRIVATE_KEY: string;
     public readonly MAX_REFRESH_TOKENS_PER_USER: number;
     public readonly MAIL_SERVICE_HOST: string;
@@ -48,9 +50,11 @@ export class ConfigService {
         this.JWT_REFRESH_EXP_TIME = env.get('JWT_REFRESH_EXP_TIME').required().asString();
         this.JWT_SESSION_EXP_TIME = env.get('JWT_SESSION_EXP_TIME').required().asString();
         this.JWT_EMAIL_VALIDATION_EXP_TIME = env.get('JWT_EMAIL_VALIDATION_EXP_TIME').required().asString();
+        this.JWT_PASSWORD_RECOVERY_EXP_TIME = env.get('JWT_PASSWORD_RECOVERY_EXP_TIME').required().asString();
         this.MAX_REFRESH_TOKENS_PER_USER = env.get('MAX_REFRESH_TOKENS_PER_USER').required().asIntPositive();
         this.JWT_PRIVATE_KEY = readFileSync('/run/secrets/jwt-private-key', 'utf-8');
         this.JWT_REFRESH_PRIVATE_KEY = readFileSync('/run/secrets/jwt-refresh-private-key', 'utf-8');
+        this.JWT_PASSWORD_RECOVERY_PRIVATE_KEY = readFileSync('/run/secrets/jwt-password-recovery-private-key', 'utf-8');
 
         // email-service        
         this.MAIL_SERVICE_HOST = env.get('MAIL_SERVICE_HOST').required().asString();
@@ -61,7 +65,7 @@ export class ConfigService {
         // server admin
         this.ADMIN_NAME = env.get('ADMIN_NAME').required().asString();
         this.ADMIN_EMAIL = env.get('ADMIN_EMAIL').required().asEmailString();
-        this.ADMIN_PASSWORD = readFileSync('/run/secrets/admin-password', 'utf-8');        
+        this.ADMIN_PASSWORD = readFileSync('/run/secrets/admin-password', 'utf-8');
 
         // cache
         this.CACHE_HARD_TTL_SECONDS = env.get('CACHE_HARD_TTL_SECONDS').required().asInt();

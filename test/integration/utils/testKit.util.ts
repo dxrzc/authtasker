@@ -12,6 +12,8 @@ export const testKit: ITestKit = {
         logoutFromAll: '/api/users/logoutFromAll',
         requestEmailValidation: `/api/users/requestEmailValidation`,
         confirmEmailValidation: `/api/users/confirmEmailValidation`,
+        forgotPassword: `/api/users/forgot-password`,
+        resetPassword: `/api/users/reset-password`,
         tasksAPI: '/api/tasks',
         createTask: `/api/tasks/create`,
         findAllTasksByUser: '/api/tasks/allByUser',

@@ -14,7 +14,8 @@ import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
 import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
 import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
 import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
-import { PasswordValidator } from '@root/validators/models/user/password.validator';
+import { ResetPasswordValidator } from '@root/validators/models/user/reset-password.validator';
+import { ForgotPasswordValidator } from '@root/validators/models/user/forgot-password.validator';
 
 export class UserRoutes {
 
@@ -25,8 +26,7 @@ export class UserRoutes {
         private readonly configService: ConfigService,
         private readonly userModel: Model<IUser>,
         private readonly hashingService: HashingService,
-        private readonly loggerService: LoggerService,
-        private readonly rolesMiddleware: RolesMiddleware,        
+        private readonly rolesMiddleware: RolesMiddleware,
         private readonly apiLimiterMiddleware: ApiLimiterMiddleware,
     ) {
         this.userController = new UserController(
@@ -34,7 +34,8 @@ export class UserRoutes {
             new CreateUserValidator(),
             new UpdateUserValidator(),
             new LoginUserValidator(),
-            new PasswordValidator(),
+            new ForgotPasswordValidator(),
+            new ResetPasswordValidator(),
         );
 
         SystemLoggerService.info('User routes loaded');
@@ -52,6 +53,11 @@ export class UserRoutes {
         await this.initialData();
 
         const router = Router();
+
+        router.get('/reset-password',
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.userController.resetPasswordFormFwdErr()
+        );
 
         router.get('/me',
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
@@ -118,6 +124,16 @@ export class UserRoutes {
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
             this.rolesMiddleware.middleware('readonly'),
             this.userController.findAllFwdErr()
+        );
+
+        router.post('/forgot-password',
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.userController.requestPasswordRecoveryFwdErr()
+        );
+
+        router.post('/reset-password',
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.userController.resetPasswordFwdErr()        
         );
 
         return router;

@@ -5,13 +5,14 @@ import { validationOptionsConfig } from '@root/validators/config/validation.conf
 import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
 import { InvalidInputError } from '@root/common/errors/classes/invalid-input-error.class';
 
-export class PasswordValidator extends PickType(CreateUserValidator, ['password'] as const) {
-    async validate(password: string): Promise<string> {
-        const data = new PasswordValidator();
-        data.password = password;
+export class ResetPasswordValidator extends PickType(CreateUserValidator, ['password'] as const) {
+    async validate(input: { password: string } = {} as any): Promise<ResetPasswordValidator> {
+        const data = new ResetPasswordValidator();
+        data.password = input.password;
         const errors = await validate(data, validationOptionsConfig);
         if (errors.length > 0)
             throw new InvalidInputError(returnFirstError(errors));
-        return password;
+
+        return data;
     }
 }

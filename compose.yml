@@ -20,6 +20,7 @@ services:
       - mongo-uri
       - admin-password
       - mail-service-pass
+      - jwt-password-recovery-private-key
     environment:           
       HTTP_LOGS: ${HTTP_LOGS}
       WEB_URL: ${WEB_URL}
@@ -32,6 +33,7 @@ services:
       BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS}
       JWT_SESSION_EXP_TIME: ${JWT_SESSION_EXP_TIME}
       JWT_EMAIL_VALIDATION_EXP_TIME: ${JWT_EMAIL_VALIDATION_EXP_TIME}
+      JWT_PASSWORD_RECOVERY_EXP_TIME: ${JWT_PASSWORD_RECOVERY_EXP_TIME}
       JWT_REFRESH_EXP_TIME: ${JWT_REFRESH_EXP_TIME}
       MAX_REFRESH_TOKENS_PER_USER: ${MAX_REFRESH_TOKENS_PER_USER}
       MAIL_SERVICE_HOST: ${MAIL_SERVICE_HOST}
@@ -78,6 +80,8 @@ secrets:
     environment: ADMIN_PASSWORD
   mail-service-pass:
     environment: MAIL_SERVICE_PASS
+  jwt-password-recovery-private-key:
+    environment: JWT_PASSWORD_RECOVERY_PRIVATE_KEY
 
 volumes:
   mongo_data:

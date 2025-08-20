@@ -16,7 +16,8 @@ export class Server {
         private readonly errorHandlerMiddleware: ErrorHandlerMiddleware,
     ) {
         this.app.use(express.json({ limit: '10kb' }));
-        this.app.use(helmet());    
+        this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(helmet());
         this.app.use(this.routes);
         this.app.use(this.errorHandlerMiddleware.middleware());
     }

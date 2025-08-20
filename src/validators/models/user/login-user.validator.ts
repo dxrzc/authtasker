@@ -5,6 +5,7 @@ import { validationOptionsConfig } from '@root/validators/config/validation.conf
 import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
 import { InvalidInputError } from '@root/common/errors/classes/invalid-input-error.class';
 
+// TODO: don't show "Invalid password length message"
 export class LoginUserValidator extends PickType(CreateUserValidator, ['email', 'password'] as const) {
 
     async validate(data: object): Promise<LoginUserValidator> {
