@@ -37,7 +37,7 @@ export interface ITestKit {
 
     endpoints: {
         seedUsers: string;
-        seedTasks: string;
+        seedTasks: string;        
 
         usersAPI: string;
         myProfile: string;
@@ -47,6 +47,8 @@ export interface ITestKit {
         logoutFromAll: string;
         requestEmailValidation: string;
         confirmEmailValidation: string;
+
+        forgotPassword: string;
 
         tasksAPI: string;
         createTask: string;
