@@ -20,10 +20,10 @@ describe('EmailValidationTokenService', () => {
     beforeEach(() => {
         // envs
         configService = {
-            JWT_PRIVATE_KEY: 'test-123',
+            JWT_SESSION_PRIVATE_KEY: 'test-123',
             JWT_EMAIL_VALIDATION_EXP_TIME: '5m',
         }
-        jwtService = new JwtService(configService.JWT_PRIVATE_KEY!);
+        jwtService = new JwtService(configService.JWT_SESSION_PRIVATE_KEY!);
 
         // mocks
         jwtBlacklistService = mock<JwtBlackListService>();

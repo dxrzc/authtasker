@@ -11,7 +11,8 @@ export class ConfigService {
     public readonly JWT_PASSWORD_RECOVERY_EXP_TIME: string;
     public readonly JWT_EMAIL_VALIDATION_EXP_TIME: string;
     public readonly JWT_REFRESH_EXP_TIME: string;
-    public readonly JWT_PRIVATE_KEY: string;
+    public readonly JWT_SESSION_PRIVATE_KEY: string;
+    public readonly JWT_EMAIL_VALIDATION_PRIVATE_KEY: string;
     public readonly JWT_PASSWORD_RECOVERY_PRIVATE_KEY: string;
     public readonly JWT_REFRESH_PRIVATE_KEY: string;
     public readonly MAX_REFRESH_TOKENS_PER_USER: number;
@@ -52,7 +53,8 @@ export class ConfigService {
         this.JWT_EMAIL_VALIDATION_EXP_TIME = env.get('JWT_EMAIL_VALIDATION_EXP_TIME').required().asString();
         this.JWT_PASSWORD_RECOVERY_EXP_TIME = env.get('JWT_PASSWORD_RECOVERY_EXP_TIME').required().asString();
         this.MAX_REFRESH_TOKENS_PER_USER = env.get('MAX_REFRESH_TOKENS_PER_USER').required().asIntPositive();
-        this.JWT_PRIVATE_KEY = readFileSync('/run/secrets/jwt-private-key', 'utf-8');
+        this.JWT_SESSION_PRIVATE_KEY = readFileSync('/run/secrets/jwt-session-private-key', 'utf-8');
+        this.JWT_EMAIL_VALIDATION_PRIVATE_KEY = readFileSync('/run/secrets/jwt-email-validation-private-key', 'utf-8');
         this.JWT_REFRESH_PRIVATE_KEY = readFileSync('/run/secrets/jwt-refresh-private-key', 'utf-8');
         this.JWT_PASSWORD_RECOVERY_PRIVATE_KEY = readFileSync('/run/secrets/jwt-password-recovery-private-key', 'utf-8');
 

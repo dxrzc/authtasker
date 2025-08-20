@@ -13,13 +13,14 @@ services:
     depends_on:
       - mongo-db
       - redis-db    
-    secrets:
-      - jwt-private-key
+    secrets:      
       - jwt-refresh-private-key
       - redis-uri
       - mongo-uri
       - admin-password
       - mail-service-pass
+      - jwt-session-private-key
+      - jwt-email-validation-private-key
       - jwt-password-recovery-private-key
     environment:           
       HTTP_LOGS: ${HTTP_LOGS}
@@ -68,8 +69,12 @@ services:
       - ${REDIS_PASSWORD}
 
 secrets:
-  jwt-private-key:
-    environment: JWT_PRIVATE_KEY 
+  jwt-session-private-key:
+    environment: JWT_SESSION_PRIVATE_KEY 
+  jwt-email-validation-private-key:
+    environment: JWT_EMAIL_VALIDATION_PRIVATE_KEY    
+  jwt-password-recovery-private-key:
+    environment: JWT_PASSWORD_RECOVERY_PRIVATE_KEY
   jwt-refresh-private-key:
     environment: JWT_REFRESH_PRIVATE_KEY
   redis-uri:
@@ -79,9 +84,7 @@ secrets:
   admin-password: 
     environment: ADMIN_PASSWORD
   mail-service-pass:
-    environment: MAIL_SERVICE_PASS
-  jwt-password-recovery-private-key:
-    environment: JWT_PASSWORD_RECOVERY_PRIVATE_KEY
+    environment: MAIL_SERVICE_PASS    
 
 volumes:
   mongo_data:
