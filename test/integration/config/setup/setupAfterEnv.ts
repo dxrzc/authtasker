@@ -22,6 +22,7 @@ import * as UserModelLoader from '@root/databases/mongo/models/user.model.load';
 import * as TasksModelLoader from '@root/databases/mongo/models/tasks.model.load';
 import { ErrorHandlerMiddleware } from '@root/middlewares/error-handler.middleware';
 import { RefreshTokenService } from '@root/services/refresh-token.service';
+import { PasswordRecoveryTokenService } from '@root/services/password-recovery-token.service';
 
 let mongoMemoryServer: MongoMemoryServer;
 let mongoDatabase: MongoDatabase;
@@ -102,7 +103,13 @@ beforeAll(async () => {
         loggerServiceMock,
         redisService,
         userModel,
-    )
+    );
+    testKit.passwordRecoveryTokenService = new PasswordRecoveryTokenService(
+        configService as ConfigService,
+        testKit.passwordRecovJwt,
+        testKit.jwtBlacklistService,
+        testKit.loggerServiceMock
+    );
 
     // data generators
     const userDataGenerator = new UserDataGenerator();

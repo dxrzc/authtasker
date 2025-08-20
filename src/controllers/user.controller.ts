@@ -114,7 +114,7 @@ export class UserController extends BaseUserController {
         const token = req.body.token;
         const rawPassword = req.body.newPassword;
         const { password } = await this.resetPasswordValidator.validate({ password: rawPassword });
-        await this.userService.resetPassword(token, password);
+        await this.userService.resetPassword(password, token);
         res.status(statusCodes.OK).send('Password successfully changed');
     }
 

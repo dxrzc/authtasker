@@ -320,14 +320,18 @@ export class UserService {
         }
     }
 
-    async resetPassword(token: string, password: string): Promise<void> {
+    async resetPassword(newPassword: string, token?: string, ): Promise<void> {
+        if (!token) {
+            this.loggerService.error(`Recovery password token not provided`);
+            throw HttpError.badRequest(authErrors.INVALID_TOKEN);
+        }
         const emailInToken = await this.passwordRecoveryTokenService.consume(token);
         const user = await this.userModel.findOne({ email: emailInToken }).exec();
         if (!user) {
             this.loggerService.error(`User ${emailInToken} not found`);
             throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
         }
-        user.password = await this.hashingService.hash(password);
+        user.password = await this.hashingService.hash(newPassword);
         await user.save();
         this.loggerService.info(`User ${user.id} password updated`);
         // logout all
