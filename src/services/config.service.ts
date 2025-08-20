@@ -12,6 +12,7 @@ export class ConfigService {
     public readonly JWT_EMAIL_VALIDATION_EXP_TIME: string;
     public readonly JWT_REFRESH_EXP_TIME: string;
     public readonly JWT_PRIVATE_KEY: string;
+    public readonly JWT_PASSWORD_RECOVERY_PRIVATE_KEY: string;
     public readonly JWT_REFRESH_PRIVATE_KEY: string;
     public readonly MAX_REFRESH_TOKENS_PER_USER: number;
     public readonly MAIL_SERVICE_HOST: string;
@@ -53,6 +54,7 @@ export class ConfigService {
         this.MAX_REFRESH_TOKENS_PER_USER = env.get('MAX_REFRESH_TOKENS_PER_USER').required().asIntPositive();
         this.JWT_PRIVATE_KEY = readFileSync('/run/secrets/jwt-private-key', 'utf-8');
         this.JWT_REFRESH_PRIVATE_KEY = readFileSync('/run/secrets/jwt-refresh-private-key', 'utf-8');
+        this.JWT_PASSWORD_RECOVERY_PRIVATE_KEY = readFileSync('/run/secrets/jwt-password-recovery-private-key', 'utf-8');
 
         // email-service        
         this.MAIL_SERVICE_HOST = env.get('MAIL_SERVICE_HOST').required().asString();

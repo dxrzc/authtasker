@@ -34,9 +34,7 @@ import { PasswordRecoveryTokenService } from '@root/services/password-recovery-t
 
 
 export class AppRoutes {
-
-    private readonly sessionJwt: JwtService;
-    private readonly refreshJwt: JwtService;
+    
     private readonly hashingService: HashingService;
     private readonly emailService?: EmailService;
     private readonly userModel: Model<IUser>;
@@ -65,28 +63,25 @@ export class AppRoutes {
         this.userModel = loadUserModel(this.configService);
         this.tasksModel = loadTasksModel(this.configService);
 
-        // services
-        this.sessionJwt = new JwtService(this.configService.JWT_PRIVATE_KEY);
-        this.refreshJwt = new JwtService(this.configService.JWT_REFRESH_PRIVATE_KEY);
         this.hashingService = new HashingService(this.configService.BCRYPT_SALT_ROUNDS);
         this.jwtBlacklistService = new JwtBlackListService(this.redisService);
         this.refreshTokenService = new RefreshTokenService(
             this.configService,
-            this.refreshJwt,
+            new JwtService(this.configService.JWT_REFRESH_PRIVATE_KEY),
             this.loggerService,
             this.redisService,
             this.userModel
         );
         this.sessionTokenService = new SessionTokenService(
             this.configService,
-            this.sessionJwt,
+            new JwtService(this.configService.JWT_PRIVATE_KEY), 
             this.jwtBlacklistService,
             this.loggerService,
             this.userModel,
         );
         this.emailValidationTokenService = new EmailValidationTokenService(
             this.configService,
-            this.sessionJwt,
+            new JwtService(this.configService.JWT_PRIVATE_KEY),  // TODO: use different key
             this.jwtBlacklistService,
             this.loggerService,
         );
@@ -121,7 +116,7 @@ export class AppRoutes {
 
         this.passwordRecoverTokenService = new PasswordRecoveryTokenService(
             this.configService,
-            this.sessionJwt,
+            new JwtService(this.configService.JWT_PASSWORD_RECOVERY_PRIVATE_KEY),
             this.jwtBlacklistService,
             this.loggerService,
         );
@@ -187,7 +182,7 @@ export class AppRoutes {
 
     private async buildTasksRoutes(): Promise<Router> {
         const tasksRoutes = new TasksRoutes(
-            this.tasksService,            
+            this.tasksService,
             this.rolesMiddleware,
             this.apiLimiterMiddleware,
         );
