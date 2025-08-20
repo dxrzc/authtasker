@@ -9,6 +9,7 @@ Backend application designed to manage user authentication, authorization and ta
 - **Role-based access** (`readonly`, `editor`, `admin`)
 - **Email validation for role upgrade** (`readonly`->`editor`)
 - **Secure password hashing**
+- **Forgot-password flow**: send password recovery emails with time-limited reset tokens
 
 ### ⚡ Caching
 - **Revalidation caching**: on-demand data re-check with Redis + DB fallback
