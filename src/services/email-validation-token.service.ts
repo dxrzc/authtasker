@@ -1,9 +1,7 @@
-import { Model } from 'mongoose';
 import { JwtService } from './jwt.service';
 import { ConfigService } from './config.service';
 import { LoggerService } from './logger.service';
 import { JwtTypes } from '@root/enums/jwt-types.enum';
-import { IUser } from '@root/interfaces/user/user.interface';
 import { JwtBlackListService } from './jwt-blacklist.service';
 import { calculateTokenTTL } from '@logic/token/calculate-token-ttl';
 import { HttpError } from '@root/common/errors/classes/http-error.class';
