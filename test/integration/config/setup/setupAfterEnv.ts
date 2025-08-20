@@ -59,7 +59,8 @@ beforeAll(async () => {
         BCRYPT_SALT_ROUNDS: 1,
         JWT_SESSION_EXP_TIME: '30m',
         JWT_EMAIL_VALIDATION_EXP_TIME: '5m',
-        JWT_PRIVATE_KEY: 'testkey',
+        JWT_SESSION_PRIVATE_KEY: 'testkey',
+        JWT_EMAIL_VALIDATION_PRIVATE_KEY: 'emailValidationKey123Supersecret',
         USERS_API_CACHE_TTL_SECONDS: 60,
         TASKS_API_CACHE_TTL_SECONDS: 60,
         CACHE_HARD_TTL_SECONDS: 600,
@@ -91,8 +92,10 @@ beforeAll(async () => {
     testKit.configService = configService as ConfigService;
     testKit.redisService = redisService;
     testKit.redisInstance = redisInstance;
-    testKit.sessionJwt = new JwtService(configService.JWT_PRIVATE_KEY);
+    testKit.sessionJwt = new JwtService(configService.JWT_SESSION_PRIVATE_KEY);
     testKit.refreshJwt = new JwtService(configService.JWT_REFRESH_PRIVATE_KEY);
+    testKit.emailValidationJwt = new JwtService(configService.JWT_EMAIL_VALIDATION_PRIVATE_KEY);
+
     testKit.passwordRecovJwt = new JwtService(configService.JWT_PASSWORD_RECOVERY_PRIVATE_KEY);
 
     testKit.jwtBlacklistService = new JwtBlackListService(redisService);

@@ -1,6 +1,7 @@
 import request from 'supertest';
 import * as nodemailer from "nodemailer";
 import { NodemailerMock } from "nodemailer-mock";
+import { JwtTypes } from '@root/enums/jwt-types.enum';
 import { JwtService } from '@root/services/jwt.service';
 import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
@@ -9,9 +10,6 @@ import { getTokenFromMail } from '@integration/utils/getTokenFromMail.util';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
 import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
 import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
-import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
-import { makeEmailValidationBlacklistKey } from '@logic/token/make-email-validation-token-blacklist-key';
-import { JwtTypes } from '@root/enums/jwt-types.enum';
 
 // https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
 const { mock } = nodemailer as unknown as NodemailerMock;
@@ -24,14 +22,14 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // generate token
             const { userEmail } = await createUser('admin');
-            const sessionToken = testKit.sessionJwt.generate('10m', {
+            const { token: emailValidationToken } = testKit.emailValidationJwt.generate('10m', {
                 purpose: tokenPurposes.SESSION,
                 email: userEmail,
             });
 
             // Confirm email validation using an invalid token
             const response = await request(testKit.server)
-                .get(`${testKit.endpoints.confirmEmailValidation}/${sessionToken}`);
+                .get(`${testKit.endpoints.confirmEmailValidation}/${emailValidationToken}`);
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
@@ -43,14 +41,14 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // generate token
             const { userEmail } = await createUser('admin');
-            const sessionToken = new JwtService('_').generate('10m', {
+            const {token: emailValidationToken} = new JwtService('_').generate('10m', {
                 purpose: tokenPurposes.EMAIL_VALIDATION,
                 email: userEmail,
             });
 
             // confirm email validation using a strange token
             const response = await request(testKit.server)
-                .get(`${testKit.endpoints.confirmEmailValidation}/${sessionToken}`);
+                .get(`${testKit.endpoints.confirmEmailValidation}/${emailValidationToken}`);
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
@@ -62,11 +60,11 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // generate token
             const { userEmail } = await createUser('editor');
-            const { token: sessionToken } = testKit.sessionJwt.generate('10m', {
+            const { token: emailValidationToken } = testKit.emailValidationJwt.generate('10m', {
                 purpose: tokenPurposes.EMAIL_VALIDATION,
                 email: userEmail,
             });
-            const jti = testKit.sessionJwt.verify(sessionToken)?.jti!;
+            const jti = testKit.emailValidationJwt.verify(emailValidationToken)?.jti!;
             expect(jti).not.toBeNull();
 
             // blacklist token
@@ -74,7 +72,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // confirm email validation using a blacklisted token
             const response = await request(testKit.server)
-                .get(`${testKit.endpoints.confirmEmailValidation}/${sessionToken}`);
+                .get(`${testKit.endpoints.confirmEmailValidation}/${emailValidationToken}`);
 
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
             expect(response.statusCode).toBe(expectedStatus);
@@ -140,7 +138,7 @@ describe('POST /api/users/confirmEmailValidation/:token', () => {
 
             // Obtain token sent in url
             const tokenInEmail = getTokenFromMail(mock.getSentMail().at(0)?.html as string);
-            const payload = testKit.sessionJwt.verify(tokenInEmail);
+            const payload = testKit.emailValidationJwt.verify(tokenInEmail);
             const jti = payload!.jti;
 
             // Confirm email validation

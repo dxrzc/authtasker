@@ -32,6 +32,7 @@ export interface ITestKit {
     loggerServiceMock: LoggerService;
     sessionJwt: JwtService;
     refreshJwt: JwtService;
+    emailValidationJwt: JwtService;
     passwordRecovJwt: JwtService;
     jwtBlacklistService: JwtBlackListService;
     hashingService: HashingService;

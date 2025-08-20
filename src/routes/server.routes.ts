@@ -72,19 +72,27 @@ export class AppRoutes {
             this.redisService,
             this.userModel
         );
+        
         this.sessionTokenService = new SessionTokenService(
             this.configService,
-            new JwtService(this.configService.JWT_PRIVATE_KEY), 
+            new JwtService(this.configService. JWT_SESSION_PRIVATE_KEY), 
             this.jwtBlacklistService,
             this.loggerService,
             this.userModel,
         );
         this.emailValidationTokenService = new EmailValidationTokenService(
             this.configService,
-            new JwtService(this.configService.JWT_PRIVATE_KEY),  // TODO: use different key
+            new JwtService(this.configService.JWT_EMAIL_VALIDATION_PRIVATE_KEY), 
             this.jwtBlacklistService,
             this.loggerService,
         );
+        this.passwordRecoverTokenService = new PasswordRecoveryTokenService(
+            this.configService,
+            new JwtService(this.configService.JWT_PASSWORD_RECOVERY_PRIVATE_KEY),
+            this.jwtBlacklistService,
+            this.loggerService,
+        );
+
         this.emailService = new EmailService({
             host: this.configService.MAIL_SERVICE_HOST,
             port: this.configService.MAIL_SERVICE_PORT,
@@ -113,14 +121,6 @@ export class AppRoutes {
             this.redisService,
             this.configService
         );
-
-        this.passwordRecoverTokenService = new PasswordRecoveryTokenService(
-            this.configService,
-            new JwtService(this.configService.JWT_PASSWORD_RECOVERY_PRIVATE_KEY),
-            this.jwtBlacklistService,
-            this.loggerService,
-        );
-
         // api services
         this.userService = new UserService(
             this.configService,
