@@ -4,7 +4,6 @@ import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { usersLimits } from '@root/common/constants/user.constants';
 import { authErrors } from '@root/common/errors/messages/auth.error.messages';
-import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
 import { createUser } from '@integration/utils/createUser.util';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
 import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
@@ -13,9 +12,9 @@ import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-
 
 describe('POST /api/users/login', () => {
     describe('Input sanitization Wiring', () => {
-        test.concurrent('return status 400 BAD REQUEST when email is not a valid email', async () => {
+        test.concurrent('return status 400 BAD REQUEST INVALID_CREDENTIALS when email is not a valid email', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = usersApiErrors.INVALID_EMAIL;
+            const expectedErrorMssg = authErrors.INVALID_CREDENTIALS;
 
             const response = await request(testKit.server)
                 .post(testKit.endpoints.login)
@@ -28,9 +27,9 @@ describe('POST /api/users/login', () => {
             expect(response.statusCode).toBe(expectedStatus);
         });
 
-        test.concurrent('return status 400 BAD REQUEST password is too long', async () => {
+        test.concurrent('return status 400 BAD REQUEST INVALID_CREDENTIALS password is too long', async () => {
             const expectedStatus = 400;
-            const expectedErrorMssg = usersApiErrors.INVALID_PASSWORD_LENGTH;
+            const expectedErrorMssg = authErrors.INVALID_CREDENTIALS;
 
             const response = await request(testKit.server)
                 .post(testKit.endpoints.login)

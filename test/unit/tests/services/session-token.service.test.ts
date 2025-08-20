@@ -22,10 +22,10 @@ describe('SessionTokenService', () => {
     beforeEach(() => {
         // envs
         configService = {
-            JWT_PRIVATE_KEY: 'test-123',
+            JWT_SESSION_PRIVATE_KEY: 'test-123',
             JWT_SESSION_EXP_TIME: '10m',
         }
-        jwtService = new JwtService(configService.JWT_PRIVATE_KEY!);
+        jwtService = new JwtService(configService.JWT_SESSION_PRIVATE_KEY!);
 
         // mocks
         jwtBlacklistServiceMock = mock<JwtBlackListService>();
