@@ -353,13 +353,18 @@ export class UserService {
         let userEmail: string;
 
         if (input.username) {
-            const userInDb = await this.userModel.findOne({ username: input.username }).exec();
+            const userInDb = await this.userModel.findOne({ name: input.username }).exec();
             if (!userInDb) {
                 this.loggerService.info(`User with username "${input.username}" not found, skipping password recovery`);
                 return;
             }
             userEmail = userInDb.email
         } else {
+            const userInDb = await this.userModel.findOne({ email: input.email }).exec();
+            if (!userInDb) {
+                this.loggerService.info(`User with email "${input.email}" not found, skipping password recovery`);
+                return;
+            }
             userEmail = input.email as string;
         }
         await this.sendForgotPasswordLink(userEmail);
