@@ -6,7 +6,7 @@ import { returnFirstError } from '@root/validators/helpers/return-first-error.he
 import { InvalidInputError } from '@root/common/errors/classes/invalid-input-error.class';
 
 export class ResetPasswordValidator extends PickType(CreateUserValidator, ['password'] as const) {
-    async validate(input: { password: string }): Promise<ResetPasswordValidator> {
+    async validate(input: { password: string } = {} as any): Promise<ResetPasswordValidator> {
         const data = new ResetPasswordValidator();
         data.password = input.password;
         const errors = await validate(data, validationOptionsConfig);

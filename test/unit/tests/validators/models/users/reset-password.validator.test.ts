@@ -25,6 +25,14 @@ describe('ResetPasswordValidator', () => {
         });
     });
 
+    describe('No object provided', () => {
+        test.concurrent('throw InvalidInputError PASSWORD_NOT_PROVIDED', async () => {
+            await expect(resetPasswordValidator.validate()) // NOTHING
+                .rejects
+                .toThrow(new InvalidInputError(usersApiErrors.PASSWORD_NOT_PROVIDED));
+        });
+    });
+
     describe('Invalid password min length', () => {
         test.concurrent('throw InvalidInputError INVALID_PASSWORD_LENGTH', async () => {
             await expect(resetPasswordValidator.validate({ password: faker.internet.password({ length: usersLimits.MIN_PASSWORD_LENGTH - 1 }) }))
