@@ -49,6 +49,23 @@ describe('POST /api/user/reset-password', () => {
         });
     });
 
+    describe('User with email in token not found', () => {
+        test('return status 404 USER_NOT_FOUND error message', async () => {
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                email: testKit.userDataGenerator.email(),
+                purpose: tokenPurposes.PASSWORD_RECOVERY
+            });
+            const res = await request(testKit.server)
+                .post(testKit.endpoints.resetPassword)
+                .send({
+                    token,
+                    newPassword: testKit.userDataGenerator.password()
+                });
+            expect(res.body).toStrictEqual({ error: usersApiErrors.USER_NOT_FOUND });
+            expect(res.status).toBe(404);
+        });
+    });
+
     describe('Token not provided', () => {
         test('return status 400 and INVALID_TOKEN error message', async () => {
             const res = await request(testKit.server)
