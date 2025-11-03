@@ -16,7 +16,9 @@ describe('BaseHttpComponent', () => {
 
     test('should call next with error if sync handler throws', () => {
         const error = new Error('sync error');
-        const handler: RequestHandler = () => { throw error; };
+        const handler: RequestHandler = () => {
+            throw error;
+        };
         // @ts-ignore: access protected for test
         const wrapped = base.forwardError(handler);
         wrapped(req as Request, res as Response, next as NextFunction);

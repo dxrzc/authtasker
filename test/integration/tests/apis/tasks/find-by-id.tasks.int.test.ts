@@ -15,7 +15,9 @@ describe('GET /api/tasks/:id', () => {
                     .get(`${testKit.endpoints.tasksAPI}/${invalidTaskId}`)
                     .set('Authorization', `Bearer ${sessionToken}`);
 
-                expect(redisServiceGetSpy).not.toHaveBeenCalledWith(makeTasksCacheKey(invalidTaskId));
+                expect(redisServiceGetSpy).not.toHaveBeenCalledWith(
+                    makeTasksCacheKey(invalidTaskId),
+                );
             });
         });
 
@@ -31,7 +33,7 @@ describe('GET /api/tasks/:id', () => {
                 const taskInCache = await testKit.redisService.get(makeTasksCacheKey(taskId));
                 expect(taskInCache).toBeNull();
             });
-        }); 
+        });
 
         describe('No Cache-Control header is provided', () => {
             test('cache the response in redis cache database', async () => {

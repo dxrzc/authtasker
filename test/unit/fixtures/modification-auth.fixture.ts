@@ -1,4 +1,3 @@
-
 export const modificationAuthFixture = [
     { currentUserRole: 'admin', targetUserRole: 'admin', expected: 'forbidden' },
     { currentUserRole: 'admin', targetUserRole: 'editor', expected: 'authorized' },

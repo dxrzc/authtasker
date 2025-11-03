@@ -22,7 +22,7 @@ describe('PATCH /api/tasks/:id', () => {
                 .send({ user: '12345' });
 
             expect(response.statusCode).toBe(expectedStatus);
-            expect(response.body).toStrictEqual({ error: expectedErrorMssg })
+            expect(response.body).toStrictEqual({ error: expectedErrorMssg });
         });
 
         test.concurrent('return 400 BAD REQUEST when no field to update is provided', async () => {
@@ -43,7 +43,7 @@ describe('PATCH /api/tasks/:id', () => {
     });
 
     describe('Modification Access Rules Wiring', () => {
-        test.concurrent('admins are forbidden to update other admin\'s tasks', async () => {
+        test.concurrent("admins are forbidden to update other admin's tasks", async () => {
             const expectedStatus = 403;
 
             // Create current user
@@ -61,7 +61,7 @@ describe('PATCH /api/tasks/:id', () => {
                 .expect(expectedStatus);
         });
 
-        test.concurrent('admins are authorized to update editor\'s tasks', async () => {
+        test.concurrent("admins are authorized to update editor's tasks", async () => {
             // Create admin
             const { sessionToken: currentUserSessionToken } = await createUser('admin');
 
@@ -127,9 +127,9 @@ describe('PATCH /api/tasks/:id', () => {
                 const response = await request(testKit.server)
                     .patch(`${testKit.endpoints.tasksAPI}/${taskToUpdateId}`)
                     .set('Authorization', `Bearer ${user2SessionToken}`)
-                    .send({ name: alreadyExistingTaskName })
+                    .send({ name: alreadyExistingTaskName });
 
-                expect(response.body).toStrictEqual({ error: expectedErrorMssg })
+                expect(response.body).toStrictEqual({ error: expectedErrorMssg });
                 expect(response.statusCode).toBe(expectedStatus);
             });
         });

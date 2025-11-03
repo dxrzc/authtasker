@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - development
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true        
+
+jobs: 
+  run-linter:
+    name: ESLint
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.19.0
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          auto_fix: true
+          continue_on_error: false
+          eslint: true
+          eslint_auto_fix: true
+          commit_message: "style: fix eslint/prettier issues"
+          eslint_args: "\"{src,test}/**/*.ts\" --max-warnings 0"  

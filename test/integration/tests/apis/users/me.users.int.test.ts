@@ -12,11 +12,13 @@ describe('GET /api/users/me', () => {
                 .get(testKit.endpoints.myProfile)
                 .set('Authorization', `Bearer ${sessionToken}`);
 
-            expect(response.body).toStrictEqual(expect.objectContaining({
-                name: userName,
-                email: userEmail,
-                id: userId
-            }));
+            expect(response.body).toStrictEqual(
+                expect.objectContaining({
+                    name: userName,
+                    email: userEmail,
+                    id: userId,
+                }),
+            );
             expect(response.statusCode).toBe(expectedStatus);
         });
     });

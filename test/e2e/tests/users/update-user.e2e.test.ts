@@ -7,7 +7,7 @@ describe('Users API', () => {
         test.concurrent('user can login with new updated data', async () => {
             const createdUserResponse = await e2eKit.client.post(
                 e2eKit.endpoints.register,
-                e2eKit.userDataGenerator.fullUser()
+                e2eKit.userDataGenerator.fullUser(),
             );
             // update
             const newPassword = e2eKit.userDataGenerator.password();
@@ -15,77 +15,76 @@ describe('Users API', () => {
             await e2eKit.client.patch(
                 `${e2eKit.endpoints.usersAPI}/${createdUserResponse.data.user.id}`,
                 { password: newPassword, email: newEmail },
-                { headers: { Authorization: `Bearer ${createdUserResponse.data.sessionToken}` } }
+                { headers: { Authorization: `Bearer ${createdUserResponse.data.sessionToken}` } },
             );
             // login with new password and email
-            await e2eKit.client.post(
-                e2eKit.endpoints.login,
-                { password: newPassword, email: newEmail }
-            );
+            await e2eKit.client.post(e2eKit.endpoints.login, {
+                password: newPassword,
+                email: newEmail,
+            });
         });
 
         describe('Password is updated', () => {
             test.concurrent('all user refresh tokens remain invalidated', async () => {
                 const { name, email, password } = e2eKit.userDataGenerator.fullUser();
                 // create user provides a refresh token
-                const createdUserResponse = await e2eKit.client.post(
-                    e2eKit.endpoints.register,
-                    { name, email, password },
-                );
+                const createdUserResponse = await e2eKit.client.post(e2eKit.endpoints.register, {
+                    name,
+                    email,
+                    password,
+                });
                 const sessionToken = createdUserResponse.data.sessionToken;
                 const userID = createdUserResponse.data.user.id;
                 const refreshTokenFromRegistration = createdUserResponse.data.refreshToken;
                 // login provides a new refresh token
-                const loginResponse = await e2eKit.client.post(
-                    e2eKit.endpoints.login,
-                    { password, email }
-                );
+                const loginResponse = await e2eKit.client.post(e2eKit.endpoints.login, {
+                    password,
+                    email,
+                });
                 const refreshTokenFromLogin = loginResponse.data.refreshToken;
                 // update user password trigger old refresh tokens invalidation
                 await e2eKit.client.patch(
                     `${e2eKit.endpoints.usersAPI}/${userID}`,
                     { password: e2eKit.userDataGenerator.password() },
-                    { headers: { Authorization: `Bearer ${sessionToken}` } }
+                    { headers: { Authorization: `Bearer ${sessionToken}` } },
                 );
                 // try to use the old refresh tokens to get a new session token
                 expectRequestToFail({
                     expectedStatus: 401,
-                    request: e2eKit.client.post(
-                        e2eKit.endpoints.refreshToken,
-                        { refreshToken: refreshTokenFromRegistration }
-                    )
+                    request: e2eKit.client.post(e2eKit.endpoints.refreshToken, {
+                        refreshToken: refreshTokenFromRegistration,
+                    }),
                 });
                 expectRequestToFail({
                     expectedStatus: 401,
-                    request: e2eKit.client.post(
-                        e2eKit.endpoints.refreshToken,
-                        { refreshToken: refreshTokenFromLogin }
-                    )
+                    request: e2eKit.client.post(e2eKit.endpoints.refreshToken, {
+                        refreshToken: refreshTokenFromLogin,
+                    }),
                 });
             });
 
             test.concurrent('provided session token remains invalid', async () => {
                 const { name, email, password } = e2eKit.userDataGenerator.fullUser();
                 // create user provides a refresh token
-                const createdUserResponse = await e2eKit.client.post(
-                    e2eKit.endpoints.register,
-                    { name, email, password },
-                );
+                const createdUserResponse = await e2eKit.client.post(e2eKit.endpoints.register, {
+                    name,
+                    email,
+                    password,
+                });
                 const sessionToken = createdUserResponse.data.sessionToken;
                 const userID = createdUserResponse.data.user.id;
                 // update user password trigger old session token invalidation
                 await e2eKit.client.patch(
                     `${e2eKit.endpoints.usersAPI}/${userID}`,
                     { password: e2eKit.userDataGenerator.password() },
-                    { headers: { Authorization: `Bearer ${sessionToken}` } }
+                    { headers: { Authorization: `Bearer ${sessionToken}` } },
                 );
                 // try to use the old session token to access a protected endpoint
                 expectRequestToFail({
                     expectedStatus: 401,
-                    request: e2eKit.client.get(
-                        `${e2eKit.endpoints.usersAPI}/${userID}`,
-                        { headers: { Authorization: `Bearer ${sessionToken}` } }
-                    )
+                    request: e2eKit.client.get(`${e2eKit.endpoints.usersAPI}/${userID}`, {
+                        headers: { Authorization: `Bearer ${sessionToken}` },
+                    }),
                 });
             });
         });
@@ -96,7 +95,7 @@ describe('Users API', () => {
                 const user = e2eKit.userDataGenerator.fullUser();
                 const createdUserResponse = await e2eKit.client.post(
                     e2eKit.endpoints.register,
-                    user
+                    user,
                 );
                 const userID = createdUserResponse.data.user.id;
                 const sessionToken = createdUserResponse.data.sessionToken;
@@ -104,24 +103,27 @@ describe('Users API', () => {
 
                 // validate email
                 await e2eKit.client.post(
-                    e2eKit.endpoints.requestEmailValidation, {},
-                    { headers: { Authorization: `Bearer ${sessionToken}` } }
+                    e2eKit.endpoints.requestEmailValidation,
+                    {},
+                    { headers: { Authorization: `Bearer ${sessionToken}` } },
                 );
-                await e2eKit.client.get(await getEmailConfirmationFromLink(e2eKit.emailClient, userEmail));
+                await e2eKit.client.get(
+                    await getEmailConfirmationFromLink(e2eKit.emailClient, userEmail),
+                );
 
                 // change email
                 const newEmail = e2eKit.userDataGenerator.email();
                 await e2eKit.client.patch(
                     `${e2eKit.endpoints.usersAPI}/${userID}`,
                     { email: newEmail },
-                    { headers: { Authorization: `Bearer ${sessionToken}` } }
+                    { headers: { Authorization: `Bearer ${sessionToken}` } },
                 );
 
                 // login to get a new session token
-                const loginResponse = await e2eKit.client.post(
-                    e2eKit.endpoints.login,
-                    { email: newEmail, password: user.password }
-                );
+                const loginResponse = await e2eKit.client.post(e2eKit.endpoints.login, {
+                    email: newEmail,
+                    password: user.password,
+                });
                 const newSessionToken = loginResponse.data.sessionToken;
 
                 // try to crete a task
@@ -130,8 +132,8 @@ describe('Users API', () => {
                     request: e2eKit.client.post(
                         e2eKit.endpoints.createTask,
                         e2eKit.tasksDataGenerator.fullTask(),
-                        { headers: { Authorization: `Bearer ${newSessionToken}` } }
-                    )
+                        { headers: { Authorization: `Bearer ${newSessionToken}` } },
+                    ),
                 });
             });
         });

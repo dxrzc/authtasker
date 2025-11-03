@@ -17,7 +17,7 @@ describe('CacheService', () => {
             testKit.redisService,
             ttls,
             hardTtls,
-            makeUsersCacheKey
+            makeUsersCacheKey,
         );
     });
 
@@ -46,7 +46,9 @@ describe('CacheService', () => {
             describe('resource is not expired (hit)', () => {
                 test('return the data in redis', async () => {
                     // cache the user data
-                    const userInDb = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
+                    const userInDb = await testKit.userModel.create(
+                        testKit.userDataGenerator.fullUser(),
+                    );
                     await cacheService.cache(userInDb);
                     // get the resource
                     const result = await cacheService.get(userInDb.id);
@@ -59,12 +61,16 @@ describe('CacheService', () => {
                 describe('resource has changed (revalidate-miss)', () => {
                     test('return null', async () => {
                         // cache the user data
-                        const userInDb = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
+                        const userInDb = await testKit.userModel.create(
+                            testKit.userDataGenerator.fullUser(),
+                        );
                         await cacheService.cache(userInDb);
                         // we move to the time where it has already expired
-                        jest.spyOn(Date, 'now').mockReturnValue(Date.now() + ((ttls) * 1000) + 1000);
+                        jest.spyOn(Date, 'now').mockReturnValue(Date.now() + ttls * 1000 + 1000);
                         // apply some modification
-                        await testKit.userModel.findByIdAndUpdate(userInDb, { email: testKit.userDataGenerator.email });
+                        await testKit.userModel.findByIdAndUpdate(userInDb, {
+                            email: testKit.userDataGenerator.email,
+                        });
                         // call get
                         const result = await cacheService.get(userInDb.id);
                         expect(result).toBeNull();
@@ -74,10 +80,12 @@ describe('CacheService', () => {
                 describe('resource has been deleted', () => {
                     test('return null', async () => {
                         // cache the user data
-                        const userInDb = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
+                        const userInDb = await testKit.userModel.create(
+                            testKit.userDataGenerator.fullUser(),
+                        );
                         await cacheService.cache(userInDb);
                         // we move to the time where it has already expired
-                        jest.spyOn(Date, 'now').mockReturnValue(Date.now() + ((ttls) * 1000) + 1000);
+                        jest.spyOn(Date, 'now').mockReturnValue(Date.now() + ttls * 1000 + 1000);
                         // delete the resource
                         await testKit.userModel.findByIdAndDelete(userInDb.id);
                         // call get
@@ -89,10 +97,12 @@ describe('CacheService', () => {
                 describe('resource has not changed (revalidate-hit)', () => {
                     test('return the resource in cache', async () => {
                         // cache the user data
-                        const userInDb = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
+                        const userInDb = await testKit.userModel.create(
+                            testKit.userDataGenerator.fullUser(),
+                        );
                         await cacheService.cache(userInDb);
                         // we move to the time where it has already expired
-                        jest.spyOn(Date, 'now').mockReturnValue(Date.now() + ((ttls) * 1000) + 1000);
+                        jest.spyOn(Date, 'now').mockReturnValue(Date.now() + ttls * 1000 + 1000);
                         // call get
                         const result = await cacheService.get(userInDb.id);
                         compareWithUserInDb(result!, userInDb);
@@ -106,8 +116,10 @@ describe('CacheService', () => {
         test('the provided data inside the "data" field', async () => {
             const userInDb = await testKit.userModel.create(testKit.userDataGenerator.fullUser());
             await cacheService.cache(userInDb);
-            const dataInRedis = await testKit.redisService.get<DataInCache<UserResponse>>(makeUsersCacheKey(userInDb.id));
-            compareWithUserInDb(dataInRedis?.data!, userInDb);
+            const dataInRedis = await testKit.redisService.get<DataInCache<UserResponse>>(
+                makeUsersCacheKey(userInDb.id),
+            );
+            compareWithUserInDb(dataInRedis?.data, userInDb);
         });
 
         test('store the current time in unix in the "cacheAtUnix" field', async () => {
@@ -116,7 +128,9 @@ describe('CacheService', () => {
             const currentUnixTime = Math.floor(Date.now() / 1000);
             const testUserId = '12345';
             await cacheService.cache({ id: testUserId } as any);
-            const dataInRedis = await testKit.redisService.get<DataInCache<UserResponse>>(makeUsersCacheKey(testUserId));
+            const dataInRedis = await testKit.redisService.get<DataInCache<UserResponse>>(
+                makeUsersCacheKey(testUserId),
+            );
             expect(dataInRedis!.cachedAtUnix).toBe(currentUnixTime);
         });
 

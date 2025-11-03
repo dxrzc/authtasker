@@ -18,6 +18,6 @@ export const testKit: ITestKit = {
         createTask: `/api/tasks/create`,
         findAllTasksByUser: '/api/tasks/allByUser',
         refreshToken: '/api/users/refresh-token',
-        health: '/health'
-    }
+        health: '/health',
+    },
 } as any;

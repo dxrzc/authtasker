@@ -19,7 +19,12 @@ describe('RedisService', () => {
             test.concurrent('call "set" function with the provided expiration time', async () => {
                 const expirationTime = 3600;
                 await redisService.set('test', 'test-data', expirationTime);
-                expect(redisMock.set).toHaveBeenCalledWith('test', 'test-data', 'EX', expirationTime);
+                expect(redisMock.set).toHaveBeenCalledWith(
+                    'test',
+                    'test-data',
+                    'EX',
+                    expirationTime,
+                );
             });
         });
     });
@@ -47,7 +52,7 @@ describe('RedisService', () => {
             test.concurrent('return null', async () => {
                 redisMock.get.mockResolvedValueOnce(null);
                 const data = await redisService.get('test');
-                expect(data).toBeNull();                
+                expect(data).toBeNull();
             });
         });
     });

@@ -2,7 +2,7 @@ import { JwtService } from 'src/services/jwt.service';
 import jwt from 'jsonwebtoken';
 
 const PRIVATE_KEY = 'my-secret-key';
-let jwtService = new JwtService(PRIVATE_KEY)
+const jwtService = new JwtService(PRIVATE_KEY);
 
 describe('JwtService', () => {
     describe('generate', () => {
