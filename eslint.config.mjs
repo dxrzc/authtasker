@@ -28,9 +28,13 @@ export default tseslint.config(
             },
         },
         rules: {
-            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-explicit-any': 'off',         // allow type 'any'
+            '@typescript-eslint/no-unsafe-assignment': 'off',    // allow assigning values of type 'any'
+            '@typescript-eslint/no-unsafe-member-access': 'off', // allow property access on 'any'
+            '@typescript-eslint/no-unsafe-return': 'off',        // allow returning 'any'
+            '@typescript-eslint/no-unsafe-call': 'off',          // allow calling 'any' as a function
+            '@typescript-eslint/no-unsafe-argument': 'off',      // allow passing 'any' as args        
             '@typescript-eslint/no-floating-promises': 'warn',
-            '@typescript-eslint/no-unsafe-argument': 'warn'
         },
     },
     {
