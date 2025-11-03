@@ -6,10 +6,4 @@
         "dist",
         "**/*test.ts"
     ],
-    "baseUrl": "./",
-    "paths": {
-        "src/*": [
-            "src/*"
-        ]
-    },
 }
