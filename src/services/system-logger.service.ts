@@ -1,3 +1,4 @@
+import { LogInfoType } from 'src/types/logging/log-info.type';
 import winston from 'winston';
 
 export class SystemLoggerService {
@@ -12,17 +13,24 @@ export class SystemLoggerService {
                 new winston.transports.Console({
                     format: winston.format.combine(
                         winston.format.timestamp(),
-                        winston.format.printf(({ level, message, timestamp, stackTrace }) => {
+                        winston.format.printf((logInfo: LogInfoType) => {
                             const colorizer = winston.format.colorize().colorize;
 
-                            const coloredLevel = colorizer(level, `[${level.toUpperCase()}]`);
-                            const coloredTimestamp = colorizer(level, `[${timestamp}]`);
-                            const finalMessage = message as any;
+                            const coloredLevel = colorizer(
+                                logInfo.level,
+                                `[${logInfo.level.toUpperCase()}]`,
+                            );
+                            const coloredTimestamp = colorizer(
+                                logInfo.level,
+                                `[${logInfo.timestamp}]`,
+                            );
+                            const coloredMessage = colorizer(
+                                logInfo.level,
+                                <string>logInfo.message,
+                            );
 
-                            const coloredMessage = colorizer(level, finalMessage);
-
-                            if (stackTrace)
-                                return `${coloredTimestamp} ${coloredLevel}: ${coloredMessage} ${stackTrace}`;
+                            if (logInfo.stackTrace)
+                                return `${coloredTimestamp} ${coloredLevel}: ${coloredMessage} ${logInfo.stackTrace}`;
 
                             return `${coloredTimestamp} ${coloredLevel}: ${coloredMessage}`;
                         }),
@@ -45,11 +53,11 @@ export class SystemLoggerService {
         SystemLoggerService.logger.info(message);
     }
 
-    static error(message: string, stackTrace?: string) {
+    static error(message: any, stackTrace?: string) {
         try {
             SystemLoggerService.logger.log({
                 level: 'error',
-                message,
+                message: <string>message,
                 stackTrace,
             });
         } catch (error) {
