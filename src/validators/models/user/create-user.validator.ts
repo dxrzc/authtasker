@@ -8,7 +8,6 @@ import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messa
 import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
 
 export class CreateUserValidator {
-
     @IsDefined({ message: usersApiErrors.NAME_NOT_PROVIDED })
     @MinLength(usersLimits.MIN_NAME_LENGTH, { message: usersApiErrors.INVALID_NAME_LENGTH })
     @MaxLength(usersLimits.MAX_NAME_LENGTH, { message: usersApiErrors.INVALID_NAME_LENGTH })
@@ -29,8 +28,7 @@ export class CreateUserValidator {
         Object.assign(user, data);
 
         const errors = await validate(user, validationOptionsConfig);
-        if (errors.length > 0)
-            throw new InvalidInputError(returnFirstError(errors));
+        if (errors.length > 0) throw new InvalidInputError(returnFirstError(errors));
 
         return plainToInstance(CreateUserValidator, user);
     }

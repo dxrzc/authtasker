@@ -1,4 +1,3 @@
-
 export interface ITransporter {
     host: string;
     port: number;

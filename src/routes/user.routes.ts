@@ -1,5 +1,5 @@
-import { Router } from "express";
-import { Model } from "mongoose";
+import { Router } from 'express';
+import { Model } from 'mongoose';
 import { ApiType } from 'src/enums/api-type.enum';
 import { createAdmin } from 'src/admin/create-admin';
 import { UserService } from 'src/services/user.service';
@@ -18,7 +18,6 @@ import { ResetPasswordValidator } from 'src/validators/models/user/reset-passwor
 import { ForgotPasswordValidator } from 'src/validators/models/user/forgot-password.validator';
 
 export class UserRoutes {
-
     private readonly userController: UserController;
 
     constructor(
@@ -42,11 +41,7 @@ export class UserRoutes {
     }
 
     private async initialData() {
-        await createAdmin(
-            this.userModel,
-            this.configService,
-            this.hashingService
-        );
+        await createAdmin(this.userModel, this.configService, this.hashingService);
     }
 
     async build(): Promise<Router> {
@@ -54,86 +49,101 @@ export class UserRoutes {
 
         const router = Router();
 
-        router.get('/reset-password',
+        router.get(
+            '/reset-password',
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
-            this.userController.resetPasswordFormFwdErr()
+            this.userController.resetPasswordFormFwdErr(),
         );
 
-        router.get('/me',
+        router.get(
+            '/me',
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
             this.rolesMiddleware.middleware('readonly'),
-            this.userController.meFwdErr()
+            this.userController.meFwdErr(),
         );
 
-        router.post('/register',
+        router.post(
+            '/register',
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
-            this.userController.createFwdErr()
+            this.userController.createFwdErr(),
         );
 
-        router.post('/login',
+        router.post(
+            '/login',
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
-            this.userController.loginFwdErr()
+            this.userController.loginFwdErr(),
         );
 
-        router.post('/logoutFromAll',
+        router.post(
+            '/logoutFromAll',
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
-            this.userController.logoutFromAllFwdErr()
+            this.userController.logoutFromAllFwdErr(),
         );
 
-        router.post('/refresh-token',
+        router.post(
+            '/refresh-token',
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
-            this.userController.refreshFwdErr()
+            this.userController.refreshFwdErr(),
         );
 
-        router.post('/requestEmailValidation',
+        router.post(
+            '/requestEmailValidation',
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
             this.rolesMiddleware.middleware('readonly'),
-            this.userController.requestEmailValidationFwdErr()
+            this.userController.requestEmailValidationFwdErr(),
         );
 
-        router.post('/logout',
+        router.post(
+            '/logout',
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
             this.rolesMiddleware.middleware('readonly'),
-            this.userController.logoutFwdErr()
-        );        
+            this.userController.logoutFwdErr(),
+        );
 
-        router.get('/confirmEmailValidation/:token',
+        router.get(
+            '/confirmEmailValidation/:token',
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
-            this.userController.confirmEmailValidationFwdErr()
+            this.userController.confirmEmailValidationFwdErr(),
         );
 
-        router.delete('/:id',
-            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
-            this.rolesMiddleware.middleware('readonly'),
-            this.userController.deleteOneFwdErr()
-        );
-
-        router.patch('/:id',
-            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
-            this.rolesMiddleware.middleware('readonly'),
-            this.userController.updateOneFwdErr()
-        );
-
-        router.get('/:id',
+        router.delete(
+            '/:id',
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
             this.rolesMiddleware.middleware('readonly'),
-            this.userController.findOneFwdErr()
+            this.userController.deleteOneFwdErr(),
         );
 
-        router.get('/',
+        router.patch(
+            '/:id',
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
             this.rolesMiddleware.middleware('readonly'),
-            this.userController.findAllFwdErr()
+            this.userController.updateOneFwdErr(),
         );
 
-        router.post('/forgot-password',
-            this.apiLimiterMiddleware.middleware(ApiType.authApi),
-            this.userController.requestPasswordRecoveryFwdErr()
+        router.get(
+            '/:id',
+            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.rolesMiddleware.middleware('readonly'),
+            this.userController.findOneFwdErr(),
         );
 
-        router.post('/reset-password',
+        router.get(
+            '/',
+            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.rolesMiddleware.middleware('readonly'),
+            this.userController.findAllFwdErr(),
+        );
+
+        router.post(
+            '/forgot-password',
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
-            this.userController.resetPasswordFwdErr()        
+            this.userController.requestPasswordRecoveryFwdErr(),
+        );
+
+        router.post(
+            '/reset-password',
+            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.userController.resetPasswordFwdErr(),
         );
 
         return router;

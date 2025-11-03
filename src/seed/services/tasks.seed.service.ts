@@ -1,4 +1,4 @@
-import { Model } from "mongoose";
+import { Model } from 'mongoose';
 import { IUser } from 'src/interfaces/user/user.interface';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
@@ -7,7 +7,6 @@ import { TaskRequest } from 'src/types/tasks/task-request.type';
 import { TasksDataGenerator } from 'src/seed/generators/tasks.generator';
 
 export class TasksSeedService {
-
     constructor(
         private readonly tasksModel: Model<ITasks>,
         private readonly userModel: Model<IUser>,
@@ -26,7 +25,7 @@ export class TasksSeedService {
     }
 
     private async generateBunchOfTasks(n: number): Promise<TaskRequest[]> {
-        let tasks = new Array<TaskRequest>();
+        const tasks = new Array<TaskRequest>();
         for (let i = 0; i < n; i++) {
             tasks.push(this.generateRandomTask());
         }
@@ -49,7 +48,6 @@ export class TasksSeedService {
 
         const adminId = adminUser.id;
 
-        return await this.tasksModel
-            .insertMany(tasks.map(task => ({ ...task, user: adminId })));
+        return await this.tasksModel.insertMany(tasks.map((task) => ({ ...task, user: adminId })));
     }
 }

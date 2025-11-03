@@ -1,6 +1,5 @@
-
 export const tasksApiErrors = {
-    // db    
+    // db
     taskAlreadyExists: (prop: string) => `A task with this ${prop} already exists`,
     TASK_NOT_FOUND: 'Task not found',
     // validation

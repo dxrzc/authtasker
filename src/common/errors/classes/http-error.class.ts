@@ -1,7 +1,6 @@
 import { statusCodes } from 'src/common/constants/status-codes.constants';
 
 export class HttpError extends Error {
-
     private constructor(
         public readonly statusCode: number,
         public readonly message: string,

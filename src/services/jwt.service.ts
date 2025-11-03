@@ -1,30 +1,22 @@
-import jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { IJwtPayload } from "src/interfaces/token/jwt-payload.interface";
+import { IJwtPayload } from 'src/interfaces/token/jwt-payload.interface';
 
 export class JwtService {
+    constructor(private readonly privateKey: string) {}
 
-    constructor(
-        private readonly privateKey: string,
-    ) {}
-
-    generate(expirationTime: string, payload: object): { token: string, jti: string } {
+    generate(expirationTime: string, payload: object): { token: string; jti: string } {
         const jti = uuidv4();
-        Object.defineProperty(
-            payload,
-            'jti',
-            { value: jti, enumerable: true }
-        );
+        Object.defineProperty(payload, 'jti', { value: jti, enumerable: true });
 
-        const token = jwt.sign(payload,
-            this.privateKey,
-            { expiresIn: expirationTime as `${number}${'h' | 'd' | 'm'}` }
-        );
+        const token = jwt.sign(payload, this.privateKey, {
+            expiresIn: expirationTime as `${number}${'h' | 'd' | 'm'}`,
+        });
 
         return { token, jti };
     }
 
-    verify<T>(token: string): IJwtPayload & T | null {
+    verify<T>(token: string): (IJwtPayload & T) | null {
         try {
             const payload = jwt.verify(token, this.privateKey);
             return payload as any;

@@ -1,8 +1,7 @@
-import{ SendMailOptions, Transporter, createTransport } from 'nodemailer';
+import { SendMailOptions, Transporter, createTransport } from 'nodemailer';
 import { ITransporter } from 'src/interfaces/email/transporter.interface';
 
 export class EmailService {
-
     private transporter: Transporter;
 
     constructor(transporterOptions: ITransporter) {

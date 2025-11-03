@@ -5,18 +5,19 @@ import { BaseMiddleware } from 'src/common/base/base-middleware.class';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 
 export class RequestContextMiddleware extends BaseMiddleware {
-
     constructor(
         private readonly asyncLocalStorage: AsyncLocalStorage<unknown>,
         private readonly loggerService: LoggerService,
-    ) { super(); }
+    ) {
+        super();
+    }
 
     protected getHandler(): RequestHandler {
         return async (req: Request, res: Response, next: NextFunction) => {
             const url = req.originalUrl;
             const method = req.method;
-            const requestId = uuidv4();                
-            
+            const requestId = uuidv4();
+
             const store = {
                 requestId,
                 method,
@@ -26,7 +27,7 @@ export class RequestContextMiddleware extends BaseMiddleware {
 
             res.on('finish', () => {
                 const [seconds, nanoseconds] = process.hrtime(start);
-                const durationInMs = (seconds * 1000) + (nanoseconds / 1000000);
+                const durationInMs = seconds * 1000 + nanoseconds / 1000000;
 
                 this.loggerService.logRequest({
                     ip: req.ip!,
@@ -35,15 +36,15 @@ export class RequestContextMiddleware extends BaseMiddleware {
                     responseTime: durationInMs,
                     statusCode: res.statusCode,
                     url,
-                })
+                });
             });
 
-            res.setHeader("Request-Id", requestId);
+            res.setHeader('Request-Id', requestId);
 
             this.asyncLocalStorage.run(store, () => {
                 this.loggerService.info(`Incoming request ${url}`);
                 next();
             });
-        }
+        };
     }
 }

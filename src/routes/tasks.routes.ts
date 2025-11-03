@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router } from 'express';
 import { ApiType } from 'src/enums/api-type.enum';
 import { TasksService } from 'src/services/tasks.service';
 import { LoggerService } from 'src/services/logger.service';
@@ -10,18 +10,17 @@ import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.val
 import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
 
 export class TasksRoutes {
-
     private readonly tasksController: TasksController;
 
     constructor(
-        private readonly tasksService: TasksService,        
+        private readonly tasksService: TasksService,
         private readonly rolesMiddleware: RolesMiddleware,
         private readonly apiLimiterMiddleware: ApiLimiterMiddleware,
     ) {
         this.tasksController = new TasksController(
-            this.tasksService,            
+            this.tasksService,
             new CreateTaskValidator(),
-            new UpdateTaskValidator()
+            new UpdateTaskValidator(),
         );
 
         SystemLoggerService.info('Task routes loaded');
@@ -34,37 +33,37 @@ export class TasksRoutes {
         router.post(
             '/create',
             this.rolesMiddleware.middleware('editor'),
-            this.tasksController.createFwdErr()
+            this.tasksController.createFwdErr(),
         );
 
         router.delete(
             '/:id',
             this.rolesMiddleware.middleware('editor'),
-            this.tasksController.deleteOneFwdErr()
+            this.tasksController.deleteOneFwdErr(),
         );
 
         router.get(
             '/:id',
             this.rolesMiddleware.middleware('readonly'),
-            this.tasksController.findOneFwdErr()
+            this.tasksController.findOneFwdErr(),
         );
 
         router.get(
             '/',
             this.rolesMiddleware.middleware('readonly'),
-            this.tasksController.findAllFwdErr()
+            this.tasksController.findAllFwdErr(),
         );
 
         router.get(
             '/allByUser/:id',
             this.rolesMiddleware.middleware('readonly'),
-            this.tasksController.findAllByUserFwdErr()
+            this.tasksController.findAllByUserFwdErr(),
         );
 
         router.patch(
             '/:id',
             this.rolesMiddleware.middleware('editor'),
-            this.tasksController.updateOneFwdErr()
+            this.tasksController.updateOneFwdErr(),
         );
 
         return router;

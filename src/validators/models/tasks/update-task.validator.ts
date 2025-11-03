@@ -8,7 +8,6 @@ import { tasksApiErrors } from 'src/common/errors/messages/tasks-api.error.messa
 import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
 
 export class UpdateTaskValidator extends PartialType(CreateTaskValidator) {
-
     async validateNewAndTransform(data: object): Promise<UpdateTaskValidator> {
         if (Object.keys(data).length === 0)
             throw new InvalidInputError(tasksApiErrors.NO_PROPERTIES_TO_UPDATE);
@@ -17,9 +16,8 @@ export class UpdateTaskValidator extends PartialType(CreateTaskValidator) {
         Object.assign(user, data);
 
         const errors = await validate(user, validationOptionsConfig);
-        if (errors.length > 0)
-            throw new InvalidInputError(returnFirstError(errors));
+        if (errors.length > 0) throw new InvalidInputError(returnFirstError(errors));
 
-        return plainToInstance(UpdateTaskValidator, user)
+        return plainToInstance(UpdateTaskValidator, user);
     }
 }

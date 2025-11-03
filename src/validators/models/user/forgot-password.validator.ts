@@ -1,8 +1,8 @@
 import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
-import { usersApiErrors } from "src/common/errors/messages/users-api.error.messages";
+import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
 import { returnFirstError } from 'src/validators/helpers/return-first-error.helper';
 import { validationOptionsConfig } from 'src/validators/config/validation.config';
-import { IsEmail, IsOptional, MaxLength, validate } from "class-validator";
+import { IsEmail, IsOptional, MaxLength, validate } from 'class-validator';
 import { usersLimits } from 'src/common/constants/user.constants';
 
 export class ForgotPasswordValidator {
@@ -23,8 +23,7 @@ export class ForgotPasswordValidator {
             throw new InvalidInputError(usersApiErrors.INVALID_FORGOT_PASSWORD_INPUT);
 
         const errors = await validate(input, validationOptionsConfig);
-        if (errors.length > 0)
-            throw new InvalidInputError(returnFirstError(errors));
+        if (errors.length > 0) throw new InvalidInputError(returnFirstError(errors));
 
         return input;
     }

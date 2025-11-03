@@ -1,52 +1,55 @@
-import { model, Schema, Model } from "mongoose";
-import { EventManager } from "src/events/eventManager";
+import { model, Schema, Model } from 'mongoose';
+import { EventManager } from 'src/events/eventManager';
 import { IUser } from 'src/interfaces/user/user.interface';
 import { ConfigService } from 'src/services/config.service';
 import { validRoles } from 'src/types/user/user-roles.type';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 
 export const loadUserModel = (configService: ConfigService): Model<IUser> => {
-    const userSchema = new Schema<IUser>({
-        name: {
-            type: String,
-            required: true,
-            unique: true
-        },
+    const userSchema = new Schema<IUser>(
+        {
+            name: {
+                type: String,
+                required: true,
+                unique: true,
+            },
 
-        email: {
-            type: String,
-            required: true,
-            unique: true
-        },
+            email: {
+                type: String,
+                required: true,
+                unique: true,
+            },
 
-        password: {
-            type: String,
-            required: true
-        },
+            password: {
+                type: String,
+                required: true,
+            },
 
-        role: {
-            type: String,
-            required: true,
-            enum: validRoles,
-            default: 'readonly'
-        },
+            role: {
+                type: String,
+                required: true,
+                enum: validRoles,
+                default: 'readonly',
+            },
 
-        emailValidated: {
-            type: Boolean,
-            default: false,
-        }
-    }, {
-        timestamps: true,
-        toJSON: {
-            virtuals: true,
-            versionKey: false,
-            transform: function (doc, ret, options) {
-                delete ret._id;
-                delete ret.password;
-                return ret;
-            }
-        }
-    });
+            emailValidated: {
+                type: Boolean,
+                default: false,
+            },
+        },
+        {
+            timestamps: true,
+            toJSON: {
+                virtuals: true,
+                versionKey: false,
+                transform: function (doc, ret, options) {
+                    delete ret._id;
+                    delete ret.password;
+                    return ret;
+                },
+            },
+        },
+    );
 
     if (configService.HTTP_LOGS) {
         userSchema.post('findOne', (doc) => {
@@ -58,7 +61,7 @@ export const loadUserModel = (configService: ConfigService): Model<IUser> => {
         });
 
         userSchema.post('deleteOne', (res) => {
-            if (res) EventManager.emit('mongoose.userModel.deleteOne');            
+            if (res) EventManager.emit('mongoose.userModel.deleteOne');
         });
     }
 

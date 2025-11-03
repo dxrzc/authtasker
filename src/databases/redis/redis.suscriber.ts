@@ -7,7 +7,7 @@ import { removeFromSetWhenRefreshTokenExpires } from 'src/common/logic/token/rem
 export class RedisSuscriber {
     constructor(
         private readonly configService: ConfigService,
-        private readonly redisInstance: Redis
+        private readonly redisInstance: Redis,
     ) {
         const subscriber = new Redis(this.configService.REDIS_URI, getRedisOptions());
         const expiredKeyPattern = '__keyevent@0__:expired';
@@ -17,10 +17,8 @@ export class RedisSuscriber {
             SystemLoggerService.info(`Suscribed to redis event: ${expiredKeyPattern}`);
         });
 
-        subscriber.on(
-            'message',
-            async (channel, expiredKey) => removeFromSetWhenRefreshTokenExpires(expiredKey, this.redisInstance)
+        subscriber.on('message', async (channel, expiredKey) =>
+            removeFromSetWhenRefreshTokenExpires(expiredKey, this.redisInstance),
         );
     }
 }
-

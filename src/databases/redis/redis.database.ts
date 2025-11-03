@@ -6,7 +6,6 @@ import { Events } from 'src/common/constants/events.constants';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 
 export class RedisDatabase {
-
     private disconnectedManually = false;
     private redis: Redis;
 
@@ -36,7 +35,7 @@ export class RedisDatabase {
             await this.redis.connect();
             SystemLoggerService.info('Connected to Redis database');
         }
-        
+
         return this.redis;
     }
 
