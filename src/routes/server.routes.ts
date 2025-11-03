@@ -1,8 +1,8 @@
-import { Router } from "express";
-import { Model } from "mongoose";
+import { Router } from 'express';
+import { Model } from 'mongoose';
 import { UserRoutes } from './user.routes';
 import { TasksRoutes } from './tasks.routes';
-import { AsyncLocalStorage } from "async_hooks";
+import { AsyncLocalStorage } from 'async_hooks';
 import { JwtService } from 'src/services/jwt.service';
 import { UserService } from 'src/services/user.service';
 import { CacheService } from 'src/services/cache.service';
@@ -18,7 +18,7 @@ import { UserResponse } from 'src/types/user/user-response.type';
 import { TaskResponse } from 'src/types/tasks/task-response.type';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
 import { makeUsersCacheKey } from 'src/common/logic/cache/make-users-cache-key';
-import { HealthController } from "src/controllers/health.controller";
+import { HealthController } from 'src/controllers/health.controller';
 import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
 import { RefreshTokenService } from 'src/services/refresh-token.service';
 import { SessionTokenService } from 'src/services/session-token.service';
@@ -27,14 +27,12 @@ import { loadTasksModel } from 'src/databases/mongo/models/tasks.model.load';
 import { ApiLimiterMiddleware } from 'src/middlewares/api-limiter.middleware';
 import { RequestContextMiddleware } from 'src/middlewares/request-context.middleware';
 import { EmailValidationTokenService } from 'src/services/email-validation-token.service';
-import { IAsyncLocalStorageStore } from "src/interfaces/common/async-local-storage.interface";
+import { IAsyncLocalStorageStore } from 'src/interfaces/common/async-local-storage.interface';
 import { makeTasksCacheKey } from 'src/common/logic/cache/make-tasks-cache-key';
 import { PaginationCacheService } from 'src/services/pagination-cache.service';
 import { PasswordRecoveryTokenService } from 'src/services/password-recovery-token.service';
 
-
 export class AppRoutes {
-    
     private readonly hashingService: HashingService;
     private readonly emailService?: EmailService;
     private readonly userModel: Model<IUser>;
@@ -70,19 +68,19 @@ export class AppRoutes {
             new JwtService(this.configService.JWT_REFRESH_PRIVATE_KEY),
             this.loggerService,
             this.redisService,
-            this.userModel
+            this.userModel,
         );
-        
+
         this.sessionTokenService = new SessionTokenService(
             this.configService,
-            new JwtService(this.configService. JWT_SESSION_PRIVATE_KEY), 
+            new JwtService(this.configService.JWT_SESSION_PRIVATE_KEY),
             this.jwtBlacklistService,
             this.loggerService,
             this.userModel,
         );
         this.emailValidationTokenService = new EmailValidationTokenService(
             this.configService,
-            new JwtService(this.configService.JWT_EMAIL_VALIDATION_PRIVATE_KEY), 
+            new JwtService(this.configService.JWT_EMAIL_VALIDATION_PRIVATE_KEY),
             this.jwtBlacklistService,
             this.loggerService,
         );
@@ -100,12 +98,12 @@ export class AppRoutes {
             pass: this.configService.MAIL_SERVICE_PASS,
         });
 
-        // Middlewares        
-        this.apiLimiterMiddleware = new ApiLimiterMiddleware(this.configService, this.loggerService);
-        this.rolesMiddleware = new RolesMiddleware(
-            this.sessionTokenService,
-            this.loggerService
+        // Middlewares
+        this.apiLimiterMiddleware = new ApiLimiterMiddleware(
+            this.configService,
+            this.loggerService,
         );
+        this.rolesMiddleware = new RolesMiddleware(this.sessionTokenService, this.loggerService);
 
         this.usersCacheService = new CacheService<UserResponse>(
             this.userModel,
@@ -113,13 +111,13 @@ export class AppRoutes {
             this.redisService,
             configService.USERS_API_CACHE_TTL_SECONDS,
             configService.CACHE_HARD_TTL_SECONDS,
-            makeUsersCacheKey
+            makeUsersCacheKey,
         );
 
         this.paginationCacheService = new PaginationCacheService(
             this.loggerService,
             this.redisService,
-            this.configService
+            this.configService,
         );
         // api services
         this.userService = new UserService(
@@ -143,15 +141,15 @@ export class AppRoutes {
             this.redisService,
             configService.TASKS_API_CACHE_TTL_SECONDS,
             configService.CACHE_HARD_TTL_SECONDS,
-            makeTasksCacheKey
-        )
+            makeTasksCacheKey,
+        );
 
         this.tasksService = new TasksService(
             this.loggerService,
             this.tasksModel,
             this.userService,
             this.tasksCacheService,
-            this.paginationCacheService
+            this.paginationCacheService,
         );
 
         this.healthController = new HealthController();
@@ -163,9 +161,7 @@ export class AppRoutes {
             this.loggerService,
         );
 
-        return [
-            requestContextMiddleware.middleware()
-        ];
+        return [requestContextMiddleware.middleware()];
     }
 
     private async buildUserRoutes(): Promise<Router> {
@@ -190,7 +186,7 @@ export class AppRoutes {
     }
 
     private async buildSeedRoutes() {
-        const { SeedRoutes } = await import("src/seed/seed.routes");
+        const { SeedRoutes } = await import('src/seed/seed.routes');
         const seedRoutes = new SeedRoutes(
             this.configService,
             this.userModel,
@@ -205,7 +201,11 @@ export class AppRoutes {
     async buildApp() {
         const router = Router();
 
-        router.get('/health', this.rolesMiddleware.middleware('admin'), this.healthController.getServerHealth);
+        router.get(
+            '/health',
+            this.rolesMiddleware.middleware('admin'),
+            this.healthController.getServerHealth,
+        );
         router.use(this.buildGlobalMiddlewares());
         router.use('/api/users', await this.buildUserRoutes());
         router.use('/api/tasks', await this.buildTasksRoutes());

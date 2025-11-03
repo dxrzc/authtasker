@@ -15,19 +15,17 @@ export class CacheService<Data extends { id: string }> {
     ) {}
 
     private async revalidate(id: string, cachedAtUnix: number): Promise<boolean> {
-        const query = await this.model
-            .findById(id)
-            .select('updatedAt')
-            .exec();
+        const query = await this.model.findById(id).select('updatedAt').exec();
         // resource not found
-        if (!query)
-            return false;
-        const updatedAtUnix = Math.floor((query.updatedAt.getTime()) / 1000);
+        if (!query) return false;
+        const updatedAtUnix = Math.floor(query.updatedAt.getTime() / 1000);
         return cachedAtUnix > updatedAtUnix;
     }
 
     async get(id: string): Promise<Data | null> {
-        const resourceInCache = await this.redisService.get<DataInCache<Data>>(this.cacheKeyMaker(id));
+        const resourceInCache = await this.redisService.get<DataInCache<Data>>(
+            this.cacheKeyMaker(id),
+        );
         // first time
         if (!resourceInCache) {
             this.loggerService.info(`No data in cache`);

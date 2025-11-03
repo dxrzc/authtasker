@@ -1,4 +1,3 @@
-
 export const usersLimits = {
     MAX_NAME_LENGTH: 15,
     MAX_PASSWORD_LENGTH: 20,

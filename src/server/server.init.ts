@@ -1,12 +1,11 @@
-import helmet from "helmet";
-import timeout from "connect-timeout";
-import express, { Router } from "express";
-import { Server as HttpServer } from "http";
+import helmet from 'helmet';
+import timeout from 'connect-timeout';
+import express, { Router } from 'express';
+import { Server as HttpServer } from 'http';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 import { ErrorHandlerMiddleware } from 'src/middlewares/error-handler.middleware';
 
 export class Server {
-
     private readonly app = express();
     private server: HttpServer | undefined;
 
@@ -25,7 +24,7 @@ export class Server {
     start(): Promise<void> {
         return new Promise<void>((resolve) => {
             this.server = this.app.listen(this.port, () => {
-                SystemLoggerService.info(`Server listening on port ${this.port}`)
+                SystemLoggerService.info(`Server listening on port ${this.port}`);
                 resolve();
             });
         });

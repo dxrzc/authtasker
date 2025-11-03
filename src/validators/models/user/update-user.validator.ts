@@ -8,7 +8,6 @@ import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messa
 import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
 
 export class UpdateUserValidator extends PartialType(CreateUserValidator) {
-
     async validateNewAndTransform(data: object): Promise<UpdateUserValidator> {
         if (Object.keys(data).length === 0)
             throw new InvalidInputError(usersApiErrors.NO_PROPERTIES_TO_UPDATE);
@@ -17,9 +16,8 @@ export class UpdateUserValidator extends PartialType(CreateUserValidator) {
         Object.assign(user, data);
 
         const errors = await validate(user, validationOptionsConfig);
-        if (errors.length > 0)
-            throw new InvalidInputError(returnFirstError(errors));
+        if (errors.length > 0) throw new InvalidInputError(returnFirstError(errors));
 
-        return plainToInstance(UpdateUserValidator, user)
+        return plainToInstance(UpdateUserValidator, user);
     }
 }

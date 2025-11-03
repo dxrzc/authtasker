@@ -70,4 +70,3 @@ describe('BaseMiddleware', () => {
         expect((next.mock.calls[0][0] as Error).message).toBe(errorMssg);
     });
 });
-

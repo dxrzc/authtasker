@@ -1,16 +1,18 @@
-import nodemailer from "nodemailer";
+import nodemailer from 'nodemailer';
 import { EmailService } from 'src/services/email.service';
 import { ITransporter } from 'src/interfaces/email/transporter.interface';
 
 describe('Email Service', () => {
     describe('constructor', () => {
         test('createTransport is called with the provided options', async () => {
-            const createTransportMock = jest.spyOn(nodemailer, 'createTransport').mockImplementation();
+            const createTransportMock = jest
+                .spyOn(nodemailer, 'createTransport')
+                .mockImplementation();
             const transporterOptions: ITransporter = {
                 host: 'localhost',
                 port: 5379,
                 user: 'test-user',
-                pass: 'test-password'
+                pass: 'test-password',
             };
 
             new EmailService(transporterOptions);
@@ -32,18 +34,20 @@ describe('Email Service', () => {
                 host: 'localhost',
                 port: 5379,
                 user: 'test-user',
-                pass: 'test-password'
+                pass: 'test-password',
             });
 
-            const sendMailMock = jest.spyOn(emailService['transporter'], 'sendMail').mockImplementation();
+            const sendMailMock = jest
+                .spyOn(emailService['transporter'], 'sendMail')
+                .mockImplementation();
             const mailOptions: nodemailer.SendMailOptions = {
                 to: 'test-email@gmail.com',
                 subject: 'Hello World',
-                html: `<h1>Hello-World</h1>`
+                html: `<h1>Hello-World</h1>`,
             };
 
             emailService.sendMail(mailOptions);
             expect(sendMailMock).toHaveBeenCalledWith(mailOptions);
         });
     });
-}); 
+});

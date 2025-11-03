@@ -10,8 +10,7 @@ export class ResetPasswordValidator extends PickType(CreateUserValidator, ['pass
         const data = new ResetPasswordValidator();
         data.password = input.password;
         const errors = await validate(data, validationOptionsConfig);
-        if (errors.length > 0)
-            throw new InvalidInputError(returnFirstError(errors));
+        if (errors.length > 0) throw new InvalidInputError(returnFirstError(errors));
 
         return data;
     }

@@ -1,4 +1,4 @@
-import { Model } from "mongoose";
+import { Model } from 'mongoose';
 import { IUser } from 'src/interfaces/user/user.interface';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
@@ -7,7 +7,6 @@ import { UserDataGenerator } from '../generators/user.generator';
 import { UserRequest } from 'src/types/user/user-request.type';
 
 export class UserSeedService {
-
     constructor(
         private readonly configService: ConfigService,
         private readonly userModel: Model<IUser>,
@@ -31,7 +30,7 @@ export class UserSeedService {
     }
 
     private async generateBunchOfUsers(n: number): Promise<UserRequest[]> {
-        let users = new Array<UserRequest>;
+        let users = new Array<UserRequest>();
         for (let i = 0; i < n; i++) {
             users.push(await this.generateRandomUser());
         }
@@ -43,7 +42,7 @@ export class UserSeedService {
         this.loggerService.warn('All users deleted, except admin');
 
         const users = await this.generateBunchOfUsers(n);
-        const usersWithRole = users.map(user => ({ ...user, role: this.returnRandomRole() }));
+        const usersWithRole = users.map((user) => ({ ...user, role: this.returnRandomRole() }));
 
         return await this.userModel.insertMany(usersWithRole);
     }

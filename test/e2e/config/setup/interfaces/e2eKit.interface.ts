@@ -5,10 +5,10 @@ import { TasksDataGenerator } from 'src/seed/generators/tasks.generator';
 import { ImapFlow } from 'imapflow';
 
 export interface IE2EKit {
-    configService: ConfigService,
-    userDataGenerator: UserDataGenerator,
-    tasksDataGenerator: TasksDataGenerator,
-    client: Axios,
+    configService: ConfigService;
+    userDataGenerator: UserDataGenerator;
+    tasksDataGenerator: TasksDataGenerator;
+    client: Axios;
     emailClient: ImapFlow;
     adminSessionToken: string;
     endpoints: {
@@ -24,5 +24,5 @@ export interface IE2EKit {
         findAllTasksByUser: string;
         refreshToken: string;
         health: string;
-    }
+    };
 }

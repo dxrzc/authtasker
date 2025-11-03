@@ -9,10 +9,9 @@ describe('GET /health', () => {
     describe('User is not an administrator', () => {
         const getNotAdminUser = (): UserRole => {
             let role = 'admin';
-            while (role === 'admin')
-                role = getRandomRole();
+            while (role === 'admin') role = getRandomRole();
             return role as 'editor' | 'readonly';
-        }
+        };
 
         test('return 403 FORBIDDEN', async () => {
             const expectedStatus = 403;

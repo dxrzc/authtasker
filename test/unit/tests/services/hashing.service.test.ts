@@ -36,7 +36,7 @@ describe('Hashing Service', () => {
         test.concurrent('return false for invalid data', async () => {
             const service = new HashingService(10);
             const hash = await service.hash('original-password');
-            const result = await service.compare('wrong-password', hash);            
+            const result = await service.compare('wrong-password', hash);
             expect(result).toBe(false);
         });
     });

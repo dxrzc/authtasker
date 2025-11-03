@@ -1,4 +1,3 @@
-
 export interface IShutdownParams {
     cause: string;
     exitCode: number;

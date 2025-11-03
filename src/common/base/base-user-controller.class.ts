@@ -1,4 +1,4 @@
-import { Request, RequestHandler, Response } from 'express'
+import { Request, RequestHandler, Response } from 'express';
 import { BaseController } from './base-controller.class';
 
 export abstract class BaseUserController extends BaseController {
@@ -18,15 +18,19 @@ export abstract class BaseUserController extends BaseController {
     protected abstract resetPasswordd(req: Request, res: Response): Promise<void>;
     protected abstract resetPasswordForm(req: Request, res: Response): Promise<void>;
 
-    readonly resetPasswordFormFwdErr = (): RequestHandler => this.forwardError(this.resetPasswordForm);
+    readonly resetPasswordFormFwdErr = (): RequestHandler =>
+        this.forwardError(this.resetPasswordForm);
     readonly resetPasswordFwdErr = (): RequestHandler => this.forwardError(this.resetPasswordd);
-    readonly requestPasswordRecoveryFwdErr = (): RequestHandler => this.forwardError(this.requestPasswordRecovery);
+    readonly requestPasswordRecoveryFwdErr = (): RequestHandler =>
+        this.forwardError(this.requestPasswordRecovery);
     readonly createFwdErr = (): RequestHandler => this.forwardError(this.create);
     readonly loginFwdErr = (): RequestHandler => this.forwardError(this.login);
     readonly logoutFwdErr = (): RequestHandler => this.forwardError(this.logout);
     readonly logoutFromAllFwdErr = (): RequestHandler => this.forwardError(this.logoutFromAll);
-    readonly requestEmailValidationFwdErr = (): RequestHandler => this.forwardError(this.requestEmailValidation);
-    readonly confirmEmailValidationFwdErr = (): RequestHandler => this.forwardError(this.confirmEmailValidation);
+    readonly requestEmailValidationFwdErr = (): RequestHandler =>
+        this.forwardError(this.requestEmailValidation);
+    readonly confirmEmailValidationFwdErr = (): RequestHandler =>
+        this.forwardError(this.confirmEmailValidation);
     readonly findOneFwdErr = (): RequestHandler => this.forwardError(this.findOne);
     readonly findAllFwdErr = (): RequestHandler => this.forwardError(this.findAll);
     readonly deleteOneFwdErr = (): RequestHandler => this.forwardError(this.deleteOne);

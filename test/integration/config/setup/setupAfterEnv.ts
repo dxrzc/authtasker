@@ -1,12 +1,12 @@
-import * as nodemailer from "nodemailer";
-import { mock } from "jest-mock-extended";
-import { NodemailerMock } from "nodemailer-mock";
-import { AsyncLocalStorage } from "async_hooks";
+import * as nodemailer from 'nodemailer';
+import { mock } from 'jest-mock-extended';
+import { NodemailerMock } from 'nodemailer-mock';
+import { AsyncLocalStorage } from 'async_hooks';
 import { Server } from 'src/server/server.init';
 import { AppRoutes } from 'src/routes/server.routes';
 import { JwtService } from 'src/services/jwt.service';
 import { testKit } from '@integration/utils/testKit.util';
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import { RedisService } from 'src/services/redis.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ConfigService } from 'src/services/config.service';
@@ -70,7 +70,7 @@ beforeAll(async () => {
         JWT_REFRESH_PRIVATE_KEY: 'testkey2',
         MAX_REFRESH_TOKENS_PER_USER: 3,
         JWT_PASSWORD_RECOVERY_EXP_TIME: '20m',
-        JWT_PASSWORD_RECOVERY_PRIVATE_KEY: 'passwordRecov123Key'
+        JWT_PASSWORD_RECOVERY_PRIVATE_KEY: 'passwordRecov123Key',
     } as const;
     mongoDatabase = new MongoDatabase(configService as ConfigService, loggerServiceMock);
     await mongoDatabase.connect();
@@ -111,7 +111,7 @@ beforeAll(async () => {
         configService as ConfigService,
         testKit.passwordRecovJwt,
         testKit.jwtBlacklistService,
-        testKit.loggerServiceMock
+        testKit.loggerServiceMock,
     );
 
     // data generators
@@ -125,9 +125,13 @@ beforeAll(async () => {
         configService as ConfigService,
         loggerServiceMock,
         new AsyncLocalStorage<any>(),
-        redisService
+        redisService,
     );
-    const server = new Server(0, await appRoutes.buildApp(), new ErrorHandlerMiddleware(loggerServiceMock));
+    const server = new Server(
+        0,
+        await appRoutes.buildApp(),
+        new ErrorHandlerMiddleware(loggerServiceMock),
+    );
     testKit.server = server['app'];
 });
 
@@ -135,6 +139,6 @@ afterAll(async () => {
     await Promise.all([
         redisDatabase.disconnect(),
         mongoMemoryServer.stop(),
-        mongoDatabase.disconnect()
+        mongoDatabase.disconnect(),
     ]);
 });

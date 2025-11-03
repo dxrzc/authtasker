@@ -1,6 +1,6 @@
 import request from 'supertest';
-import * as nodemailer from "nodemailer";
-import { NodemailerMock } from "nodemailer-mock";
+import * as nodemailer from 'nodemailer';
+import { NodemailerMock } from 'nodemailer-mock';
 import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';

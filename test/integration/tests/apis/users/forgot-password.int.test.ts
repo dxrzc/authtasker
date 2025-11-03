@@ -1,6 +1,6 @@
 import request from 'supertest';
-import * as nodemailer from "nodemailer";
-import { NodemailerMock } from "nodemailer-mock";
+import * as nodemailer from 'nodemailer';
+import { NodemailerMock } from 'nodemailer-mock';
 import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
@@ -19,15 +19,14 @@ describe('POST /api/users/forgot-password', () => {
                     .post(testKit.endpoints.forgotPassword)
                     .send({ email: 'invalid-email' });
                 expect(res.statusCode).toBe(400);
-                expect(res.body)
-                    .toStrictEqual({ error: usersApiErrors.INVALID_EMAIL })
+                expect(res.body).toStrictEqual({ error: usersApiErrors.INVALID_EMAIL });
             });
         });
     });
 
     describe('Email successfully sent', () => {
         test('email should contain a token generated with the secret: JWT_PASSWORD_RECOVERY_PRIVATE_KEY', async () => {
-            // create user            
+            // create user
             const { userEmail } = await createUser(getRandomRole());
 
             // forgot-password endpoint
@@ -38,17 +37,17 @@ describe('POST /api/users/forgot-password', () => {
 
             // obtain token
             const sentEmails = mock.getSentMail();
-            expect(sentEmails.length).toBe(1);                
-            const tokenInLink = extractTokenFromResetPasswordLink(sentEmails[0])            
+            expect(sentEmails.length).toBe(1);
+            const tokenInLink = extractTokenFromResetPasswordLink(sentEmails[0]);
 
-            expect(testKit.passwordRecovJwt.verify(tokenInLink)).not.toBeNull()
+            expect(testKit.passwordRecovJwt.verify(tokenInLink)).not.toBeNull();
         });
     });
 
     describe('Email provided', () => {
         describe('User email exists', () => {
             test('Send email to the user email', async () => {
-                // create user            
+                // create user
                 const { userEmail } = await createUser(getRandomRole());
 
                 // forgot-password endpoint
@@ -80,8 +79,7 @@ describe('POST /api/users/forgot-password', () => {
                     .send({ email: 'nonexistent@example.com' })
                     .expect(200);
 
-                expect(res.text)
-                    .toEqual('If that account exists, you will receive an email.');
+                expect(res.text).toEqual('If that account exists, you will receive an email.');
             });
         });
     });
@@ -89,7 +87,7 @@ describe('POST /api/users/forgot-password', () => {
     describe('Username provided', () => {
         describe('Username exists', () => {
             test('Send email to the user email', async () => {
-                // create user            
+                // create user
                 const { userName, userEmail } = await createUser(getRandomRole());
 
                 // forgot-password endpoint
@@ -121,8 +119,7 @@ describe('POST /api/users/forgot-password', () => {
                     .send({ username: testKit.userDataGenerator.name() })
                     .expect(200);
 
-                expect(res.text)
-                    .toEqual('If that account exists, you will receive an email.');
+                expect(res.text).toEqual('If that account exists, you will receive an email.');
             });
         });
     });

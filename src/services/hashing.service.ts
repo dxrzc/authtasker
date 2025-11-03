@@ -1,10 +1,7 @@
-import bcrypt from "bcryptjs"
+import bcrypt from 'bcryptjs';
 
 export class HashingService {
-
-    constructor(
-        private readonly saltRounds: number
-    ) {}
+    constructor(private readonly saltRounds: number) {}
 
     async hash(data: string): Promise<string> {
         const salt = await bcrypt.genSalt(this.saltRounds);

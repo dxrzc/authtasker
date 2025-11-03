@@ -1,4 +1,3 @@
-
 export const usersApiErrors = {
     // db
     USER_NOT_FOUND: 'User not found',
