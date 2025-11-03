@@ -34,4 +34,4 @@ jobs:
           eslint: true
           eslint_auto_fix: true
           commit_message: "style: fix eslint/prettier issues"
-          eslint_args: "\"src/**/*.ts\" --max-warnings 0"
+          eslint_args: "\"{src,test}/**/*.ts\" --max-warnings 0"  
