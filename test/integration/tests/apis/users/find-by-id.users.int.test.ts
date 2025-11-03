@@ -2,7 +2,7 @@ import request from 'supertest';
 import { testKit } from '@integration/utils/testKit.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { UserResponse } from 'src/types/user/user-response.type';
-import { makeUsersCacheKey } from '@logic/cache/make-users-cache-key';
+import { makeUsersCacheKey } from 'src/common/logic/cache/make-users-cache-key';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
 import { commonErrors } from 'src/common/errors/messages/common.error.messages';
 

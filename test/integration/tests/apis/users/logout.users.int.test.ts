@@ -4,9 +4,9 @@ import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
-import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
+import { makeRefreshTokenKey } from 'src/common/logic/token/make-refresh-token-key';
 import { authErrors } from 'src/common/errors/messages/auth.error.messages';
-import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
+import { makeRefreshTokenIndexKey } from 'src/common/logic/token/make-refresh-token-index-key';
 
 describe('POST /api/users/logout', () => {
     describe('Tokens', () => {

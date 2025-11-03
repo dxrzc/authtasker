@@ -4,8 +4,8 @@ import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
 import { authErrors } from 'src/common/errors/messages/auth.error.messages';
-import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
-import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
+import { makeRefreshTokenKey } from 'src/common/logic/token/make-refresh-token-key';
+import { makeRefreshTokenIndexKey } from 'src/common/logic/token/make-refresh-token-index-key';
 
 describe('DELETE /api/users/:id', () => {
     describe('Modification Access Rules Wiring', () => {

@@ -1,4 +1,4 @@
-import { calculateTokenTTL } from '@logic/token/calculate-token-ttl';
+import { calculateTokenTTL } from 'src/common/logic/token/calculate-token-ttl';
 
 describe('calculateTokenTTL', () => {
     test.concurrent('return the number of seconds of the remaining token time to live', async () => {

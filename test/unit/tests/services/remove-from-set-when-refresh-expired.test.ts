@@ -1,7 +1,7 @@
 import Redis from 'ioredis';
-import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
-import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
-import { removeFromSetWhenRefreshTokenExpires } from '@logic/token/remove-from-set-when-refresh-expired';
+import { makeRefreshTokenKey } from 'src/common/logic/token/make-refresh-token-key';
+import { makeRefreshTokenIndexKey } from 'src/common/logic/token/make-refresh-token-index-key';
+import { removeFromSetWhenRefreshTokenExpires } from 'src/common/logic/token/remove-from-set-when-refresh-expired';
 
 describe('removeFromSetWhenRefreshTokenExpires', () => {
     test('logic works with current refresh-token-key', async () => {

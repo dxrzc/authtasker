@@ -1,6 +1,6 @@
 import { validRoles } from 'src/types/user/user-roles.type';
 import { modificationAuthFixture } from '@unit/fixtures/modification-auth.fixture';
-import { modificationAccessControl } from '@logic/roles/modification-access-control';
+import { modificationAccessControl } from 'src/common/logic/roles/modification-access-control';
 
 describe('tasksModificationAccessControl', () => {
     test.each(validRoles)('%s users are authorized themselves', async (role) => {

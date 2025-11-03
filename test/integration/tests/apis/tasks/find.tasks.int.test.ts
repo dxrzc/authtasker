@@ -4,7 +4,7 @@ import { testKit } from '@integration/utils/testKit.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { createTask } from '@integration/utils/createTask.util';
 import { paginationErrors } from 'src/common/errors/messages/pagination.error.messages';
-import { makePaginationCacheKey } from '@logic/cache/make-pagination-cache-key';
+import { makePaginationCacheKey } from 'src/common/logic/cache/make-pagination-cache-key';
 
 describe('GET /api/tasks/', () => {
     let tasksIdSorted = new Array<string>();

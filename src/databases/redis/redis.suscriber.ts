@@ -2,7 +2,7 @@ import Redis from 'ioredis';
 import { getRedisOptions } from './redis.options';
 import { ConfigService } from 'src/services/config.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
-import { removeFromSetWhenRefreshTokenExpires } from '@logic/token/remove-from-set-when-refresh-expired';
+import { removeFromSetWhenRefreshTokenExpires } from 'src/common/logic/token/remove-from-set-when-refresh-expired';
 
 export class RedisSuscriber {
     constructor(

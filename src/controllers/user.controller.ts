@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { UserService } from "src/services/user.service";
-import { buildCacheOptions } from '@logic/cache/build-cache-options';
+import { buildCacheOptions } from 'src/common/logic/cache/build-cache-options';
 import { statusCodes } from 'src/common/constants/status-codes.constants';
 import { paginationSettings } from 'src/common/constants/pagination.constants';
 import { BaseUserController } from 'src/common/base/base-user-controller.class';

@@ -6,7 +6,7 @@ import { paginationSettings } from 'src/common/constants/pagination.constants';
 import { BaseTasksController } from 'src/common/base/base-tasks-controller.class';
 import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
-import { buildCacheOptions } from '@logic/cache/build-cache-options';
+import { buildCacheOptions } from 'src/common/logic/cache/build-cache-options';
 
 export class TasksController extends BaseTasksController {
 

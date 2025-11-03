@@ -1,6 +1,6 @@
 import { UserRole } from 'src/types/user/user-roles.type';
 import { LoggerService } from 'src/services/logger.service';
-import { hasSufficientRole } from '@logic/roles/has-sufficent-role';
+import { hasSufficientRole } from 'src/common/logic/roles/has-sufficent-role';
 import { BaseMiddleware } from 'src/common/base/base-middleware.class';
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import { SessionTokenService } from 'src/services/session-token.service';

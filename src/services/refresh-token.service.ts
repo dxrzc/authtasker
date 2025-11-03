@@ -5,12 +5,12 @@ import { RedisService } from './redis.service';
 import { ConfigService } from './config.service';
 import { LoggerService } from './logger.service';
 import { IUser } from 'src/interfaces/user/user.interface';
-import { calculateTokenTTL } from '@logic/token/calculate-token-ttl';
+import { calculateTokenTTL } from 'src/common/logic/token/calculate-token-ttl';
 import { HttpError } from 'src/common/errors/classes/http-error.class';
-import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
+import { makeRefreshTokenKey } from 'src/common/logic/token/make-refresh-token-key';
 import { authErrors } from 'src/common/errors/messages/auth.error.messages';
-import { convertExpTimeToSeconds } from '@logic/token/convert-exp-time-to-unix';
-import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
+import { convertExpTimeToSeconds } from 'src/common/logic/token/convert-exp-time-to-unix';
+import { makeRefreshTokenIndexKey } from 'src/common/logic/token/make-refresh-token-index-key';
 
 interface RefreshTokenMetadata {
     token: string;

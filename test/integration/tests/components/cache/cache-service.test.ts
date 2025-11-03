@@ -1,7 +1,7 @@
 import { testKit } from '@integration/utils/testKit.util';
 import { CacheService } from 'src/services/cache.service';
 import { UserResponse } from 'src/types/user/user-response.type';
-import { makeUsersCacheKey } from '@logic/cache/make-users-cache-key';
+import { makeUsersCacheKey } from 'src/common/logic/cache/make-users-cache-key';
 import { DataInCache } from 'src/interfaces/cache/data-in-cache.interface';
 import { UserDocument } from 'src/types/user/user-document.type';
 

@@ -2,7 +2,7 @@ import request from 'supertest';
 import { Apis } from 'src/enums/apis.enum';
 import { testKit } from '@integration/utils/testKit.util';
 import { createUser } from '@integration/utils/createUser.util';
-import { makePaginationCacheKey } from '@logic/cache/make-pagination-cache-key';
+import { makePaginationCacheKey } from 'src/common/logic/cache/make-pagination-cache-key';
 import { paginationErrors } from 'src/common/errors/messages/pagination.error.messages';
 
 describe('GET /api/users/:id', () => {

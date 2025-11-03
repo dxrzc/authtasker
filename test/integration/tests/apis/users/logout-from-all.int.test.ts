@@ -5,9 +5,9 @@ import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { usersLimits } from 'src/common/constants/user.constants';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
-import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
+import { makeRefreshTokenKey } from 'src/common/logic/token/make-refresh-token-key';
 import { authErrors } from 'src/common/errors/messages/auth.error.messages';
-import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
+import { makeRefreshTokenIndexKey } from 'src/common/logic/token/make-refresh-token-index-key';
 import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
 
 describe('Logout from all', () => {
