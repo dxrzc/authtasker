@@ -26,7 +26,7 @@ describe('Refresh Token Service', () => {
         const role = getRandomRole();
         const userCreated = await testKit.userModel.create({
             ...testKit.userDataGenerator.fullUser(),
-            emailValidated: (role !== 'readonly'),
+            emailValidated: role !== 'readonly',
             role,
         });
         return { userId: userCreated.id };
@@ -38,8 +38,12 @@ describe('Refresh Token Service', () => {
             const { userId } = await createUser();
             const { jti, id } = await refreshTokenService.generate(userId, { meta: true });
             // calculate token exp
-            const expTimeEnvInSeconds = Math.floor(ms(testKit.configService.JWT_REFRESH_EXP_TIME as StringValue) / 1000);
-            const ttlInSecondsFromRedis = await testKit.redisInstance.ttl(makeRefreshTokenKey(id, jti));
+            const expTimeEnvInSeconds = Math.floor(
+                ms(testKit.configService.JWT_REFRESH_EXP_TIME as StringValue) / 1000,
+            );
+            const ttlInSecondsFromRedis = await testKit.redisInstance.ttl(
+                makeRefreshTokenKey(id, jti),
+            );
             expect(ttlInSecondsFromRedis).toBeDefined();
             expect(Math.abs(expTimeEnvInSeconds - ttlInSecondsFromRedis)).toBeLessThanOrEqual(1);
         });
@@ -49,7 +53,10 @@ describe('Refresh Token Service', () => {
             const { userId } = await createUser();
             const { jti, id } = await refreshTokenService.generate(userId, { meta: true });
             // jti should be in the user's set
-            const jtiInSet = await testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), jti);
+            const jtiInSet = await testKit.redisService.belongsToSet(
+                makeRefreshTokenIndexKey(userId),
+                jti,
+            );
             expect(jtiInSet).toBeTruthy();
         });
     });
@@ -73,7 +80,7 @@ describe('Refresh Token Service', () => {
             const { jti, id, token } = await refreshTokenService.generate(userId, { meta: true });
             // token in redis
             const inRedis = await testKit.redisService.get(makeRefreshTokenKey(id, jti));
-            expect(inRedis).not.toBeNull()
+            expect(inRedis).not.toBeNull();
             // rotate
             await refreshTokenService.rotate(token);
             // previously token shouldn't be in redis anymore
@@ -84,22 +91,34 @@ describe('Refresh Token Service', () => {
         test('store the new token jti in redis database with the same ttl as the previous one', async () => {
             const { userId } = await createUser();
             // generate old token
-            const { token: oldToken, expSeconds: oldTokenExpSeconds } = await refreshTokenService.generate(userId, { meta: true });
+            const { token: oldToken, expSeconds: oldTokenExpSeconds } =
+                await refreshTokenService.generate(userId, { meta: true });
             // rotate token
-            const { id: newTokenUserId, jti: newTokenJti } = await refreshTokenService.rotate(oldToken, { meta: true });
+            const { id: newTokenUserId, jti: newTokenJti } = await refreshTokenService.rotate(
+                oldToken,
+                { meta: true },
+            );
             // new token stored for oldTokenExpSeconds
-            const newTokenTTLInRedis = await testKit.redisInstance.ttl(makeRefreshTokenKey(newTokenUserId, newTokenJti));
+            const newTokenTTLInRedis = await testKit.redisInstance.ttl(
+                makeRefreshTokenKey(newTokenUserId, newTokenJti),
+            );
             expect(newTokenTTLInRedis).toBe(oldTokenExpSeconds);
         });
 
         test('delete previous token jti from user refresh tokens index', async () => {
             const { userId } = await createUser();
             // generate old token
-            const { token: oldToken, jti: oldTokenJti } = await refreshTokenService.generate(userId, { meta: true });
+            const { token: oldToken, jti: oldTokenJti } = await refreshTokenService.generate(
+                userId,
+                { meta: true },
+            );
             // rotate token
             await refreshTokenService.rotate(oldToken, { meta: true });
             // token should'nt be in user's set anymore
-            const oldTokenJtiInSet = await testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), oldTokenJti);
+            const oldTokenJtiInSet = await testKit.redisService.belongsToSet(
+                makeRefreshTokenIndexKey(userId),
+                oldTokenJti,
+            );
             expect(oldTokenJtiInSet).toBeFalsy();
         });
 
@@ -110,7 +129,10 @@ describe('Refresh Token Service', () => {
             // rotate token
             const { jti: newTokenJti } = await refreshTokenService.rotate(oldToken, { meta: true });
             //  new token jti should be in the user set
-            const newTokenJtiInSet = await testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), newTokenJti);
+            const newTokenJtiInSet = await testKit.redisService.belongsToSet(
+                makeRefreshTokenIndexKey(userId),
+                newTokenJti,
+            );
             expect(newTokenJtiInSet).toBeTruthy();
         });
 
@@ -119,24 +141,24 @@ describe('Refresh Token Service', () => {
                 // valid token but never saved in redis db
                 const { userId } = await createUser();
                 const { token: invalidToken } = testKit.refreshJwt.generate('20m', {
-                    id: userId
+                    id: userId,
                 });
-                await expect(refreshTokenService.rotate(invalidToken))
-                    .rejects
-                    .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                await expect(refreshTokenService.rotate(invalidToken)).rejects.toThrow(
+                    HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
         describe('Token is expired', () => {
             test('throw HttpError UNAUTHORIZED and invalid token message', async () => {
-                jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 1000000000)
+                jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 1000000000);
                 const { userId } = await createUser();
                 const { token: expiredToken } = testKit.refreshJwt.generate('10s', {
-                    id: userId
+                    id: userId,
                 });
-                await expect(refreshTokenService.rotate(expiredToken))
-                    .rejects
-                    .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                await expect(refreshTokenService.rotate(expiredToken)).rejects.toThrow(
+                    HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
@@ -148,9 +170,9 @@ describe('Refresh Token Service', () => {
                 const { token: invalidToken } = jwtService.generate('20m', {
                     id: userId,
                 });
-                await expect(refreshTokenService.rotate(invalidToken))
-                    .rejects
-                    .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                await expect(refreshTokenService.rotate(invalidToken)).rejects.toThrow(
+                    HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
@@ -158,20 +180,20 @@ describe('Refresh Token Service', () => {
             test('throw HttpError UNAUTHORIZED and invalid token message', async () => {
                 // generate a signed token with no user field
                 const { token: invalidToken } = testKit.refreshJwt.generate('20m', {});
-                await expect(refreshTokenService.rotate(invalidToken))
-                    .rejects
-                    .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                await expect(refreshTokenService.rotate(invalidToken)).rejects.toThrow(
+                    HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
         describe('User in token not found', () => {
             test('throw HttpError UNAUTHORIZED and invalid token message', async () => {
                 const { token: invalidToken } = testKit.refreshJwt.generate('20m', {
-                    id: new Types.ObjectId()
+                    id: new Types.ObjectId(),
                 });
-                await expect(refreshTokenService.rotate(invalidToken))
-                    .rejects
-                    .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                await expect(refreshTokenService.rotate(invalidToken)).rejects.toThrow(
+                    HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                );
             });
         });
     });
@@ -192,7 +214,10 @@ describe('Refresh Token Service', () => {
             // revoke
             await refreshTokenService.revokeToken(id, jti);
             // jti shouldn't be in the user's set
-            const jtiInSet = await testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), jti);
+            const jtiInSet = await testKit.redisService.belongsToSet(
+                makeRefreshTokenIndexKey(userId),
+                jti,
+            );
             expect(jtiInSet).toBeFalsy();
         });
     });
@@ -201,15 +226,30 @@ describe('Refresh Token Service', () => {
         test('delete all the tokens asocciated to user in redis database', async () => {
             // create 3 tokens for this user
             const { userId } = await createUser();
-            const { id: token1UserId, jti: token1Jti } = await refreshTokenService.generate(userId, { meta: true });
-            const { id: token2UserId, jti: token2Jti } = await refreshTokenService.generate(userId, { meta: true });
-            const { id: token3UserId, jti: token3Jti } = await refreshTokenService.generate(userId, { meta: true });
+            const { id: token1UserId, jti: token1Jti } = await refreshTokenService.generate(
+                userId,
+                { meta: true },
+            );
+            const { id: token2UserId, jti: token2Jti } = await refreshTokenService.generate(
+                userId,
+                { meta: true },
+            );
+            const { id: token3UserId, jti: token3Jti } = await refreshTokenService.generate(
+                userId,
+                { meta: true },
+            );
             // revoke all tokens
             await refreshTokenService.revokeAll(userId);
             // tokens shouldn't exist in redis db
-            await expect(testKit.redisService.get(makeRefreshTokenKey(token1UserId, token1Jti))).resolves.toBeNull()
-            await expect(testKit.redisService.get(makeRefreshTokenKey(token2UserId, token2Jti))).resolves.toBeNull()
-            await expect(testKit.redisService.get(makeRefreshTokenKey(token3UserId, token3Jti))).resolves.toBeNull()
+            await expect(
+                testKit.redisService.get(makeRefreshTokenKey(token1UserId, token1Jti)),
+            ).resolves.toBeNull();
+            await expect(
+                testKit.redisService.get(makeRefreshTokenKey(token2UserId, token2Jti)),
+            ).resolves.toBeNull();
+            await expect(
+                testKit.redisService.get(makeRefreshTokenKey(token3UserId, token3Jti)),
+            ).resolves.toBeNull();
         });
 
         test('user refresh tokens set remains empty', async () => {
@@ -219,7 +259,7 @@ describe('Refresh Token Service', () => {
                 refreshTokenService.generate(userId, { meta: true }),
                 refreshTokenService.generate(userId, { meta: true }),
                 refreshTokenService.generate(userId, { meta: true }),
-            ])
+            ]);
             // revoke all tokens
             await refreshTokenService.revokeAll(userId);
             // count jtis in set
@@ -228,4 +268,3 @@ describe('Refresh Token Service', () => {
         });
     });
 });
-

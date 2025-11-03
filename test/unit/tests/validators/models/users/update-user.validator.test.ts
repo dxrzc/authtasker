@@ -11,29 +11,29 @@ const updateUserValidator = new UpdateUserValidator();
 
 describe('UpdateUserValidator', () => {
     test.concurrent('throw InvalidInputError if all fields are missing', async () => {
-        await expect(async () =>
-            await updateUserValidator.validateNewAndTransform({})
+        await expect(
+            async () => await updateUserValidator.validateNewAndTransform({}),
         ).rejects.toThrow(new InvalidInputError(usersApiErrors.NO_PROPERTIES_TO_UPDATE));
     });
 
     test.concurrent('throw InvalidInputError if name is too short', async () => {
         const data = { name: 'ab' };
-        await expect(async () =>
-            await updateUserValidator.validateNewAndTransform(data)
+        await expect(
+            async () => await updateUserValidator.validateNewAndTransform(data),
         ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_NAME_LENGTH));
     });
 
     test.concurrent('throw InvalidInputError if name is too long', async () => {
         const data = { name: faker.string.alpha(usersLimits.MAX_NAME_LENGTH + 1) };
-        await expect(async () =>
-            await updateUserValidator.validateNewAndTransform(data)
+        await expect(
+            async () => await updateUserValidator.validateNewAndTransform(data),
         ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_NAME_LENGTH));
     });
 
     test.concurrent('throw InvalidInputError if email format is invalid', async () => {
         const data = { email: 'not-an-email' };
-        await expect(async () =>
-            await updateUserValidator.validateNewAndTransform(data)
+        await expect(
+            async () => await updateUserValidator.validateNewAndTransform(data),
         ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_EMAIL));
     });
 
@@ -41,8 +41,8 @@ describe('UpdateUserValidator', () => {
         const data = {
             password: faker.string.alpha(usersLimits.MIN_PASSWORD_LENGTH - 1),
         };
-        await expect(async () =>
-            await updateUserValidator.validateNewAndTransform(data)
+        await expect(
+            async () => await updateUserValidator.validateNewAndTransform(data),
         ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH));
     });
 
@@ -50,8 +50,8 @@ describe('UpdateUserValidator', () => {
         const data = {
             password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1),
         };
-        await expect(async () =>
-            await updateUserValidator.validateNewAndTransform(data)
+        await expect(
+            async () => await updateUserValidator.validateNewAndTransform(data),
         ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH));
     });
 
@@ -61,8 +61,8 @@ describe('UpdateUserValidator', () => {
             email: usersData.email(),
             unknown: 'surprise',
         };
-        await expect(async () =>
-            await updateUserValidator.validateNewAndTransform(data)
+        await expect(
+            async () => await updateUserValidator.validateNewAndTransform(data),
         ).rejects.toThrow(new InvalidInputError(commonErrors.UNEXPECTED_PROPERTY_PROVIDED));
     });
 

@@ -12,8 +12,8 @@ import { EmailValidationTokenService } from 'src/services/email-validation-token
 
 describe('EmailValidationTokenService', () => {
     let jwtService: JwtService;
-    let jwtBlacklistService: MockProxy<JwtBlackListService>
-    let loggerService: MockProxy<LoggerService>    
+    let jwtBlacklistService: MockProxy<JwtBlackListService>;
+    let loggerService: MockProxy<LoggerService>;
     let configService: Partial<ConfigService>;
     let emailValidationTokenService: EmailValidationTokenService;
 
@@ -22,7 +22,7 @@ describe('EmailValidationTokenService', () => {
         configService = {
             JWT_SESSION_PRIVATE_KEY: 'test-123',
             JWT_EMAIL_VALIDATION_EXP_TIME: '5m',
-        }
+        };
         jwtService = new JwtService(configService.JWT_SESSION_PRIVATE_KEY!);
 
         // mocks
@@ -66,11 +66,14 @@ describe('EmailValidationTokenService', () => {
                 jest.spyOn(Date, 'now').mockReturnValue(nowInSeconds * 1000);
                 const remainingTTLInSeconds = 79;
 
-                await emailValidationTokenService.blacklist(jti, nowInSeconds + remainingTTLInSeconds);
+                await emailValidationTokenService.blacklist(
+                    jti,
+                    nowInSeconds + remainingTTLInSeconds,
+                );
                 expect(jwtBlacklistService.blacklist).toHaveBeenCalledWith(
                     JwtTypes.emailValidation,
                     jti,
-                    remainingTTLInSeconds
+                    remainingTTLInSeconds,
                 );
             });
         });
@@ -82,11 +85,11 @@ describe('EmailValidationTokenService', () => {
                 const badJwtService = new JwtService('123-bad-key');
                 const { token: badToken } = badJwtService.generate('10m', {
                     purpose: tokenPurposes.EMAIL_VALIDATION,
-                    email: faker.internet.email()
+                    email: faker.internet.email(),
                 });
-                await expect(emailValidationTokenService.consume(badToken))
-                    .rejects
-                    .toThrow(HttpError.badRequest(authErrors.INVALID_TOKEN));
+                await expect(emailValidationTokenService.consume(badToken)).rejects.toThrow(
+                    HttpError.badRequest(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
@@ -94,13 +97,13 @@ describe('EmailValidationTokenService', () => {
             test('throw bad request invalid token error', async () => {
                 const { token: expiredToken } = jwtService.generate('1s', {
                     purpose: tokenPurposes.EMAIL_VALIDATION,
-                    email: faker.internet.email()
+                    email: faker.internet.email(),
                 });
                 // 1.1 seconds to ensure expiry
                 await new Promise((res) => setTimeout(res, 1100));
-                await expect(emailValidationTokenService.consume(expiredToken))
-                    .rejects
-                    .toThrow(HttpError.badRequest(authErrors.INVALID_TOKEN));
+                await expect(emailValidationTokenService.consume(expiredToken)).rejects.toThrow(
+                    HttpError.badRequest(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
@@ -108,11 +111,11 @@ describe('EmailValidationTokenService', () => {
             test('throw bad request invalid token error', async () => {
                 const { token: invalidToken } = jwtService.generate('10m', {
                     purpose: tokenPurposes.EMAIL_VALIDATION,
-                    email: undefined
+                    email: undefined,
                 });
-                await expect(emailValidationTokenService.consume(invalidToken))
-                    .rejects
-                    .toThrow(HttpError.badRequest(authErrors.INVALID_TOKEN));
+                await expect(emailValidationTokenService.consume(invalidToken)).rejects.toThrow(
+                    HttpError.badRequest(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
@@ -120,11 +123,11 @@ describe('EmailValidationTokenService', () => {
             test('throw bad request invalid token error', async () => {
                 const { token: sessionToken } = jwtService.generate('10m', {
                     purpose: tokenPurposes.SESSION,
-                    email: faker.internet.email()
+                    email: faker.internet.email(),
                 });
-                await expect(emailValidationTokenService.consume(sessionToken))
-                    .rejects
-                    .toThrow(HttpError.badRequest(authErrors.INVALID_TOKEN));
+                await expect(emailValidationTokenService.consume(sessionToken)).rejects.toThrow(
+                    HttpError.badRequest(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
@@ -132,11 +135,11 @@ describe('EmailValidationTokenService', () => {
             test('throw bad request invalid token error', async () => {
                 const { token: sessionToken } = jwtService.generate('10m', {
                     purpose: 'random-purpose',
-                    email: faker.internet.email()
+                    email: faker.internet.email(),
                 });
-                await expect(emailValidationTokenService.consume(sessionToken))
-                    .rejects
-                    .toThrow(HttpError.badRequest(authErrors.INVALID_TOKEN));
+                await expect(emailValidationTokenService.consume(sessionToken)).rejects.toThrow(
+                    HttpError.badRequest(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
@@ -145,25 +148,28 @@ describe('EmailValidationTokenService', () => {
                 // send a valid token but mock tokenInBlacklist function to return true
                 const { token: validToken } = jwtService.generate('1m', {
                     purpose: tokenPurposes.EMAIL_VALIDATION,
-                    email: faker.internet.email()
+                    email: faker.internet.email(),
                 });
                 jwtBlacklistService.tokenInBlacklist.mockResolvedValue(true);
-                await expect(emailValidationTokenService.consume(validToken))
-                    .rejects
-                    .toThrow(HttpError.badRequest(authErrors.INVALID_TOKEN));
+                await expect(emailValidationTokenService.consume(validToken)).rejects.toThrow(
+                    HttpError.badRequest(authErrors.INVALID_TOKEN),
+                );
             });
 
             test('jwtBlacklistService.tokenInBlacklist is called with email-validation token type and jti', async () => {
                 // send a valid token
                 const { jti, token: validToken } = jwtService.generate('1m', {
                     purpose: tokenPurposes.EMAIL_VALIDATION,
-                    email: faker.internet.email()
+                    email: faker.internet.email(),
                 });
                 jwtBlacklistService.tokenInBlacklist.mockResolvedValue(true);
-                await expect(emailValidationTokenService.consume(validToken))
-                    .rejects
-                    .toThrow(HttpError.badRequest(authErrors.INVALID_TOKEN));
-                expect(jwtBlacklistService.tokenInBlacklist).toHaveBeenCalledWith(JwtTypes.emailValidation, jti);
+                await expect(emailValidationTokenService.consume(validToken)).rejects.toThrow(
+                    HttpError.badRequest(authErrors.INVALID_TOKEN),
+                );
+                expect(jwtBlacklistService.tokenInBlacklist).toHaveBeenCalledWith(
+                    JwtTypes.emailValidation,
+                    jti,
+                );
             });
         });
 
@@ -173,7 +179,7 @@ describe('EmailValidationTokenService', () => {
                 const emailInToken = faker.internet.email();
                 const { token: validToken } = jwtService.generate('1m', {
                     purpose: tokenPurposes.EMAIL_VALIDATION,
-                    email: emailInToken
+                    email: emailInToken,
                 });
                 // token not in blacklist
                 jwtBlacklistService.tokenInBlacklist.mockResolvedValue(false);
@@ -188,7 +194,7 @@ describe('EmailValidationTokenService', () => {
                 // send a valid token
                 const { jti, token: validToken } = jwtService.generate(`${remainingTTL}s`, {
                     purpose: tokenPurposes.EMAIL_VALIDATION,
-                    email: faker.internet.email()
+                    email: faker.internet.email(),
                 });
 
                 // run

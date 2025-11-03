@@ -7,7 +7,7 @@ import { authErrors } from 'src/common/errors/messages/auth.error.messages';
 
 describe('DELETE /api/tasks/:id', () => {
     describe('Modification Access Rules Wiring', () => {
-        test.concurrent('editors are forbidden to delete another editor\'s task', async () => {
+        test.concurrent("editors are forbidden to delete another editor's task", async () => {
             const expectedStatus = 403;
             const expectedErrorMssg = authErrors.FORBIDDEN;
 
@@ -27,7 +27,7 @@ describe('DELETE /api/tasks/:id', () => {
             expect(response.body).toStrictEqual({ error: expectedErrorMssg });
         });
 
-        test.concurrent('admins are authorized to delete editor\'s tasks', async () => {
+        test.concurrent("admins are authorized to delete editor's tasks", async () => {
             // Create admin
             const { sessionToken: currentUserSessionToken } = await createUser('admin');
 

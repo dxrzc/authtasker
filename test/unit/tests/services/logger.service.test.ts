@@ -8,15 +8,12 @@ import { NoReadonly } from '@unit/utils/types/no-read-only.type';
 describe('LoggerService ', () => {
     let configService: NoReadonly<ConfigService>;
     let loggerService: LoggerService;
-    let consoleLogger = mock<winston.Logger>();
-    let fileLogger = mock<winston.Logger>();
-    let requestCompletedFileLogger = mock<winston.Logger>();
+    const consoleLogger = mock<winston.Logger>();
+    const fileLogger = mock<winston.Logger>();
+    const requestCompletedFileLogger = mock<winston.Logger>();
     beforeEach(() => {
         configService = {} as any;
-        loggerService = new LoggerService(
-            configService,
-            new AsyncLocalStorage<any>()
-        );
+        loggerService = new LoggerService(configService, new AsyncLocalStorage<any>());
         loggerService['consoleLogger'] = consoleLogger;
         loggerService['requestCompletedFileLogger'] = requestCompletedFileLogger;
         loggerService['fileLogger'] = fileLogger;
@@ -48,7 +45,7 @@ describe('LoggerService ', () => {
                 configService.HTTP_LOGS = true;
                 loggerService.logRequest({} as any);
                 expect(consoleLogger.log).toHaveBeenCalledTimes(1);
-                expect(requestCompletedFileLogger.info).toHaveBeenCalledTimes(1);                
+                expect(requestCompletedFileLogger.info).toHaveBeenCalledTimes(1);
             });
         });
 
@@ -57,7 +54,7 @@ describe('LoggerService ', () => {
                 configService.HTTP_LOGS = false;
                 loggerService.logRequest({} as any);
                 expect(consoleLogger.log).not.toHaveBeenCalled();
-                expect(requestCompletedFileLogger.info).not.toHaveBeenCalled();                
+                expect(requestCompletedFileLogger.info).not.toHaveBeenCalled();
             });
         });
     });

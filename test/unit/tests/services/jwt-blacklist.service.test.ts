@@ -13,16 +13,15 @@ describe('JwtBlackListService', () => {
         test.concurrent.each([
             { tokenType: JwtTypes.session, keyGenerator: makeSessionTokenBlacklistKey },
             { tokenType: JwtTypes.emailValidation, keyGenerator: makeEmailValidationBlacklistKey },
-        ])('when token is a $tokenType token call redisService.set() with the right key, "1", and the exp time', async ({ tokenType, keyGenerator }) => {
-            const expTime = 360;
-            const jti = 'tokenJti';
-            await service.blacklist(tokenType, jti, expTime);
-            expect(redisServiceMock.set).toHaveBeenCalledWith(
-                keyGenerator(jti),
-                '1',
-                expTime
-            );
-        });
+        ])(
+            'when token is a $tokenType token call redisService.set() with the right key, "1", and the exp time',
+            async ({ tokenType, keyGenerator }) => {
+                const expTime = 360;
+                const jti = 'tokenJti';
+                await service.blacklist(tokenType, jti, expTime);
+                expect(redisServiceMock.set).toHaveBeenCalledWith(keyGenerator(jti), '1', expTime);
+            },
+        );
     });
 
     describe('tokenInBlacklist', () => {

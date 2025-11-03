@@ -11,16 +11,21 @@ import { makeRefreshTokenIndexKey } from 'src/common/logic/token/make-refresh-to
 describe('POST /api/users/logout', () => {
     describe('Tokens', () => {
         describe('Refresh token not provided in body', () => {
-            test.concurrent('return status 400 BAD REQUEST and the configured error messg', async () => {
-                const expectedStatus = 400;
-                const { sessionToken, refreshToken } = await createUser(getRandomRole());
-                // logout
-                const response = await request(testKit.server)
-                    .post(testKit.endpoints.logout)
-                    .set('Authorization', `Bearer ${sessionToken}`)
-                expect(response.body).toStrictEqual({ error: authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY });
-                expect(response.statusCode).toBe(expectedStatus);
-            });
+            test.concurrent(
+                'return status 400 BAD REQUEST and the configured error messg',
+                async () => {
+                    const expectedStatus = 400;
+                    const { sessionToken, refreshToken } = await createUser(getRandomRole());
+                    // logout
+                    const response = await request(testKit.server)
+                        .post(testKit.endpoints.logout)
+                        .set('Authorization', `Bearer ${sessionToken}`);
+                    expect(response.body).toStrictEqual({
+                        error: authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY,
+                    });
+                    expect(response.statusCode).toBe(expectedStatus);
+                },
+            );
         });
 
         test.concurrent('session token is blacklisted after logout', async () => {
@@ -33,7 +38,10 @@ describe('POST /api/users/logout', () => {
                 .expect(status2xx);
             // session token should be blacklisted
             const sessionJti = testKit.sessionJwt.verify(sessionToken)?.jti!;
-            const token = await testKit.jwtBlacklistService.tokenInBlacklist(JwtTypes.session, sessionJti);
+            const token = await testKit.jwtBlacklistService.tokenInBlacklist(
+                JwtTypes.session,
+                sessionJti,
+            );
             expect(token).not.toBeNull();
         });
 
@@ -47,11 +55,13 @@ describe('POST /api/users/logout', () => {
                 .expect(status2xx);
             const refreshJti = testKit.refreshJwt.verify(refreshToken)?.jti!;
             // deleted from refresh tokens db
-            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, refreshJti)))
-                .resolves.toBeNull();
+            await expect(
+                testKit.redisService.get(makeRefreshTokenKey(userId, refreshJti)),
+            ).resolves.toBeNull();
             // deleted from user set
-            await expect(testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), refreshJti))
-                .resolves.toBeFalsy();
+            await expect(
+                testKit.redisService.belongsToSet(makeRefreshTokenIndexKey(userId), refreshJti),
+            ).resolves.toBeFalsy();
         });
     });
 

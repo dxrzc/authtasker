@@ -44,24 +44,37 @@ describe('DELETE /api/users/:id', () => {
     });
 
     describe('Tokens', () => {
-        test.concurrent('delete all refresh tokens belonging to user from redis (refresh tokens db)', async () => {
-            // create assigns a refresh token
-            const { userId, sessionToken, refreshToken } = await createUser(getRandomRole());
-            const jti1 = testKit.refreshJwt.verify(refreshToken)?.jti!;
-            // create an extra token
-            const { jti: jti2 } = await testKit.refreshTokenService.generate(userId, { meta: true });
-            // 2 tokens assigned
-            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, jti1))).resolves.not.toBeNull();
-            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, jti2))).resolves.not.toBeNull();
-            // delete user
-            await request(testKit.server)
-                .delete(`${testKit.endpoints.usersAPI}/${userId}`)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .expect(status2xx);
-            // tokens should have been deleted
-            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, jti1))).resolves.toBeNull();
-            await expect(testKit.redisService.get(makeRefreshTokenKey(userId, jti2))).resolves.toBeNull();
-        });
+        test.concurrent(
+            'delete all refresh tokens belonging to user from redis (refresh tokens db)',
+            async () => {
+                // create assigns a refresh token
+                const { userId, sessionToken, refreshToken } = await createUser(getRandomRole());
+                const jti1 = testKit.refreshJwt.verify(refreshToken)?.jti!;
+                // create an extra token
+                const { jti: jti2 } = await testKit.refreshTokenService.generate(userId, {
+                    meta: true,
+                });
+                // 2 tokens assigned
+                await expect(
+                    testKit.redisService.get(makeRefreshTokenKey(userId, jti1)),
+                ).resolves.not.toBeNull();
+                await expect(
+                    testKit.redisService.get(makeRefreshTokenKey(userId, jti2)),
+                ).resolves.not.toBeNull();
+                // delete user
+                await request(testKit.server)
+                    .delete(`${testKit.endpoints.usersAPI}/${userId}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .expect(status2xx);
+                // tokens should have been deleted
+                await expect(
+                    testKit.redisService.get(makeRefreshTokenKey(userId, jti1)),
+                ).resolves.toBeNull();
+                await expect(
+                    testKit.redisService.get(makeRefreshTokenKey(userId, jti2)),
+                ).resolves.toBeNull();
+            },
+        );
 
         test.concurrent('delete the user refresh tokens count set', async () => {
             // create assigns a refresh token
@@ -72,14 +85,18 @@ describe('DELETE /api/users/:id', () => {
                 testKit.refreshTokenService.generate(userId, { meta: true }),
             ]);
             // 3 tokens in set
-            await expect(testKit.redisService.getSetSize(makeRefreshTokenIndexKey(userId))).resolves.toBe(3);
+            await expect(
+                testKit.redisService.getSetSize(makeRefreshTokenIndexKey(userId)),
+            ).resolves.toBe(3);
             // delete user
             await request(testKit.server)
                 .delete(`${testKit.endpoints.usersAPI}/${userId}`)
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .expect(status2xx);
             // set (refresh jtis index) should have been deleted
-            await expect(testKit.redisService.get(makeRefreshTokenIndexKey(userId))).resolves.toBeNull();
+            await expect(
+                testKit.redisService.get(makeRefreshTokenIndexKey(userId)),
+            ).resolves.toBeNull();
         });
     });
 

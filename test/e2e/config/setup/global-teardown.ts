@@ -4,7 +4,7 @@ import { teardownKit } from '@e2e/helpers/global-setup/teardownKit.helper';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 import { loadUserModel } from 'src/databases/mongo/models/user.model.load';
 import { loadTasksModel } from 'src/databases/mongo/models/tasks.model.load';
-import { removeAdminSessionTokenIfExists } from '@e2e/helpers/admin-token/remove-admin-session-token.helper'
+import { removeAdminSessionTokenIfExists } from '@e2e/helpers/admin-token/remove-admin-session-token.helper';
 import { RedisDatabase } from 'src/databases/redis/redis.database';
 
 export default async () => {
@@ -34,8 +34,5 @@ export default async () => {
     SystemLoggerService.info('All documents deleted except the administrator');
     removeAdminSessionTokenIfExists();
 
-    await Promise.all([
-        mongoDatabase.disconnect(),
-        redisInstance.disconnect()
-    ]);
-}
+    await Promise.all([mongoDatabase.disconnect(), redisInstance.disconnect()]);
+};

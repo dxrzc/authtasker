@@ -1,5 +1,7 @@
-
-export async function expectRequestToFail(reqData: { expectedStatus: number, request: Promise<any> }) {
+export async function expectRequestToFail(reqData: {
+    expectedStatus: number;
+    request: Promise<any>;
+}) {
     let errorThrown = false;
     try {
         await reqData.request;
@@ -7,7 +9,9 @@ export async function expectRequestToFail(reqData: { expectedStatus: number, req
         const errorObj = JSON.parse((error as any).message);
         const reqStatus = errorObj.status;
         if (reqStatus !== reqData.expectedStatus)
-            throw new Error(`Request failed with status ${reqStatus}, but status ${reqData.expectedStatus} was expected`);
+            throw new Error(
+                `Request failed with status ${reqStatus}, but status ${reqData.expectedStatus} was expected`,
+            );
         errorThrown = true;
     }
 

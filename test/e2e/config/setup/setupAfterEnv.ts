@@ -16,7 +16,7 @@ beforeAll(async () => {
         (err) => handleAxiosError(err),
     );
 
-    const configService = new ConfigService()
+    const configService = new ConfigService();
     e2eKit.configService = configService;
     e2eKit.userDataGenerator = new UserDataGenerator();
     e2eKit.tasksDataGenerator = new TasksDataGenerator();
@@ -30,7 +30,7 @@ beforeAll(async () => {
         auth: {
             user: e2eKit.configService.MAIL_SERVICE_USER,
             pass: e2eKit.configService.MAIL_SERVICE_PASS,
-        }
+        },
     });
     await e2eKit.emailClient.connect();
 

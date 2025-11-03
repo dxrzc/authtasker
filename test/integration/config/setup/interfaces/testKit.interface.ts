@@ -15,11 +15,10 @@ import { RefreshTokenService } from 'src/services/refresh-token.service';
 import { PasswordRecoveryTokenService } from 'src/services/password-recovery-token.service';
 
 export interface ITestKit {
-
     configService: ConfigService;
 
-    redisService: RedisService,
-    redisInstance: Redis,
+    redisService: RedisService;
+    redisInstance: Redis;
 
     userModel: Model<IUser>;
     tasksModel: Model<ITasks>;
@@ -63,4 +62,4 @@ export interface ITestKit {
 
         health: string;
     };
-};
+}
