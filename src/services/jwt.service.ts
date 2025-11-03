@@ -20,6 +20,7 @@ export class JwtService {
         try {
             const payload = jwt.verify(token, this.privateKey);
             return payload as any;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             return null;
         }
