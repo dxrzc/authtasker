@@ -139,7 +139,7 @@ export class RefreshTokenService {
 
     async revokeAll(userId: string) {
         const jtis = await this.redisService.getAllSetMembers(makeRefreshTokenIndexKey(userId));
-        jtis.forEach((jti) => this.revokeToken(userId, jti));
+        await Promise.all(jtis.map((jti) => this.revokeToken(userId, jti)));
     }
 
     async revokeToken(userId: string, jti: string) {
