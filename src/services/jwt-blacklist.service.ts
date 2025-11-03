@@ -16,7 +16,7 @@ export class JwtBlackListService {
             case JwtTypes.passwordRecovery:
                 return makePasswordRecoveryTokenBlacklistKey(jti);
             default:
-                throw new Error(`Unknown JWT type: ${jwtType}`);
+                throw new Error(`Unknown JWT type: ${jwtType as string}`);
         }
     }
 
