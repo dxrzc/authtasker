@@ -4,7 +4,11 @@ import { HttpError } from 'src/common/errors/classes/http-error.class';
 import { tasksApiErrors } from 'src/common/errors/messages/tasks-api.error.messages';
 import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
 
-export const handleDuplicatedKeyInDb = (api: Apis, error: { keyValue: any }, loggerService: LoggerService) => {
+export const handleDuplicatedKeyInDb = (
+    api: Apis,
+    error: { keyValue: any },
+    loggerService: LoggerService,
+) => {
     // - keyValue: {name: 'user123'}
     const duplicatedKey = Object.keys(error.keyValue);
     const keyValue = Object.values(error.keyValue);
@@ -18,4 +22,4 @@ export const handleDuplicatedKeyInDb = (api: Apis, error: { keyValue: any }, log
             throw HttpError.conflict(tasksApiErrors.taskAlreadyExists(duplicatedKey[0]));
         }
     }
-}
+};

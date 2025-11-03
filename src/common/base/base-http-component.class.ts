@@ -11,6 +11,6 @@ export class BaseHttpComponent {
             } catch (err) {
                 next(err);
             }
-        }
+        };
     }
 }

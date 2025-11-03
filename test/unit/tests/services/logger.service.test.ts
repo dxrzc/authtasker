@@ -13,10 +13,7 @@ describe('LoggerService ', () => {
     let requestCompletedFileLogger = mock<winston.Logger>();
     beforeEach(() => {
         configService = {} as any;
-        loggerService = new LoggerService(
-            configService,
-            new AsyncLocalStorage<any>()
-        );
+        loggerService = new LoggerService(configService, new AsyncLocalStorage<any>());
         loggerService['consoleLogger'] = consoleLogger;
         loggerService['requestCompletedFileLogger'] = requestCompletedFileLogger;
         loggerService['fileLogger'] = fileLogger;
@@ -48,7 +45,7 @@ describe('LoggerService ', () => {
                 configService.HTTP_LOGS = true;
                 loggerService.logRequest({} as any);
                 expect(consoleLogger.log).toHaveBeenCalledTimes(1);
-                expect(requestCompletedFileLogger.info).toHaveBeenCalledTimes(1);                
+                expect(requestCompletedFileLogger.info).toHaveBeenCalledTimes(1);
             });
         });
 
@@ -57,7 +54,7 @@ describe('LoggerService ', () => {
                 configService.HTTP_LOGS = false;
                 loggerService.logRequest({} as any);
                 expect(consoleLogger.log).not.toHaveBeenCalled();
-                expect(requestCompletedFileLogger.info).not.toHaveBeenCalled();                
+                expect(requestCompletedFileLogger.info).not.toHaveBeenCalled();
             });
         });
     });

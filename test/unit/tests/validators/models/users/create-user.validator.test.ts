@@ -16,9 +16,9 @@ describe('CreateUserValidator', () => {
                 email: usersData.email(),
                 password: usersData.password(),
             };
-            await expect(async () => await createUserValidator.validateAndTransform(data))
-                .rejects
-                .toThrow(new InvalidInputError(usersApiErrors.INVALID_NAME_LENGTH))
+            await expect(
+                async () => await createUserValidator.validateAndTransform(data),
+            ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_NAME_LENGTH));
         });
 
         test.concurrent('throw InvalidInputError with custom message if too long', async () => {
@@ -27,9 +27,9 @@ describe('CreateUserValidator', () => {
                 email: usersData.email(),
                 password: usersData.password(),
             };
-            await expect(async () => await createUserValidator.validateAndTransform(data))
-                .rejects
-                .toThrow(new InvalidInputError(usersApiErrors.INVALID_NAME_LENGTH))
+            await expect(
+                async () => await createUserValidator.validateAndTransform(data),
+            ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_NAME_LENGTH));
         });
 
         test.concurrent('throw InvalidInputError with custom message if missing', async () => {
@@ -37,9 +37,9 @@ describe('CreateUserValidator', () => {
                 email: usersData.email(),
                 password: usersData.password(),
             };
-            await expect(async () => await createUserValidator.validateAndTransform(data))
-                .rejects
-                .toThrow(new InvalidInputError(usersApiErrors.NAME_NOT_PROVIDED))
+            await expect(
+                async () => await createUserValidator.validateAndTransform(data),
+            ).rejects.toThrow(new InvalidInputError(usersApiErrors.NAME_NOT_PROVIDED));
         });
     });
 
@@ -49,21 +49,24 @@ describe('CreateUserValidator', () => {
                 name: usersData.name(),
                 password: usersData.password(),
             };
-            await expect(async () => await createUserValidator.validateAndTransform(data))
-                .rejects
-                .toThrow(new InvalidInputError(usersApiErrors.EMAIL_NOT_PROVIDED));
+            await expect(
+                async () => await createUserValidator.validateAndTransform(data),
+            ).rejects.toThrow(new InvalidInputError(usersApiErrors.EMAIL_NOT_PROVIDED));
         });
 
-        test.concurrent('throw InvalidInputError with custom message if invalid format', async () => {
-            const data = {
-                name: usersData.name(),
-                email: 'not-an-email',
-                password: usersData.password(),
-            };
-            await expect(async () => await createUserValidator.validateAndTransform(data))
-                .rejects
-                .toThrow(new InvalidInputError(usersApiErrors.INVALID_EMAIL));
-        });
+        test.concurrent(
+            'throw InvalidInputError with custom message if invalid format',
+            async () => {
+                const data = {
+                    name: usersData.name(),
+                    email: 'not-an-email',
+                    password: usersData.password(),
+                };
+                await expect(
+                    async () => await createUserValidator.validateAndTransform(data),
+                ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_EMAIL));
+            },
+        );
     });
 
     describe('invalid password', () => {
@@ -73,9 +76,9 @@ describe('CreateUserValidator', () => {
                 email: usersData.email(),
                 password: faker.string.alpha(usersLimits.MIN_PASSWORD_LENGTH - 1),
             };
-            await expect(async () => await createUserValidator.validateAndTransform(data))
-                .rejects
-                .toThrow(new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH));
+            await expect(
+                async () => await createUserValidator.validateAndTransform(data),
+            ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH));
         });
 
         test.concurrent('throw InvalidInputError with custom message if too long', async () => {
@@ -84,9 +87,9 @@ describe('CreateUserValidator', () => {
                 email: usersData.email(),
                 password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1),
             };
-            await expect(async () => await createUserValidator.validateAndTransform(data))
-                .rejects
-                .toThrow(new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH));
+            await expect(
+                async () => await createUserValidator.validateAndTransform(data),
+            ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH));
         });
 
         test.concurrent('throw InvalidInputError with custom message if missing', async () => {
@@ -94,9 +97,9 @@ describe('CreateUserValidator', () => {
                 name: usersData.name(),
                 email: usersData.email(),
             };
-            await expect(async () => await createUserValidator.validateAndTransform(data))
-                .rejects
-                .toThrow(new InvalidInputError(usersApiErrors.PASSWORD_NOT_PROVIDED));
+            await expect(
+                async () => await createUserValidator.validateAndTransform(data),
+            ).rejects.toThrow(new InvalidInputError(usersApiErrors.PASSWORD_NOT_PROVIDED));
         });
     });
 

@@ -11,8 +11,7 @@ describe('GET /api/users/:id', () => {
     beforeAll(async () => {
         sessionToken = (await createUser('admin')).sessionToken;
         const usersSeed = 29;
-        await request(testKit.server)
-            .post(`${testKit.endpoints.seedUsers}/${usersSeed}`);
+        await request(testKit.server).post(`${testKit.endpoints.seedUsers}/${usersSeed}`);
     });
 
     describe('Caching', () => {
@@ -25,7 +24,9 @@ describe('GET /api/users/:id', () => {
                     .query({ page, limit })
                     .set('Cache-Control', 'no-store')
                     .set('Authorization', `Bearer ${sessionToken}`);
-                const dataInRedis = await testKit.redisService.get(makePaginationCacheKey(Apis.users, page, limit));
+                const dataInRedis = await testKit.redisService.get(
+                    makePaginationCacheKey(Apis.users, page, limit),
+                );
                 expect(dataInRedis).toBeNull();
             });
         });
@@ -38,7 +39,9 @@ describe('GET /api/users/:id', () => {
                     .get(testKit.endpoints.usersAPI)
                     .query({ page, limit })
                     .set('Authorization', `Bearer ${sessionToken}`);
-                const dataInRedis = await testKit.redisService.get(makePaginationCacheKey(Apis.users, page, limit));
+                const dataInRedis = await testKit.redisService.get(
+                    makePaginationCacheKey(Apis.users, page, limit),
+                );
                 expect(dataInRedis).toBeDefined();
             });
         });
@@ -49,8 +52,11 @@ describe('GET /api/users/:id', () => {
                 const limit = 1;
                 // mock data in cache
                 const fakeData = 'fakeData';
-                await testKit.redisService.set(makePaginationCacheKey(Apis.users, page, limit), fakeData);
-                // find 
+                await testKit.redisService.set(
+                    makePaginationCacheKey(Apis.users, page, limit),
+                    fakeData,
+                );
+                // find
                 const response = await request(testKit.server)
                     .get(testKit.endpoints.usersAPI)
                     .query({ page, limit })

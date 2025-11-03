@@ -13,9 +13,9 @@ import { tokenPurposes } from 'src/common/constants/token-purposes.constants';
 
 describe('SessionTokenService', () => {
     let jwtService: JwtService;
-    let jwtBlacklistServiceMock: MockProxy<JwtBlackListService>
-    let loggerServiceMock: MockProxy<LoggerService>
-    let userModelMock: { findById: () => { exec: jest.Mock } }
+    let jwtBlacklistServiceMock: MockProxy<JwtBlackListService>;
+    let loggerServiceMock: MockProxy<LoggerService>;
+    let userModelMock: { findById: () => { exec: jest.Mock } };
     let configService: Partial<ConfigService>;
     let sessionTokenService: SessionTokenService;
 
@@ -24,14 +24,14 @@ describe('SessionTokenService', () => {
         configService = {
             JWT_SESSION_PRIVATE_KEY: 'test-123',
             JWT_SESSION_EXP_TIME: '10m',
-        }
+        };
         jwtService = new JwtService(configService.JWT_SESSION_PRIVATE_KEY!);
 
         // mocks
         jwtBlacklistServiceMock = mock<JwtBlackListService>();
         loggerServiceMock = mock<LoggerService>();
         userModelMock = {
-            findById: () => ({ exec: jest.fn() })
+            findById: () => ({ exec: jest.fn() }),
         };
 
         sessionTokenService = new SessionTokenService(
@@ -39,7 +39,7 @@ describe('SessionTokenService', () => {
             jwtService,
             jwtBlacklistServiceMock,
             loggerServiceMock,
-            userModelMock as unknown as Model<IUser>
+            userModelMock as unknown as Model<IUser>,
         );
     });
 
@@ -64,7 +64,7 @@ describe('SessionTokenService', () => {
                 expect(jwtBlacklistServiceMock.blacklist).toHaveBeenCalledWith(
                     JwtTypes.session,
                     jti,
-                    remainingTTLInSeconds
+                    remainingTTLInSeconds,
                 );
             });
         });
@@ -95,11 +95,11 @@ describe('SessionTokenService', () => {
                 test('throw HttpError UNAUTHORIZED and INVALID_TOKEN error', async () => {
                     const { token: tokenWithBadPurpose } = jwtService.generate('10m', {
                         id: new Types.ObjectId(),
-                        purpose: tokenPurposes.EMAIL_VALIDATION
+                        purpose: tokenPurposes.EMAIL_VALIDATION,
                     });
-                    await expect(sessionTokenService.consume(tokenWithBadPurpose))
-                        .rejects
-                        .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                    await expect(sessionTokenService.consume(tokenWithBadPurpose)).rejects.toThrow(
+                        HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                    );
                 });
             });
 
@@ -107,11 +107,11 @@ describe('SessionTokenService', () => {
                 test('throw HttpError UNAUTHORIZED and INVALID_TOKEN error', async () => {
                     const { token: tokenWithBadPurpose } = jwtService.generate('10m', {
                         id: new Types.ObjectId(),
-                        purpose: 'unknown-purpose'
+                        purpose: 'unknown-purpose',
                     });
-                    await expect(sessionTokenService.consume(tokenWithBadPurpose))
-                        .rejects
-                        .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                    await expect(sessionTokenService.consume(tokenWithBadPurpose)).rejects.toThrow(
+                        HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                    );
                 });
             });
         });
@@ -121,11 +121,11 @@ describe('SessionTokenService', () => {
                 const newJwtService = new JwtService('bad-key-123');
                 const { token: invalidToken } = newJwtService.generate('10m', {
                     id: new Types.ObjectId(),
-                    purpose: tokenPurposes.SESSION
+                    purpose: tokenPurposes.SESSION,
                 });
-                await expect(sessionTokenService.consume(invalidToken))
-                    .rejects
-                    .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                await expect(sessionTokenService.consume(invalidToken)).rejects.toThrow(
+                    HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
@@ -134,11 +134,11 @@ describe('SessionTokenService', () => {
                 jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 1000000);
                 const { token: expiredToken } = jwtService.generate('1s', {
                     id: new Types.ObjectId(),
-                    purpose: tokenPurposes.SESSION
+                    purpose: tokenPurposes.SESSION,
                 });
-                await expect(sessionTokenService.consume(expiredToken))
-                    .rejects
-                    .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                await expect(sessionTokenService.consume(expiredToken)).rejects.toThrow(
+                    HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
@@ -146,11 +146,11 @@ describe('SessionTokenService', () => {
             test('throw HttpError UNAUTHORIZED and INVALID_TOKEN error', async () => {
                 const { token: incompleteToken } = jwtService.generate('10m', {
                     id: undefined,
-                    purpose: tokenPurposes.SESSION
+                    purpose: tokenPurposes.SESSION,
                 });
-                await expect(sessionTokenService.consume(incompleteToken))
-                    .rejects
-                    .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                await expect(sessionTokenService.consume(incompleteToken)).rejects.toThrow(
+                    HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
@@ -158,13 +158,13 @@ describe('SessionTokenService', () => {
             test('throw HttpError UNAUTHORIZED and INVALID_TOKEN error', async () => {
                 const { token: orphanToken } = jwtService.generate('10m', {
                     id: new Types.ObjectId(),
-                    purpose: tokenPurposes.SESSION
+                    purpose: tokenPurposes.SESSION,
                 });
                 // mock: user is not found
                 userModelMock.findById().exec.mockResolvedValue(null);
-                await expect(sessionTokenService.consume(orphanToken))
-                    .rejects
-                    .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                await expect(sessionTokenService.consume(orphanToken)).rejects.toThrow(
+                    HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                );
             });
         });
 
@@ -172,13 +172,13 @@ describe('SessionTokenService', () => {
             test('throw HttpError UNAUTHORIZED and INVALID_TOKEN error', async () => {
                 const { token: blacklistedToken } = jwtService.generate('10m', {
                     id: new Types.ObjectId(),
-                    purpose: tokenPurposes.SESSION
+                    purpose: tokenPurposes.SESSION,
                 });
                 // mock: token is in blacklist
                 jwtBlacklistServiceMock.tokenInBlacklist.mockResolvedValue(true);
-                await expect(sessionTokenService.consume(blacklistedToken))
-                    .rejects
-                    .toThrow(HttpError.unAuthorized(authErrors.INVALID_TOKEN));
+                await expect(sessionTokenService.consume(blacklistedToken)).rejects.toThrow(
+                    HttpError.unAuthorized(authErrors.INVALID_TOKEN),
+                );
             });
         });
     });

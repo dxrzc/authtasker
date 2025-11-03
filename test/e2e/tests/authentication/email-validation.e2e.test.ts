@@ -8,7 +8,7 @@ describe('Authentication', () => {
                 // create user
                 const createdUserResponse = await e2eKit.client.post(
                     e2eKit.endpoints.register,
-                    e2eKit.userDataGenerator.fullUser()
+                    e2eKit.userDataGenerator.fullUser(),
                 );
                 const sessionToken = createdUserResponse.data.sessionToken;
                 const userEmail = createdUserResponse.data.user.email;
@@ -16,18 +16,20 @@ describe('Authentication', () => {
                 // request email validation
                 await e2eKit.client.post(e2eKit.endpoints.requestEmailValidation, null, {
                     headers: {
-                        Authorization: `Bearer ${sessionToken}`
-                    }
+                        Authorization: `Bearer ${sessionToken}`,
+                    },
                 });
 
-                // confirm email validation                
-                await e2eKit.client.get(await getEmailConfirmationFromLink(e2eKit.emailClient, userEmail));
+                // confirm email validation
+                await e2eKit.client.get(
+                    await getEmailConfirmationFromLink(e2eKit.emailClient, userEmail),
+                );
 
                 // create task
                 await e2eKit.client.post(
                     e2eKit.endpoints.createTask,
                     e2eKit.tasksDataGenerator.fullTask(),
-                    { headers: { Authorization: `Bearer ${sessionToken}` } }
+                    { headers: { Authorization: `Bearer ${sessionToken}` } },
                 );
             });
         });

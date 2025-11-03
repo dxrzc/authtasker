@@ -25,6 +25,6 @@ export const createUser = async (role: UserRole) => {
         userId,
         userEmail,
         userName,
-        unhashedPassword: userData.password
+        unhashedPassword: userData.password,
     };
 };

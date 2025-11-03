@@ -1,11 +1,11 @@
-import { Server } from "./server/server.init";
-import { AsyncLocalStorage } from "async_hooks";
+import { Server } from './server/server.init';
+import { AsyncLocalStorage } from 'async_hooks';
 import { AppRoutes } from './routes/server.routes';
 import { ShutdownManager } from './server/shutdown';
 import { RedisService } from './services/redis.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ConfigService } from 'src/services/config.service';
-import { MongoDatabase } from "./databases/mongo/mongo.database";
+import { MongoDatabase } from './databases/mongo/mongo.database';
 import { RedisDatabase } from './databases/redis/redis.database';
 import { SystemLoggerService } from './services/system-logger.service';
 import { ErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
@@ -17,14 +17,14 @@ import { RedisSuscriber } from './databases/redis/redis.suscriber';
 process.on('SIGINT', async () => {
     await ShutdownManager.shutdown({
         cause: 'SIGINT',
-        exitCode: 0
+        exitCode: 0,
     });
 });
 
 process.on('SIGTERM', async () => {
     await ShutdownManager.shutdown({
         cause: 'SIGTERM',
-        exitCode: 0
+        exitCode: 0,
     });
 });
 
@@ -32,7 +32,7 @@ process.on('unhandledRejection', async (reason: any) => {
     await ShutdownManager.shutdown({
         cause: `unhandledRejection: ${reason}`,
         exitCode: 1,
-        stack: reason.stack
+        stack: reason.stack,
     });
 });
 
@@ -40,21 +40,21 @@ process.on('uncaughtException', async (err) => {
     await ShutdownManager.shutdown({
         cause: `uncaughtException: ${err.message}`,
         exitCode: 1,
-        stack: err.stack
+        stack: err.stack,
     });
 });
 
 EventManager.listen(Events.MONGO_CONNECTION_ERROR, async () => {
     await ShutdownManager.shutdown({
         cause: 'Mongo database connection lost',
-        exitCode: 1
+        exitCode: 1,
     });
 });
 
 EventManager.listen(Events.REDIS_CONNECTION_ERROR, async () => {
     await ShutdownManager.shutdown({
         cause: 'Redis database connection lost',
-        exitCode: 1
+        exitCode: 1,
     });
 });
 
@@ -86,9 +86,9 @@ async function main() {
             configService,
             loggerService,
             asyncLocalStorage,
-            redisService
+            redisService,
         ).buildApp(),
-        new ErrorHandlerMiddleware(loggerService)
+        new ErrorHandlerMiddleware(loggerService),
     );
     await server.start();
     ShutdownManager.server = server;

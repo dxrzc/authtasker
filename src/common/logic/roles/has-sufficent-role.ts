@@ -8,7 +8,9 @@ const roleHierarchy: Record<UserRole, number> = {
 
 export function hasSufficientRole(minRoleRequired: UserRole, userRole: UserRole): boolean {
     if (!(minRoleRequired in roleHierarchy) || !(userRole in roleHierarchy)) {
-        throw new Error(`Invalid role(s): userRole="${userRole}", minRoleRequired="${minRoleRequired}"`);
+        throw new Error(
+            `Invalid role(s): userRole="${userRole}", minRoleRequired="${minRoleRequired}"`,
+        );
     }
     return roleHierarchy[userRole] >= roleHierarchy[minRoleRequired];
 }

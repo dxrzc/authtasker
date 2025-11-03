@@ -9,9 +9,10 @@ describe('POST /api/users/refresh-token', () => {
     describe('Refresh token is not provided in body', () => {
         test('return status 400 BAD REQUEST and the configured message', async () => {
             const expectedStatus = 400;
-            const response = await request(testKit.server)
-                .post(testKit.endpoints.refreshToken);
-            expect(response.body).toStrictEqual({ error: authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY });
+            const response = await request(testKit.server).post(testKit.endpoints.refreshToken);
+            expect(response.body).toStrictEqual({
+                error: authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY,
+            });
             expect(response.statusCode).toBe(expectedStatus);
         });
     });
@@ -43,12 +44,14 @@ describe('POST /api/users/refresh-token', () => {
             .send({ refreshToken })
             .expect(status2xx);
         // tokens are different
-        const newRefreshToken = response.body.refreshToken
+        const newRefreshToken = response.body.refreshToken;
         expect(newRefreshToken).not.toBe(refreshToken);
         // same exp date
         const prevRefreshTokenExpDateUnix = testKit.refreshJwt.verify(refreshToken)?.exp!;
         const newRefreshTokenExpDateUnix = testKit.refreshJwt.verify(newRefreshToken)?.exp!;
-        expect(Math.abs(newRefreshTokenExpDateUnix - prevRefreshTokenExpDateUnix)).toBeLessThanOrEqual(1);
+        expect(
+            Math.abs(newRefreshTokenExpDateUnix - prevRefreshTokenExpDateUnix),
+        ).toBeLessThanOrEqual(1);
     });
 
     describe('Response', () => {

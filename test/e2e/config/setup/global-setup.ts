@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ConfigService } from 'src/services/config.service'
+import { ConfigService } from 'src/services/config.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 import { teardownKit } from '@e2e/helpers/global-setup/teardownKit.helper';
 import { saveAdminSessionToken } from '@e2e/helpers/admin-token/save-admin-session-token.helper';
@@ -18,10 +18,9 @@ export default async () => {
 
         // Teardown
         teardownKit.configService = configService;
-
     } catch (error) {
         removeAdminSessionTokenIfExists();
         console.error(error);
         process.exit(1);
     }
-}
+};

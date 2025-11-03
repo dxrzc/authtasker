@@ -6,17 +6,14 @@ const config: Config = {
     // setup
     setupFilesAfterEnv: ['<rootDir>/test/unit/config/setup/setupAfterEnv.ts'],
 
-    // mocks    
+    // mocks
     resetMocks: false,
     clearMocks: true,
     restoreMocks: true,
 
     // coverage
     collectCoverage: true,
-    collectCoverageFrom: [
-        '<rootDir>/src/**/*.ts',
-        '!<rootDir>/test/unit/**'
-    ],
+    collectCoverageFrom: ['<rootDir>/src/**/*.ts', '!<rootDir>/test/unit/**'],
     coverageDirectory: '<rootDir>/coverage/unit',
     coverageProvider: 'v8',
 
@@ -26,8 +23,8 @@ const config: Config = {
     // alias
     moduleNameMapper: {
         '^src/(.*)$': '<rootDir>/src/$1',
-        "^@unit/(.*)$": "<rootDir>/test/unit/$1",
-        "^src/common/logic/(.*)$": "<rootDir>/src/common/logic/$1",
+        '^@unit/(.*)$': '<rootDir>/test/unit/$1',
+        '^src/common/logic/(.*)$': '<rootDir>/src/common/logic/$1',
     },
 
     preset: 'ts-jest',

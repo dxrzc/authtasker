@@ -28,7 +28,7 @@ describe('BaseController', () => {
                 id: '123',
                 role: 'admin',
                 sessionJti: 'token123',
-                sessionTokenExpUnix: 1234567890
+                sessionTokenExpUnix: 1234567890,
             });
         });
 
@@ -37,8 +37,9 @@ describe('BaseController', () => {
             req.sessionJti = 'token123';
             req.sessionTokenExpUnix = 1234567890;
 
-            expect(() => controller['getUserRequestInfo'](req as Request, res as Response))
-                .toThrow('role, id, jti and tokenExp are expected');
+            expect(() => controller['getUserRequestInfo'](req as Request, res as Response)).toThrow(
+                'role, id, jti and tokenExp are expected',
+            );
         });
 
         test('should throw error if userId is missing', () => {
@@ -46,8 +47,9 @@ describe('BaseController', () => {
             req.sessionJti = 'token123';
             req.sessionTokenExpUnix = 1234567890;
 
-            expect(() => controller['getUserRequestInfo'](req as Request, res as Response))
-                .toThrow('role, id, jti and tokenExp are expected');
+            expect(() => controller['getUserRequestInfo'](req as Request, res as Response)).toThrow(
+                'role, id, jti and tokenExp are expected',
+            );
         });
 
         test('should throw error if jti is missing', () => {
@@ -55,8 +57,9 @@ describe('BaseController', () => {
             req.id = '123';
             req.sessionTokenExpUnix = 1234567890;
 
-            expect(() => controller['getUserRequestInfo'](req as Request, res as Response))
-                .toThrow('role, id, jti and tokenExp are expected');
+            expect(() => controller['getUserRequestInfo'](req as Request, res as Response)).toThrow(
+                'role, id, jti and tokenExp are expected',
+            );
         });
 
         test('should throw error if tokenExp is missing', () => {
@@ -64,9 +67,9 @@ describe('BaseController', () => {
             req.id = '123';
             req.sessionJti = 'token123';
 
-            expect(() => controller['getUserRequestInfo'](req as Request, res as Response))
-                .toThrow('role, id, jti and tokenExp are expected');
+            expect(() => controller['getUserRequestInfo'](req as Request, res as Response)).toThrow(
+                'role, id, jti and tokenExp are expected',
+            );
         });
     });
 });
-

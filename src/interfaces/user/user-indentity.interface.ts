@@ -1,6 +1,6 @@
 import { UserRole } from 'src/types/user/user-roles.type';
 
 export interface UserIdentity {
-    role: UserRole,
+    role: UserRole;
     id: string;
 }

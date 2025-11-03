@@ -11,25 +11,25 @@ describe('Users API', () => {
                         // create user
                         const createdUserResponse = await e2eKit.client.post(
                             e2eKit.endpoints.register,
-                            e2eKit.userDataGenerator.fullUser()
+                            e2eKit.userDataGenerator.fullUser(),
                         );
                         const sessionToken = createdUserResponse.data.sessionToken;
                         const userId = createdUserResponse.data.user.id;
                         const userEmail = createdUserResponse.data.user.email;
 
-                        // email-validation                    
-                        await e2eKit.client.post(
-                            e2eKit.endpoints.requestEmailValidation,
-                            null,
-                            { headers: { Authorization: `Bearer ${sessionToken}` } }
+                        // email-validation
+                        await e2eKit.client.post(e2eKit.endpoints.requestEmailValidation, null, {
+                            headers: { Authorization: `Bearer ${sessionToken}` },
+                        });
+                        await e2eKit.client.get(
+                            await getEmailConfirmationFromLink(e2eKit.emailClient, userEmail),
                         );
-                        await e2eKit.client.get(await getEmailConfirmationFromLink(e2eKit.emailClient, userEmail));
-                        
+
                         // task 1
                         const createdTask1Res = await e2eKit.client.post(
                             e2eKit.endpoints.createTask,
                             e2eKit.tasksDataGenerator.fullTask(),
-                            { headers: { Authorization: `Bearer ${sessionToken}` } }
+                            { headers: { Authorization: `Bearer ${sessionToken}` } },
                         );
                         const task1Id = createdTask1Res.data.id;
                         expect(task1Id).toBeDefined();
@@ -38,31 +38,28 @@ describe('Users API', () => {
                         const createdTask2Res = await e2eKit.client.post(
                             e2eKit.endpoints.createTask,
                             e2eKit.tasksDataGenerator.fullTask(),
-                            { headers: { Authorization: `Bearer ${sessionToken}` } }
+                            { headers: { Authorization: `Bearer ${sessionToken}` } },
                         );
                         const task2Id = createdTask2Res.data.id;
                         expect(task2Id).toBeDefined();
 
                         // delete user
-                        await e2eKit.client.delete(
-                            `${e2eKit.endpoints.usersAPI}/${userId}`,
-                            { headers: { Authorization: `Bearer ${e2eKit.adminSessionToken}` } }
-                        );
+                        await e2eKit.client.delete(`${e2eKit.endpoints.usersAPI}/${userId}`, {
+                            headers: { Authorization: `Bearer ${e2eKit.adminSessionToken}` },
+                        });
 
                         // tasks are not found
                         expectRequestToFail({
                             expectedStatus: 404,
-                            request: e2eKit.client.get(
-                                `${e2eKit.endpoints.tasksAPI}/${task1Id}`,
-                                { headers: { Authorization: `Bearer ${e2eKit.adminSessionToken}` } }
-                            )
+                            request: e2eKit.client.get(`${e2eKit.endpoints.tasksAPI}/${task1Id}`, {
+                                headers: { Authorization: `Bearer ${e2eKit.adminSessionToken}` },
+                            }),
                         });
                         expectRequestToFail({
                             expectedStatus: 404,
-                            request: e2eKit.client.get(
-                                `${e2eKit.endpoints.tasksAPI}/${task2Id}`,
-                                { headers: { Authorization: `Bearer ${e2eKit.adminSessionToken}` } }
-                            )
+                            request: e2eKit.client.get(`${e2eKit.endpoints.tasksAPI}/${task2Id}`, {
+                                headers: { Authorization: `Bearer ${e2eKit.adminSessionToken}` },
+                            }),
                         });
                     });
                 });

@@ -1,5 +1,5 @@
-import { Router } from "express";
-import { Model } from "mongoose";
+import { Router } from 'express';
+import { Model } from 'mongoose';
 import { SeedController } from './seed.controller';
 import { IUser } from 'src/interfaces/user/user.interface';
 import { ConfigService } from 'src/services/config.service';
@@ -13,7 +13,6 @@ import { TasksDataGenerator } from './generators/tasks.generator';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 
 export class SeedRoutes {
-
     constructor(
         private readonly configService: ConfigService,
         private readonly userModel: Model<IUser>,
@@ -46,7 +45,7 @@ export class SeedRoutes {
         const seedController = new SeedController(
             this.loggerService,
             userSeedService,
-            tasksSeedService
+            tasksSeedService,
         );
 
         router.post('/users/:total', seedController.seedUsers);

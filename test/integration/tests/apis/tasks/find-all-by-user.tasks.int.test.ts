@@ -18,7 +18,7 @@ describe('GET /api/tasks/allByUser/:id', () => {
                 // seed
                 const { sessionToken, userId } = await createUser('editor');
                 await createUserMultipleTasks(sessionToken, 7);
-                // get all 
+                // get all
                 await request(testKit.server)
                     .get(`${testKit.endpoints.findAllTasksByUser}/${userId}`)
                     .query({ page, limit })
@@ -26,7 +26,7 @@ describe('GET /api/tasks/allByUser/:id', () => {
                     .set('Authorization', `Bearer ${sessionToken}`)
                     .expect(status2xx);
                 // check data not in redis
-                const key = makeTasksByUserPaginationCacheKey(userId, page, limit)
+                const key = makeTasksByUserPaginationCacheKey(userId, page, limit);
                 const dataInRedis = await testKit.redisService.get(key);
                 expect(dataInRedis).toBeNull();
             });
@@ -39,7 +39,7 @@ describe('GET /api/tasks/allByUser/:id', () => {
                 // seed
                 const { sessionToken, userId } = await createUser('editor');
                 await createUserMultipleTasks(sessionToken, 5);
-                // get all 
+                // get all
                 await request(testKit.server)
                     .get(`${testKit.endpoints.findAllTasksByUser}/${userId}`)
                     .query({ page, limit })
@@ -138,7 +138,7 @@ describe('GET /api/tasks/allByUser/:id', () => {
             const response = await request(testKit.server)
                 .get(`${testKit.endpoints.findAllTasksByUser}/${userId}`)
                 .query({ page: 1, limit })
-                .set('Authorization', `Bearer ${sessionToken}`)
+                .set('Authorization', `Bearer ${sessionToken}`);
             expect(response.body.length).toBe(limit);
             expect(response.statusCode).toBe(expectedStatus);
         });

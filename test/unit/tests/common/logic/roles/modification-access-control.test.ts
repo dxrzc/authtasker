@@ -10,21 +10,22 @@ describe('tasksModificationAccessControl', () => {
         expect(canModify).toBeTruthy();
     });
 
-    test.each(
-        modificationAuthFixture
-    )(`$currentUserRole users $expected to modify other $targetUserRole users`, async ({ currentUserRole, targetUserRole, expected }) => {
-        const currentUserInfo = {
-            role: currentUserRole,
-            id: 'current-user-id'
-        };
-        const targetUserInfo = {
-            role: targetUserRole,
-            id: 'target-user-id'
-        };
+    test.each(modificationAuthFixture)(
+        `$currentUserRole users $expected to modify other $targetUserRole users`,
+        async ({ currentUserRole, targetUserRole, expected }) => {
+            const currentUserInfo = {
+                role: currentUserRole,
+                id: 'current-user-id',
+            };
+            const targetUserInfo = {
+                role: targetUserRole,
+                id: 'target-user-id',
+            };
 
-        const canModify = modificationAccessControl(currentUserInfo, targetUserInfo);
-        (expected === 'authorized')
-            ? expect(canModify).toBeTruthy()
-            : expect(canModify).toBeFalsy();
-    });
+            const canModify = modificationAccessControl(currentUserInfo, targetUserInfo);
+            expected === 'authorized'
+                ? expect(canModify).toBeTruthy()
+                : expect(canModify).toBeFalsy();
+        },
+    );
 });

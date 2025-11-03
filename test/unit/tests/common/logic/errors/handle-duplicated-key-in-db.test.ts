@@ -7,12 +7,13 @@ import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messa
 describe('handleDuplicatedKeyInDb', () => {
     describe('Users API', () => {
         test('throw HttpError CONFLICT and USER_ALREADY_EXISTS message', async () => {
-            expect(() => handleDuplicatedKeyInDb(
-                Apis.users,
-                { keyValue: '...' }, // error
-                { error: jest.fn() } as any // loggerService
-            ))
-                .toThrow(HttpError.conflict(usersApiErrors.USER_ALREADY_EXISTS))
+            expect(() =>
+                handleDuplicatedKeyInDb(
+                    Apis.users,
+                    { keyValue: '...' }, // error
+                    { error: jest.fn() } as any, // loggerService
+                ),
+            ).toThrow(HttpError.conflict(usersApiErrors.USER_ALREADY_EXISTS));
         });
     });
 
@@ -20,14 +21,15 @@ describe('handleDuplicatedKeyInDb', () => {
         test('throw HttpError CONFLICT and the message containing the duplicated key', async () => {
             const duplicatedKey = 'name';
             const error = {
-                keyValue: { [duplicatedKey]: 'duplicated-value' }
+                keyValue: { [duplicatedKey]: 'duplicated-value' },
             };
-            expect(() => handleDuplicatedKeyInDb(
-                Apis.tasks,
-                error,
-                { error: jest.fn() } as any // loggerService
-            ))
-                .toThrow(HttpError.conflict(tasksApiErrors.taskAlreadyExists(duplicatedKey)))
+            expect(() =>
+                handleDuplicatedKeyInDb(
+                    Apis.tasks,
+                    error,
+                    { error: jest.fn() } as any, // loggerService
+                ),
+            ).toThrow(HttpError.conflict(tasksApiErrors.taskAlreadyExists(duplicatedKey)));
         });
     });
 });

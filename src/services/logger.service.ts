@@ -1,8 +1,8 @@
-import winston from "winston";
-import { AsyncLocalStorage } from "async_hooks";
+import winston from 'winston';
+import { AsyncLocalStorage } from 'async_hooks';
 import { ConfigService } from './config.service';
 import { IRequestFsLog } from 'src/interfaces/logs/request-fs.log.interface';
-import { IAsyncLocalStorageStore } from "src/interfaces/common/async-local-storage.interface";
+import { IAsyncLocalStorageStore } from 'src/interfaces/common/async-local-storage.interface';
 
 /*  
     WINSTON LEVELS
@@ -16,14 +16,13 @@ import { IAsyncLocalStorageStore } from "src/interfaces/common/async-local-stora
 */
 
 export class LoggerService {
-
     private consoleLogger: winston.Logger;
-    private requestCompletedFileLogger: winston.Logger
+    private requestCompletedFileLogger: winston.Logger;
     private fileLogger: winston.Logger;
 
     constructor(
         private readonly configService: ConfigService,
-        private readonly asyncLocalStorage: AsyncLocalStorage<IAsyncLocalStorageStore>
+        private readonly asyncLocalStorage: AsyncLocalStorage<IAsyncLocalStorageStore>,
     ) {
         const currentEnv = this.configService.NODE_ENV;
 
@@ -36,7 +35,7 @@ export class LoggerService {
                     const colorizer = winston.format.colorize().colorize;
 
                     const finalMessage = (() => {
-                        let mssg = (message as string);
+                        let mssg = message as string;
                         return mssg[0].toUpperCase() + mssg.slice(1);
                     })();
 
@@ -52,50 +51,53 @@ export class LoggerService {
         });
 
         this.consoleLogger = winston.createLogger({
-            transports: [consoleTransport]
+            transports: [consoleTransport],
         });
 
         const devLogsFolder = 'logs/dev';
         const prodLogsFolder = 'logs/prod';
 
-        const folder = currentEnv === 'production' ?
-            prodLogsFolder : devLogsFolder;
+        const folder = currentEnv === 'production' ? prodLogsFolder : devLogsFolder;
 
         this.fileLogger = winston.createLogger({
-            transports: [new winston.transports.File({
-                // no debug messages in fs
-                level: 'info',
-                filename: `${folder}/http-messages.log`,
-                // add timestamp in filesystem logs
-                format: winston.format.combine(
-                    winston.format.timestamp(),                    
-                    winston.format.prettyPrint(),
-                )
-            })]
+            transports: [
+                new winston.transports.File({
+                    // no debug messages in fs
+                    level: 'info',
+                    filename: `${folder}/http-messages.log`,
+                    // add timestamp in filesystem logs
+                    format: winston.format.combine(
+                        winston.format.timestamp(),
+                        winston.format.prettyPrint(),
+                    ),
+                }),
+            ],
         });
 
         this.requestCompletedFileLogger = winston.createLogger({
-            transports: [new winston.transports.File({
-                // no debug messages in fs
-                level: 'info',
-                filename: `${folder}/request-completed.log`,
-                // add timestamp in filesystem logs
-                // level is not saved
-                format: winston.format.combine(
-                    winston.format.timestamp(),
-                    winston.format.printf(({ level, timestamp, message, ...meta }) => {
-                        return JSON.stringify({ timestamp, message, ...meta });
-                    }),
-                    winston.format.prettyPrint(),
-                ),
-            })]
+            transports: [
+                new winston.transports.File({
+                    // no debug messages in fs
+                    level: 'info',
+                    filename: `${folder}/request-completed.log`,
+                    // add timestamp in filesystem logs
+                    // level is not saved
+                    format: winston.format.combine(
+                        winston.format.timestamp(),
+                        winston.format.printf(({ level, timestamp, message, ...meta }) => {
+                            return JSON.stringify({ timestamp, message, ...meta });
+                        }),
+                        winston.format.prettyPrint(),
+                    ),
+                }),
+            ],
         });
     }
 
     private log(
         level: 'info' | 'error' | 'debug' | 'warn',
         message: string,
-        stackTrace?: string
+        stackTrace?: string,
     ): void {
         if (this.configService.HTTP_LOGS) {
             const requestId = this.asyncLocalStorage.getStore()?.requestId || 'N/A';
@@ -105,14 +107,14 @@ export class LoggerService {
                 level,
                 message,
                 method,
-                requestId,                
+                requestId,
             });
 
             this.fileLogger.log({
                 level,
                 message,
                 requestId,
-                stackTrace
+                stackTrace,
             });
         }
     }
@@ -121,7 +123,7 @@ export class LoggerService {
         this.log('info', message);
     }
 
-    error(message: string, stackTrace?: string) {        
+    error(message: string, stackTrace?: string) {
         // stackTrace is not shown in console, but saved in fs
         // use debug to print the stack on console
         this.log('error', message, stackTrace);
@@ -140,7 +142,7 @@ export class LoggerService {
             this.requestCompletedFileLogger.info({
                 message: `Request completed`,
                 // timestamp added automatically, level not needed
-                ...data
+                ...data,
             });
 
             const { requestId, method } = data;
@@ -149,8 +151,8 @@ export class LoggerService {
                 message: `Request completed (${data.responseTime}ms)`,
                 level: 'info',
                 requestId,
-                method
+                method,
             });
-        };
+        }
     }
 }

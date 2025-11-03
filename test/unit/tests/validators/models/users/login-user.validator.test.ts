@@ -10,53 +10,68 @@ const loginUserValidator = new LoginUserValidator();
 
 describe('LoginUserValidator', () => {
     describe('invalid email', () => {
-        test.concurrent('throw InvalidInputError INVALID_CREDENTIALS if email is missing', async () => {
-            const data = { password: usersData.password() };
+        test.concurrent(
+            'throw InvalidInputError INVALID_CREDENTIALS if email is missing',
+            async () => {
+                const data = { password: usersData.password() };
 
-            await expect(async () => await loginUserValidator.validate(data))
-                .rejects
-                .toThrow(new InvalidInputError(authErrors.INVALID_CREDENTIALS));
-        });
+                await expect(async () => await loginUserValidator.validate(data)).rejects.toThrow(
+                    new InvalidInputError(authErrors.INVALID_CREDENTIALS),
+                );
+            },
+        );
 
-        test.concurrent('throw InvalidInputError INVALID_CREDENTIALS if email format is invalid', async () => {
-            const data = { email: 'not-an-email', password: usersData.password() };
+        test.concurrent(
+            'throw InvalidInputError INVALID_CREDENTIALS if email format is invalid',
+            async () => {
+                const data = { email: 'not-an-email', password: usersData.password() };
 
-            await expect(async () => await loginUserValidator.validate(data))
-                .rejects
-                .toThrow(new InvalidInputError(authErrors.INVALID_CREDENTIALS));
-        });
+                await expect(async () => await loginUserValidator.validate(data)).rejects.toThrow(
+                    new InvalidInputError(authErrors.INVALID_CREDENTIALS),
+                );
+            },
+        );
     });
 
     describe('invalid password', () => {
-        test.concurrent('throw InvalidInputError INVALID_CREDENTIALS if password is missing', async () => {
-            const data = { email: usersData.email() };
+        test.concurrent(
+            'throw InvalidInputError INVALID_CREDENTIALS if password is missing',
+            async () => {
+                const data = { email: usersData.email() };
 
-            await expect(async () => await loginUserValidator.validate(data))
-                .rejects
-                .toThrow(new InvalidInputError(authErrors.INVALID_CREDENTIALS));
-        });
+                await expect(async () => await loginUserValidator.validate(data)).rejects.toThrow(
+                    new InvalidInputError(authErrors.INVALID_CREDENTIALS),
+                );
+            },
+        );
 
-        test.concurrent('throw InvalidInputError INVALID_CREDENTIALS if password is too short', async () => {
-            const data = {
-                email: usersData.email(),
-                password: faker.string.alpha(usersLimits.MIN_PASSWORD_LENGTH - 1),
-            };
+        test.concurrent(
+            'throw InvalidInputError INVALID_CREDENTIALS if password is too short',
+            async () => {
+                const data = {
+                    email: usersData.email(),
+                    password: faker.string.alpha(usersLimits.MIN_PASSWORD_LENGTH - 1),
+                };
 
-            await expect(async () => await loginUserValidator.validate(data))
-                .rejects
-                .toThrow(new InvalidInputError(authErrors.INVALID_CREDENTIALS));
-        });
+                await expect(async () => await loginUserValidator.validate(data)).rejects.toThrow(
+                    new InvalidInputError(authErrors.INVALID_CREDENTIALS),
+                );
+            },
+        );
 
-        test.concurrent('throw InvalidInputError INVALID_CREDENTIALS if password is too long', async () => {
-            const data = {
-                email: usersData.email(),
-                password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1),
-            };
+        test.concurrent(
+            'throw InvalidInputError INVALID_CREDENTIALS if password is too long',
+            async () => {
+                const data = {
+                    email: usersData.email(),
+                    password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1),
+                };
 
-            await expect(async () => await loginUserValidator.validate(data))
-                .rejects
-                .toThrow(new InvalidInputError(authErrors.INVALID_CREDENTIALS));
-        });
+                await expect(async () => await loginUserValidator.validate(data)).rejects.toThrow(
+                    new InvalidInputError(authErrors.INVALID_CREDENTIALS),
+                );
+            },
+        );
     });
 
     describe('valid input', () => {

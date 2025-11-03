@@ -1,6 +1,5 @@
-
 // Defines the request log in fs
-export interface IRequestFsLog {    
+export interface IRequestFsLog {
     method: string;
     requestId: string;
     responseTime: number;
@@ -11,4 +10,4 @@ export interface IRequestFsLog {
     // level: string;
     // message: string;
     // timestamp: string;
-};
+}

@@ -29,7 +29,7 @@ describe('GET /api/tasks/', () => {
         }
 
         // One more for user1
-        tasksIdSorted.push((await createTask(user1SessionToken)).taskId)
+        tasksIdSorted.push((await createTask(user1SessionToken)).taskId);
     });
 
     describe('Caching', () => {
@@ -42,7 +42,9 @@ describe('GET /api/tasks/', () => {
                     .query({ page, limit })
                     .set('Cache-Control', 'no-store')
                     .set('Authorization', `Bearer ${sessionToken}`);
-                const dataInRedis = await testKit.redisService.get(makePaginationCacheKey(Apis.tasks, page, limit));
+                const dataInRedis = await testKit.redisService.get(
+                    makePaginationCacheKey(Apis.tasks, page, limit),
+                );
                 expect(dataInRedis).toBeNull();
             });
         });
@@ -55,7 +57,9 @@ describe('GET /api/tasks/', () => {
                     .get(testKit.endpoints.tasksAPI)
                     .query({ page, limit })
                     .set('Authorization', `Bearer ${sessionToken}`);
-                const dataInRedis = await testKit.redisService.get(makePaginationCacheKey(Apis.tasks, page, limit));                
+                const dataInRedis = await testKit.redisService.get(
+                    makePaginationCacheKey(Apis.tasks, page, limit),
+                );
                 expect(dataInRedis).not.toBeNull();
             });
         });
@@ -66,8 +70,11 @@ describe('GET /api/tasks/', () => {
                 const limit = 1;
                 // mock data in cache
                 const fakeData = 'fakeData';
-                await testKit.redisService.set(makePaginationCacheKey(Apis.tasks, page, limit), fakeData);
-                // find 
+                await testKit.redisService.set(
+                    makePaginationCacheKey(Apis.tasks, page, limit),
+                    fakeData,
+                );
+                // find
                 const response = await request(testKit.server)
                     .get(testKit.endpoints.tasksAPI)
                     .query({ page, limit })

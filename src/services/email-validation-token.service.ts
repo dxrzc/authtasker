@@ -13,14 +13,14 @@ export class EmailValidationTokenService {
         private readonly configService: ConfigService,
         private readonly jwtService: JwtService,
         private readonly jwtBlacklistService: JwtBlackListService,
-        private readonly loggerService: LoggerService,        
+        private readonly loggerService: LoggerService,
     ) {}
 
     generate(userEmail: string): string {
         const expTime = this.configService.JWT_EMAIL_VALIDATION_EXP_TIME;
         const { token, jti } = this.jwtService.generate(expTime, {
             purpose: tokenPurposes.EMAIL_VALIDATION,
-            email: userEmail
+            email: userEmail,
         });
         this.loggerService.info(`Email validation token ${jti} generated, expires at ${expTime}`);
         return token;
@@ -30,9 +30,15 @@ export class EmailValidationTokenService {
         const remainingTokenTTL = calculateTokenTTL(tokenExp);
         if (remainingTokenTTL > 0) {
             this.loggerService.info(`Email validation token "${jti}" blacklisted`);
-            await this.jwtBlacklistService.blacklist(JwtTypes.emailValidation, jti, remainingTokenTTL);
+            await this.jwtBlacklistService.blacklist(
+                JwtTypes.emailValidation,
+                jti,
+                remainingTokenTTL,
+            );
         } else {
-            this.loggerService.info(`Email validation token "${jti}" already expired, skipping blacklisting`)
+            this.loggerService.info(
+                `Email validation token "${jti}" already expired, skipping blacklisting`,
+            );
         }
     }
 
@@ -57,7 +63,10 @@ export class EmailValidationTokenService {
             throw HttpError.badRequest(authErrors.INVALID_TOKEN);
         }
         // token is not blacklisted
-        const tokenIsBlacklisted = await this.jwtBlacklistService.tokenInBlacklist(JwtTypes.emailValidation, payload.jti)
+        const tokenIsBlacklisted = await this.jwtBlacklistService.tokenInBlacklist(
+            JwtTypes.emailValidation,
+            payload.jti,
+        );
         if (tokenIsBlacklisted) {
             this.loggerService.error('Token is blacklisted');
             throw HttpError.badRequest(authErrors.INVALID_TOKEN);

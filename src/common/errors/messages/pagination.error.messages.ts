@@ -1,4 +1,3 @@
-
 export const paginationErrors = {
     INVALID_PAGE: 'Invalid page',
     INVALID_LIMIT: 'Invalid limit',
