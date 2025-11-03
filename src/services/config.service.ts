@@ -18,10 +18,12 @@ export class ConfigService {
 
     public readonly PORT = env
         .get("PORT")
+        .required()
         .asPortNumber();
 
     public readonly BCRYPT_SALT_ROUNDS = env
         .get("BCRYPT_SALT_ROUNDS")
+        .required()
         .asInt();
 
     public readonly JWT_SESSION_EXP_TIME = env
@@ -68,6 +70,7 @@ export class ConfigService {
         .get("MAX_REFRESH_TOKENS_PER_USER")
         .required()
         .asIntPositive();
+        
     public readonly MAIL_SERVICE_HOST = env
         .get("MAIL_SERVICE_HOST")
         .required()
@@ -77,6 +80,7 @@ export class ConfigService {
         .get("MAIL_SERVICE_PORT")
         .required()
         .asPortNumber();
+
     public readonly MAIL_SERVICE_USER = env
         .get("MAIL_SERVICE_USER")
         .required()
