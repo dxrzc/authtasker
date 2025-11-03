@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { TasksService } from 'src/services/tasks.service';
-import { LoggerService } from 'src/services/logger.service';
 import { statusCodes } from 'src/common/constants/status-codes.constants';
 import { paginationSettings } from 'src/common/constants/pagination.constants';
 import { BaseTasksController } from 'src/common/base/base-tasks-controller.class';
@@ -19,7 +18,7 @@ export class TasksController extends BaseTasksController {
 
     protected readonly create = async (req: Request, res: Response) => {
         const validTask = await this.createTaskValidator.validateAndTransform(req.body);
-        const requestUserInfo = this.getUserRequestInfo(req, res);
+        const requestUserInfo = this.getUserRequestInfo(req);
         const created = await this.tasksService.create(validTask, requestUserInfo.id);
         res.status(statusCodes.CREATED).json(created);
     };
@@ -50,7 +49,7 @@ export class TasksController extends BaseTasksController {
 
     protected readonly deleteOne = async (req: Request, res: Response) => {
         const id = req.params.id;
-        const requestUserInfo = this.getUserRequestInfo(req, res);
+        const requestUserInfo = this.getUserRequestInfo(req);
         await this.tasksService.deleteOne(requestUserInfo, id);
         res.status(statusCodes.NO_CONTENT).end();
     };
@@ -58,7 +57,7 @@ export class TasksController extends BaseTasksController {
     protected readonly updateOne = async (req: Request, res: Response) => {
         const id = req.params.id;
         const validUpdate = await this.updateTaskValidator.validateNewAndTransform(req.body);
-        const requestUserInfo = this.getUserRequestInfo(req, res);
+        const requestUserInfo = this.getUserRequestInfo(req);
         const updated = await this.tasksService.updateOne(requestUserInfo, id, validUpdate);
         res.status(statusCodes.OK).json(updated);
     };

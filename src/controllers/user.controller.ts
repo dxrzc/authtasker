@@ -25,7 +25,7 @@ export class UserController extends BaseUserController {
     }
 
     protected readonly me = async (req: Request, res: Response): Promise<void> => {
-        const { id } = this.getUserRequestInfo(req, res);
+        const { id } = this.getUserRequestInfo(req);
         const me = await this.userService.findOne(id, { noStore: true });
         res.status(statusCodes.OK).json(me);
     };
@@ -50,7 +50,7 @@ export class UserController extends BaseUserController {
     };
 
     protected readonly logout = async (req: Request, res: Response): Promise<void> => {
-        const requestUserInfo = this.getUserRequestInfo(req, res);
+        const requestUserInfo = this.getUserRequestInfo(req);
         const refreshToken = req.body.refreshToken;
         await this.userService.logout(requestUserInfo, refreshToken);
         res.status(statusCodes.NO_CONTENT).end();
@@ -66,7 +66,7 @@ export class UserController extends BaseUserController {
         req: Request,
         res: Response,
     ): Promise<void> => {
-        const requestUserInfo = this.getUserRequestInfo(req, res);
+        const requestUserInfo = this.getUserRequestInfo(req);
         await this.userService.requestEmailValidation(requestUserInfo.id);
         res.status(statusCodes.NO_CONTENT).end();
     };
@@ -97,7 +97,7 @@ export class UserController extends BaseUserController {
 
     protected readonly deleteOne = async (req: Request, res: Response): Promise<void> => {
         const userIdToDelete = req.params.id;
-        const requestUserInfo = this.getUserRequestInfo(req, res);
+        const requestUserInfo = this.getUserRequestInfo(req);
         await this.userService.deleteOne(requestUserInfo, userIdToDelete);
         res.status(statusCodes.NO_CONTENT).end();
     };
@@ -107,7 +107,7 @@ export class UserController extends BaseUserController {
         const propertiesToUpdate = req.body;
         const validUpdate =
             await this.updateUserValidator.validateNewAndTransform(propertiesToUpdate);
-        const requestUserInfo = this.getUserRequestInfo(req, res);
+        const requestUserInfo = this.getUserRequestInfo(req);
         const updated = await this.userService.updateOne(
             requestUserInfo,
             userIdToUpdate,
@@ -135,7 +135,8 @@ export class UserController extends BaseUserController {
 
     protected readonly resetPasswordForm = async (req: Request, res: Response): Promise<void> => {
         const { token } = req.query;
-        if (!token) throw HttpError.badRequest(authErrors.INVALID_TOKEN);
+        if (!token || typeof token !== 'string')
+            throw HttpError.badRequest(authErrors.INVALID_TOKEN);
 
         res.send(`
           <html>
@@ -150,5 +151,6 @@ export class UserController extends BaseUserController {
             </body>
           </html>
         `);
+        return Promise.resolve();
     };
 }

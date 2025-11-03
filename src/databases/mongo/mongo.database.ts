@@ -25,7 +25,7 @@ export class MongoDatabase {
     }
 
     async disconnect(): Promise<void> {
-        if (mongoose.connection.readyState === 1) {
+        if (mongoose.connection.readyState === mongoose.ConnectionStates.connected) {
             await mongoose.disconnect();
             this.disconnectedManually = true;
             SystemLoggerService.warn(`Disconnected from mongo database`);

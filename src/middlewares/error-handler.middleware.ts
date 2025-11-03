@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { LoggerService } from 'src/services/logger.service';
 import { HttpError } from 'src/common/errors/classes/http-error.class';
 import { SystemLoggerService } from 'src/services/system-logger.service';
@@ -10,7 +10,7 @@ export class ErrorHandlerMiddleware {
     constructor(private readonly loggerService: LoggerService) {}
 
     middleware() {
-        return (err: Error, req: Request, res: Response, next: NextFunction) => {
+        return (err: Error, req: Request, res: Response) => {
             if (err instanceof HttpError) {
                 res.status(err.statusCode).json({ error: err.message });
                 return;

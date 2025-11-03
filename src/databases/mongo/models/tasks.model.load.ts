@@ -39,7 +39,7 @@ export const loadTasksModel = (configService: ConfigService): Model<ITasks> => {
             toJSON: {
                 virtuals: true,
                 versionKey: false,
-                transform: function (doc, ret, options) {
+                transform: function (doc, ret) {
                     delete ret._id;
                     return ret;
                 },

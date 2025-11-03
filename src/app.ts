@@ -14,45 +14,45 @@ import { EventManager } from './events/eventManager';
 import { Events } from './common/constants/events.constants';
 import { RedisSuscriber } from './databases/redis/redis.suscriber';
 
-process.on('SIGINT', async () => {
-    await ShutdownManager.shutdown({
+process.on('SIGINT', () => {
+    void ShutdownManager.shutdown({
         cause: 'SIGINT',
         exitCode: 0,
     });
 });
 
-process.on('SIGTERM', async () => {
-    await ShutdownManager.shutdown({
+process.on('SIGTERM', () => {
+    void ShutdownManager.shutdown({
         cause: 'SIGTERM',
         exitCode: 0,
     });
 });
 
-process.on('unhandledRejection', async (reason: any) => {
-    await ShutdownManager.shutdown({
+process.on('unhandledRejection', (reason: any) => {
+    void ShutdownManager.shutdown({
         cause: `unhandledRejection: ${reason}`,
         exitCode: 1,
         stack: reason.stack,
     });
 });
 
-process.on('uncaughtException', async (err) => {
-    await ShutdownManager.shutdown({
+process.on('uncaughtException', (err) => {
+    void ShutdownManager.shutdown({
         cause: `uncaughtException: ${err.message}`,
         exitCode: 1,
         stack: err.stack,
     });
 });
 
-EventManager.listen(Events.MONGO_CONNECTION_ERROR, async () => {
-    await ShutdownManager.shutdown({
+EventManager.listen(Events.MONGO_CONNECTION_ERROR, () => {
+    void ShutdownManager.shutdown({
         cause: 'Mongo database connection lost',
         exitCode: 1,
     });
 });
 
-EventManager.listen(Events.REDIS_CONNECTION_ERROR, async () => {
-    await ShutdownManager.shutdown({
+EventManager.listen(Events.REDIS_CONNECTION_ERROR, () => {
+    void ShutdownManager.shutdown({
         cause: 'Redis database connection lost',
         exitCode: 1,
     });
@@ -76,7 +76,7 @@ async function main() {
     const redisDb = new RedisDatabase(configService);
     const redisInstance = await redisDb.connect();
     const redisService = new RedisService(redisInstance);
-    const redisSuscriber = new RedisSuscriber(configService, redisInstance);
+    new RedisSuscriber(configService, redisInstance);
     ShutdownManager.redisDb = redisDb;
 
     // server
@@ -94,4 +94,4 @@ async function main() {
     ShutdownManager.server = server;
 }
 
-main();
+void main();

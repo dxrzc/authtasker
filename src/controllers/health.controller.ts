@@ -7,16 +7,14 @@ export class HealthController extends BaseController {
         super();
     }
 
-    readonly getServerHealth = this.forwardError(
-        async (req: Request, res: Response): Promise<void> => {
-            const health = {
-                status: 'UP',
-                uptime: process.uptime(),
-                memoryUsage: process.memoryUsage(),
-                cpuUsage: process.cpuUsage(),
-                timestamp: new Date(),
-            };
-            res.status(statusCodes.OK).json(health);
-        },
-    );
+    readonly getServerHealth = this.forwardError((req: Request, res: Response): void => {
+        const health = {
+            status: 'UP',
+            uptime: process.uptime(),
+            memoryUsage: process.memoryUsage(),
+            cpuUsage: process.cpuUsage(),
+            timestamp: new Date(),
+        };
+        res.status(statusCodes.OK).json(health);
+    });
 }

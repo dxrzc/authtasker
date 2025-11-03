@@ -36,7 +36,7 @@ export class ApiLimiterMiddleware extends BaseMiddleware<[ApiType]> {
             windowMs: 1 * 60 * 1000,
             standardHeaders: false,
             legacyHeaders: false,
-            skip: (req, res) => this.configService.NODE_ENV === 'development',
+            skip: () => this.configService.NODE_ENV === 'development',
         });
     }
 }

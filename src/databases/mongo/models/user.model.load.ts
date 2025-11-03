@@ -42,7 +42,7 @@ export const loadUserModel = (configService: ConfigService): Model<IUser> => {
             toJSON: {
                 virtuals: true,
                 versionKey: false,
-                transform: function (doc, ret, options) {
+                transform: function (doc, ret) {
                     delete ret._id;
                     delete ret.password;
                     return ret;

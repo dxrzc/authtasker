@@ -9,10 +9,11 @@ export abstract class BaseTasksController extends BaseController {
     protected abstract deleteOne(req: Request, res: Response): Promise<void>;
     protected abstract updateOne(req: Request, res: Response): Promise<void>;
 
-    readonly createFwdErr = (): RequestHandler => this.forwardError(this.create);
-    readonly findOneFwdErr = (): RequestHandler => this.forwardError(this.findOne);
-    readonly findAllFwdErr = (): RequestHandler => this.forwardError(this.findAll);
-    readonly findAllByUserFwdErr = (): RequestHandler => this.forwardError(this.findAllByUser);
-    readonly deleteOneFwdErr = (): RequestHandler => this.forwardError(this.deleteOne);
-    readonly updateOneFwdErr = (): RequestHandler => this.forwardError(this.updateOne);
+    readonly createFwdErr = (): RequestHandler => this.forwardError(this.create.bind(this));
+    readonly findOneFwdErr = (): RequestHandler => this.forwardError(this.findOne.bind(this));
+    readonly findAllFwdErr = (): RequestHandler => this.forwardError(this.findAll.bind(this));
+    readonly findAllByUserFwdErr = (): RequestHandler =>
+        this.forwardError(this.findAllByUser.bind(this));
+    readonly deleteOneFwdErr = (): RequestHandler => this.forwardError(this.deleteOne.bind(this));
+    readonly updateOneFwdErr = (): RequestHandler => this.forwardError(this.updateOne.bind(this));
 }

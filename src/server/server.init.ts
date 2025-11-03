@@ -1,5 +1,4 @@
 import helmet from 'helmet';
-import timeout from 'connect-timeout';
 import express, { Router } from 'express';
 import { Server as HttpServer } from 'http';
 import { SystemLoggerService } from 'src/services/system-logger.service';

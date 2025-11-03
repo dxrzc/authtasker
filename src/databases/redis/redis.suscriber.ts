@@ -12,13 +12,13 @@ export class RedisSuscriber {
         const subscriber = new Redis(this.configService.REDIS_URI, getRedisOptions());
         const expiredKeyPattern = '__keyevent@0__:expired';
 
-        subscriber.subscribe(expiredKeyPattern, (err, count) => {
+        void subscriber.subscribe(expiredKeyPattern, (err) => {
             if (err) throw new Error(`Failed to subscribe: ${err}`);
-            SystemLoggerService.info(`Suscribed to redis event: ${expiredKeyPattern}`);
+            void SystemLoggerService.info(`Suscribed to redis event: ${expiredKeyPattern}`);
         });
 
-        subscriber.on('message', async (channel, expiredKey) =>
-            removeFromSetWhenRefreshTokenExpires(expiredKey, this.redisInstance),
-        );
+        subscriber.on('message', (channel, expiredKey) => {
+            void removeFromSetWhenRefreshTokenExpires(expiredKey, this.redisInstance);
+        });
     }
 }

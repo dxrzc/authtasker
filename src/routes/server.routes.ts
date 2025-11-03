@@ -176,13 +176,13 @@ export class AppRoutes {
         return await userRoutes.build();
     }
 
-    private async buildTasksRoutes(): Promise<Router> {
+    private buildTasksRoutes(): Router {
         const tasksRoutes = new TasksRoutes(
             this.tasksService,
             this.rolesMiddleware,
             this.apiLimiterMiddleware,
         );
-        return await tasksRoutes.build();
+        return tasksRoutes.build();
     }
 
     private async buildSeedRoutes() {
@@ -208,7 +208,7 @@ export class AppRoutes {
         );
         router.use(this.buildGlobalMiddlewares());
         router.use('/api/users', await this.buildUserRoutes());
-        router.use('/api/tasks', await this.buildTasksRoutes());
+        router.use('/api/tasks', this.buildTasksRoutes());
 
         if (this.configService.NODE_ENV === 'development') {
             router.use('/seed', await this.buildSeedRoutes());

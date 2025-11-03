@@ -24,7 +24,7 @@ export class TasksSeedService {
         };
     }
 
-    private async generateBunchOfTasks(n: number): Promise<TaskRequest[]> {
+    private generateBunchOfTasks(n: number): TaskRequest[] {
         const tasks = new Array<TaskRequest>();
         for (let i = 0; i < n; i++) {
             tasks.push(this.generateRandomTask());
@@ -36,7 +36,7 @@ export class TasksSeedService {
         await this.tasksModel.deleteMany({});
         this.loggerService.warn('All tasks deleted');
 
-        const tasks = await this.generateBunchOfTasks(n);
+        const tasks = this.generateBunchOfTasks(n);
 
         const adminUser = await this.userModel
             .findOne({ email: this.configService.ADMIN_EMAIL })

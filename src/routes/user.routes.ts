@@ -5,7 +5,6 @@ import { createAdmin } from 'src/admin/create-admin';
 import { UserService } from 'src/services/user.service';
 import { IUser } from 'src/interfaces/user/user.interface';
 import { ConfigService } from 'src/services/config.service';
-import { LoggerService } from 'src/services/logger.service';
 import { HashingService } from 'src/services/hashing.service';
 import { UserController } from 'src/controllers/user.controller';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';

@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { ApiType } from 'src/enums/api-type.enum';
 import { TasksService } from 'src/services/tasks.service';
-import { LoggerService } from 'src/services/logger.service';
 import { TasksController } from 'src/controllers/tasks.controller';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
 import { SystemLoggerService } from 'src/services/system-logger.service';
@@ -26,7 +25,7 @@ export class TasksRoutes {
         SystemLoggerService.info('Task routes loaded');
     }
 
-    async build(): Promise<Router> {
+    build(): Router {
         const router = Router();
         router.use(this.apiLimiterMiddleware.middleware(ApiType.coreApi));
 

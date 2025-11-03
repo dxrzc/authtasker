@@ -14,11 +14,15 @@ export const handleDuplicatedKeyInDb = (
     const keyValue = Object.values(error.keyValue);
     switch (api) {
         case Apis.users: {
-            loggerService.error(`User with ${duplicatedKey} "${keyValue}" already exists`);
+            loggerService.error(
+                `User with ${duplicatedKey.join(', ')} "${keyValue.join(', ')}" already exists`,
+            );
             throw HttpError.conflict(usersApiErrors.USER_ALREADY_EXISTS);
         }
         case Apis.tasks: {
-            loggerService.error(`Task with ${duplicatedKey}: "${keyValue}" already exists`);
+            loggerService.error(
+                `Task with ${duplicatedKey.join(', ')}: "${keyValue.join(', ')}" already exists`,
+            );
             throw HttpError.conflict(tasksApiErrors.taskAlreadyExists(duplicatedKey[0]));
         }
     }

@@ -19,22 +19,24 @@ export abstract class BaseUserController extends BaseController {
     protected abstract resetPasswordForm(req: Request, res: Response): Promise<void>;
 
     readonly resetPasswordFormFwdErr = (): RequestHandler =>
-        this.forwardError(this.resetPasswordForm);
-    readonly resetPasswordFwdErr = (): RequestHandler => this.forwardError(this.resetPasswordd);
+        this.forwardError(this.resetPasswordForm.bind(this));
+    readonly resetPasswordFwdErr = (): RequestHandler =>
+        this.forwardError(this.resetPasswordd.bind(this));
     readonly requestPasswordRecoveryFwdErr = (): RequestHandler =>
-        this.forwardError(this.requestPasswordRecovery);
-    readonly createFwdErr = (): RequestHandler => this.forwardError(this.create);
-    readonly loginFwdErr = (): RequestHandler => this.forwardError(this.login);
-    readonly logoutFwdErr = (): RequestHandler => this.forwardError(this.logout);
-    readonly logoutFromAllFwdErr = (): RequestHandler => this.forwardError(this.logoutFromAll);
+        this.forwardError(this.requestPasswordRecovery.bind(this));
+    readonly createFwdErr = (): RequestHandler => this.forwardError(this.create.bind(this));
+    readonly loginFwdErr = (): RequestHandler => this.forwardError(this.login.bind(this));
+    readonly logoutFwdErr = (): RequestHandler => this.forwardError(this.logout.bind(this));
+    readonly logoutFromAllFwdErr = (): RequestHandler =>
+        this.forwardError(this.logoutFromAll.bind(this));
     readonly requestEmailValidationFwdErr = (): RequestHandler =>
-        this.forwardError(this.requestEmailValidation);
+        this.forwardError(this.requestEmailValidation.bind(this));
     readonly confirmEmailValidationFwdErr = (): RequestHandler =>
-        this.forwardError(this.confirmEmailValidation);
-    readonly findOneFwdErr = (): RequestHandler => this.forwardError(this.findOne);
-    readonly findAllFwdErr = (): RequestHandler => this.forwardError(this.findAll);
-    readonly deleteOneFwdErr = (): RequestHandler => this.forwardError(this.deleteOne);
-    readonly updateOneFwdErr = (): RequestHandler => this.forwardError(this.updateOne);
-    readonly meFwdErr = (): RequestHandler => this.forwardError(this.me);
-    readonly refreshFwdErr = (): RequestHandler => this.forwardError(this.refresh);
+        this.forwardError(this.confirmEmailValidation.bind(this));
+    readonly findOneFwdErr = (): RequestHandler => this.forwardError(this.findOne.bind(this));
+    readonly findAllFwdErr = (): RequestHandler => this.forwardError(this.findAll.bind(this));
+    readonly deleteOneFwdErr = (): RequestHandler => this.forwardError(this.deleteOne.bind(this));
+    readonly updateOneFwdErr = (): RequestHandler => this.forwardError(this.updateOne.bind(this));
+    readonly meFwdErr = (): RequestHandler => this.forwardError(this.me.bind(this));
+    readonly refreshFwdErr = (): RequestHandler => this.forwardError(this.refresh.bind(this));
 }

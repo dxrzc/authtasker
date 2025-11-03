@@ -13,7 +13,7 @@ export class RequestContextMiddleware extends BaseMiddleware {
     }
 
     protected getHandler(): RequestHandler {
-        return async (req: Request, res: Response, next: NextFunction) => {
+        return (req: Request, res: Response, next: NextFunction) => {
             const url = req.originalUrl;
             const method = req.method;
             const requestId = uuidv4();
