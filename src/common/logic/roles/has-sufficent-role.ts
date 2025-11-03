@@ -1,16 +1,14 @@
 import { UserRole } from 'src/types/user/user-roles.type';
 
-const roleHierarchy: Record<UserRole, number> = {
-    readonly: 0,
-    editor: 1,
-    admin: 2,
-};
+const sortedRoles: UserRole[] = ['readonly', 'editor', 'admin'];
 
 export function hasSufficientRole(minRoleRequired: UserRole, userRole: UserRole): boolean {
-    if (!(minRoleRequired in roleHierarchy) || !(userRole in roleHierarchy)) {
+    const userRoleIndex = sortedRoles.indexOf(userRole);
+    const minRoleIndex = sortedRoles.indexOf(minRoleRequired);
+    if (userRoleIndex === -1 || minRoleIndex === -1) {
         throw new Error(
             `Invalid role(s): userRole="${userRole}", minRoleRequired="${minRoleRequired}"`,
         );
     }
-    return roleHierarchy[userRole] >= roleHierarchy[minRoleRequired];
+    return userRoleIndex >= minRoleIndex;
 }

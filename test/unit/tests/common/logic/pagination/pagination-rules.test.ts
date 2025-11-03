@@ -3,8 +3,6 @@ import { HttpError } from 'src/common/errors/classes/http-error.class';
 import { paginationRules } from 'src/common/logic/pagination/pagination-rules';
 import { statusCodes } from 'src/common/constants/status-codes.constants';
 
-// CHAT GPT WROTE THIS
-
 describe('paginationRules()', () => {
     test('returns correct offset for valid inputs', () => {
         const offset = paginationRules(10, 2, 50); // page 2 → offset = 10

@@ -10,7 +10,7 @@ describe('removeFromSetWhenRefreshTokenExpires', () => {
         // the splitting of userId and jti should success inside the function
         const expiredKey = makeRefreshTokenKey(userId, jti);
         const redis = { srem: jest.fn() };
-        removeFromSetWhenRefreshTokenExpires(expiredKey, redis as unknown as Redis);
+        await removeFromSetWhenRefreshTokenExpires(expiredKey, redis as unknown as Redis);
         expect(redis.srem).toHaveBeenCalledWith(makeRefreshTokenIndexKey(userId), jti);
     });
 });

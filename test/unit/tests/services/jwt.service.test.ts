@@ -11,7 +11,7 @@ describe('JwtService', () => {
             expect(typeof token).toBe('string');
         });
 
-        test.concurrent('return an object containing the token jti', async () => {
+        test.concurrent('return an object containing the token jti', () => {
             const { jti, token } = jwtService.generate('1h', { userId: '123' });
             const payload = jwtService.verify(token);
             expect(payload?.jti).toBe(jti);
@@ -49,7 +49,7 @@ describe('JwtService', () => {
             expect(result).toBeNull();
         });
 
-        test.concurrent('return null if token is expired', async () => {
+        test.concurrent('return null if token is expired', () => {
             // expired 10 seconds ago
             const expiredToken = jwt.sign({ exp: Math.floor(Date.now() / 1000) - 10 }, PRIVATE_KEY);
             const result = jwtService.verify(expiredToken);

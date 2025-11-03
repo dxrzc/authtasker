@@ -6,7 +6,7 @@ import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messa
 
 describe('handleDuplicatedKeyInDb', () => {
     describe('Users API', () => {
-        test('throw HttpError CONFLICT and USER_ALREADY_EXISTS message', async () => {
+        test('throw HttpError CONFLICT and USER_ALREADY_EXISTS message', () => {
             expect(() =>
                 handleDuplicatedKeyInDb(
                     Apis.users,
@@ -18,7 +18,7 @@ describe('handleDuplicatedKeyInDb', () => {
     });
 
     describe('Tasks API', () => {
-        test('throw HttpError CONFLICT and the message containing the duplicated key', async () => {
+        test('throw HttpError CONFLICT and the message containing the duplicated key', () => {
             const duplicatedKey = 'name';
             const error = {
                 keyValue: { [duplicatedKey]: 'duplicated-value' },

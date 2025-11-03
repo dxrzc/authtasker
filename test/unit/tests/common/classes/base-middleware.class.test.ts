@@ -7,7 +7,7 @@ describe('BaseMiddleware', () => {
 
         protected getHandler(param: string): RequestHandler {
             this.getHandlerCalledWith = param;
-            return (req, res, next) => {
+            return (req, res) => {
                 res.send(`Handled: ${param}`);
             };
         }
@@ -24,7 +24,7 @@ describe('BaseMiddleware', () => {
         expect(typeof handler).toBe('function');
     });
 
-    it('returns a middleware that handles sync errors', () => {
+    test('returns a middleware that handles sync errors', async () => {
         const errorMssg = 'sync error';
         class SyncThrowMiddleware extends BaseMiddleware {
             protected getHandler(): RequestHandler {
@@ -41,7 +41,7 @@ describe('BaseMiddleware', () => {
         const res = {} as Response;
         const next = jest.fn();
 
-        handler(req, res, next);
+        await handler(req, res, next);
 
         expect(next).toHaveBeenCalledWith(expect.any(Error));
         expect((next.mock.calls[0][0] as Error).message).toBe(errorMssg);
@@ -51,7 +51,7 @@ describe('BaseMiddleware', () => {
         const errorMssg = 'async error';
         class AsyncThrowMiddleware extends BaseMiddleware {
             protected getHandler(): RequestHandler {
-                return async () => {
+                return () => {
                     throw new Error(errorMssg);
                 };
             }

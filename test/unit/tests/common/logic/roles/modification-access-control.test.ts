@@ -1,9 +1,22 @@
 import { validRoles } from 'src/types/user/user-roles.type';
-import { modificationAuthFixture } from '@unit/fixtures/modification-auth.fixture';
 import { modificationAccessControl } from 'src/common/logic/roles/modification-access-control';
 
+export const modificationAuthFixture = [
+    { currentUserRole: 'admin', targetUserRole: 'admin', expected: 'forbidden' },
+    { currentUserRole: 'admin', targetUserRole: 'editor', expected: 'authorized' },
+    { currentUserRole: 'admin', targetUserRole: 'readonly', expected: 'authorized' },
+
+    { currentUserRole: 'editor', targetUserRole: 'admin', expected: 'forbidden' },
+    { currentUserRole: 'editor', targetUserRole: 'editor', expected: 'forbidden' },
+    { currentUserRole: 'editor', targetUserRole: 'readonly', expected: 'forbidden' },
+
+    { currentUserRole: 'readonly', targetUserRole: 'admin', expected: 'forbidden' },
+    { currentUserRole: 'readonly', targetUserRole: 'editor', expected: 'forbidden' },
+    { currentUserRole: 'readonly', targetUserRole: 'readonly', expected: 'forbidden' },
+] as const;
+
 describe('tasksModificationAccessControl', () => {
-    test.each(validRoles)('%s users are authorized themselves', async (role) => {
+    test.each(validRoles)('%s users are authorized to modify themselves', (role) => {
         const currentUserInfo = { role, id: 'test-id' };
         const targetUserInfo = { role, id: currentUserInfo.id };
         const canModify = modificationAccessControl(currentUserInfo, targetUserInfo);
@@ -12,7 +25,7 @@ describe('tasksModificationAccessControl', () => {
 
     test.each(modificationAuthFixture)(
         `$currentUserRole users $expected to modify other $targetUserRole users`,
-        async ({ currentUserRole, targetUserRole, expected }) => {
+        ({ currentUserRole, targetUserRole, expected }) => {
             const currentUserInfo = {
                 role: currentUserRole,
                 id: 'current-user-id',
@@ -21,11 +34,9 @@ describe('tasksModificationAccessControl', () => {
                 role: targetUserRole,
                 id: 'target-user-id',
             };
-
-            const canModify = modificationAccessControl(currentUserInfo, targetUserInfo);
-            expected === 'authorized'
-                ? expect(canModify).toBeTruthy()
-                : expect(canModify).toBeFalsy();
+            const allowed = modificationAccessControl(currentUserInfo, targetUserInfo);
+            if (expected === 'authorized') expect(allowed).toBeTruthy();
+            else expect(allowed).toBeFalsy();
         },
     );
 });

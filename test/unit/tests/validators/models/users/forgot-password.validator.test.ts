@@ -12,7 +12,7 @@ const usersData = new UserDataGenerator();
 describe('ForgotPasswordValidator', () => {
     describe('Valid password provided', () => {
         test.concurrent('return ForgotPasswordValidator instance', async () => {
-            expect(
+            await expect(
                 forgotPasswordValidator.validate({ username: usersData.name() }),
             ).resolves.toBeInstanceOf(ForgotPasswordValidator);
         });
@@ -20,7 +20,7 @@ describe('ForgotPasswordValidator', () => {
 
     describe('Valid email provided', () => {
         test.concurrent('return ForgotPasswordValidator instance', async () => {
-            expect(
+            await expect(
                 forgotPasswordValidator.validate({ email: usersData.email() }),
             ).resolves.toBeInstanceOf(ForgotPasswordValidator);
         });
