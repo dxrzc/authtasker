@@ -25,7 +25,7 @@ COPY --from=dev-deps /usr/src/app/node_modules ./node_modules
 COPY src ./src
 COPY tsconfig.json ./tsconfig.json
 ENV NODE_ENV=development
-CMD ["sh", "-c", "npx tsc --noEmit && npx tsx watch -r tsconfig-paths/register src/app.ts"]
+CMD ["sh", "-c", "npx tsc-watch --onSuccess \"node -r tsconfig-paths/register dist/app.js\""]
 
 FROM base AS production
 COPY --from=prod-deps /usr/src/app/node_modules ./node_modules

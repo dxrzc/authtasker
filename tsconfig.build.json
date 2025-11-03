@@ -4,11 +4,12 @@
         "node_modules",
         "test",
         "dist",
-        "**/*test.ts"        
+        "**/*test.ts"
     ],
-    "compilerOptions": {
-        // Given that ts.config.json uses "rootDir": "./". We need to override this 
-        // config in order to get the built files in "dist" and not in "dist/src"
-        "rootDir": "src",
-    }
+    "baseUrl": "./",
+    "paths": {
+        "src/*": [
+            "src/*"
+        ]
+    },
 }
