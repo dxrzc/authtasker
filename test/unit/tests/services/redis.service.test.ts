@@ -1,4 +1,4 @@
-import { RedisService } from '@root/services/redis.service';
+import { RedisService } from 'src/services/redis.service';
 import { mock } from 'jest-mock-extended';
 import Redis from 'ioredis';
 

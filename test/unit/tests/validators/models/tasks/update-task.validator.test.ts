@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker/.';
-import { tasksLimits } from '@root/common/constants/tasks.constants';
-import { commonErrors } from '@root/common/errors/messages/common.error.messages';
-import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
-import { InvalidInputError } from '@root/common/errors/classes/invalid-input-error.class';
-import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
-import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
+import { tasksLimits } from 'src/common/constants/tasks.constants';
+import { commonErrors } from 'src/common/errors/messages/common.error.messages';
+import { tasksApiErrors } from 'src/common/errors/messages/tasks-api.error.messages';
+import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
+import { TasksDataGenerator } from 'src/seed/generators/tasks.generator';
+import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
 
 const tasksData = new TasksDataGenerator();
 const updateTaskValidator = new UpdateTaskValidator();

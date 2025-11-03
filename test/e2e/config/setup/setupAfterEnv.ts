@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { ImapFlow } from 'imapflow';
 import { e2eKit } from '@e2e/utils/e2eKit.util';
-import { ConfigService } from '@root/services/config.service';
-import { UserDataGenerator } from '@root/seed/generators/user.generator';
-import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
+import { ConfigService } from 'src/services/config.service';
+import { UserDataGenerator } from 'src/seed/generators/user.generator';
+import { TasksDataGenerator } from 'src/seed/generators/tasks.generator';
 import { handleAxiosError } from '@e2e/utils/handle-axios-error.util';
 import { readAdminSessionToken } from '@e2e/helpers/admin-token/read-admin-session-token.helper';
 

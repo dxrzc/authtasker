@@ -2,8 +2,8 @@ import request from 'supertest';
 import { faker } from '@faker-js/faker/.';
 import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
-import { commonErrors } from '@root/common/errors/messages/common.error.messages';
-import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { commonErrors } from 'src/common/errors/messages/common.error.messages';
+import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
 
 describe('POST /api/users/register', () => {
     describe('Input Sanitization Wiring', () => {

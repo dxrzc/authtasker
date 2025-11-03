@@ -1,12 +1,12 @@
 import request from 'supertest';
-import { JwtTypes } from '@root/enums/jwt-types.enum';
+import { JwtTypes } from 'src/enums/jwt-types.enum';
 import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
-import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
-import { authErrors } from '@root/common/errors/messages/auth.error.messages';
-import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
+import { makeRefreshTokenKey } from 'src/common/logic/token/make-refresh-token-key';
+import { authErrors } from 'src/common/errors/messages/auth.error.messages';
+import { makeRefreshTokenIndexKey } from 'src/common/logic/token/make-refresh-token-index-key';
 
 describe('POST /api/users/logout', () => {
     describe('Tokens', () => {

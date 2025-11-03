@@ -1,18 +1,18 @@
 import Redis from 'ioredis';
 import { Express } from 'express';
 import { Model } from 'mongoose';
-import { JwtService } from '@root/services/jwt.service';
-import { RedisService } from '@root/services/redis.service';
-import { IUser } from '@root/interfaces/user/user.interface';
-import { LoggerService } from '@root/services/logger.service';
-import { ConfigService } from '@root/services/config.service';
-import { ITasks } from '@root/interfaces/tasks/task.interface';
-import { HashingService } from '@root/services/hashing.service';
-import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
-import { UserDataGenerator } from '@root/seed/generators/user.generator';
-import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
-import { RefreshTokenService } from '@root/services/refresh-token.service';
-import { PasswordRecoveryTokenService } from '@root/services/password-recovery-token.service';
+import { JwtService } from 'src/services/jwt.service';
+import { RedisService } from 'src/services/redis.service';
+import { IUser } from 'src/interfaces/user/user.interface';
+import { LoggerService } from 'src/services/logger.service';
+import { ConfigService } from 'src/services/config.service';
+import { ITasks } from 'src/interfaces/tasks/task.interface';
+import { HashingService } from 'src/services/hashing.service';
+import { TasksDataGenerator } from 'src/seed/generators/tasks.generator';
+import { UserDataGenerator } from 'src/seed/generators/user.generator';
+import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
+import { RefreshTokenService } from 'src/services/refresh-token.service';
+import { PasswordRecoveryTokenService } from 'src/services/password-recovery-token.service';
 
 export interface ITestKit {
 

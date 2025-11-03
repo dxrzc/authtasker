@@ -1,4 +1,4 @@
-import { validRoles } from '@root/types/user/user-roles.type';
+import { validRoles } from 'src/types/user/user-roles.type';
 
 export const getRandomRole = ()=> {;
     const randomIndex = Math.floor(Math.random() * validRoles.length);

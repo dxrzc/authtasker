@@ -4,8 +4,8 @@ import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { createTask } from '@integration/utils/createTask.util';
-import { commonErrors } from '@root/common/errors/messages/common.error.messages';
-import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
+import { commonErrors } from 'src/common/errors/messages/common.error.messages';
+import { tasksApiErrors } from 'src/common/errors/messages/tasks-api.error.messages';
 
 describe('POST /api/tasks', () => {
     describe('Input Sanitization', () => {

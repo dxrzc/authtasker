@@ -1,8 +1,8 @@
-import { Apis } from '@root/enums/apis.enum';
+import { Apis } from 'src/enums/apis.enum';
 import { RedisService } from './redis.service';
 import { ConfigService } from './config.service';
 import { LoggerService } from './logger.service';
-import { makePaginationCacheKey } from '@logic/cache/make-pagination-cache-key';
+import { makePaginationCacheKey } from 'src/common/logic/cache/make-pagination-cache-key';
 
 export class PaginationCacheService {
 

@@ -1,10 +1,10 @@
 import { Model, model, Schema } from "mongoose";
-import { EventManager } from "@root/events/eventManager";
-import { ConfigService } from '@root/services/config.service';
-import { ITasks } from '@root/interfaces/tasks/task.interface';
-import { tasksStatus } from '@root/types/tasks/task-status.type';
-import { tasksPriority } from '@root/types/tasks/task-priority.type';
-import { SystemLoggerService } from '@root/services/system-logger.service';
+import { EventManager } from "src/events/eventManager";
+import { ConfigService } from 'src/services/config.service';
+import { ITasks } from 'src/interfaces/tasks/task.interface';
+import { tasksStatus } from 'src/types/tasks/task-status.type';
+import { tasksPriority } from 'src/types/tasks/task-priority.type';
+import { SystemLoggerService } from 'src/services/system-logger.service';
 
 export const loadTasksModel = (configService: ConfigService): Model<ITasks> => {
     const tasksSchema = new Schema<ITasks>({

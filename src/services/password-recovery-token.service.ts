@@ -2,11 +2,11 @@ import { JwtService } from './jwt.service';
 import { ConfigService } from './config.service';
 import { LoggerService } from './logger.service';
 import { JwtBlackListService } from './jwt-blacklist.service';
-import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
-import { calculateTokenTTL } from '@logic/token/calculate-token-ttl';
-import { JwtTypes } from '@root/enums/jwt-types.enum';
-import { HttpError } from '@root/common/errors/classes/http-error.class';
-import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { tokenPurposes } from 'src/common/constants/token-purposes.constants';
+import { calculateTokenTTL } from 'src/common/logic/token/calculate-token-ttl';
+import { JwtTypes } from 'src/enums/jwt-types.enum';
+import { HttpError } from 'src/common/errors/classes/http-error.class';
+import { authErrors } from 'src/common/errors/messages/auth.error.messages';
 
 export class PasswordRecoveryTokenService {
     constructor(

@@ -1,4 +1,4 @@
 import { HydratedDocument } from 'mongoose';
-import { IUser } from '@root/interfaces/user/user.interface';
+import { IUser } from 'src/interfaces/user/user.interface';
 
 export type UserDocument = HydratedDocument<IUser>;

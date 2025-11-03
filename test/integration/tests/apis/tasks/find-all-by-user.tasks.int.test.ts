@@ -4,10 +4,10 @@ import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
-import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
-import { paginationErrors } from '@root/common/errors/messages/pagination.error.messages';
+import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
+import { paginationErrors } from 'src/common/errors/messages/pagination.error.messages';
 import { createUserMultipleTasks } from '@integration/utils/create-user-multiple-tasks-util';
-import { makeTasksByUserPaginationCacheKey } from '@logic/cache/make-tasks-by-users-pag-cache-key';
+import { makeTasksByUserPaginationCacheKey } from 'src/common/logic/cache/make-tasks-by-users-pag-cache-key';
 
 describe('GET /api/tasks/allByUser/:id', () => {
     describe('Caching', () => {

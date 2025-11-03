@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { BaseController } from '@root/common/base/base-controller.class';
-import { statusCodes } from '@root/common/constants/status-codes.constants';
+import { BaseController } from 'src/common/base/base-controller.class';
+import { statusCodes } from 'src/common/constants/status-codes.constants';
 
 export class HealthController extends BaseController {
 

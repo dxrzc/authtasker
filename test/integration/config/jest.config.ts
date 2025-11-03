@@ -20,8 +20,8 @@ const config: Config = {
     
     // aliases
     moduleNameMapper: {
-        "^@root/(.*)$": "<rootDir>/src/$1",
-        "^@logic/(.*)$": "<rootDir>/src/common/logic/$1",
+        "^src/(.*)$": "<rootDir>/src/$1",
+        "^src/common/logic/(.*)$": "<rootDir>/src/common/logic/$1",
         "^@integration/(.*)$": "<rootDir>/test/integration/$1",
         "^ioredis$": "ioredis-mock",
         "^nodemailer$": "<rootDir>/test/integration/config/setup/mocks/nodemailer.ts"

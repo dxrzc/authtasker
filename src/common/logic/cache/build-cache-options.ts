@@ -1,4 +1,4 @@
-import { ICacheOptions } from '@root/interfaces/cache/cache-options.interface';
+import { ICacheOptions } from 'src/interfaces/cache/cache-options.interface';
 import { Request } from 'express';
 
 export function buildCacheOptions(req: Request): ICacheOptions {

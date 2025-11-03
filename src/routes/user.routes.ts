@@ -1,21 +1,21 @@
 import { Router } from "express";
 import { Model } from "mongoose";
-import { ApiType } from '@root/enums/api-type.enum';
-import { createAdmin } from '@root/admin/create-admin';
-import { UserService } from '@root/services/user.service';
-import { IUser } from '@root/interfaces/user/user.interface';
-import { ConfigService } from '@root/services/config.service';
-import { LoggerService } from '@root/services/logger.service';
-import { HashingService } from '@root/services/hashing.service';
-import { UserController } from '@root/controllers/user.controller';
-import { RolesMiddleware } from '@root/middlewares/roles.middleware';
-import { SystemLoggerService } from '@root/services/system-logger.service';
-import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
-import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
-import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
-import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
-import { ResetPasswordValidator } from '@root/validators/models/user/reset-password.validator';
-import { ForgotPasswordValidator } from '@root/validators/models/user/forgot-password.validator';
+import { ApiType } from 'src/enums/api-type.enum';
+import { createAdmin } from 'src/admin/create-admin';
+import { UserService } from 'src/services/user.service';
+import { IUser } from 'src/interfaces/user/user.interface';
+import { ConfigService } from 'src/services/config.service';
+import { LoggerService } from 'src/services/logger.service';
+import { HashingService } from 'src/services/hashing.service';
+import { UserController } from 'src/controllers/user.controller';
+import { RolesMiddleware } from 'src/middlewares/roles.middleware';
+import { SystemLoggerService } from 'src/services/system-logger.service';
+import { ApiLimiterMiddleware } from 'src/middlewares/api-limiter.middleware';
+import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
+import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
+import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
+import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';
+import { ForgotPasswordValidator } from 'src/validators/models/user/forgot-password.validator';
 
 export class UserRoutes {
 

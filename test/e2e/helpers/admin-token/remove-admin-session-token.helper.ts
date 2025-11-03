@@ -1,6 +1,6 @@
 import { rmSync } from "fs";
 import { fileExistsSync } from "tsconfig-paths/lib/filesystem";
-import { SystemLoggerService } from "@root/services/system-logger.service";
+import { SystemLoggerService } from "src/services/system-logger.service";
 
 export const removeAdminSessionTokenIfExists = () => {
     const tokenPath = `${__dirname}/admin-session-token.txt`;

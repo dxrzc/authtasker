@@ -1,4 +1,4 @@
-import { IUser } from "@root/interfaces/user/user.interface";
+import { IUser } from "src/interfaces/user/user.interface";
 
 /* Represents the data expected in request. Used in validation classes
 Use with "Exact" type to get and immediately type error on files that work

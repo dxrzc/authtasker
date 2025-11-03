@@ -3,11 +3,11 @@ import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
-import { makeRefreshTokenKey } from '@logic/token/make-refresh-token-key';
-import { commonErrors } from '@root/common/errors/messages/common.error.messages';
-import { makeRefreshTokenIndexKey } from '@logic/token/make-refresh-token-index-key';
-import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
-import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
+import { makeRefreshTokenKey } from 'src/common/logic/token/make-refresh-token-key';
+import { commonErrors } from 'src/common/errors/messages/common.error.messages';
+import { makeRefreshTokenIndexKey } from 'src/common/logic/token/make-refresh-token-index-key';
+import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
+import { makeSessionTokenBlacklistKey } from 'src/common/logic/token/make-session-token-blacklist-key';
 
 describe('PATCH /api/users/:id', () => {
     describe('Input sanitization Wiring', () => {

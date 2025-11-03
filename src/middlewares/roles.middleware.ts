@@ -1,11 +1,11 @@
-import { UserRole } from '@root/types/user/user-roles.type';
-import { LoggerService } from '@root/services/logger.service';
-import { hasSufficientRole } from '@logic/roles/has-sufficent-role';
-import { BaseMiddleware } from '@root/common/base/base-middleware.class';
+import { UserRole } from 'src/types/user/user-roles.type';
+import { LoggerService } from 'src/services/logger.service';
+import { hasSufficientRole } from 'src/common/logic/roles/has-sufficent-role';
+import { BaseMiddleware } from 'src/common/base/base-middleware.class';
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { SessionTokenService } from '@root/services/session-token.service';
-import { statusCodes } from '@root/common/constants/status-codes.constants';
-import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { SessionTokenService } from 'src/services/session-token.service';
+import { statusCodes } from 'src/common/constants/status-codes.constants';
+import { authErrors } from 'src/common/errors/messages/auth.error.messages';
 
 export class RolesMiddleware extends BaseMiddleware<[UserRole]> {
 

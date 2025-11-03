@@ -2,7 +2,7 @@ import request from 'supertest';
 import { testKit } from '@integration/utils/testKit.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { createTask } from '@integration/utils/createTask.util';
-import { makeTasksCacheKey } from '@logic/cache/make-tasks-cache-key';
+import { makeTasksCacheKey } from 'src/common/logic/cache/make-tasks-cache-key';
 
 describe('GET /api/tasks/:id', () => {
     describe('Caching', () => {

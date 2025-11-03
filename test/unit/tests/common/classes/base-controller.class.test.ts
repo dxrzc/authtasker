@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { BaseController } from '@root/common/base/base-controller.class';
-import { UserFromRequest } from '@root/interfaces/user/user-from-request.interface';
+import { BaseController } from 'src/common/base/base-controller.class';
+import { UserFromRequest } from 'src/interfaces/user/user-from-request.interface';
 
 class TestController extends BaseController {}
 

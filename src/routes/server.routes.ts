@@ -3,34 +3,34 @@ import { Model } from "mongoose";
 import { UserRoutes } from './user.routes';
 import { TasksRoutes } from './tasks.routes';
 import { AsyncLocalStorage } from "async_hooks";
-import { JwtService } from '@root/services/jwt.service';
-import { UserService } from '@root/services/user.service';
-import { CacheService } from '@root/services/cache.service';
-import { EmailService } from '@root/services/email.service';
-import { RedisService } from '@root/services/redis.service';
-import { TasksService } from '@root/services/tasks.service';
-import { IUser } from '@root/interfaces/user/user.interface';
-import { LoggerService } from '@root/services/logger.service';
-import { ConfigService } from '@root/services/config.service';
-import { ITasks } from '@root/interfaces/tasks/task.interface';
-import { HashingService } from '@root/services/hashing.service';
-import { UserResponse } from '@root/types/user/user-response.type';
-import { TaskResponse } from '@root/types/tasks/task-response.type';
-import { RolesMiddleware } from '@root/middlewares/roles.middleware';
-import { makeUsersCacheKey } from '@logic/cache/make-users-cache-key';
-import { HealthController } from "@root/controllers/health.controller";
-import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
-import { RefreshTokenService } from '@root/services/refresh-token.service';
-import { SessionTokenService } from '@root/services/session-token.service';
-import { loadUserModel } from '@root/databases/mongo/models/user.model.load';
-import { loadTasksModel } from '@root/databases/mongo/models/tasks.model.load';
-import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
-import { RequestContextMiddleware } from '@root/middlewares/request-context.middleware';
-import { EmailValidationTokenService } from '@root/services/email-validation-token.service';
-import { IAsyncLocalStorageStore } from "@root/interfaces/common/async-local-storage.interface";
-import { makeTasksCacheKey } from '@logic/cache/make-tasks-cache-key';
-import { PaginationCacheService } from '@root/services/pagination-cache.service';
-import { PasswordRecoveryTokenService } from '@root/services/password-recovery-token.service';
+import { JwtService } from 'src/services/jwt.service';
+import { UserService } from 'src/services/user.service';
+import { CacheService } from 'src/services/cache.service';
+import { EmailService } from 'src/services/email.service';
+import { RedisService } from 'src/services/redis.service';
+import { TasksService } from 'src/services/tasks.service';
+import { IUser } from 'src/interfaces/user/user.interface';
+import { LoggerService } from 'src/services/logger.service';
+import { ConfigService } from 'src/services/config.service';
+import { ITasks } from 'src/interfaces/tasks/task.interface';
+import { HashingService } from 'src/services/hashing.service';
+import { UserResponse } from 'src/types/user/user-response.type';
+import { TaskResponse } from 'src/types/tasks/task-response.type';
+import { RolesMiddleware } from 'src/middlewares/roles.middleware';
+import { makeUsersCacheKey } from 'src/common/logic/cache/make-users-cache-key';
+import { HealthController } from "src/controllers/health.controller";
+import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
+import { RefreshTokenService } from 'src/services/refresh-token.service';
+import { SessionTokenService } from 'src/services/session-token.service';
+import { loadUserModel } from 'src/databases/mongo/models/user.model.load';
+import { loadTasksModel } from 'src/databases/mongo/models/tasks.model.load';
+import { ApiLimiterMiddleware } from 'src/middlewares/api-limiter.middleware';
+import { RequestContextMiddleware } from 'src/middlewares/request-context.middleware';
+import { EmailValidationTokenService } from 'src/services/email-validation-token.service';
+import { IAsyncLocalStorageStore } from "src/interfaces/common/async-local-storage.interface";
+import { makeTasksCacheKey } from 'src/common/logic/cache/make-tasks-cache-key';
+import { PaginationCacheService } from 'src/services/pagination-cache.service';
+import { PasswordRecoveryTokenService } from 'src/services/password-recovery-token.service';
 
 
 export class AppRoutes {
@@ -190,7 +190,7 @@ export class AppRoutes {
     }
 
     private async buildSeedRoutes() {
-        const { SeedRoutes } = await import("@root/seed/seed.routes");
+        const { SeedRoutes } = await import("src/seed/seed.routes");
         const seedRoutes = new SeedRoutes(
             this.configService,
             this.userModel,

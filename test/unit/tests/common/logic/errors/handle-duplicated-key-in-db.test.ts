@@ -1,8 +1,8 @@
-import { Apis } from '@root/enums/apis.enum';
-import { HttpError } from '@root/common/errors/classes/http-error.class';
-import { handleDuplicatedKeyInDb } from '@logic/errors/handle-duplicated-key-in-db';
-import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
-import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { Apis } from 'src/enums/apis.enum';
+import { HttpError } from 'src/common/errors/classes/http-error.class';
+import { handleDuplicatedKeyInDb } from 'src/common/logic/errors/handle-duplicated-key-in-db';
+import { tasksApiErrors } from 'src/common/errors/messages/tasks-api.error.messages';
+import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
 
 describe('handleDuplicatedKeyInDb', () => {
     describe('Users API', () => {

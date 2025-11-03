@@ -3,7 +3,7 @@ import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { createTask } from '@integration/utils/createTask.util';
-import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { authErrors } from 'src/common/errors/messages/auth.error.messages';
 
 describe('DELETE /api/tasks/:id', () => {
     describe('Modification Access Rules Wiring', () => {

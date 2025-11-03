@@ -3,7 +3,7 @@ import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
-import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { authErrors } from 'src/common/errors/messages/auth.error.messages';
 import { protectedRoutes } from '@integration/fixtures/protected-routes.fixture';
 
 describe('Session Token Auth Wiring', () => {

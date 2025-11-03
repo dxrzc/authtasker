@@ -5,7 +5,7 @@ import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
-import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
 import { extractTokenFromResetPasswordLink } from '@integration/utils/extract-token-from-reset-password-link.util';
 
 // https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest

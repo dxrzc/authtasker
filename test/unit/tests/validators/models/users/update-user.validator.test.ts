@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { usersLimits } from '@root/common/constants/user.constants';
-import { UserDataGenerator } from '@root/seed/generators/user.generator';
-import { commonErrors } from '@root/common/errors/messages/common.error.messages';
-import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
-import { InvalidInputError } from '@root/common/errors/classes/invalid-input-error.class';
-import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
+import { usersLimits } from 'src/common/constants/user.constants';
+import { UserDataGenerator } from 'src/seed/generators/user.generator';
+import { commonErrors } from 'src/common/errors/messages/common.error.messages';
+import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
+import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
+import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
 
 const usersData = new UserDataGenerator();
 const updateUserValidator = new UpdateUserValidator();
