@@ -115,7 +115,7 @@ export class UserService {
     private async passwordsMatchOrThrow(
         hashedPassword: string,
         incomingPassword: string,
-    ): Promise<void | never> {
+    ): Promise<void> {
         // password hashing
         const passwordOk = await this.hashingService.compare(incomingPassword, hashedPassword);
         if (!passwordOk) {
