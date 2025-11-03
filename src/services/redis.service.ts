@@ -9,9 +9,11 @@ export class RedisService {
         expirationTimeInSeconds?: number,
     ): Promise<void> {
         if (typeof data === 'object') data = JSON.stringify(data);
-        expirationTimeInSeconds
-            ? await this.redis.set(key, data, 'EX', expirationTimeInSeconds)
-            : await this.redis.set(key, data);
+        if (expirationTimeInSeconds) {
+            await this.redis.set(key, data, 'EX', expirationTimeInSeconds);
+        } else {
+            await this.redis.set(key, data);
+        }
     }
 
     async get<T>(key: string): Promise<T | null> {
@@ -19,6 +21,7 @@ export class RedisService {
         if (data) {
             try {
                 return JSON.parse(data);
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (error) {
                 return data as T;
             }
