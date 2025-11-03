@@ -3,6 +3,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { ConfigService } from './config.service';
 import { IRequestFsLog } from 'src/interfaces/logs/request-fs.log.interface';
 import { IAsyncLocalStorageStore } from 'src/interfaces/common/async-local-storage.interface';
+import { LogInfoType } from 'src/types/logging/log-info.type';
 
 /*  
     WINSTON LEVELS
@@ -31,20 +32,21 @@ export class LoggerService {
             level: currentEnv === 'production' ? 'info' : 'debug',
             format: winston.format.combine(
                 winston.format.timestamp(),
-                winston.format.printf(({ level, message, timestamp, method, requestId }) => {
+                winston.format.printf((logInfo: LogInfoType) => {
                     const colorizer = winston.format.colorize().colorize;
 
                     const finalMessage = (() => {
-                        const mssg = message as string;
+                        const mssg = logInfo.message as string;
                         return mssg[0].toUpperCase() + mssg.slice(1);
                     })();
 
-                    const coloredTimestamp = colorizer(level, `[${timestamp}]`);
-                    const coloredMethod = colorizer(level, `[${method}]`);
-                    const coloredRequest = colorizer(level, `[${requestId}]`);
-                    const coloredLevel = colorizer(level, `[${level.toUpperCase()}]`);
-                    const coloredMessage = colorizer(level, finalMessage);
-
+                    const coloredTimestamp = colorizer(logInfo.level, `[${logInfo.timestamp}]`);
+                    const coloredMethod = colorizer(logInfo.level, `[${logInfo.method}]`);
+                    const coloredRequest = colorizer(logInfo.level, `[${logInfo.requestId}]`);
+                    const coloredLevel = colorizer(
+                        logInfo.level,
+                        `[${logInfo.level.toUpperCase()}]`,
+                    );
                     return `${coloredTimestamp} ${coloredRequest} ${coloredMethod} ${coloredLevel}: ${finalMessage}`;
                 }),
             ),
@@ -84,7 +86,7 @@ export class LoggerService {
                     // level is not saved
                     format: winston.format.combine(
                         winston.format.timestamp(),
-                        winston.format.printf(({ level, timestamp, message, ...meta }) => {
+                        winston.format.printf(({ timestamp, message, ...meta }) => {
                             return JSON.stringify({ timestamp, message, ...meta });
                         }),
                         winston.format.prettyPrint(),
