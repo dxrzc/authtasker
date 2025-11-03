@@ -10,7 +10,7 @@ const usersData = new UserDataGenerator();
 
 describe('CreateUserValidator', () => {
     describe('invalid name', () => {
-        test.concurrent('throw InvalidInputError with custom message if too short', async () => {
+        test('throw InvalidInputError with custom message if too short', async () => {
             const data = {
                 name: 'ab',
                 email: usersData.email(),
@@ -21,7 +21,7 @@ describe('CreateUserValidator', () => {
             ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_NAME_LENGTH));
         });
 
-        test.concurrent('throw InvalidInputError with custom message if too long', async () => {
+        test('throw InvalidInputError with custom message if too long', async () => {
             const data = {
                 name: faker.string.alpha(usersLimits.MAX_NAME_LENGTH + 1),
                 email: usersData.email(),
@@ -32,7 +32,7 @@ describe('CreateUserValidator', () => {
             ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_NAME_LENGTH));
         });
 
-        test.concurrent('throw InvalidInputError with custom message if missing', async () => {
+        test('throw InvalidInputError with custom message if missing', async () => {
             const data = {
                 email: usersData.email(),
                 password: usersData.password(),
@@ -44,7 +44,7 @@ describe('CreateUserValidator', () => {
     });
 
     describe('invalid email', () => {
-        test.concurrent('throw InvalidInputError with custom message if missing', async () => {
+        test('throw InvalidInputError with custom message if missing', async () => {
             const data = {
                 name: usersData.name(),
                 password: usersData.password(),
@@ -54,23 +54,20 @@ describe('CreateUserValidator', () => {
             ).rejects.toThrow(new InvalidInputError(usersApiErrors.EMAIL_NOT_PROVIDED));
         });
 
-        test.concurrent(
-            'throw InvalidInputError with custom message if invalid format',
-            async () => {
-                const data = {
-                    name: usersData.name(),
-                    email: 'not-an-email',
-                    password: usersData.password(),
-                };
-                await expect(
-                    async () => await createUserValidator.validateAndTransform(data),
-                ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_EMAIL));
-            },
-        );
+        test('throw InvalidInputError with custom message if invalid format', async () => {
+            const data = {
+                name: usersData.name(),
+                email: 'not-an-email',
+                password: usersData.password(),
+            };
+            await expect(
+                async () => await createUserValidator.validateAndTransform(data),
+            ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_EMAIL));
+        });
     });
 
     describe('invalid password', () => {
-        test.concurrent('throw InvalidInputError with custom message if too short', async () => {
+        test('throw InvalidInputError with custom message if too short', async () => {
             const data = {
                 name: usersData.name(),
                 email: usersData.email(),
@@ -81,7 +78,7 @@ describe('CreateUserValidator', () => {
             ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH));
         });
 
-        test.concurrent('throw InvalidInputError with custom message if too long', async () => {
+        test('throw InvalidInputError with custom message if too long', async () => {
             const data = {
                 name: usersData.name(),
                 email: usersData.email(),
@@ -92,7 +89,7 @@ describe('CreateUserValidator', () => {
             ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH));
         });
 
-        test.concurrent('throw InvalidInputError with custom message if missing', async () => {
+        test('throw InvalidInputError with custom message if missing', async () => {
             const data = {
                 name: usersData.name(),
                 email: usersData.email(),
@@ -104,7 +101,7 @@ describe('CreateUserValidator', () => {
     });
 
     describe('valid input', () => {
-        test.concurrent('return CreateUserValidator instance', async () => {
+        test('return CreateUserValidator instance', async () => {
             const data = {
                 name: usersData.name(),
                 email: usersData.email(),
@@ -114,7 +111,7 @@ describe('CreateUserValidator', () => {
             expect(result).toBeInstanceOf(CreateUserValidator);
         });
 
-        test.concurrent('transform name to lowercase and trim it', async () => {
+        test('transform name to lowercase and trim it', async () => {
             const data = {
                 name: ` ${faker.string.alpha(usersLimits.MAX_NAME_LENGTH - 2).toUpperCase()} `,
                 email: usersData.email(),
@@ -124,7 +121,7 @@ describe('CreateUserValidator', () => {
             expect(result.name).toBe(data.name.toLowerCase().trim());
         });
 
-        test.concurrent('return all other properties unchanged', async () => {
+        test('return all other properties unchanged', async () => {
             const name = usersData.name();
             const email = usersData.email();
             const password = usersData.password();

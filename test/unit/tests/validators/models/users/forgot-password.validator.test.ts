@@ -11,7 +11,7 @@ const usersData = new UserDataGenerator();
 
 describe('ForgotPasswordValidator', () => {
     describe('Valid password provided', () => {
-        test.concurrent('return ForgotPasswordValidator instance', async () => {
+        test('return ForgotPasswordValidator instance', async () => {
             await expect(
                 forgotPasswordValidator.validate({ username: usersData.name() }),
             ).resolves.toBeInstanceOf(ForgotPasswordValidator);
@@ -19,7 +19,7 @@ describe('ForgotPasswordValidator', () => {
     });
 
     describe('Valid email provided', () => {
-        test.concurrent('return ForgotPasswordValidator instance', async () => {
+        test('return ForgotPasswordValidator instance', async () => {
             await expect(
                 forgotPasswordValidator.validate({ email: usersData.email() }),
             ).resolves.toBeInstanceOf(ForgotPasswordValidator);
@@ -27,7 +27,7 @@ describe('ForgotPasswordValidator', () => {
     });
 
     describe('No properties provided', () => {
-        test.concurrent('throw InvalidInput INVALID_FORGOT_PASSWORD_INPUT message', async () => {
+        test('throw InvalidInput INVALID_FORGOT_PASSWORD_INPUT message', async () => {
             await expect(forgotPasswordValidator.validate({})).rejects.toThrow(
                 new InvalidInputError(usersApiErrors.INVALID_FORGOT_PASSWORD_INPUT),
             );
@@ -35,7 +35,7 @@ describe('ForgotPasswordValidator', () => {
     });
 
     describe('Provided email is not a valid email', () => {
-        test.concurrent('throw InvalidInput INVALID_EMAIL  error', async () => {
+        test('throw InvalidInput INVALID_EMAIL  error', async () => {
             await expect(
                 forgotPasswordValidator.validate({ email: 'invalid-email' }),
             ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_EMAIL));
@@ -43,7 +43,7 @@ describe('ForgotPasswordValidator', () => {
     });
 
     describe('Provided username is too long', () => {
-        test.concurrent('throw InvalidInput INVALID_NAME_LENGTH  error', async () => {
+        test('throw InvalidInput INVALID_NAME_LENGTH  error', async () => {
             const invalidName = faker.string.alpha({ length: usersLimits.MAX_NAME_LENGTH + 1 });
             await expect(
                 forgotPasswordValidator.validate({ username: invalidName }),
@@ -52,7 +52,7 @@ describe('ForgotPasswordValidator', () => {
     });
 
     describe('Email and password provided', () => {
-        test.concurrent('throw InvalidInput INVALID_FORGOT_PASSWORD_INPUT message', async () => {
+        test('throw InvalidInput INVALID_FORGOT_PASSWORD_INPUT message', async () => {
             await expect(
                 forgotPasswordValidator.validate({
                     username: usersData.name(),
@@ -63,7 +63,7 @@ describe('ForgotPasswordValidator', () => {
     });
 
     describe('Unexpected property provided', () => {
-        test.concurrent('throw InvalidInput UNEXPECTED_PROPERTY_PROVIDED message', async () => {
+        test('throw InvalidInput UNEXPECTED_PROPERTY_PROVIDED message', async () => {
             await expect(
                 forgotPasswordValidator.validate({
                     sqlInjection: 'DROP DATABASE',

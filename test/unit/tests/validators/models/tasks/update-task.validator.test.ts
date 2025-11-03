@@ -10,48 +10,48 @@ const tasksData = new TasksDataGenerator();
 const updateTaskValidator = new UpdateTaskValidator();
 
 describe('UpdateTaskValidator', () => {
-    test.concurrent('throw InvalidInputError if all fields are missing', async () => {
+    test('throw InvalidInputError if all fields are missing', async () => {
         await expect(() => updateTaskValidator.validateNewAndTransform({})).rejects.toThrow(
             new InvalidInputError(tasksApiErrors.NO_PROPERTIES_TO_UPDATE),
         );
     });
 
-    test.concurrent('throw InvalidInputError if name is invalid', async () => {
+    test('throw InvalidInputError if name is invalid', async () => {
         const data = { name: 'ab' };
         await expect(() => updateTaskValidator.validateNewAndTransform(data)).rejects.toThrow(
             new InvalidInputError(tasksApiErrors.INVALID_NAME_LENGTH),
         );
     });
 
-    test.concurrent('throw InvalidInputError if description is invalid', async () => {
+    test('throw InvalidInputError if description is invalid', async () => {
         const data = { description: 'x' };
         await expect(() => updateTaskValidator.validateNewAndTransform(data)).rejects.toThrow(
             new InvalidInputError(tasksApiErrors.INVALID_DESCRIPTION_LENGTH),
         );
     });
 
-    test.concurrent('throw InvalidInputError if status is invalid', async () => {
+    test('throw InvalidInputError if status is invalid', async () => {
         const data = { status: 'not-valid' };
         await expect(() => updateTaskValidator.validateNewAndTransform(data)).rejects.toThrow(
             new InvalidInputError(tasksApiErrors.INVALID_STATUS),
         );
     });
 
-    test.concurrent('throw InvalidInputError if priority is invalid', async () => {
+    test('throw InvalidInputError if priority is invalid', async () => {
         const data = { priority: 'urgent' };
         await expect(() => updateTaskValidator.validateNewAndTransform(data)).rejects.toThrow(
             new InvalidInputError(tasksApiErrors.INVALID_PRIORITY),
         );
     });
 
-    test.concurrent('succeed with one valid field (e.g. status)', async () => {
+    test('succeed with one valid field (e.g. status)', async () => {
         const data = { status: tasksData.status() };
         const result = await updateTaskValidator.validateNewAndTransform(data);
         expect(result).toBeInstanceOf(UpdateTaskValidator);
         expect(result.status).toBe(data.status);
     });
 
-    test.concurrent('throw InvalidInputError when unexpected property is provided', async () => {
+    test('throw InvalidInputError when unexpected property is provided', async () => {
         const data = {
             name: 'Updated name',
             description: 'Updated description',
@@ -65,7 +65,7 @@ describe('UpdateTaskValidator', () => {
     });
 
     describe('valid input', () => {
-        test.concurrent('return UpdateTaskValidator instance', async () => {
+        test('return UpdateTaskValidator instance', async () => {
             const data = {
                 name: tasksData.name(),
             };
@@ -73,7 +73,7 @@ describe('UpdateTaskValidator', () => {
             expect(result).toBeInstanceOf(UpdateTaskValidator);
         });
 
-        test.concurrent('transform name to lowercase and trim', async () => {
+        test('transform name to lowercase and trim', async () => {
             const data = {
                 name: ` ${faker.string.alpha(tasksLimits.MAX_NAME_LENGTH - 2).toUpperCase()} `,
             };
@@ -81,7 +81,7 @@ describe('UpdateTaskValidator', () => {
             expect(result.name).toBe(data.name.trim().toLowerCase());
         });
 
-        test.concurrent('return all other properties unchanged', async () => {
+        test('return all other properties unchanged', async () => {
             const data = {
                 name: tasksData.name(),
                 description: tasksData.description(),

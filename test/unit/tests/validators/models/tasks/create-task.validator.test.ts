@@ -11,7 +11,7 @@ const tasksData = new TasksDataGenerator();
 
 describe('CreateTaskValidator', () => {
     describe('invalid name', () => {
-        test.concurrent('throw InvalidInputError if too short', async () => {
+        test('throw InvalidInputError if too short', async () => {
             const data = {
                 name: 'ab',
                 description: tasksData.description(),
@@ -23,7 +23,7 @@ describe('CreateTaskValidator', () => {
             );
         });
 
-        test.concurrent('throw InvalidInputError if too long', async () => {
+        test('throw InvalidInputError if too long', async () => {
             const data = {
                 name: faker.string.alpha(tasksLimits.MAX_NAME_LENGTH + 1),
                 description: tasksData.description(),
@@ -35,7 +35,7 @@ describe('CreateTaskValidator', () => {
             );
         });
 
-        test.concurrent('throw InvalidInputError if missing', async () => {
+        test('throw InvalidInputError if missing', async () => {
             const data = {
                 description: tasksData.description(),
                 status: tasksData.status(),
@@ -46,7 +46,7 @@ describe('CreateTaskValidator', () => {
             );
         });
 
-        test.concurrent('throw InvalidInputError if not a string', async () => {
+        test('throw InvalidInputError if not a string', async () => {
             const data = {
                 name: 12345,
                 description: tasksData.description(),
@@ -60,7 +60,7 @@ describe('CreateTaskValidator', () => {
     });
 
     describe('invalid description', () => {
-        test.concurrent('throw InvalidInputError if too short', async () => {
+        test('throw InvalidInputError if too short', async () => {
             const data = {
                 name: tasksData.name(),
                 description: 'short',
@@ -72,7 +72,7 @@ describe('CreateTaskValidator', () => {
             );
         });
 
-        test.concurrent('throw InvalidInputError if too long', async () => {
+        test('throw InvalidInputError if too long', async () => {
             const data = {
                 name: tasksData.name(),
                 description: faker.string.alpha(tasksLimits.MAX_DESCRIPTION_LENGTH + 1),
@@ -84,7 +84,7 @@ describe('CreateTaskValidator', () => {
             );
         });
 
-        test.concurrent('throw InvalidInputError if missing', async () => {
+        test('throw InvalidInputError if missing', async () => {
             const data = {
                 name: tasksData.name(),
                 status: tasksData.status(),
@@ -95,7 +95,7 @@ describe('CreateTaskValidator', () => {
             );
         });
 
-        test.concurrent('throw InvalidInputError if not a string', async () => {
+        test('throw InvalidInputError if not a string', async () => {
             const data = {
                 name: tasksData.name(),
                 description: 12345,
@@ -109,7 +109,7 @@ describe('CreateTaskValidator', () => {
     });
 
     describe('invalid status', () => {
-        test.concurrent('throw InvalidInputError if invalid', async () => {
+        test('throw InvalidInputError if invalid', async () => {
             const data = {
                 name: tasksData.name(),
                 description: tasksData.description(),
@@ -121,7 +121,7 @@ describe('CreateTaskValidator', () => {
             );
         });
 
-        test.concurrent('throw InvalidInputError if missing', async () => {
+        test('throw InvalidInputError if missing', async () => {
             const data = {
                 name: tasksData.name(),
                 description: tasksData.description(),
@@ -134,7 +134,7 @@ describe('CreateTaskValidator', () => {
     });
 
     describe('invalid priority', () => {
-        test.concurrent('throw InvalidInputError if invalid', async () => {
+        test('throw InvalidInputError if invalid', async () => {
             const data = {
                 name: tasksData.name(),
                 description: tasksData.description(),
@@ -146,7 +146,7 @@ describe('CreateTaskValidator', () => {
             );
         });
 
-        test.concurrent('throw InvalidInputError if missing', async () => {
+        test('throw InvalidInputError if missing', async () => {
             const data = {
                 name: tasksData.name(),
                 description: tasksData.description(),
@@ -158,7 +158,7 @@ describe('CreateTaskValidator', () => {
         });
     });
 
-    test.concurrent('throw InvalidInputError when unexpected property is provided', async () => {
+    test('throw InvalidInputError when unexpected property is provided', async () => {
         const data = {
             name: tasksData.name(),
             description: tasksData.description(),
@@ -171,7 +171,7 @@ describe('CreateTaskValidator', () => {
     });
 
     describe('valid input', () => {
-        test.concurrent('return a CreateTaskValidator instance', async () => {
+        test('return a CreateTaskValidator instance', async () => {
             const data = {
                 name: tasksData.name(),
                 description: tasksData.description(),
@@ -182,7 +182,7 @@ describe('CreateTaskValidator', () => {
             expect(result).toBeInstanceOf(CreateTaskValidator);
         });
 
-        test.concurrent('transform name to lowercase and trim it', async () => {
+        test('transform name to lowercase and trim it', async () => {
             const data = {
                 name: ` ${faker.string.alpha(tasksLimits.MAX_NAME_LENGTH - 2).toUpperCase()} `,
                 description: tasksData.description(),
@@ -193,7 +193,7 @@ describe('CreateTaskValidator', () => {
             expect(result.name).toBe(data.name.trim().toLowerCase());
         });
 
-        test.concurrent('return all other properties unchanged', async () => {
+        test('return all other properties unchanged', async () => {
             const data = {
                 name: tasksData.name(),
                 description: tasksData.description(),

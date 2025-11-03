@@ -6,18 +6,18 @@ const jwtService = new JwtService(PRIVATE_KEY);
 
 describe('JwtService', () => {
     describe('generate', () => {
-        test.concurrent('return an object containing the token as a string', () => {
+        test('return an object containing the token as a string', () => {
             const { token } = jwtService.generate('1h', { userId: '123' });
             expect(typeof token).toBe('string');
         });
 
-        test.concurrent('return an object containing the token jti', () => {
+        test('return an object containing the token jti', () => {
             const { jti, token } = jwtService.generate('1h', { userId: '123' });
             const payload = jwtService.verify(token);
             expect(payload?.jti).toBe(jti);
         });
 
-        test.concurrent('generate a token that can be verified by verify()', () => {
+        test('generate a token that can be verified by verify()', () => {
             const payload = { userId: 'xyz' };
             const { token } = jwtService.generate('1h', payload);
 
@@ -26,7 +26,7 @@ describe('JwtService', () => {
             expect(result?.jti).toBeDefined();
         });
 
-        test.concurrent('embed a jti (JWT ID) in the payload', () => {
+        test('embed a jti (JWT ID) in the payload', () => {
             const payload = { userId: 'abc' };
             const { token } = jwtService.generate('1h', payload);
 
@@ -37,19 +37,19 @@ describe('JwtService', () => {
     });
 
     describe('verify', () => {
-        test.concurrent('return decoded payload if token is valid', () => {
+        test('return decoded payload if token is valid', () => {
             const token = jwt.sign({ foo: 'bar' }, PRIVATE_KEY, { expiresIn: '1h' });
             const result = jwtService.verify<{ foo: string }>(token);
             expect(result).toMatchObject({ foo: 'bar' });
         });
 
-        test.concurrent('return null if token is invalid', () => {
+        test('return null if token is invalid', () => {
             const invalidToken = 'not.a.valid.token';
             const result = jwtService.verify(invalidToken);
             expect(result).toBeNull();
         });
 
-        test.concurrent('return null if token is expired', () => {
+        test('return null if token is expired', () => {
             // expired 10 seconds ago
             const expiredToken = jwt.sign({ exp: Math.floor(Date.now() / 1000) - 10 }, PRIVATE_KEY);
             const result = jwtService.verify(expiredToken);

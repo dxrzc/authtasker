@@ -10,7 +10,7 @@ const seed = new UserDataGenerator();
 
 describe('ResetPasswordValidator', () => {
     describe('Valid password', () => {
-        test.concurrent('return ResetPasswordValidatorInstance', async () => {
+        test('return ResetPasswordValidatorInstance', async () => {
             await expect(
                 resetPasswordValidator.validate({ password: seed.password() }),
             ).resolves.toBeInstanceOf(ResetPasswordValidator);
@@ -18,7 +18,7 @@ describe('ResetPasswordValidator', () => {
     });
 
     describe('No password provided', () => {
-        test.concurrent('throw InvalidInputError PASSWORD_NOT_PROVIDED', async () => {
+        test('throw InvalidInputError PASSWORD_NOT_PROVIDED', async () => {
             await expect(resetPasswordValidator.validate({} as any)).rejects.toThrow(
                 new InvalidInputError(usersApiErrors.PASSWORD_NOT_PROVIDED),
             );
@@ -26,14 +26,14 @@ describe('ResetPasswordValidator', () => {
     });
 
     describe('No object provided', () => {
-        test.concurrent('throw InvalidInputError PASSWORD_NOT_PROVIDED', async () => {
+        test('throw InvalidInputError PASSWORD_NOT_PROVIDED', async () => {
             await expect(resetPasswordValidator.validate()) // NOTHING
                 .rejects.toThrow(new InvalidInputError(usersApiErrors.PASSWORD_NOT_PROVIDED));
         });
     });
 
     describe('Invalid password min length', () => {
-        test.concurrent('throw InvalidInputError INVALID_PASSWORD_LENGTH', async () => {
+        test('throw InvalidInputError INVALID_PASSWORD_LENGTH', async () => {
             await expect(
                 resetPasswordValidator.validate({
                     password: faker.internet.password({
@@ -45,7 +45,7 @@ describe('ResetPasswordValidator', () => {
     });
 
     describe('Invalid password max length', () => {
-        test.concurrent('throw InvalidInputError INVALID_PASSWORD_LENGTH', async () => {
+        test('throw InvalidInputError INVALID_PASSWORD_LENGTH', async () => {
             await expect(
                 resetPasswordValidator.validate({
                     password: faker.internet.password({
