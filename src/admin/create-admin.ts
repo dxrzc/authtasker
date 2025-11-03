@@ -12,19 +12,20 @@ export const createAdmin = async (
     try {
         const alreadyExists = await userModel.findOne({ name: configService.ADMIN_NAME }).exec();
         if (!alreadyExists) {
-            const { id } = await userModel.create({
+            const admin = await userModel.create({
                 name: configService.ADMIN_NAME,
                 email: configService.ADMIN_EMAIL,
                 password: await hashingService.hash(configService.ADMIN_PASSWORD),
                 role: 'admin',
                 emailValidated: true,
             });
-            SystemLoggerService.info(`Admin ${id} created successfully`);
+            const adminId = admin._id.toString();
+            SystemLoggerService.info(`Admin ${adminId} created successfully`);
         } else {
             SystemLoggerService.info(`Admin user creation omitted, already exists`);
         }
     } catch (error) {
-        SystemLoggerService.error(`Failed to create admin user: ${error}`);
+        SystemLoggerService.error(error);
         process.exit(1);
     }
 };
