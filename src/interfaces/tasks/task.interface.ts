@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
-import { TasksStatus } from "@root/types/tasks/task-status.type";
-import { TasksPriority } from "@root/types/tasks/task-priority.type";
+import { TasksStatus } from "src/types/tasks/task-status.type";
+import { TasksPriority } from "src/types/tasks/task-priority.type";
 
 export interface ITasks {
     id: string;

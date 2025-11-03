@@ -1,14 +1,14 @@
 import { faker } from '@faker-js/faker/.';
 import { mock, MockProxy } from 'jest-mock-extended';
-import { JwtTypes } from '@root/enums/jwt-types.enum';
-import { JwtService } from '@root/services/jwt.service';
-import { LoggerService } from '@root/services/logger.service';
-import { ConfigService } from '@root/services/config.service';
-import { HttpError } from '@root/common/errors/classes/http-error.class';
-import { JwtBlackListService } from '@root/services/jwt-blacklist.service';
-import { authErrors } from '@root/common/errors/messages/auth.error.messages';
-import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
-import { EmailValidationTokenService } from '@root/services/email-validation-token.service';
+import { JwtTypes } from 'src/enums/jwt-types.enum';
+import { JwtService } from 'src/services/jwt.service';
+import { LoggerService } from 'src/services/logger.service';
+import { ConfigService } from 'src/services/config.service';
+import { HttpError } from 'src/common/errors/classes/http-error.class';
+import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
+import { authErrors } from 'src/common/errors/messages/auth.error.messages';
+import { tokenPurposes } from 'src/common/constants/token-purposes.constants';
+import { EmailValidationTokenService } from 'src/services/email-validation-token.service';
 
 describe('EmailValidationTokenService', () => {
     let jwtService: JwtService;

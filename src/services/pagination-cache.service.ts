@@ -1,4 +1,4 @@
-import { Apis } from '@root/enums/apis.enum';
+import { Apis } from 'src/enums/apis.enum';
 import { RedisService } from './redis.service';
 import { ConfigService } from './config.service';
 import { LoggerService } from './logger.service';

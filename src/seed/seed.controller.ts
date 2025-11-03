@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { LoggerService } from '@root/services/logger.service';
+import { LoggerService } from 'src/services/logger.service';
 import { UserSeedService } from './services/user.seed.service';
 import { TasksSeedService } from './services/tasks.seed.service';
-import { BaseController } from '@root/common/base/base-controller.class';
+import { BaseController } from 'src/common/base/base-controller.class';
 
 export class SeedController extends BaseController {
 

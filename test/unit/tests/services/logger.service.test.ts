@@ -1,8 +1,8 @@
 import { mock } from 'jest-mock-extended';
 import winston from 'winston';
 import { AsyncLocalStorage } from 'async_hooks';
-import { ConfigService } from '@root/services/config.service';
-import { LoggerService } from '@root/services/logger.service';
+import { ConfigService } from 'src/services/config.service';
+import { LoggerService } from 'src/services/logger.service';
 import { NoReadonly } from '@unit/utils/types/no-read-only.type';
 
 describe('LoggerService ', () => {

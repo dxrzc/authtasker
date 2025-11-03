@@ -1,9 +1,9 @@
 import { model, Schema, Model } from "mongoose";
-import { EventManager } from "@root/events/eventManager";
-import { IUser } from '@root/interfaces/user/user.interface';
-import { ConfigService } from '@root/services/config.service';
-import { validRoles } from '@root/types/user/user-roles.type';
-import { SystemLoggerService } from '@root/services/system-logger.service';
+import { EventManager } from "src/events/eventManager";
+import { IUser } from 'src/interfaces/user/user.interface';
+import { ConfigService } from 'src/services/config.service';
+import { validRoles } from 'src/types/user/user-roles.type';
+import { SystemLoggerService } from 'src/services/system-logger.service';
 
 export const loadUserModel = (configService: ConfigService): Model<IUser> => {
     const userSchema = new Schema<IUser>({

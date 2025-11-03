@@ -25,7 +25,7 @@ const config: Config = {
 
     // alias
     moduleNameMapper: {
-        '^@root/(.*)$': '<rootDir>/src/$1',
+        '^src/(.*)$': '<rootDir>/src/$1',
         "^@unit/(.*)$": "<rootDir>/test/unit/$1",
         "^@logic/(.*)$": "<rootDir>/src/common/logic/$1",
     },

@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { testKit } from './testKit.util';
 import { status2xx } from './status2xx.util';
-import { UserRole } from '@root/types/user/user-roles.type';
+import { UserRole } from 'src/types/user/user-roles.type';
 
 export const createUser = async (role: UserRole) => {
     const userData = testKit.userDataGenerator.fullUser();

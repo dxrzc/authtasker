@@ -1,15 +1,15 @@
 import request from 'supertest';
 import * as nodemailer from "nodemailer";
 import { NodemailerMock } from "nodemailer-mock";
-import { JwtTypes } from '@root/enums/jwt-types.enum';
-import { JwtService } from '@root/services/jwt.service';
+import { JwtTypes } from 'src/enums/jwt-types.enum';
+import { JwtService } from 'src/services/jwt.service';
 import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { getTokenFromMail } from '@integration/utils/getTokenFromMail.util';
-import { authErrors } from '@root/common/errors/messages/auth.error.messages';
-import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
-import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { authErrors } from 'src/common/errors/messages/auth.error.messages';
+import { tokenPurposes } from 'src/common/constants/token-purposes.constants';
+import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
 
 // https://github.com/doublesharp/nodemailer-mock?tab=readme-ov-file#example-using-jest
 const { mock } = nodemailer as unknown as NodemailerMock;

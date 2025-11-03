@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { ConfigService } from '@root/services/config.service'
-import { SystemLoggerService } from '@root/services/system-logger.service';
+import { ConfigService } from 'src/services/config.service'
+import { SystemLoggerService } from 'src/services/system-logger.service';
 import { teardownKit } from '@e2e/helpers/global-setup/teardownKit.helper';
 import { saveAdminSessionToken } from '@e2e/helpers/admin-token/save-admin-session-token.helper';
 import { removeAdminSessionTokenIfExists } from '@e2e/helpers/admin-token/remove-admin-session-token.helper';

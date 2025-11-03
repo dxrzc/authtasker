@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { ApiType } from '@root/enums/api-type.enum';
-import { TasksService } from '@root/services/tasks.service';
-import { LoggerService } from '@root/services/logger.service';
-import { TasksController } from '@root/controllers/tasks.controller';
-import { RolesMiddleware } from '@root/middlewares/roles.middleware';
-import { SystemLoggerService } from '@root/services/system-logger.service';
-import { ApiLimiterMiddleware } from '@root/middlewares/api-limiter.middleware';
-import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
-import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
+import { ApiType } from 'src/enums/api-type.enum';
+import { TasksService } from 'src/services/tasks.service';
+import { LoggerService } from 'src/services/logger.service';
+import { TasksController } from 'src/controllers/tasks.controller';
+import { RolesMiddleware } from 'src/middlewares/roles.middleware';
+import { SystemLoggerService } from 'src/services/system-logger.service';
+import { ApiLimiterMiddleware } from 'src/middlewares/api-limiter.middleware';
+import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
+import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
 
 export class TasksRoutes {
 

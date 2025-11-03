@@ -1,4 +1,4 @@
-import { ITasks } from "@root/interfaces/tasks/task.interface";
+import { ITasks } from "src/interfaces/tasks/task.interface";
 
 /* Represents the data expected in request. Used in validation classes
 Use with "Exact" type to get and immediately type error on files that work

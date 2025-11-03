@@ -1,9 +1,9 @@
 import request from 'supertest';
 import { testKit } from '@integration/utils/testKit.util';
-import { UserRole } from '@root/types/user/user-roles.type';
+import { UserRole } from 'src/types/user/user-roles.type';
 import { createUser } from '@integration/utils/createUser.util';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
-import { authErrors } from '@root/common/errors/messages/auth.error.messages';
+import { authErrors } from 'src/common/errors/messages/auth.error.messages';
 
 describe('GET /health', () => {
     describe('User is not an administrator', () => {

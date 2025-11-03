@@ -1,9 +1,9 @@
 import request from 'supertest';
-import { Apis } from '@root/enums/apis.enum';
+import { Apis } from 'src/enums/apis.enum';
 import { testKit } from '@integration/utils/testKit.util';
 import { createUser } from '@integration/utils/createUser.util';
 import { createTask } from '@integration/utils/createTask.util';
-import { paginationErrors } from '@root/common/errors/messages/pagination.error.messages';
+import { paginationErrors } from 'src/common/errors/messages/pagination.error.messages';
 import { makePaginationCacheKey } from '@logic/cache/make-pagination-cache-key';
 
 describe('GET /api/tasks/', () => {

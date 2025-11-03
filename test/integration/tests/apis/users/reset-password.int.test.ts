@@ -1,15 +1,15 @@
 import request from 'supertest';
 import { faker } from '@faker-js/faker/.';
-import { JwtTypes } from '@root/enums/jwt-types.enum';
-import { JwtService } from '@root/services/jwt.service';
+import { JwtTypes } from 'src/enums/jwt-types.enum';
+import { JwtService } from 'src/services/jwt.service';
 import { testKit } from '@integration/utils/testKit.util';
 import { status2xx } from '@integration/utils/status2xx.util';
 import { createUser } from '@integration/utils/createUser.util';
-import { usersLimits } from '@root/common/constants/user.constants';
+import { usersLimits } from 'src/common/constants/user.constants';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
-import { authErrors } from '@root/common/errors/messages/auth.error.messages';
-import { tokenPurposes } from '@root/common/constants/token-purposes.constants';
-import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
+import { authErrors } from 'src/common/errors/messages/auth.error.messages';
+import { tokenPurposes } from 'src/common/constants/token-purposes.constants';
+import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
 
 describe('POST /api/user/reset-password', () => {
     describe('Successful password reset', () => {

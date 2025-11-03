@@ -1,4 +1,4 @@
-import { BaseHttpComponent } from '@root/common/base/base-http-component.class';
+import { BaseHttpComponent } from 'src/common/base/base-http-component.class';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 
 describe('BaseHttpComponent', () => {

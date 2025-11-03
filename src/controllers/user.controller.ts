@@ -1,16 +1,16 @@
 import { Request, Response } from "express";
-import { UserService } from "@root/services/user.service";
+import { UserService } from "src/services/user.service";
 import { buildCacheOptions } from '@logic/cache/build-cache-options';
-import { statusCodes } from '@root/common/constants/status-codes.constants';
-import { paginationSettings } from '@root/common/constants/pagination.constants';
-import { BaseUserController } from '@root/common/base/base-user-controller.class';
-import { LoginUserValidator } from '@root/validators/models/user/login-user.validator';
-import { CreateUserValidator } from '@root/validators/models/user/create-user.validator';
-import { UpdateUserValidator } from '@root/validators/models/user/update-user.validator';
-import { ForgotPasswordValidator } from '@root/validators/models/user/forgot-password.validator';
-import { HttpError } from '@root/common/errors/classes/http-error.class';
-import { authErrors } from '@root/common/errors/messages/auth.error.messages';
-import { ResetPasswordValidator } from '@root/validators/models/user/reset-password.validator';
+import { statusCodes } from 'src/common/constants/status-codes.constants';
+import { paginationSettings } from 'src/common/constants/pagination.constants';
+import { BaseUserController } from 'src/common/base/base-user-controller.class';
+import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
+import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
+import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
+import { ForgotPasswordValidator } from 'src/validators/models/user/forgot-password.validator';
+import { HttpError } from 'src/common/errors/classes/http-error.class';
+import { authErrors } from 'src/common/errors/messages/auth.error.messages';
+import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';
 
 export class UserController extends BaseUserController {
 

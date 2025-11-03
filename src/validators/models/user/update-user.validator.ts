@@ -2,10 +2,10 @@ import { validate } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 import { plainToInstance } from 'class-transformer';
 import { CreateUserValidator } from './create-user.validator';
-import { validationOptionsConfig } from '@root/validators/config/validation.config';
-import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
-import { usersApiErrors } from '@root/common/errors/messages/users-api.error.messages';
-import { InvalidInputError } from '@root/common/errors/classes/invalid-input-error.class';
+import { validationOptionsConfig } from 'src/validators/config/validation.config';
+import { returnFirstError } from 'src/validators/helpers/return-first-error.helper';
+import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
+import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
 
 export class UpdateUserValidator extends PartialType(CreateUserValidator) {
 

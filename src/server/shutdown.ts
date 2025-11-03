@@ -1,8 +1,8 @@
 import { Server } from './server.init';
-import { MongoDatabase } from '@root/databases/mongo/mongo.database';
-import { RedisDatabase } from '@root/databases/redis/redis.database';
-import { SystemLoggerService } from '@root/services/system-logger.service';
-import { IShutdownParams } from '@root/interfaces/server/shutdown.interface';
+import { MongoDatabase } from 'src/databases/mongo/mongo.database';
+import { RedisDatabase } from 'src/databases/redis/redis.database';
+import { SystemLoggerService } from 'src/services/system-logger.service';
+import { IShutdownParams } from 'src/interfaces/server/shutdown.interface';
 
 export class ShutdownManager {
     static isShuttingDown = false;

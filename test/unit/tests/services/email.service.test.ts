@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
-import { EmailService } from '@root/services/email.service';
-import { ITransporter } from '@root/interfaces/email/transporter.interface';
+import { EmailService } from 'src/services/email.service';
+import { ITransporter } from 'src/interfaces/email/transporter.interface';
 
 describe('Email Service', () => {
     describe('constructor', () => {

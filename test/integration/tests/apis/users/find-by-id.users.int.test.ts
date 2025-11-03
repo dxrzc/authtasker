@@ -1,10 +1,10 @@
 import request from 'supertest';
 import { testKit } from '@integration/utils/testKit.util';
 import { createUser } from '@integration/utils/createUser.util';
-import { UserResponse } from '@root/types/user/user-response.type';
+import { UserResponse } from 'src/types/user/user-response.type';
 import { makeUsersCacheKey } from '@logic/cache/make-users-cache-key';
 import { getRandomRole } from '@integration/utils/get-random-role.util';
-import { commonErrors } from '@root/common/errors/messages/common.error.messages';
+import { commonErrors } from 'src/common/errors/messages/common.error.messages';
 
 describe('GET /api/users/:id', () => {
     describe('Caching', () => {

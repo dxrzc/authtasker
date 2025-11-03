@@ -1,4 +1,4 @@
-import { UserIdentity } from '@root/interfaces/user/user-indentity.interface';
+import { UserIdentity } from 'src/interfaces/user/user-indentity.interface';
 
 // checks if requestUser can perform modifications on targetUser
 export function modificationAccessControl(requestUser: UserIdentity, targetUser: UserIdentity) {

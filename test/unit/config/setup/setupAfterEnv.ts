@@ -1,4 +1,4 @@
-import { SystemLoggerService } from '@root/services/system-logger.service';
+import { SystemLoggerService } from 'src/services/system-logger.service';
 
 beforeEach(() => {
     // disable info logs before every single test

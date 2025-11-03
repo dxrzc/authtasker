@@ -1,4 +1,4 @@
-import { validRoles } from '@root/types/user/user-roles.type';
+import { validRoles } from 'src/types/user/user-roles.type';
 import { modificationAuthFixture } from '@unit/fixtures/modification-auth.fixture';
 import { modificationAccessControl } from '@logic/roles/modification-access-control';
 

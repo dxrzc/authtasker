@@ -2,7 +2,7 @@ import { Model } from 'mongoose';
 import { RedisService } from './redis.service';
 import { LoggerService } from './logger.service';
 import { isDataInCacheExpired } from '@logic/cache/is-data-expired-in-cache';
-import { DataInCache } from '@root/interfaces/cache/data-in-cache.interface';
+import { DataInCache } from 'src/interfaces/cache/data-in-cache.interface';
 
 export class CacheService<Data extends { id: string }> {
     constructor(

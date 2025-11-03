@@ -1,9 +1,9 @@
 import Redis from 'ioredis';
 import { getRedisOptions } from './redis.options';
-import { EventManager } from '@root/events/eventManager';
-import { ConfigService } from '@root/services/config.service';
-import { Events } from '@root/common/constants/events.constants';
-import { SystemLoggerService } from '@root/services/system-logger.service';
+import { EventManager } from 'src/events/eventManager';
+import { ConfigService } from 'src/services/config.service';
+import { Events } from 'src/common/constants/events.constants';
+import { SystemLoggerService } from 'src/services/system-logger.service';
 
 export class RedisDatabase {
 

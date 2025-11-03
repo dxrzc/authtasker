@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { TasksService } from '@root/services/tasks.service';
-import { LoggerService } from '@root/services/logger.service';
-import { statusCodes } from '@root/common/constants/status-codes.constants';
-import { paginationSettings } from '@root/common/constants/pagination.constants';
-import { BaseTasksController } from '@root/common/base/base-tasks-controller.class';
-import { CreateTaskValidator } from '@root/validators/models/tasks/create-task.validator';
-import { UpdateTaskValidator } from '@root/validators/models/tasks/update-task.validator';
+import { TasksService } from 'src/services/tasks.service';
+import { LoggerService } from 'src/services/logger.service';
+import { statusCodes } from 'src/common/constants/status-codes.constants';
+import { paginationSettings } from 'src/common/constants/pagination.constants';
+import { BaseTasksController } from 'src/common/base/base-tasks-controller.class';
+import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
+import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
 import { buildCacheOptions } from '@logic/cache/build-cache-options';
 
 export class TasksController extends BaseTasksController {

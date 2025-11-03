@@ -1,10 +1,10 @@
 import { Model } from "mongoose";
-import { IUser } from '@root/interfaces/user/user.interface';
-import { ConfigService } from '@root/services/config.service';
-import { LoggerService } from '@root/services/logger.service';
-import { ITasks } from '@root/interfaces/tasks/task.interface';
-import { TaskRequest } from '@root/types/tasks/task-request.type';
-import { TasksDataGenerator } from '@root/seed/generators/tasks.generator';
+import { IUser } from 'src/interfaces/user/user.interface';
+import { ConfigService } from 'src/services/config.service';
+import { LoggerService } from 'src/services/logger.service';
+import { ITasks } from 'src/interfaces/tasks/task.interface';
+import { TaskRequest } from 'src/types/tasks/task-request.type';
+import { TasksDataGenerator } from 'src/seed/generators/tasks.generator';
 
 export class TasksSeedService {
 

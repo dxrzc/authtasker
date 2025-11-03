@@ -1,13 +1,13 @@
 import { plainToInstance, Transform } from 'class-transformer';
-import { tasksLimits } from '@root/common/constants/tasks.constants';
-import { TasksStatus, tasksStatus } from '@root/types/tasks/task-status.type';
-import { toLowerCaseAndTrim } from '@root/validators/helpers/to-lowercase.helper';
+import { tasksLimits } from 'src/common/constants/tasks.constants';
+import { TasksStatus, tasksStatus } from 'src/types/tasks/task-status.type';
+import { toLowerCaseAndTrim } from 'src/validators/helpers/to-lowercase.helper';
 import { IsDefined, IsIn, MaxLength, MinLength, validate } from 'class-validator';
-import { tasksPriority, TasksPriority } from '@root/types/tasks/task-priority.type';
-import { validationOptionsConfig } from '@root/validators/config/validation.config';
-import { returnFirstError } from '@root/validators/helpers/return-first-error.helper';
-import { tasksApiErrors } from '@root/common/errors/messages/tasks-api.error.messages';
-import { InvalidInputError } from '@root/common/errors/classes/invalid-input-error.class';
+import { tasksPriority, TasksPriority } from 'src/types/tasks/task-priority.type';
+import { validationOptionsConfig } from 'src/validators/config/validation.config';
+import { returnFirstError } from 'src/validators/helpers/return-first-error.helper';
+import { tasksApiErrors } from 'src/common/errors/messages/tasks-api.error.messages';
+import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
 
 export class CreateTaskValidator {
 

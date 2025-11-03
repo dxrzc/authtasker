@@ -1,5 +1,5 @@
 import { RedisService } from './redis.service';
-import { JwtTypes } from '@root/enums/jwt-types.enum';
+import { JwtTypes } from 'src/enums/jwt-types.enum';
 import { makeSessionTokenBlacklistKey } from '@logic/token/make-session-token-blacklist-key';
 import { makeEmailValidationBlacklistKey } from '@logic/token/make-email-validation-token-blacklist-key';
 import { makePasswordRecoveryTokenBlacklistKey } from '@logic/token/make-password-recovery-token-blacklist-key';

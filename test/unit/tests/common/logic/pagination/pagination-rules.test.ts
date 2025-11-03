@@ -1,7 +1,7 @@
-import { paginationErrors } from '@root/common/errors/messages/pagination.error.messages';
-import { HttpError } from '@root/common/errors/classes/http-error.class';
+import { paginationErrors } from 'src/common/errors/messages/pagination.error.messages';
+import { HttpError } from 'src/common/errors/classes/http-error.class';
 import { paginationRules } from '@logic/pagination/pagination-rules';
-import { statusCodes } from '@root/common/constants/status-codes.constants';
+import { statusCodes } from 'src/common/constants/status-codes.constants';
 
 // CHAT GPT WROTE THIS
 

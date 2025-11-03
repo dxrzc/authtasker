@@ -1,11 +1,11 @@
-import { LoggerService } from '@root/services/logger.service';
-import { MongoDatabase } from '@root/databases/mongo/mongo.database';
+import { LoggerService } from 'src/services/logger.service';
+import { MongoDatabase } from 'src/databases/mongo/mongo.database';
 import { teardownKit } from '@e2e/helpers/global-setup/teardownKit.helper';
-import { SystemLoggerService } from '@root/services/system-logger.service';
-import { loadUserModel } from '@root/databases/mongo/models/user.model.load';
-import { loadTasksModel } from '@root/databases/mongo/models/tasks.model.load';
+import { SystemLoggerService } from 'src/services/system-logger.service';
+import { loadUserModel } from 'src/databases/mongo/models/user.model.load';
+import { loadTasksModel } from 'src/databases/mongo/models/tasks.model.load';
 import { removeAdminSessionTokenIfExists } from '@e2e/helpers/admin-token/remove-admin-session-token.helper'
-import { RedisDatabase } from '@root/databases/redis/redis.database';
+import { RedisDatabase } from 'src/databases/redis/redis.database';
 
 export default async () => {
     SystemLoggerService.info('Executing e2e teardown');

@@ -1,4 +1,4 @@
-import { UserRole } from "@root/types/user/user-roles.type";
+import { UserRole } from "src/types/user/user-roles.type";
 
 // user info obtained by roles middleware
 export interface UserFromRequest {

@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import { EventManager } from "@root/events/eventManager";
-import { ConfigService } from '@root/services/config.service';
-import { LoggerService } from '@root/services/logger.service';
-import { Events } from '@root/common/constants/events.constants';
-import { SystemLoggerService } from '@root/services/system-logger.service';
+import { EventManager } from "src/events/eventManager";
+import { ConfigService } from 'src/services/config.service';
+import { LoggerService } from 'src/services/logger.service';
+import { SystemLoggerService } from 'src/services/system-logger.service';
+import { Events } from 'src/common/constants/events.constants';
 
 export class MongoDatabase {
 
