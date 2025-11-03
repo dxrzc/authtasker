@@ -1,8 +1,11 @@
 # Authtasker
-Backend application designed to manage user authentication, authorization and task management. Built with NodeJS, Typescript and Express.  
+
+Backend application designed to manage user authentication, authorization and task management. Built with NodeJS, Typescript and Express.
 
 ## 🚀 Features
+
 ### 🔒 Authentication/Authorization
+
 - **Bearer token authentication** with short-lived session tokens and long-lived refresh tokens.
 - **Refresh token limiting**: restrict users to a max number of active sessions
 - **Session token blacklisting** using Redis
@@ -12,41 +15,48 @@ Backend application designed to manage user authentication, authorization and ta
 - **Forgot-password flow**: send password recovery emails with time-limited reset tokens
 
 ### ⚡ Caching
+
 - **Revalidation caching**: on-demand data re-check with Redis + DB fallback
 - **Pagination caching** using Redis with hard TTL
 
 ### 🐳 Docker
+
 - **Dockerized** environment for development
 - **Dockerfile** image for production and development
 
 ### 🔑 Secrets
+
 - **Sensitive secrets** (JWT keys, DB URIs, credentials) are securely loaded via Docker secrets
 
 ### 🧪 Testing
+
 - **Unit, integration** and **e2e** tests
 
 ### 🛡 Security
+
 - **Administrator user creation** when the server is started
 - **Input sanitization and validation** using `class-validator`
 - **API rate limiting** to prevent abuse
 
 ### 📊 Monitoring & Maintenance
+
 - **Health endpoint** (restricted to `admin` users)
 - **Logging and monitoring** of HTTP requests and system events
 
 ## 📜 Scripts
 
-| Command            | Description                                      |
-|--------------------|--------------------------------------------------|
-| `npm run dev`      | Starts the development server with Docker Compose using `.env.dev` |
-| `npm run test:unit`| Runs unit tests using Jest                       |
-| `npm run test:int` | Runs integration tests with environment setup    |
-| `npm run build`    | Builds the project using `tsc` with `tsconfig.build.json` |
-| `npm start`        | Runs the built app in production using `dotenvx` and `.env.prod` |
+| Command             | Description                                                        |
+| ------------------- | ------------------------------------------------------------------ |
+| `npm run dev`       | Starts the development server with Docker Compose using `.env.dev` |
+| `npm run test:unit` | Runs unit tests using Jest                                         |
+| `npm run test:int`  | Runs integration tests with environment setup                      |
+| `npm run build`     | Builds the project using `tsc` with `tsconfig.build.json`          |
+| `npm start`         | Runs the built app in production using `dotenvx` and `.env.prod`   |
 
 ## 📂 Logs
 
 ### 🛠️ System Logs
+
 - Logs are saved in the filesystem
 - Three levels: `info`, `error`, `warn`
 
@@ -57,6 +67,7 @@ Backend application designed to manage user authentication, authorization and ta
 ---
 
 ### 🌐 HTTP Logs
+
 - Logs are saved in the filesystem
 - `debug` messages are **disabled in production mode**
 - `debug` messages are **not saved** in the filesystem
@@ -70,8 +81,8 @@ Backend application designed to manage user authentication, authorization and ta
 ---
 
 ### ✅ Request Completed
-When a request is completed, it's registered in the filesystem as follows:
 
+When a request is completed, it's registered in the filesystem as follows:
 
 ```javascript
 {
@@ -88,6 +99,5 @@ When a request is completed, it's registered in the filesystem as follows:
 ```
 
 ## Api documentation
+
 https://authtaskerdocs.apidog.io
-
-

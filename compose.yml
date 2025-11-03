@@ -1,65 +1,65 @@
 services:
-  app:
-    # TODO: depends-on
-    restart: always
-    pull_policy: never
-    init: true    
-    build:
-      context: .
-      target: development
-    ports:
-      - ${SERVER_PORT:-3000}:3000    
-    volumes:
-      - ./src:/usr/src/app/src
-      - ./logs:/usr/src/app/logs
-      - ./tsconfig.json:/usr/src/app/tsconfig.json
-    environment:      
-      MONGO_URI: mongodb://mongo-db:27017
-      REDIS_URI: redis://redis-db:6379
-      MAIL_SERVICE_HOST: mailpit
-      MAIL_SERVICE_PORT: 1025
-      MAIL_SERVICE_USER: anyuser
-      MAIL_SERVICE_PASS: anypass         
-    env_file:
-      - path: .env.defaults
-        required: true 
-      - path: .env.dev
-        required: false           
+    app:
+        # TODO: depends-on
+        restart: always
+        pull_policy: never
+        init: true
+        build:
+            context: .
+            target: development
+        ports:
+            - ${SERVER_PORT:-3000}:3000
+        volumes:
+            - ./src:/usr/src/app/src
+            - ./logs:/usr/src/app/logs
+            - ./tsconfig.json:/usr/src/app/tsconfig.json
+        environment:
+            MONGO_URI: mongodb://mongo-db:27017
+            REDIS_URI: redis://redis-db:6379
+            MAIL_SERVICE_HOST: mailpit
+            MAIL_SERVICE_PORT: 1025
+            MAIL_SERVICE_USER: anyuser
+            MAIL_SERVICE_PASS: anypass
+        env_file:
+            - path: .env.defaults
+              required: true
+            - path: .env.dev
+              required: false
 
-  redis-db:        
-    image: redis:8.0-alpine    
-    restart: always
-    ports: 
-      - ${REDIS_PORT:-6379}:6379
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    volumes:    
-      - redis:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    redis-db:
+        image: redis:8.0-alpine
+        restart: always
+        ports:
+            - ${REDIS_PORT:-6379}:6379
+        command: ['redis-server', '/usr/local/etc/redis/redis.conf']
+        volumes:
+            - redis:/data
+            - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
 
-  mongo-db:
-    image: mongo:7.0.20
-    restart: always    
-    volumes:
-      - mongo:/data/db
-    ports:
-      - ${MONGO_PORT:-27017}:27017
+    mongo-db:
+        image: mongo:7.0.20
+        restart: always
+        volumes:
+            - mongo:/data/db
+        ports:
+            - ${MONGO_PORT:-27017}:27017
 
-  mailpit:        
-    image: axllent/mailpit:v1.27.6     
-    restart: always
-    ports:        
-        - "${MAILHOG_UI_PORT:-8025}:8025"    
-    volumes:
-        - mailpit:/data    
-    environment:
-      # https://mailpit.axllent.org/docs/configuration/runtime-options/
-      MP_MAX_MESSAGES: 500
-      MP_DATABASE: /data/mailpit.db
-      MP_SMTP_AUTH_ACCEPT_ANY: 1
-      MP_SMTP_AUTH_ALLOW_INSECURE: 1   
-      MP_SEND_API_AUTH_ACCEPT_ANY: 1          
+    mailpit:
+        image: axllent/mailpit:v1.27.6
+        restart: always
+        ports:
+            - '${MAILHOG_UI_PORT:-8025}:8025'
+        volumes:
+            - mailpit:/data
+        environment:
+            # https://mailpit.axllent.org/docs/configuration/runtime-options/
+            MP_MAX_MESSAGES: 500
+            MP_DATABASE: /data/mailpit.db
+            MP_SMTP_AUTH_ACCEPT_ANY: 1
+            MP_SMTP_AUTH_ALLOW_INSECURE: 1
+            MP_SEND_API_AUTH_ACCEPT_ANY: 1
 
 volumes:
-  mailpit:
-  redis:
-  mongo:
+    mailpit:
+    redis:
+    mongo:
