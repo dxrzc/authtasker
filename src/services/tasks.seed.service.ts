@@ -4,7 +4,7 @@ import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
 import { TaskRequest } from 'src/types/tasks/task-request.type';
-import { TasksDataGenerator } from 'src/seed/generators/tasks.generator';
+import { TasksDataGenerator } from 'src/generators/tasks.generator';
 
 export class TasksSeedService {
     constructor(

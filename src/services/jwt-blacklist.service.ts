@@ -1,8 +1,8 @@
 import { RedisService } from './redis.service';
 import { JwtTypes } from 'src/enums/jwt-types.enum';
-import { makeSessionTokenBlacklistKey } from 'src/common/logic/token/make-session-token-blacklist-key';
-import { makeEmailValidationBlacklistKey } from 'src/common/logic/token/make-email-validation-token-blacklist-key';
-import { makePasswordRecoveryTokenBlacklistKey } from 'src/common/logic/token/make-password-recovery-token-blacklist-key';
+import { makeSessionTokenBlacklistKey } from 'src/functions/token/make-session-token-blacklist-key';
+import { makeEmailValidationBlacklistKey } from 'src/functions/token/make-email-validation-token-blacklist-key';
+import { makePasswordRecoveryTokenBlacklistKey } from 'src/functions/token/make-password-recovery-token-blacklist-key';
 
 export class JwtBlackListService {
     constructor(private readonly redisService: RedisService) {}

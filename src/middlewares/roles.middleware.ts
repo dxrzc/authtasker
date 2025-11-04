@@ -1,21 +1,18 @@
 import { UserRole } from 'src/types/user/user-roles.type';
 import { LoggerService } from 'src/services/logger.service';
-import { hasSufficientRole } from 'src/common/logic/roles/has-sufficent-role';
-import { BaseMiddleware } from 'src/common/base/base-middleware.class';
+import { hasSufficientRole } from 'src/functions/roles/has-sufficent-role';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { SessionTokenService } from 'src/services/session-token.service';
-import { statusCodes } from 'src/common/constants/status-codes.constants';
-import { authErrors } from 'src/common/errors/messages/auth.error.messages';
+import { statusCodes } from 'src/constants/status-codes.constants';
+import { authErrors } from 'src/messages/auth.error.messages';
 
-export class RolesMiddleware extends BaseMiddleware<[UserRole]> {
+export class RolesMiddleware {
     constructor(
         private readonly sessionTokenService: SessionTokenService,
         private readonly loggerService: LoggerService,
-    ) {
-        super();
-    }
+    ) {}
 
-    protected getHandler(minRoleRequired: UserRole): RequestHandler {
+    public middleware(minRoleRequired: UserRole): RequestHandler {
         return async (req: Request, res: Response, next: NextFunction) => {
             // verify token presence
             const authorizationHeader = req.header('authorization');

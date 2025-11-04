@@ -1,11 +1,11 @@
 import { plainToInstance, Transform } from 'class-transformer';
-import { usersLimits } from 'src/common/constants/user.constants';
+import { usersLimits } from 'src/constants/user.constants';
 import { toLowerCaseAndTrim } from 'src/validators/helpers/to-lowercase.helper';
 import { validationOptionsConfig } from 'src/validators/config/validation.config';
 import { IsDefined, IsEmail, MaxLength, MinLength, validate } from 'class-validator';
 import { returnFirstError } from 'src/validators/helpers/return-first-error.helper';
-import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
-import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
+import { usersApiErrors } from 'src/messages/users-api.error.messages';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 
 export class CreateUserValidator {
     @IsDefined({ message: usersApiErrors.NAME_NOT_PROVIDED })

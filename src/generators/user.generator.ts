@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { usersLimits } from 'src/common/constants/user.constants';
+import { usersLimits } from 'src/constants/user.constants';
 
 export class UserDataGenerator {
     constructor() {}

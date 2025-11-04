@@ -1,15 +1,15 @@
 import { Router } from 'express';
 import { Model } from 'mongoose';
-import { SeedController } from './seed.controller';
+import { SeedController } from '../controllers/seed.controller';
 import { IUser } from 'src/interfaces/user/user.interface';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
-import { UserSeedService } from './services/user.seed.service';
-import { UserDataGenerator } from './generators/user.generator';
+import { UserSeedService } from '../services/user.seed.service';
+import { UserDataGenerator } from '../generators/user.generator';
 import { HashingService } from 'src/services/hashing.service';
-import { TasksSeedService } from './services/tasks.seed.service';
-import { TasksDataGenerator } from './generators/tasks.generator';
+import { TasksSeedService } from '../services/tasks.seed.service';
+import { TasksDataGenerator } from '../generators/tasks.generator';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 
 export class SeedRoutes {

@@ -1,9 +1,9 @@
 import { validate } from 'class-validator';
 import { PickType } from '@nestjs/mapped-types';
 import { CreateUserValidator } from './create-user.validator';
-import { authErrors } from 'src/common/errors/messages/auth.error.messages';
+import { authErrors } from 'src/messages/auth.error.messages';
 import { validationOptionsConfig } from 'src/validators/config/validation.config';
-import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 
 export class LoginUserValidator extends PickType(CreateUserValidator, [
     'email',

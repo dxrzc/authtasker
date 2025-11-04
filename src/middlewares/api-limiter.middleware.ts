@@ -2,19 +2,16 @@ import rateLimit from 'express-rate-limit';
 import { ApiType } from 'src/enums/api-type.enum';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
-import { BaseMiddleware } from 'src/common/base/base-middleware.class';
-import { authErrors } from 'src/common/errors/messages/auth.error.messages';
-import { commonErrors } from 'src/common/errors/messages/common.error.messages';
+import { authErrors } from 'src/messages/auth.error.messages';
+import { commonErrors } from 'src/messages/common.error.messages';
 
-export class ApiLimiterMiddleware extends BaseMiddleware<[ApiType]> {
+export class ApiLimiterMiddleware {
     constructor(
         private readonly configService: ConfigService,
         private readonly loggerService: LoggerService,
-    ) {
-        super();
-    }
+    ) {}
 
-    protected getHandler(type: ApiType) {
+    public middleware(type: ApiType) {
         let message: string;
 
         switch (type) {

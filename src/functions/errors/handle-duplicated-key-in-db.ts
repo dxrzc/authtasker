@@ -1,8 +1,8 @@
 import { Apis } from 'src/enums/apis.enum';
 import { LoggerService } from 'src/services/logger.service';
-import { HttpError } from 'src/common/errors/classes/http-error.class';
-import { tasksApiErrors } from 'src/common/errors/messages/tasks-api.error.messages';
-import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
+import { HttpError } from 'src/errors/http-error.class';
+import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
+import { usersApiErrors } from 'src/messages/users-api.error.messages';
 
 export const handleDuplicatedKeyInDb = (
     api: Apis,

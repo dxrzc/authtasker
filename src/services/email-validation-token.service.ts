@@ -3,10 +3,10 @@ import { ConfigService } from './config.service';
 import { LoggerService } from './logger.service';
 import { JwtTypes } from 'src/enums/jwt-types.enum';
 import { JwtBlackListService } from './jwt-blacklist.service';
-import { calculateTokenTTL } from 'src/common/logic/token/calculate-token-ttl';
-import { HttpError } from 'src/common/errors/classes/http-error.class';
-import { authErrors } from 'src/common/errors/messages/auth.error.messages';
-import { tokenPurposes } from 'src/common/constants/token-purposes.constants';
+import { calculateTokenTTL } from 'src/functions/token/calculate-token-ttl';
+import { HttpError } from 'src/errors/http-error.class';
+import { authErrors } from 'src/messages/auth.error.messages';
+import { tokenPurposes } from 'src/constants/token-purposes.constants';
 
 export class EmailValidationTokenService {
     constructor(

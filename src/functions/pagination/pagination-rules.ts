@@ -1,5 +1,5 @@
-import { HttpError } from 'src/common/errors/classes/http-error.class';
-import { paginationErrors } from 'src/common/errors/messages/pagination.error.messages';
+import { HttpError } from 'src/errors/http-error.class';
+import { paginationErrors } from 'src/messages/pagination.error.messages';
 
 export function paginationRules(limit: number, page: number, totalDocuments: number) {
     if (limit <= 0) throw HttpError.badRequest(paginationErrors.INVALID_LIMIT);

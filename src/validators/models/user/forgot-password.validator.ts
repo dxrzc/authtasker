@@ -1,9 +1,9 @@
-import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
-import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
+import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { returnFirstError } from 'src/validators/helpers/return-first-error.helper';
 import { validationOptionsConfig } from 'src/validators/config/validation.config';
 import { IsEmail, IsOptional, MaxLength, validate } from 'class-validator';
-import { usersLimits } from 'src/common/constants/user.constants';
+import { usersLimits } from 'src/constants/user.constants';
 
 export class ForgotPasswordValidator {
     @IsOptional()

@@ -11,7 +11,7 @@ import { SystemLoggerService } from './services/system-logger.service';
 import { ErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
 import { IAsyncLocalStorageStore } from './interfaces/common/async-local-storage.interface';
 import { EventManager } from './events/eventManager';
-import { Events } from './common/constants/events.constants';
+import { Events } from './constants/events.constants';
 import { RedisSuscriber } from './databases/redis/redis.suscriber';
 
 process.on('SIGINT', () => {

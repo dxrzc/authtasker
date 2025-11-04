@@ -1,18 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
 import { AsyncLocalStorage } from 'async_hooks';
 import { LoggerService } from 'src/services/logger.service';
-import { BaseMiddleware } from 'src/common/base/base-middleware.class';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 
-export class RequestContextMiddleware extends BaseMiddleware {
+export class RequestContextMiddleware {
     constructor(
         private readonly asyncLocalStorage: AsyncLocalStorage<unknown>,
         private readonly loggerService: LoggerService,
-    ) {
-        super();
-    }
+    ) {}
 
-    protected getHandler(): RequestHandler {
+    public middleware(): RequestHandler {
         return (req: Request, res: Response, next: NextFunction) => {
             const url = req.originalUrl;
             const method = req.method;
