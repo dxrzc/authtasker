@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
     "dev": "docker compose up --attach app",
-    "test:unit": "jest --config  test/unit/config/jest.config.ts",
+    "test:unit": "jest --config jest/jest.unit.config.ts",
     "test:int": "cross-env NODE_ENV=integration node -r tsconfig-paths/register -- ./node_modules/jest/bin/jest.js --config test/integration/config/jest.config.ts"        
   },
   "keywords": [],
