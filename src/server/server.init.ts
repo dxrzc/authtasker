@@ -1,8 +1,7 @@
 import helmet from 'helmet';
-import express, { Router } from 'express';
+import express, { ErrorRequestHandler, Router } from 'express';
 import { Server as HttpServer } from 'http';
 import { SystemLoggerService } from 'src/services/system-logger.service';
-import { ErrorHandlerMiddleware } from 'src/middlewares/error-handler.middleware';
 
 export class Server {
     private readonly app = express();
@@ -11,13 +10,13 @@ export class Server {
     constructor(
         private readonly port: number,
         private readonly routes: Router,
-        private readonly errorHandlerMiddleware: ErrorHandlerMiddleware,
+        private readonly errorHandlerMiddleware: ErrorRequestHandler,
     ) {
         this.app.use(express.json({ limit: '10kb' }));
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(helmet());
         this.app.use(this.routes);
-        this.app.use(this.errorHandlerMiddleware.middleware());
+        this.app.use(this.errorHandlerMiddleware);
     }
 
     start(): Promise<void> {
