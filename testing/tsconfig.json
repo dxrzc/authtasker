@@ -1,0 +1,26 @@
+{
+    "extends": "../tsconfig.json",
+    "include": [
+        "./**/*"
+    ],
+    "compilerOptions": {
+        "types": [
+            "node",
+            "jest"
+        ],
+        "paths": {
+            "src/*": [
+                "src/*"
+            ],
+            "@unit/*": [
+                "testing/suites/unit/*"
+            ],
+            "@integration/*": [
+                "testing/suites/integration/*"
+            ],
+            "@test/tools/*": [
+                "testing/tools/*"
+            ]
+        },
+    }
+}
