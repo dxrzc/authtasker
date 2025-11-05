@@ -97,4 +97,12 @@ export class ConfigService {
         .get('PAGINATION_CACHE_TTLS_SECONDS')
         .required()
         .asIntPositive();
+
+    isProduction(): boolean {
+        return this.NODE_ENV === 'production';
+    }
+
+    isDevelopment(): boolean {
+        return this.NODE_ENV === 'development';
+    }
 }
