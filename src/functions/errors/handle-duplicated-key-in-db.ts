@@ -23,7 +23,7 @@ export const handleDuplicatedKeyInDb = (
             loggerService.error(
                 `Task with ${duplicatedKey.join(', ')}: "${keyValue.join(', ')}" already exists`,
             );
-            throw HttpError.conflict(tasksApiErrors.taskAlreadyExists(duplicatedKey[0]));
+            throw HttpError.conflict(tasksApiErrors.ALREADY_EXISTS);
         }
     }
 };

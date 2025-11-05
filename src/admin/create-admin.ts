@@ -4,6 +4,7 @@ import { ConfigService } from 'src/services/config.service';
 import { HashingService } from 'src/services/hashing.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 
+// TODO: createAdmin in usersservice
 export const createAdmin = async (
     userModel: Model<IUser>,
     configService: ConfigService,

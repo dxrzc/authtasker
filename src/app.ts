@@ -1,10 +1,9 @@
 import { AsyncLocalStorage } from 'async_hooks';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
-import { MongoDatabase } from './databases/mongo/mongo.database';
-import { RedisDatabase } from './databases/redis/redis.database';
-import { RedisSuscriber } from './databases/redis/redis.suscriber';
-import { AppRoutes } from './routes/server.routes';
+import { MongoDatabase } from './databases/mongo.database';
+import { RedisDatabase } from './databases/redis.database';
+import { AppRoutes } from './routes/app.routes';
 import { Server } from './server/server.init';
 import { ShutdownManager } from './server/shutdown';
 import { RedisService } from './services/redis.service';
@@ -60,7 +59,6 @@ async function main() {
     const redisDb = new RedisDatabase(configService);
     const redisInstance = await redisDb.connect();
     const redisService = new RedisService(redisInstance);
-    new RedisSuscriber(configService, redisInstance);
     ShutdownManager.redisDb = redisDb;
 
     // server
@@ -68,7 +66,7 @@ async function main() {
     const errorHandlerMiddleware = new ErrorHandlerMiddleware(loggerService);
     const server = new Server(
         configService.PORT,
-        await appRoutes.buildApp(),
+        appRoutes.routes,
         errorHandlerMiddleware.middleware(),
     );
     await server.start();

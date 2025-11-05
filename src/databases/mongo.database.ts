@@ -9,7 +9,7 @@ export class MongoDatabase {
         private readonly configService: ConfigService,
         private readonly loggerService: LoggerService,
     ) {
-        if (this.configService.isDevelopment()) {
+        if (this.configService.isDevelopment) {
             this.listModelEvents('user');
             this.listModelEvents('task');
         }
