@@ -1,15 +1,10 @@
 import { Router } from 'express';
-import { Model } from 'mongoose';
 import { ApiType } from 'src/enums/api-type.enum';
-import { createAdmin } from 'src/admin/create-admin';
 import { UserService } from 'src/services/user.service';
-import { IUser } from 'src/interfaces/user/user.interface';
-import { ConfigService } from 'src/services/config.service';
-import { HashingService } from 'src/services/hashing.service';
 import { UserController } from 'src/controllers/user.controller';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
 import { SystemLoggerService } from 'src/services/system-logger.service';
-import { ApiLimiterMiddleware } from 'src/middlewares/api-limiter.middleware';
+import { RateLimiterMiddleware } from 'src/middlewares/api-limiter.middleware';
 import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
 import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
 import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
@@ -20,12 +15,9 @@ export class UserRoutes {
     private readonly userController: UserController;
 
     constructor(
-        private readonly userService: UserService,
-        private readonly configService: ConfigService,
-        private readonly userModel: Model<IUser>,
-        private readonly hashingService: HashingService,
+        private readonly apiLimiterMiddleware: RateLimiterMiddleware,
         private readonly rolesMiddleware: RolesMiddleware,
-        private readonly apiLimiterMiddleware: ApiLimiterMiddleware,
+        private readonly userService: UserService,
     ) {
         this.userController = new UserController(
             this.userService,
@@ -36,17 +28,10 @@ export class UserRoutes {
             new ResetPasswordValidator(),
             userService.loggerService,
         );
-
         SystemLoggerService.info('User routes loaded');
     }
 
-    private async initialData() {
-        await createAdmin(this.userModel, this.configService, this.hashingService);
-    }
-
-    async build(): Promise<Router> {
-        await this.initialData();
-
+    get routes(): Router {
         const router = Router();
 
         router.get(
