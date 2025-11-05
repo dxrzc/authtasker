@@ -50,12 +50,19 @@ async function main() {
     const loggerService = new LoggerService(configService, asyncLocalStorage);
 
     // mongo
-    const mongoDb = new MongoDatabase(configService, loggerService);
+    const mongoDb = new MongoDatabase(loggerService, {
+        listenConnectionEvents: true,
+        listenModelEvents: configService.isDevelopment,
+        mongoUri: configService.MONGO_URI,
+    });
     await mongoDb.connect();
     ShutdownManager.mongoDb = mongoDb;
 
     // redis
-    const redisDb = new RedisDatabase(configService);
+    const redisDb = new RedisDatabase({
+        listenConnectionEvents: true,
+        redisUri: configService.REDIS_URI,
+    });
     const redisInstance = await redisDb.connect();
     const redisService = new RedisService(redisInstance);
     ShutdownManager.redisDb = redisDb;
