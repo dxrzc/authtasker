@@ -33,7 +33,7 @@ export class TasksService {
         // id is not valid / task not found
         if (!taskFound) {
             this.loggerService.error(`Task with id ${id} not found`);
-            throw HttpError.notFound(tasksApiErrors.TASK_NOT_FOUND);
+            throw HttpError.notFound(tasksApiErrors.NOT_FOUND);
         }
         return taskFound;
     }
@@ -72,7 +72,7 @@ export class TasksService {
         const validMongoId = Types.ObjectId.isValid(id);
         if (!validMongoId) {
             this.loggerService.error(`Invalid mongo id`);
-            throw HttpError.notFound(tasksApiErrors.TASK_NOT_FOUND);
+            throw HttpError.notFound(tasksApiErrors.NOT_FOUND);
         }
         // bypass read-write in cache
         if (options.noStore) {

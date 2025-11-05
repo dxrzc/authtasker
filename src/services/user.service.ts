@@ -47,7 +47,7 @@ export class UserService {
         const userInDb = await this.userModel.findById(id).exec();
         if (!userInDb) {
             this.loggerService.error(`User ${id} not found`);
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
         }
         return userInDb;
     }
@@ -123,12 +123,12 @@ export class UserService {
         const user = await this.userModel.findById(id).exec();
         if (!user) {
             this.loggerService.error(`User with id ${id} not found`);
-            throw HttpError.badRequest(usersApiErrors.USER_NOT_FOUND);
+            throw HttpError.badRequest(usersApiErrors.NOT_FOUND);
         }
         // email cannot be validated twice
         if (user.emailValidated === true) {
             this.loggerService.error(`Email ${user.email} is already validated`);
-            throw HttpError.badRequest(usersApiErrors.USER_EMAIL_ALREADY_VALIDATED);
+            throw HttpError.badRequest(usersApiErrors.EMAIL_ALREADY_VERIFIED);
         }
         await this.sendEmailValidationLink(user.email);
     }
@@ -139,7 +139,7 @@ export class UserService {
         const user = await this.userModel.findOne({ email: emailInToken }).exec();
         if (!user) {
             this.loggerService.error(`User ${emailInToken} not found`);
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
         }
         // update
         user.emailValidated = true;
@@ -216,7 +216,7 @@ export class UserService {
         const userData = await this.userModel.findOne({ email: userCredentials.email }).exec();
         if (!userData) {
             this.loggerService.error(`User ${userCredentials.email} not found`);
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
         }
         await this.passwordsMatchOrThrow(userData.password, userCredentials.password);
         // revoke all session tokens
@@ -241,7 +241,7 @@ export class UserService {
         const validMongoId = Types.ObjectId.isValid(id);
         if (!validMongoId) {
             this.loggerService.error(`Invalid mongo id`);
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
         }
         // bypass read-write in cache
         if (options.noStore) {
@@ -341,7 +341,7 @@ export class UserService {
         const user = await this.userModel.findOne({ email: emailInToken }).exec();
         if (!user) {
             this.loggerService.error(`User ${emailInToken} not found`);
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
         }
         user.password = await this.hashingService.hash(newPassword);
         await user.save();
