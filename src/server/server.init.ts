@@ -1,9 +1,12 @@
+import express, { ErrorRequestHandler, NextFunction, Request, Response, Router } from 'express';
 import helmet from 'helmet';
-import express, { Router } from 'express';
 import { Server as HttpServer } from 'http';
-import { SystemLoggerService } from 'src/services/system-logger.service';
+import { statusCodes } from 'src/constants/status-codes.constants';
+import { HttpError } from 'src/errors/http-error.class';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
+import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
-import { ErrorHandlerMiddleware } from 'src/middlewares/error-handler.middleware';
+import { SystemLoggerService } from 'src/services/system-logger.service';
 
 export class Server {
     private readonly app = express();
@@ -12,13 +15,38 @@ export class Server {
     constructor(
         private readonly port: number,
         private readonly routes: Router,
-        private readonly loggerService: LoggerService,
+        private readonly logger: LoggerService,
     ) {
         this.app.use(express.json({ limit: '10kb' }));
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(helmet());
         this.app.use(this.routes);
-        this.app.use(new ErrorHandlerMiddleware(loggerService).middleware());
+        this.app.use(this.createErrorHandlerMiddleware);
+    }
+
+    private get createErrorHandlerMiddleware(): ErrorRequestHandler {
+        return (err: Error, req: Request, res: Response, next: NextFunction) => {
+            if (res.headersSent) {
+                // Response was already sent to client
+                return next(err);
+            }
+            if (err instanceof HttpError) {
+                // Logs were already made when throwing the error
+                res.status(err.statusCode).json({ error: err.message });
+                return;
+            }
+            if (err instanceof InvalidInputError) {
+                // Validators don't log errors
+                const errorMessage = err.message;
+                this.logger.error(`Validation error: ${errorMessage}`);
+                res.status(statusCodes.BAD_REQUEST).json({ error: errorMessage });
+                return;
+            }
+            // Internal Server Error
+            this.logger.error(err.message);
+            SystemLoggerService.error(err.message, err.stack);
+            res.status(500).json({ error: commonErrors.INTERNAL_SERVER_ERROR });
+        };
     }
 
     start(): Promise<void> {
