@@ -3,20 +3,17 @@ import { EventManager } from 'src/events/eventManager';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
-import { Events } from 'src/constants/events.constants';
 
 export class MongoDatabase {
-    private disconnectedManually = false;
-
     constructor(
         private readonly configService: ConfigService,
         private readonly loggerService: LoggerService,
     ) {
-        if (configService.NODE_ENV === 'development' || configService.NODE_ENV === 'e2e') {
+        if (this.configService.isDevelopment()) {
             this.listModelEvents('user');
             this.listModelEvents('task');
         }
-        this.connectionEvents();
+        this.setupMongooseEventListeners();
     }
 
     async connect(): Promise<void> {
@@ -25,16 +22,26 @@ export class MongoDatabase {
     }
 
     async disconnect(): Promise<void> {
-        if (mongoose.connection.readyState === mongoose.ConnectionStates.connected) {
+        if (mongoose.connection.readyState === mongoose.ConnectionStates.connected)
             await mongoose.disconnect();
-            this.disconnectedManually = true;
-            SystemLoggerService.warn(`Disconnected from mongo database`);
-        }
+        SystemLoggerService.info(`Disconnected from mongo database`);
     }
 
-    connectionEvents() {
+    private setupMongooseEventListeners(): void {
+        mongoose.connection.on('connected', () => {
+            SystemLoggerService.info('Mongoose connected to MongoDB');
+        });
+
+        mongoose.connection.on('error', (err) => {
+            SystemLoggerService.error('Mongoose connection error:', err);
+        });
+
         mongoose.connection.on('disconnected', () => {
-            if (!this.disconnectedManually) EventManager.emit(Events.MONGO_CONNECTION_ERROR);
+            SystemLoggerService.info('Mongoose disconnected from MongoDB');
+        });
+
+        mongoose.connection.on('reconnected', () => {
+            SystemLoggerService.info('Mongoose reconnected to MongoDB');
         });
     }
 
