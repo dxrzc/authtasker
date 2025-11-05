@@ -9,7 +9,6 @@ import { ShutdownManager } from './server/shutdown';
 import { RedisService } from './services/redis.service';
 import { SystemLoggerService } from './services/system-logger.service';
 import { IAsyncLocalStorageStore } from './interfaces/others/async-local-storage.interface';
-import { ErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
 
 // process.on('SIGINT', () => {
 //     void ShutdownManager.shutdown({
@@ -63,12 +62,7 @@ async function main() {
 
     // server
     const appRoutes = new AppRoutes(configService, loggerService, asyncLocalStorage, redisService);
-    const errorHandlerMiddleware = new ErrorHandlerMiddleware(loggerService);
-    const server = new Server(
-        configService.PORT,
-        appRoutes.routes,
-        errorHandlerMiddleware.middleware(),
-    );
+    const server = new Server(configService.PORT, appRoutes.routes, loggerService);
     await server.start();
     ShutdownManager.server = server;
 }
