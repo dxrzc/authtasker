@@ -98,11 +98,11 @@ export class ConfigService {
         .required()
         .asIntPositive();
 
-    isProduction(): boolean {
+    get isProduction(): boolean {
         return this.NODE_ENV === 'production';
     }
 
-    isDevelopment(): boolean {
+    get isDevelopment(): boolean {
         return this.NODE_ENV === 'development';
     }
 }
