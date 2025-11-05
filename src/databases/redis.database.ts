@@ -40,14 +40,6 @@ export class RedisDatabase {
         this.client.on('error', (error) => {
             SystemLoggerService.error('Redis connection error:', error.message);
         });
-
-        this.client.on('close', () => {
-            SystemLoggerService.info('Redis connection closed');
-        });
-
-        this.client.on('reconnecting', () => {
-            SystemLoggerService.warn('Redis reconnecting...');
-        });
     }
 
     async connect(): Promise<Redis> {
