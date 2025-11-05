@@ -1,7 +1,7 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { hasSufficientRole } from 'src/functions/roles/has-sufficent-role';
-import { AUTH_ERRORS } from 'src/messages/auth.error.messages';
+import { authErrors } from 'src/messages/auth.error.messages';
 import { LoggerService } from 'src/services/logger.service';
 import { SessionTokenService } from 'src/services/session-token.service';
 import { UserRole } from 'src/types/user/user-roles.type';
@@ -18,7 +18,7 @@ export class RolesMiddleware {
             const authorizationHeader = req.header('authorization');
             if (!authorizationHeader || !authorizationHeader.startsWith('Bearer')) {
                 this.loggerService.error('No authorization token provided');
-                res.status(statusCodes.UNAUTHORIZED).json({ error: AUTH_ERRORS.INVALID_TOKEN });
+                res.status(statusCodes.UNAUTHORIZED).json({ error: authErrors.INVALID_TOKEN });
                 return;
             }
 
@@ -34,7 +34,7 @@ export class RolesMiddleware {
                 next();
             } else {
                 this.loggerService.error(`Access denied for ${id} (${role})`);
-                res.status(statusCodes.FORBIDDEN).json({ error: AUTH_ERRORS.FORBIDDEN });
+                res.status(statusCodes.FORBIDDEN).json({ error: authErrors.FORBIDDEN });
             }
         };
     }
