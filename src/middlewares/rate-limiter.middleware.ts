@@ -8,14 +8,20 @@ export class RateLimiterMiddleware {
     constructor(private readonly loggerService: LoggerService) {}
 
     middleware(type: RateLimiter) {
+        const settings = rateLimiting[type];
+
+        // TODO: use a redis store
+
         return rateLimit({
             message: () => {
-                this.loggerService.error('Too many requests');
+                this.loggerService.error(
+                    `Rate limit exceeded for ${settings.max} requests per ${settings.windowMs / 1000} seconds`,
+                );
                 return { error: commonErrors.TOO_MANY_REQUESTS };
             },
             standardHeaders: false,
             legacyHeaders: false,
-            ...rateLimiting[type],
+            ...settings,
         });
     }
 }
