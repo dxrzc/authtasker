@@ -1,11 +1,11 @@
-import { loadTasksModel } from 'src/models/tasks.model.load';
-import { loadUserModel } from 'src/models/user.model.load';
+import { ModelLoader } from 'src/models/model.loader';
 import { ConfigService } from 'src/services/config.service';
 import { Models } from 'src/types/models/models.type';
 
 export function buildModels(configService: ConfigService): Models {
+    const moduleLoader = new ModelLoader({ emitEvents: configService.isDevelopment });
     return {
-        userModel: loadUserModel(configService),
-        tasksModel: loadTasksModel(configService),
+        userModel: moduleLoader.user,
+        tasksModel: moduleLoader.task,
     };
 }

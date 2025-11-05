@@ -1,0 +1,51 @@
+import { Express } from 'express';
+import { TasksDataGenerator } from 'src/generators/tasks.generator';
+import { UserDataGenerator } from 'src/generators/user.generator';
+import { ModelLoader } from 'src/models/model.loader';
+import { ConfigService } from 'src/services/config.service';
+import { HashingService } from 'src/services/hashing.service';
+import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
+import { JwtService } from 'src/services/jwt.service';
+import { LoggerService } from 'src/services/logger.service';
+import { PasswordRecoveryTokenService } from 'src/services/password-recovery-token.service';
+import { RedisService } from 'src/services/redis.service';
+import { RefreshTokenService } from 'src/services/refresh-token.service';
+import { TestAgent } from './test-agent.interface';
+
+export interface ITestKit {
+    configService: ConfigService;
+    redisService: RedisService;
+    models: ModelLoader;
+    userDataGenerator: UserDataGenerator;
+    tasksDataGenerator: TasksDataGenerator;
+    loggerServiceMock: LoggerService;
+    sessionJwt: JwtService;
+    refreshJwt: JwtService;
+    emailValidationJwt: JwtService;
+    passwordRecovJwt: JwtService;
+    jwtBlacklistService: JwtBlackListService;
+    hashingService: HashingService;
+    refreshTokenService: RefreshTokenService;
+    passwordRecoveryTokenService: PasswordRecoveryTokenService;
+    server: Express;
+    agent: TestAgent;
+    urls: {
+        seedUsers: string;
+        seedTasks: string;
+        usersAPI: string;
+        myProfile: string;
+        register: string;
+        login: string;
+        logout: string;
+        logoutFromAll: string;
+        requestEmailValidation: string;
+        confirmEmailValidation: string;
+        resetPassword: string;
+        forgotPassword: string;
+        tasksAPI: string;
+        createTask: string;
+        findAllTasksByUser: string;
+        refreshToken: string;
+        health: string;
+    };
+}

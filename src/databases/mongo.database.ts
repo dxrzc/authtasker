@@ -1,30 +1,36 @@
 import mongoose from 'mongoose';
 import { EventManager } from 'src/events/eventManager';
-import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 
+type MongoDbOptions = {
+    listenModelEvents: boolean;
+    listenConnectionEvents: boolean;
+    mongoUri: string;
+};
+
 export class MongoDatabase {
     constructor(
-        private readonly configService: ConfigService,
         private readonly loggerService: LoggerService,
+        private readonly opts: MongoDbOptions,
     ) {
-        if (this.configService.isDevelopment) {
+        if (this.opts.listenModelEvents) {
             this.listModelEvents('user');
             this.listModelEvents('task');
         }
-        this.setupMongooseEventListeners();
+        if (this.opts.listenConnectionEvents) {
+            this.setupMongooseEventListeners();
+        }
     }
 
     async connect(): Promise<void> {
-        await mongoose.connect(this.configService.MONGO_URI);
+        await mongoose.connect(this.opts.mongoUri);
         SystemLoggerService.info(`Connected to mongo database`);
     }
 
     async disconnect(): Promise<void> {
         if (mongoose.connection.readyState === mongoose.ConnectionStates.connected)
             await mongoose.disconnect();
-        SystemLoggerService.info(`Disconnected from mongo database`);
     }
 
     private setupMongooseEventListeners(): void {
@@ -37,7 +43,7 @@ export class MongoDatabase {
         });
 
         mongoose.connection.on('disconnected', () => {
-            SystemLoggerService.info('Mongoose disconnected from MongoDB');
+            SystemLoggerService.warn('Mongoose disconnected from MongoDB');
         });
 
         mongoose.connection.on('reconnected', () => {
