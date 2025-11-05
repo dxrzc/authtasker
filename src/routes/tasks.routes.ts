@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { TasksController } from 'src/controllers/tasks.controller';
-import { ApiType } from 'src/enums/api-type.enum';
+import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
-import { RateLimiterMiddleware } from 'src/middlewares/api-limiter.middleware';
+import { RateLimiterMiddleware } from 'src/middlewares/rate-limiter.middleware';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 import { TasksService } from 'src/services/tasks.service';
@@ -27,7 +27,7 @@ export class TasksRoutes {
 
     get routes(): Router {
         const router = Router();
-        router.use(this.rateLimiter.middleware(ApiType.coreApi));
+        router.use(this.rateLimiter.middleware(RateLimiter.relaxed));
 
         router.post(
             '/create',

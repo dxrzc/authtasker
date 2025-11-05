@@ -71,16 +71,6 @@ export class ConfigService {
 
     public readonly ADMIN_PASSWORD = env.get('ADMIN_PASSWORD').required().asString();
 
-    public readonly API_MAX_REQ_PER_MINUTE = env
-        .get('API_MAX_REQ_PER_MINUTE')
-        .required()
-        .asIntPositive();
-
-    public readonly AUTH_MAX_REQ_PER_MINUTE = env
-        .get('AUTH_MAX_REQ_PER_MINUTE')
-        .required()
-        .asIntPositive();
-
     public readonly USERS_API_CACHE_TTL_SECONDS = env
         .get('USERS_API_CACHE_TTL_SECONDS')
         .required()
