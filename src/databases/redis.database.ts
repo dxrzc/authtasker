@@ -29,10 +29,10 @@ export class RedisDatabase {
             SystemLoggerService.info(`Suscribed to redis event: ${expiredKeyPattern}`);
         });
 
-        this.connectionEvents();
+        this.setupRedisEventListener();
     }
 
-    connectionEvents() {
+    private setupRedisEventListener() {
         this.client.on('ready', () => {
             SystemLoggerService.info('Redis connected successfully');
         });
