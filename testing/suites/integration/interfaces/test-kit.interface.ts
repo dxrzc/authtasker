@@ -16,8 +16,8 @@ export interface ITestKit {
     configService: ConfigService;
     redisService: RedisService;
     models: ModelLoader;
-    userDataGenerator: UserDataGenerator;
-    tasksDataGenerator: TasksDataGenerator;
+    userData: UserDataGenerator;
+    taskData: TasksDataGenerator;
     loggerServiceMock: LoggerService;
     sessionJwt: JwtService;
     refreshJwt: JwtService;
