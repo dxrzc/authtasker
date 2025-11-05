@@ -45,7 +45,7 @@ describe('UpdateTaskValidator', () => {
     });
 
     test('succeed with one valid field (e.g. status)', async () => {
-        const data = { status: tasksData.status() };
+        const data = { status: tasksData.status };
         const result = await updateTaskValidator.validateNewAndTransform(data);
         expect(result).toBeInstanceOf(UpdateTaskValidator);
         expect(result.status).toBe(data.status);
@@ -55,8 +55,8 @@ describe('UpdateTaskValidator', () => {
         const data = {
             name: 'Updated name',
             description: 'Updated description',
-            status: tasksData.status(),
-            priority: tasksData.priority(),
+            status: tasksData.status,
+            priority: tasksData.priority,
             user: '123',
         };
         await expect(() => updateTaskValidator.validateNewAndTransform(data)).rejects.toThrow(
@@ -67,7 +67,7 @@ describe('UpdateTaskValidator', () => {
     describe('valid input', () => {
         test('return UpdateTaskValidator instance', async () => {
             const data = {
-                name: tasksData.name(),
+                name: tasksData.name,
             };
             const result = await updateTaskValidator.validateNewAndTransform(data);
             expect(result).toBeInstanceOf(UpdateTaskValidator);
@@ -83,10 +83,10 @@ describe('UpdateTaskValidator', () => {
 
         test('return all other properties unchanged', async () => {
             const data = {
-                name: tasksData.name(),
-                description: tasksData.description(),
-                status: tasksData.status(),
-                priority: tasksData.priority(),
+                name: tasksData.name,
+                description: tasksData.description,
+                status: tasksData.status,
+                priority: tasksData.priority,
             };
             const result = await updateTaskValidator.validateNewAndTransform(data);
             expect(result.description).toBe(data.description);

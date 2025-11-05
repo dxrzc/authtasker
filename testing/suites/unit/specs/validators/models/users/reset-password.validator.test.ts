@@ -12,7 +12,7 @@ describe('ResetPasswordValidator', () => {
     describe('Valid password', () => {
         test('return ResetPasswordValidatorInstance', async () => {
             await expect(
-                resetPasswordValidator.validate({ password: seed.password() }),
+                resetPasswordValidator.validate({ password: seed.password }),
             ).resolves.toBeInstanceOf(ResetPasswordValidator);
         });
     });
