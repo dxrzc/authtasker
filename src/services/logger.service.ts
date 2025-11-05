@@ -2,8 +2,8 @@ import winston from 'winston';
 import { AsyncLocalStorage } from 'async_hooks';
 import { ConfigService } from './config.service';
 import { IRequestFsLog } from 'src/interfaces/logs/request-fs.log.interface';
-import { IAsyncLocalStorageStore } from 'src/interfaces/common/async-local-storage.interface';
 import { LogInfoType } from 'src/types/logging/log-info.type';
+import { IAsyncLocalStorageStore } from 'src/interfaces/others/async-local-storage.interface';
 
 /*  
     WINSTON LEVELS
@@ -35,10 +35,9 @@ export class LoggerService {
                 winston.format.printf((logInfo: LogInfoType) => {
                     const colorizer = winston.format.colorize().colorize;
 
-                    const finalMessage = (() => {
-                        const mssg = logInfo.message as string;
-                        return mssg[0].toUpperCase() + mssg.slice(1);
-                    })();
+                    const finalMessage =
+                        (logInfo.message as string).charAt(0).toUpperCase() +
+                        (logInfo.message as string).slice(1);
 
                     const coloredTimestamp = colorizer(logInfo.level, `[${logInfo.timestamp}]`);
                     const coloredMethod = colorizer(logInfo.level, `[${logInfo.method}]`);
