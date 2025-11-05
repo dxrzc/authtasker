@@ -1,18 +1,16 @@
 import { AsyncLocalStorage } from 'async_hooks';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
-import { Events } from './constants/events.constants';
 import { MongoDatabase } from './databases/mongo/mongo.database';
 import { RedisDatabase } from './databases/redis/redis.database';
 import { RedisSuscriber } from './databases/redis/redis.suscriber';
-import { EventManager } from './events/eventManager';
-import { IAsyncLocalStorageStore } from './interfaces/common/async-local-storage.interface';
-import { createErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
 import { AppRoutes } from './routes/server.routes';
 import { Server } from './server/server.init';
 import { ShutdownManager } from './server/shutdown';
 import { RedisService } from './services/redis.service';
 import { SystemLoggerService } from './services/system-logger.service';
+import { IAsyncLocalStorageStore } from './interfaces/others/async-local-storage.interface';
+import { ErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
 
 // process.on('SIGINT', () => {
 //     void ShutdownManager.shutdown({
@@ -44,20 +42,6 @@ process.on('uncaughtException', (err) => {
     });
 });
 
-EventManager.listen(Events.MONGO_CONNECTION_ERROR, () => {
-    void ShutdownManager.shutdown({
-        cause: 'Mongo database connection lost',
-        exitCode: 1,
-    });
-});
-
-EventManager.listen(Events.REDIS_CONNECTION_ERROR, () => {
-    void ShutdownManager.shutdown({
-        cause: 'Redis database connection lost',
-        exitCode: 1,
-    });
-});
-
 async function main() {
     // envs
     const configService = new ConfigService();
@@ -80,15 +64,12 @@ async function main() {
     ShutdownManager.redisDb = redisDb;
 
     // server
+    const appRoutes = new AppRoutes(configService, loggerService, asyncLocalStorage, redisService);
+    const errorHandlerMiddleware = new ErrorHandlerMiddleware(loggerService);
     const server = new Server(
         configService.PORT,
-        await new AppRoutes(
-            configService,
-            loggerService,
-            asyncLocalStorage,
-            redisService,
-        ).buildApp(),
-        createErrorHandlerMiddleware(loggerService),
+        await appRoutes.buildApp(),
+        errorHandlerMiddleware.middleware(),
     );
     await server.start();
     ShutdownManager.server = server;
