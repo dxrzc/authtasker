@@ -21,7 +21,7 @@ export class SeedRoutes {
         private readonly hashingService: HashingService,
     ) {
         SystemLoggerService.info('Seed routes loaded');
-        if (configService.isProduction())
+        if (configService.isProduction)
             throw new Error('Seeding is not allowed in production environment');
     }
 
