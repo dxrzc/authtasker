@@ -1,6 +1,6 @@
-import { UserRole } from 'src/types/user/user-roles.type';
+import { UserRole } from 'src/enums/user-role.enum';
 
-const sortedRoles: UserRole[] = ['readonly', 'editor', 'admin'];
+const sortedRoles: UserRole[] = [UserRole.READONLY, UserRole.EDITOR, UserRole.ADMIN];
 
 export function hasSufficientRole(minRoleRequired: UserRole, userRole: UserRole): boolean {
     const userRoleIndex = sortedRoles.indexOf(userRole);

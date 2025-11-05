@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { HealthController } from 'src/controllers/health.controller';
+import { UserRole } from 'src/enums/user-role.enum';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 
@@ -15,7 +16,7 @@ export class HealthRoutes {
         const router = Router();
         router.get(
             '/health',
-            this.rolesMiddleware.middleware('admin'),
+            this.rolesMiddleware.middleware(UserRole.ADMIN),
             this.healthController.getServerHealth,
         );
         return router;

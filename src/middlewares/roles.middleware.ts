@@ -4,7 +4,7 @@ import { hasSufficientRole } from 'src/functions/roles/has-sufficent-role';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { LoggerService } from 'src/services/logger.service';
 import { SessionTokenService } from 'src/services/session-token.service';
-import { UserRole } from 'src/types/user/user-roles.type';
+import { UserRole } from 'src/enums/user-role.enum';
 
 export class RolesMiddleware {
     constructor(

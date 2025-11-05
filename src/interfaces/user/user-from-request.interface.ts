@@ -1,4 +1,4 @@
-import { UserRole } from 'src/types/user/user-roles.type';
+import { UserRole } from 'src/enums/user-role.enum';
 
 // user info obtained by roles middleware
 export interface UserFromRequest {

@@ -10,6 +10,7 @@ import { UpdateUserValidator } from 'src/validators/models/user/update-user.vali
 import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
 import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';
 import { ForgotPasswordValidator } from 'src/validators/models/user/forgot-password.validator';
+import { UserRole } from 'src/enums/user-role.enum';
 
 export class UserRoutes {
     private readonly userController: UserController;
@@ -43,7 +44,7 @@ export class UserRoutes {
         router.get(
             '/me',
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
-            this.rolesMiddleware.middleware('readonly'),
+            this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.me,
         );
 
@@ -74,14 +75,14 @@ export class UserRoutes {
         router.post(
             '/requestEmailValidation',
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
-            this.rolesMiddleware.middleware('readonly'),
+            this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.requestEmailValidation,
         );
 
         router.post(
             '/logout',
             this.apiLimiterMiddleware.middleware(ApiType.authApi),
-            this.rolesMiddleware.middleware('readonly'),
+            this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.logout,
         );
 
@@ -94,28 +95,28 @@ export class UserRoutes {
         router.delete(
             '/:id',
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
-            this.rolesMiddleware.middleware('readonly'),
+            this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.deleteOne,
         );
 
         router.patch(
             '/:id',
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
-            this.rolesMiddleware.middleware('readonly'),
+            this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.updateOne,
         );
 
         router.get(
             '/:id',
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
-            this.rolesMiddleware.middleware('readonly'),
+            this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.findOne,
         );
 
         router.get(
             '/',
             this.apiLimiterMiddleware.middleware(ApiType.coreApi),
-            this.rolesMiddleware.middleware('readonly'),
+            this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.findAll,
         );
 

@@ -26,6 +26,7 @@ import { UpdateUserValidator } from 'src/validators/models/user/update-user.vali
 import { PaginationCacheService } from './pagination-cache.service';
 import { ForgotPasswordValidator } from 'src/validators/models/user/forgot-password.validator';
 import { PasswordRecoveryTokenService } from './password-recovery-token.service';
+import { UserRole } from 'src/enums/user-role.enum';
 
 export class UserService {
     constructor(
@@ -91,9 +92,9 @@ export class UserService {
     ): Promise<void> {
         // updating email
         if (propertiesUpdated.email) {
-            if (userDocument.role !== 'admin') {
+            if (userDocument.role !== UserRole.ADMIN) {
                 userDocument.emailValidated = false;
-                userDocument.role = 'readonly';
+                userDocument.role = UserRole.READONLY;
             }
             userDocument.email = propertiesUpdated.email;
         }
@@ -143,7 +144,7 @@ export class UserService {
         }
         // update
         user.emailValidated = true;
-        user.role = 'editor';
+        user.role = UserRole.EDITOR;
         await user.save();
         this.loggerService.info(`User ${user.id} email validated`);
     }
