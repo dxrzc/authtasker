@@ -11,6 +11,10 @@ export class RequestContextMiddleware {
 
     public middleware(): RequestHandler {
         return (req: Request, res: Response, next: NextFunction) => {
+            if (req.body == null) {
+                req.body = {}; // Normalize undefined → {}
+            }
+
             const url = req.originalUrl;
             const method = req.method;
             const requestId = uuidv4();
@@ -23,6 +27,10 @@ export class RequestContextMiddleware {
             const start = process.hrtime();
 
             res.on('finish', () => {
+                if (!req.route && res.statusCode === 404) {
+                    return;
+                }
+
                 const [seconds, nanoseconds] = process.hrtime(start);
                 const durationInMs = seconds * 1000 + nanoseconds / 1000000;
 
@@ -39,7 +47,7 @@ export class RequestContextMiddleware {
             res.setHeader('Request-Id', requestId);
 
             this.asyncLocalStorage.run(store, () => {
-                this.loggerService.info(`Incoming request ${url}`);
+                if (req.route) this.loggerService.info(`Incoming request ${url}`);
                 next();
             });
         };

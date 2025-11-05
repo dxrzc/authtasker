@@ -11,6 +11,7 @@ import { HttpError } from 'src/errors/http-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
+import { LoggerService } from 'src/services/logger.service';
 
 export class UserController {
     constructor(
@@ -20,6 +21,7 @@ export class UserController {
         private readonly loginUserValidator: LoginUserValidator,
         private readonly forgotPasswordValidator: ForgotPasswordValidator,
         private readonly resetPasswordValidator: ResetPasswordValidator,
+        private readonly loggerService: LoggerService,
     ) {}
 
     public readonly me = async (req: Request, res: Response): Promise<void> => {
@@ -36,6 +38,10 @@ export class UserController {
     };
 
     public readonly refresh = async (req: Request, res: Response): Promise<void> => {
+        if (!req.body || !req.body.refreshToken) {
+            this.loggerService.error('Refresh token was not in body');
+            throw HttpError.badRequest(authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY);
+        }
         const tokens = await this.userService.refresh(req.body.refreshToken);
         res.status(statusCodes.OK).json(tokens);
     };
@@ -48,9 +54,12 @@ export class UserController {
     };
 
     public readonly logout = async (req: Request, res: Response): Promise<void> => {
+        if (!req.body || !req.body.refreshToken) {
+            this.loggerService.error('Refresh token was not in body');
+            throw HttpError.badRequest(authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY);
+        }
         const requestUserInfo = userInfoInReq(req);
-        const refreshToken = req.body.refreshToken;
-        await this.userService.logout(requestUserInfo, refreshToken);
+        await this.userService.logout(requestUserInfo, req.body.refreshToken);
         res.status(statusCodes.NO_CONTENT).end();
     };
 

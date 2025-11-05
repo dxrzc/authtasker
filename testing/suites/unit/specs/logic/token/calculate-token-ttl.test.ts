@@ -1,4 +1,4 @@
-import { calculateTokenTTL } from 'src/common/logic/token/calculate-token-ttl';
+import { calculateTokenTTL } from 'src/functions/token/calculate-token-ttl';
 
 describe('calculateTokenTTL', () => {
     test('return the number of seconds of the remaining token time to live', () => {

@@ -1,5 +1,5 @@
 import { validRoles } from 'src/types/user/user-roles.type';
-import { modificationAccessControl } from 'src/common/logic/roles/modification-access-control';
+import { modificationAccessControl } from 'src/functions/roles/modification-access-control';
 import { modificationAuthFixture } from '@unit/fixtures/modification-auth.fixture';
 
 

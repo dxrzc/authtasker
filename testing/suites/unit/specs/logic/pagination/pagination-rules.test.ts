@@ -1,7 +1,7 @@
-import { paginationErrors } from 'src/common/errors/messages/pagination.error.messages';
-import { HttpError } from 'src/common/errors/classes/http-error.class';
-import { paginationRules } from 'src/common/logic/pagination/pagination-rules';
-import { statusCodes } from 'src/common/constants/status-codes.constants';
+import { paginationErrors } from 'src/messages/pagination.error.messages';
+import { HttpError } from 'src/errors/http-error.class';
+import { paginationRules } from 'src/functions/pagination/pagination-rules';
+import { statusCodes } from 'src/constants/status-codes.constants';
 
 describe('paginationRules()', () => {
     test('returns correct offset for valid inputs', () => {

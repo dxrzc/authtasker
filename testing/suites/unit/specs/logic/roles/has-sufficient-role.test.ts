@@ -1,4 +1,4 @@
-import { hasSufficientRole } from 'src/common/logic/roles/has-sufficent-role';
+import { hasSufficientRole } from 'src/functions/roles/has-sufficent-role';
 import { UserRole, validRoles } from 'src/types/user/user-roles.type';
 
 describe('hasSufficientRole', () => {

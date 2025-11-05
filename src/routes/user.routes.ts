@@ -34,6 +34,7 @@ export class UserRoutes {
             new LoginUserValidator(),
             new ForgotPasswordValidator(),
             new ResetPasswordValidator(),
+            userService.loggerService,
         );
 
         SystemLoggerService.info('User routes loaded');

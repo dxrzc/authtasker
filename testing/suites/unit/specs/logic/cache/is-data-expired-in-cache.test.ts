@@ -1,4 +1,4 @@
-import { isDataInCacheExpired } from 'src/common/logic/cache/is-data-expired-in-cache';
+import { isDataInCacheExpired } from 'src/functions/cache/is-data-expired-in-cache';
 
 describe('isDataInCacheExpired', () => {
     describe('current time is greater than the cachedAt time plus the ttl in seconds', () => {
