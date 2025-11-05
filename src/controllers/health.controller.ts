@@ -1,13 +1,10 @@
 import { Request, Response } from 'express';
-import { BaseController } from 'src/common/base/base-controller.class';
-import { statusCodes } from 'src/common/constants/status-codes.constants';
+import { statusCodes } from 'src/constants/status-codes.constants';
 
-export class HealthController extends BaseController {
-    constructor() {
-        super();
-    }
+export class HealthController {
+    constructor() {}
 
-    readonly getServerHealth = this.forwardError((req: Request, res: Response): void => {
+    readonly getServerHealth = (req: Request, res: Response): void => {
         const health = {
             status: 'UP',
             uptime: process.uptime(),
@@ -16,5 +13,5 @@ export class HealthController extends BaseController {
             timestamp: new Date(),
         };
         res.status(statusCodes.OK).json(health);
-    });
+    };
 }

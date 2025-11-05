@@ -4,8 +4,8 @@ import { plainToInstance } from 'class-transformer';
 import { CreateTaskValidator } from './create-task.validator';
 import { validationOptionsConfig } from 'src/validators/config/validation.config';
 import { returnFirstError } from 'src/validators/helpers/return-first-error.helper';
-import { tasksApiErrors } from 'src/common/errors/messages/tasks-api.error.messages';
-import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
+import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 
 export class UpdateTaskValidator extends PartialType(CreateTaskValidator) {
     async validateNewAndTransform(data: object): Promise<UpdateTaskValidator> {

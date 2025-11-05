@@ -1,32 +1,32 @@
-import { Server } from './server/server.init';
 import { AsyncLocalStorage } from 'async_hooks';
-import { AppRoutes } from './routes/server.routes';
-import { ShutdownManager } from './server/shutdown';
-import { RedisService } from './services/redis.service';
-import { LoggerService } from 'src/services/logger.service';
 import { ConfigService } from 'src/services/config.service';
+import { LoggerService } from 'src/services/logger.service';
+import { Events } from './constants/events.constants';
 import { MongoDatabase } from './databases/mongo/mongo.database';
 import { RedisDatabase } from './databases/redis/redis.database';
-import { SystemLoggerService } from './services/system-logger.service';
-import { ErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
-import { IAsyncLocalStorageStore } from './interfaces/common/async-local-storage.interface';
-import { EventManager } from './events/eventManager';
-import { Events } from './common/constants/events.constants';
 import { RedisSuscriber } from './databases/redis/redis.suscriber';
+import { EventManager } from './events/eventManager';
+import { IAsyncLocalStorageStore } from './interfaces/common/async-local-storage.interface';
+import { createErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
+import { AppRoutes } from './routes/server.routes';
+import { Server } from './server/server.init';
+import { ShutdownManager } from './server/shutdown';
+import { RedisService } from './services/redis.service';
+import { SystemLoggerService } from './services/system-logger.service';
 
-process.on('SIGINT', () => {
-    void ShutdownManager.shutdown({
-        cause: 'SIGINT',
-        exitCode: 0,
-    });
-});
+// process.on('SIGINT', () => {
+//     void ShutdownManager.shutdown({
+//         cause: 'SIGINT',
+//         exitCode: 0,
+//     });
+// });
 
-process.on('SIGTERM', () => {
-    void ShutdownManager.shutdown({
-        cause: 'SIGTERM',
-        exitCode: 0,
-    });
-});
+// process.on('SIGTERM', () => {
+//     void ShutdownManager.shutdown({
+//         cause: 'SIGTERM',
+//         exitCode: 0,
+//     });
+// });
 
 process.on('unhandledRejection', (reason: any) => {
     void ShutdownManager.shutdown({
@@ -88,7 +88,7 @@ async function main() {
             asyncLocalStorage,
             redisService,
         ).buildApp(),
-        new ErrorHandlerMiddleware(loggerService),
+        createErrorHandlerMiddleware(loggerService),
     );
     await server.start();
     ShutdownManager.server = server;

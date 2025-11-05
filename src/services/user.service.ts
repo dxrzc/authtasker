@@ -9,17 +9,17 @@ import { LoggerService } from 'src/services/logger.service';
 import { SessionTokenService } from './session-token.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
 import { HashingService } from 'src/services/hashing.service';
-import { paginationRules } from 'src/common/logic/pagination/pagination-rules';
+import { paginationRules } from 'src/functions/pagination/pagination-rules';
 import { UserResponse } from 'src/types/user/user-response.type';
 import { UserDocument } from 'src/types/user/user-document.type';
-import { HttpError } from 'src/common/errors/classes/http-error.class';
-import { authErrors } from 'src/common/errors/messages/auth.error.messages';
+import { HttpError } from 'src/errors/http-error.class';
+import { authErrors } from 'src/messages/auth.error.messages';
 import { ICacheOptions } from 'src/interfaces/cache/cache-options.interface';
 import { EmailValidationTokenService } from './email-validation-token.service';
 import { UserFromRequest } from 'src/interfaces/user/user-from-request.interface';
-import { handleDuplicatedKeyInDb } from 'src/common/logic/errors/handle-duplicated-key-in-db';
-import { modificationAccessControl } from 'src/common/logic/roles/modification-access-control';
-import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
+import { handleDuplicatedKeyInDb } from 'src/functions/errors/handle-duplicated-key-in-db';
+import { modificationAccessControl } from 'src/functions/roles/modification-access-control';
+import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
 import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
@@ -33,7 +33,7 @@ export class UserService {
         private readonly userModel: Model<IUser>,
         private readonly tasksModel: Model<ITasks>,
         private readonly hashingService: HashingService,
-        private readonly loggerService: LoggerService,
+        public readonly loggerService: LoggerService,
         private readonly emailService: EmailService,
         private readonly sessionTokenService: SessionTokenService,
         private readonly refreshTokenService: RefreshTokenService,
@@ -50,11 +50,6 @@ export class UserService {
             throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
         }
         return userInDb;
-    }
-
-    private handleRefreshTokenNotInBody(): never {
-        this.loggerService.error('Refresh token was not sent');
-        throw HttpError.badRequest(authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY);
     }
 
     private async authorizeUserModificationOrThrow(
@@ -203,9 +198,7 @@ export class UserService {
         };
     }
 
-    async logout(requestUserInfo: UserFromRequest, refreshToken?: string): Promise<void> {
-        // refresh not provided
-        if (!refreshToken) this.handleRefreshTokenNotInBody();
+    async logout(requestUserInfo: UserFromRequest, refreshToken: string): Promise<void> {
         // provided refresh token is valid
         const { jti: refreshJti } = await this.refreshTokenService.validateOrThrow(refreshToken);
         // disable session and refresh tokens
@@ -231,9 +224,7 @@ export class UserService {
         this.loggerService.info(`All refresh tokens of user ${userData.id} have been revoked`);
     }
 
-    async refresh(refreshToken?: string) {
-        // refresh not provided
-        if (!refreshToken) this.handleRefreshTokenNotInBody();
+    async refresh(refreshToken: string) {
         // provided refresh token is valid
         const { userId } = await this.refreshTokenService.validateOrThrow(refreshToken);
         // generate new tokens

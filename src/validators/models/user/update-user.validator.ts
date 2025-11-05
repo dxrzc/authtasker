@@ -4,8 +4,8 @@ import { plainToInstance } from 'class-transformer';
 import { CreateUserValidator } from './create-user.validator';
 import { validationOptionsConfig } from 'src/validators/config/validation.config';
 import { returnFirstError } from 'src/validators/helpers/return-first-error.helper';
-import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
-import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
+import { usersApiErrors } from 'src/messages/users-api.error.messages';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 
 export class UpdateUserValidator extends PartialType(CreateUserValidator) {
     async validateNewAndTransform(data: object): Promise<UpdateUserValidator> {

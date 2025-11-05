@@ -4,20 +4,20 @@ import { Model, Types } from 'mongoose';
 import { CacheService } from './cache.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
-import { paginationRules } from 'src/common/logic/pagination/pagination-rules';
+import { paginationRules } from 'src/functions/pagination/pagination-rules';
 import { TaskResponse } from 'src/types/tasks/task-response.type';
 import { TaskDocument } from 'src/types/tasks/task-document.type';
-import { HttpError } from 'src/common/errors/classes/http-error.class';
+import { HttpError } from 'src/errors/http-error.class';
 import { UserIdentity } from 'src/interfaces/user/user-indentity.interface';
 import { ICacheOptions } from 'src/interfaces/cache/cache-options.interface';
-import { authErrors } from 'src/common/errors/messages/auth.error.messages';
-import { handleDuplicatedKeyInDb } from 'src/common/logic/errors/handle-duplicated-key-in-db';
-import { modificationAccessControl } from 'src/common/logic/roles/modification-access-control';
-import { tasksApiErrors } from 'src/common/errors/messages/tasks-api.error.messages';
+import { authErrors } from 'src/messages/auth.error.messages';
+import { handleDuplicatedKeyInDb } from 'src/functions/errors/handle-duplicated-key-in-db';
+import { modificationAccessControl } from 'src/functions/roles/modification-access-control';
+import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
 import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
 import { PaginationCacheService } from './pagination-cache.service';
-import { makeTasksByUserPaginationCacheKey } from 'src/common/logic/cache/make-tasks-by-users-pag-cache-key';
+import { makeTasksByUserPaginationCacheKey } from 'src/functions/cache/make-tasks-by-users-pag-cache-key';
 
 export class TasksService {
     constructor(

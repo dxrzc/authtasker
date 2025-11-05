@@ -17,7 +17,7 @@ import { HashingService } from 'src/services/hashing.service';
 import { UserResponse } from 'src/types/user/user-response.type';
 import { TaskResponse } from 'src/types/tasks/task-response.type';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
-import { makeUsersCacheKey } from 'src/common/logic/cache/make-users-cache-key';
+import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
 import { HealthController } from 'src/controllers/health.controller';
 import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
 import { RefreshTokenService } from 'src/services/refresh-token.service';
@@ -28,7 +28,7 @@ import { ApiLimiterMiddleware } from 'src/middlewares/api-limiter.middleware';
 import { RequestContextMiddleware } from 'src/middlewares/request-context.middleware';
 import { EmailValidationTokenService } from 'src/services/email-validation-token.service';
 import { IAsyncLocalStorageStore } from 'src/interfaces/common/async-local-storage.interface';
-import { makeTasksCacheKey } from 'src/common/logic/cache/make-tasks-cache-key';
+import { makeTasksCacheKey } from 'src/functions/cache/make-tasks-cache-key';
 import { PaginationCacheService } from 'src/services/pagination-cache.service';
 import { PasswordRecoveryTokenService } from 'src/services/password-recovery-token.service';
 
@@ -186,7 +186,7 @@ export class AppRoutes {
     }
 
     private async buildSeedRoutes() {
-        const { SeedRoutes } = await import('src/seed/seed.routes');
+        const { SeedRoutes } = await import('src/routes/seed.routes');
         const seedRoutes = new SeedRoutes(
             this.configService,
             this.userModel,

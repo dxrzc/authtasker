@@ -5,11 +5,11 @@ import { LoggerService } from './logger.service';
 import { JwtTypes } from 'src/enums/jwt-types.enum';
 import { IUser } from 'src/interfaces/user/user.interface';
 import { JwtBlackListService } from './jwt-blacklist.service';
-import { calculateTokenTTL } from 'src/common/logic/token/calculate-token-ttl';
-import { tokenPurposes } from 'src/common/constants/token-purposes.constants';
+import { calculateTokenTTL } from 'src/functions/token/calculate-token-ttl';
+import { tokenPurposes } from 'src/constants/token-purposes.constants';
 import { UserFromRequest } from 'src/interfaces/user/user-from-request.interface';
-import { HttpError } from 'src/common/errors/classes/http-error.class';
-import { authErrors } from 'src/common/errors/messages/auth.error.messages';
+import { HttpError } from 'src/errors/http-error.class';
+import { authErrors } from 'src/messages/auth.error.messages';
 
 export class SessionTokenService {
     constructor(

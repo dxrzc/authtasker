@@ -32,37 +32,33 @@ export class TasksRoutes {
         router.post(
             '/create',
             this.rolesMiddleware.middleware('editor'),
-            this.tasksController.createFwdErr(),
+            this.tasksController.create,
         );
 
         router.delete(
             '/:id',
             this.rolesMiddleware.middleware('editor'),
-            this.tasksController.deleteOneFwdErr(),
+            this.tasksController.deleteOne,
         );
 
         router.get(
             '/:id',
             this.rolesMiddleware.middleware('readonly'),
-            this.tasksController.findOneFwdErr(),
+            this.tasksController.findOne,
         );
 
-        router.get(
-            '/',
-            this.rolesMiddleware.middleware('readonly'),
-            this.tasksController.findAllFwdErr(),
-        );
+        router.get('/', this.rolesMiddleware.middleware('readonly'), this.tasksController.findAll);
 
         router.get(
             '/allByUser/:id',
             this.rolesMiddleware.middleware('readonly'),
-            this.tasksController.findAllByUserFwdErr(),
+            this.tasksController.findAllByUser,
         );
 
         router.patch(
             '/:id',
             this.rolesMiddleware.middleware('editor'),
-            this.tasksController.updateOneFwdErr(),
+            this.tasksController.updateOne,
         );
 
         return router;

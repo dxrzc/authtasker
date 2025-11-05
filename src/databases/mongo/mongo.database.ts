@@ -3,7 +3,7 @@ import { EventManager } from 'src/events/eventManager';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
-import { Events } from 'src/common/constants/events.constants';
+import { Events } from 'src/constants/events.constants';
 
 export class MongoDatabase {
     private disconnectedManually = false;

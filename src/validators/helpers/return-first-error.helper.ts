@@ -1,5 +1,5 @@
 import { ValidationError } from 'class-validator';
-import { commonErrors } from 'src/common/errors/messages/common.error.messages';
+import { commonErrors } from 'src/messages/common.error.messages';
 
 export const returnFirstError = (errors: ValidationError[]): string => {
     const firstOne = errors.at(0);

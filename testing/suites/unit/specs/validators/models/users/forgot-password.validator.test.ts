@@ -1,9 +1,9 @@
-import { faker } from '@faker-js/faker/.';
-import { usersLimits } from 'src/common/constants/user.constants';
-import { InvalidInputError } from 'src/common/errors/classes/invalid-input-error.class';
-import { commonErrors } from 'src/common/errors/messages/common.error.messages';
-import { usersApiErrors } from 'src/common/errors/messages/users-api.error.messages';
-import { UserDataGenerator } from 'src/seed/generators/user.generator';
+import { faker } from '@faker-js/faker';
+import { usersLimits } from 'src/constants/user.constants';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
+import { commonErrors } from 'src/messages/common.error.messages';
+import { usersApiErrors } from 'src/messages/users-api.error.messages';
+import { UserDataGenerator } from 'src/generators/user.generator';
 import { ForgotPasswordValidator } from 'src/validators/models/user/forgot-password.validator';
 
 const forgotPasswordValidator = new ForgotPasswordValidator();
