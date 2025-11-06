@@ -124,7 +124,7 @@ export class UserService {
         const user = await this.userModel.findById(id).exec();
         if (!user) {
             this.loggerService.error(`User with id ${id} not found`);
-            throw HttpError.badRequest(usersApiErrors.NOT_FOUND);
+            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
         }
         // email cannot be validated twice
         if (user.emailValidated === true) {
