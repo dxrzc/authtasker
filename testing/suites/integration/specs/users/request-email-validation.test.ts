@@ -32,15 +32,14 @@ describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
             expect(sentEmails.length).toBe(1);
             expect(sentEmails[0].to).toBe(email);
         });
-    });
 
-    describe('Successful request', () => {
-        test('return 204 status code', async () => {
+        test('return 204 status code and no body', async () => {
             const { sessionToken } = await createUser(UserRole.READONLY);
-            await testKit.agent
+            const response = await testKit.agent
                 .post(testKit.urls.requestEmailValidation)
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .expect(204);
+            expect(response.body).toStrictEqual({});
         });
     });
 });
