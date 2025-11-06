@@ -206,8 +206,9 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
                 .send({ email: testKit.userData.email })
                 .expect(status2xx);
             const updatedUserInDb = await testKit.models.user.findById(id);
-            expect(updatedUserInDb!.emailValidated).toBeTruthy();
-            expect(updatedUserInDb!.role).toBe(UserRole.ADMIN);
+            expect(updatedUserInDb).not.toBeNull();
+            expect(updatedUserInDb?.emailValidated).toBeTruthy();
+            expect(updatedUserInDb?.role).toBe(UserRole.ADMIN);
         });
     });
 
