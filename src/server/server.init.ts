@@ -19,6 +19,13 @@ export class Server {
     ) {
         this.app.use(express.json({ limit: '10kb' }));
         this.app.use(express.urlencoded({ extended: true }));
+        // Ensure req.body is always defined
+        this.app.use((req, res, next) => {
+            if (req.body === undefined) {
+                req.body = {};
+            }
+            next();
+        });
         this.app.use(helmet());
         this.app.use(this.routes);
         this.app.use(this.createErrorHandlerMiddleware);
