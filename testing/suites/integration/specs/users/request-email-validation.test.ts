@@ -10,10 +10,20 @@ import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
+import { authErrors } from 'src/messages/auth.error.messages';
 
 const { mock } = nodemailer as unknown as NodemailerMock;
 
 describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
+    describe('Session token not provided', () => {
+        test(`should return 401 status code and "${authErrors.INVALID_TOKEN}" message`, async () => {
+            const { statusCode, body } = await testKit.agent
+                .post(testKit.urls.requestEmailValidation);
+            expect(body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(statusCode).toBe(statusCodes.UNAUTHORIZED);
+        });
+    });
+
     describe('User email is already verified', () => {
         test(`should return BAD REQUEST status code and ${usersApiErrors.EMAIL_ALREADY_VERIFIED} message`, async () => {
             const { id, sessionToken } = await createUser(UserRole.READONLY);

@@ -15,6 +15,17 @@ import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
 
 describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
+    describe('Session token not provided', () => {
+        test(`should return 401 status code and "${authErrors.INVALID_TOKEN}" message`, async () => {
+            const { id } = await createUser(UserRole.READONLY);
+            const { statusCode, body } = await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .send({ name: testKit.userData.name });
+            expect(body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(statusCode).toBe(statusCodes.UNAUTHORIZED);
+        });
+    });
+
     describe('Successful update', () => {
         test('should return status 200 and the updated user data in db', async () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
