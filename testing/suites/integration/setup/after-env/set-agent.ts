@@ -12,6 +12,7 @@ beforeAll(() => {
                 post: (url: string) => client.post(url).set(field, faker.internet.ip()),
                 put: (url: string) => client.put(url).set(field, faker.internet.ip()),
                 delete: (url: string) => client.delete(url).set(field, faker.internet.ip()),
+                patch: (url: string) => client.patch(url).set(field, faker.internet.ip()),
             };
         },
     });
