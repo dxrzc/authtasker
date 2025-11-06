@@ -1,11 +1,10 @@
 import { testKit } from '@integration/kit/test.kit';
-import request from 'supertest';
 import { UserRole } from 'src/enums/user-role.enum';
 import { status2xx } from './status-2xx.util';
 
 export async function createUser(userRole: UserRole = UserRole.READONLY) {
     const userData = testKit.userData.user;
-    const { body } = await request(testKit.server)
+    const { body } = await testKit.agent
         .post(testKit.urls.register)
         .send(userData)
         .expect(status2xx);
