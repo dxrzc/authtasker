@@ -12,22 +12,21 @@ import { usersLimits } from 'src/constants/user.constants';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
+import { authSuccessMessages } from 'src/messages/auth.success.messages';
 
-const resetPasswordUrl = testKit.urls.resetPassword;
-
-describe(`POST ${resetPasswordUrl}`, () => {
-    describe('Successful', () => {
-        test('token should be blacklisted', async () => {
+describe(`POST ${testKit.urls.resetPassword}`, () => {
+    describe('Successful password resetting', () => {
+        test('token used should be blacklisted', async () => {
             const { email } = await createUser(getRandomRole());
             const { token, jti } = testKit.passwordRecovJwt.generate('1m', {
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
                 email,
             });
             await testKit.agent
-                .post(resetPasswordUrl)
+                .post(testKit.urls.resetPassword)
                 .send({
-                    token,
                     newPassword: testKit.userData.password,
+                    token,
                 })
                 .expect(status2xx);
             const tokenInRedisStore = await testKit.jwtBlacklistService.tokenInBlacklist(
@@ -36,22 +35,35 @@ describe(`POST ${resetPasswordUrl}`, () => {
             );
             expect(tokenInRedisStore).toBeTruthy();
         });
-    });
 
-    describe('Successful', () => {
         test('user password should be hashed in database', async () => {
-            const { email, userId } = await createUser(getRandomRole());
+            const { email, id } = await createUser(getRandomRole());
             const newPassword = testKit.userData.password;
             const { token } = testKit.passwordRecovJwt.generate('1m', {
                 email,
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
             });
             await testKit.agent
-                .post(resetPasswordUrl)
+                .post(testKit.urls.resetPassword)
                 .send({ token, newPassword })
                 .expect(status2xx);
-            const userInDb = await testKit.models.user.findById(userId).exec();
-            expect(testKit.hashingService.compare(newPassword, userInDb!.password)).toBeTruthy();
+            const userInDb = await testKit.models.user.findById(id).exec();
+            const isHashed = await testKit.hashingService.compare(newPassword, userInDb!.password);
+            expect(isHashed).toBeTruthy();
+        });
+
+        test(`return status 200 and ${authSuccessMessages.PASSWORD_RESET_SUCCESS} plain message`, async () => {
+            const { email } = await createUser(getRandomRole());
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                email,
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+            });
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
+                token,
+                newPassword: testKit.userData.password,
+            });
+            expect(res.body).toBe(authSuccessMessages.PASSWORD_RESET_SUCCESS);
+            expect(res.status).toBe(200);
         });
     });
 
@@ -61,7 +73,7 @@ describe(`POST ${resetPasswordUrl}`, () => {
                 email: testKit.userData.email,
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
             });
-            const res = await testKit.agent.post(resetPasswordUrl).send({
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 token,
                 newPassword: testKit.userData.password,
             });
@@ -72,7 +84,7 @@ describe(`POST ${resetPasswordUrl}`, () => {
 
     describe('Token not provided', () => {
         test('return status 400 and INVALID_TOKEN error message', async () => {
-            const res = await testKit.agent.post(resetPasswordUrl).send({
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 newPassword: testKit.userData.password,
             });
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
@@ -87,7 +99,7 @@ describe(`POST ${resetPasswordUrl}`, () => {
                 email: randomEmail,
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
             });
-            const res = await testKit.agent.post(resetPasswordUrl).send({
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 token: invalidToken,
                 newPassword: testKit.userData.password,
             });
@@ -102,7 +114,7 @@ describe(`POST ${resetPasswordUrl}`, () => {
                 email: 'test@gmail.com',
                 purpose: tokenPurposes.SESSION,
             });
-            const res = await testKit.agent.post(resetPasswordUrl).send({
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 token: tokenWithWrongPurpose,
                 newPassword: testKit.userData.password,
             });
@@ -116,7 +128,7 @@ describe(`POST ${resetPasswordUrl}`, () => {
             const { token: tokenWithNoEmail } = testKit.passwordRecovJwt.generate('1m', {
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
             });
-            const res = await testKit.agent.post(resetPasswordUrl).send({
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 token: tokenWithNoEmail,
                 newPassword: testKit.userData.password,
             });
@@ -132,7 +144,7 @@ describe(`POST ${resetPasswordUrl}`, () => {
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
             });
             await testKit.jwtBlacklistService.blacklist(JwtTypes.passwordRecovery, jti, 10000);
-            const res = await testKit.agent.post(resetPasswordUrl).send({
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 token,
                 newPassword: testKit.userData.password,
             });
@@ -148,7 +160,7 @@ describe(`POST ${resetPasswordUrl}`, () => {
                 email,
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
             });
-            const res = await testKit.agent.post(resetPasswordUrl).send({
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 token,
                 newPassword: faker.internet.password({
                     length: usersLimits.MAX_PASSWORD_LENGTH + 1,
@@ -168,15 +180,21 @@ describe(`POST ${resetPasswordUrl}`, () => {
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
             });
             for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
-                await testKit.agent.post(resetPasswordUrl).set('X-Forwarded-For', ip).send({
+                await testKit.agent
+                    .post(testKit.urls.resetPassword)
+                    .set('X-Forwarded-For', ip)
+                    .send({
+                        token,
+                        newPassword: testKit.userData.password,
+                    });
+            }
+            const res = await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .set('X-Forwarded-For', ip)
+                .send({
                     token,
                     newPassword: testKit.userData.password,
                 });
-            }
-            const res = await testKit.agent.post(resetPasswordUrl).set('X-Forwarded-For', ip).send({
-                token,
-                newPassword: testKit.userData.password,
-            });
             expect(res.status).toBe(429);
             expect(res.body).toStrictEqual({ error: commonErrors.TOO_MANY_REQUESTS });
         });

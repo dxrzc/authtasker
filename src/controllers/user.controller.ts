@@ -12,6 +12,7 @@ import { authErrors } from 'src/messages/auth.error.messages';
 import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
 import { LoggerService } from 'src/services/logger.service';
+import { authSuccessMessages } from 'src/messages/auth.success.messages';
 
 export class UserController {
     constructor(
@@ -131,7 +132,7 @@ export class UserController {
         const rawPassword = req.body.newPassword;
         const { password } = await this.resetPasswordValidator.validate({ password: rawPassword });
         await this.userService.resetPassword(password, token);
-        res.status(statusCodes.OK).send('Password successfully changed');
+        res.status(statusCodes.OK).send(authSuccessMessages.PASSWORD_RESET_SUCCESS);
     };
 
     public readonly resetPasswordForm = async (req: Request, res: Response): Promise<void> => {
