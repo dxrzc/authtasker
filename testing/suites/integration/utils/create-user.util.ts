@@ -22,6 +22,6 @@ export async function createUser(userRole: UserRole = UserRole.READONLY) {
         email: body.user.email,
         name: body.user.name,
         unhashedPassword: userData.password,
-        userId,
+        id: userId,
     };
 }
