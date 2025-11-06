@@ -207,7 +207,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
                 .expect(status2xx);
             const updatedUserInDb = await testKit.models.user.findById(id);
             expect(updatedUserInDb!.emailValidated).toBeTruthy();
-            expect(updatedUserInDb?.role).toBe(UserRole.ADMIN);
+            expect(updatedUserInDb!.role).toBe(UserRole.ADMIN);
         });
     });
 
