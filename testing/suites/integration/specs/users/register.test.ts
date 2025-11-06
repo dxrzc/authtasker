@@ -114,6 +114,25 @@ describe(`POST ${registrationUrl}`, () => {
     });
 
     describe('Successful registration', () => {
+        test('password should be hashed in database', async () => {
+            const userData = testKit.userData.user;
+            const { body } = await testKit.agent
+                .post(registrationUrl)
+                .send(userData)
+                .expect(status2xx);
+            const userInDb = await testKit.models.user.findById(body.user.id).exec();
+            expect(userInDb).not.toBeNull();
+            expect(userInDb?.password).toBeDefined();
+            expect(userInDb?.password).not.toBe(userData.password);
+            const isPasswordCorrectlyHashed = await testKit.hashingService.compare(
+                userData.password,
+                userInDb!.password,
+            );
+            expect(isPasswordCorrectlyHashed).toBe(true);
+        });
+    });
+
+    describe('Successful registration', () => {
         test('should return 201 status code, user data and tokens', async () => {
             const userData = testKit.userData.user;
             const response = await testKit.agent
