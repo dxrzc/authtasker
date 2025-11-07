@@ -25,7 +25,7 @@ afterEach(async () => {
     }
 
     // Clean up Redis keys between tests (only if redis service is initialized)
-    if (testKit.redisService?.flushAll) {
+    if (testKit.redisService) {
         await testKit.redisService.flushAll();
     }
 });

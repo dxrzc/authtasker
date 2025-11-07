@@ -57,7 +57,6 @@ export class RedisDatabase {
     async connect(): Promise<Redis> {
         if (!['reconnecting', 'connecting', 'connect', 'ready'].includes(this.client.status)) {
             await this.client.connect();
-            // await this.subscriber.connect();
         }
         return this.client;
     }
