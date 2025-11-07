@@ -4,6 +4,7 @@ import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
 import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { statusCodes } from 'src/constants/status-codes.constants';
+import { usersLimits } from 'src/constants/user.constants';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
 import { commonErrors } from 'src/messages/common.error.messages';
@@ -30,8 +31,9 @@ describe(`POST ${registrationUrl}`, () => {
         });
 
         test('name should be transformed into lowercase and spaces are trimmed', async () => {
-            const expectedUsername = testKit.userData.name.toLowerCase().trim();
-            const rawName = `  ${expectedUsername.toUpperCase()}  `;
+            const rawName =
+                faker.string.alpha(usersLimits.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
+            const expectedName = rawName.toLowerCase().trim();
             const res = await testKit.agent.post(registrationUrl).send({
                 password: testKit.userData.password,
                 email: testKit.userData.email,
@@ -39,7 +41,7 @@ describe(`POST ${registrationUrl}`, () => {
             });
             const userInDb = await testKit.models.user.findById(res.body.user.id).exec();
             expect(userInDb).not.toBeNull();
-            expect(userInDb?.name).toBe(expectedUsername);
+            expect(userInDb?.name).toBe(expectedName);
         });
 
         test('should return a valid refresh token', async () => {

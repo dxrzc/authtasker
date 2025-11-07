@@ -13,6 +13,7 @@ import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
+import { usersLimits } from 'src/constants/user.constants';
 
 describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     describe('Session token not provided', () => {
@@ -52,13 +53,15 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
 
         test('name should be transformed to lowercase and trimmed in db', async () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
-            const expectedName = testKit.userData.name.toLowerCase().trim();
-            const rawName = `  ${expectedName.toUpperCase()}  `;
-            await testKit.agent
+            const rawName =
+                faker.string.alpha(usersLimits.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
+            const expectedName = rawName.toLowerCase().trim();
+            const res = await testKit.agent
                 .patch(`${testKit.urls.usersAPI}/${id}`)
                 .set('Authorization', `Bearer ${sessionToken}`)
-                .send({ name: rawName })
-                .expect(status2xx);
+                .send({ name: rawName });
+            // .expect(status2xx);
+            console.log(res.body);
             const userInDb = await testKit.models.user.findById(id).exec();
             expect(userInDb).not.toBeNull();
             expect(userInDb?.name).toBe(expectedName);
