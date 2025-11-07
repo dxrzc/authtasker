@@ -323,7 +323,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('EDITOR attemps to update a READONLY', () => {
+    describe('EDITOR attempts to update a READONLY', () => {
         test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
