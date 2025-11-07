@@ -297,7 +297,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('READONLY attemps to update another READONLY', () => {
+    describe('READONLY attempts to update another READONLY', () => {
         test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
@@ -310,7 +310,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('EDITOR attemps to update a READONLY', () => {
+    describe('EDITOR attempts to update a READONLY', () => {
         test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
