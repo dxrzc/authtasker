@@ -3,6 +3,11 @@ import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
 import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
 import { authErrors } from 'src/messages/auth.error.messages';
+import { RateLimiter } from 'src/enums/rate-limiter.enum';
+import { rateLimiting } from 'src/constants/rate-limiting.constants';
+import { commonErrors } from 'src/messages/common.error.messages';
+import { faker } from '@faker-js/faker';
+import { statusCodes } from 'src/constants/status-codes.constants';
 
 describe(`POST ${testKit.urls.refreshToken}`, () => {
     describe('Refresh token is not provided in body', () => {
@@ -58,6 +63,24 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
                 .expect(200);
             expect(body.sessionToken).toBeDefined();
             expect(body.refreshToken).toBeDefined();
+        });
+    });
+
+    describe(`More than ${rateLimiting[RateLimiter.critical].max} requests in ${rateLimiting[RateLimiter.critical].windowMs / 1000}s`, () => {
+        test('should return 429 status code and TOO_MANY_REQUESTS message', async () => {
+            const ip = faker.internet.ip();
+            for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
+                await testKit.agent
+                    .post(testKit.urls.refreshToken)
+                    .set('X-Forwarded-For', ip)
+                    .send({});
+            }
+            const response = await testKit.agent
+                .post(testKit.urls.refreshToken)
+                .set('X-Forwarded-For', ip)
+                .send({});
+            expect(response.body).toStrictEqual({ error: commonErrors.TOO_MANY_REQUESTS });
+            expect(response.statusCode).toBe(statusCodes.TOO_MANY_REQUESTS);
         });
     });
 });

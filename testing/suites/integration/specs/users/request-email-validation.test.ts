@@ -5,10 +5,25 @@ import * as nodemailer from 'nodemailer';
 import { NodemailerMock } from 'nodemailer-mock';
 import { UserRole } from 'src/enums/user-role.enum';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
+import { RateLimiter } from 'src/enums/rate-limiter.enum';
+import { rateLimiting } from 'src/constants/rate-limiting.constants';
+import { commonErrors } from 'src/messages/common.error.messages';
+import { faker } from '@faker-js/faker';
+import { statusCodes } from 'src/constants/status-codes.constants';
+import { authErrors } from 'src/messages/auth.error.messages';
 
 const { mock } = nodemailer as unknown as NodemailerMock;
 
 describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
+    describe('Session token not provided', () => {
+        test(`should return 401 status code and "${authErrors.INVALID_TOKEN}" message`, async () => {
+            const { statusCode, body } = await testKit.agent
+                .post(testKit.urls.requestEmailValidation);
+            expect(body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(statusCode).toBe(statusCodes.UNAUTHORIZED);
+        });
+    });
+
     describe('User email is already verified', () => {
         test(`should return BAD REQUEST status code and ${usersApiErrors.EMAIL_ALREADY_VERIFIED} message`, async () => {
             const { id, sessionToken } = await createUser(UserRole.READONLY);
@@ -40,6 +55,25 @@ describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .expect(204);
             expect(response.body).toStrictEqual({});
+        });
+    });
+
+    describe(`More than ${rateLimiting[RateLimiter.critical].max} requests in ${rateLimiting[RateLimiter.critical].windowMs / 1000}s`, () => {
+        test('should return 429 status code and TOO_MANY_REQUESTS message', async () => {
+            const ip = faker.internet.ip();
+            const { sessionToken } = await createUser(UserRole.READONLY);
+            for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
+                await testKit.agent
+                    .post(testKit.urls.requestEmailValidation)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .set('X-Forwarded-For', ip);
+            }
+            const response = await testKit.agent
+                .post(testKit.urls.requestEmailValidation)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .set('X-Forwarded-For', ip);
+            expect(response.body).toStrictEqual({ error: commonErrors.TOO_MANY_REQUESTS });
+            expect(response.statusCode).toBe(statusCodes.TOO_MANY_REQUESTS);
         });
     });
 });
