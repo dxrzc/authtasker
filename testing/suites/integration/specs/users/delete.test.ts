@@ -12,6 +12,7 @@ import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
+import { Types } from 'mongoose';
 
 describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     describe('Session token not provided', () => {
@@ -100,7 +101,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     describe('User not found', () => {
         test(`should return 404 status code and "${usersApiErrors.NOT_FOUND}" message`, async () => {
             const { sessionToken } = await createUser(UserRole.ADMIN);
-            const nonExistentId = '507f1f77bcf86cd799439011';
+            const nonExistentId = new Types.ObjectId().toString();
             const { statusCode, body } = await testKit.agent
                 .delete(`${testKit.urls.usersAPI}/${nonExistentId}`)
                 .set('Authorization', `Bearer ${sessionToken}`);
