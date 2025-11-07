@@ -16,12 +16,18 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-    // Clean up database collections between tests
-    const collections = testKit.models.user.db.collections;
-    await Promise.all(Object.values(collections).map((collection) => collection.deleteMany({})));
+    // Clean up database collections between tests (only if models are initialized)
+    if (testKit.models?.user?.db?.collections) {
+        const collections = testKit.models.user.db.collections;
+        await Promise.all(
+            Object.values(collections).map((collection) => collection.deleteMany({})),
+        );
+    }
 
-    // Clean up Redis keys between tests
-    await testKit.redisService.flushAll();
+    // Clean up Redis keys between tests (only if redis service is initialized)
+    if (testKit.redisService?.flushAll) {
+        await testKit.redisService.flushAll();
+    }
 });
 
 let mongoMemoryServer: MongoMemoryServer;
@@ -31,7 +37,14 @@ let redisDatabase: RedisDatabase;
 async function cleanup() {
     try {
         // Disconnect databases first
-        await Promise.all([redisDatabase.disconnect(), mongoDatabase.disconnect()]);
+        const disconnectPromises: Promise<void>[] = [];
+        if (redisDatabase) {
+            disconnectPromises.push(redisDatabase.disconnect());
+        }
+        if (mongoDatabase) {
+            disconnectPromises.push(mongoDatabase.disconnect());
+        }
+        await Promise.all(disconnectPromises);
 
         // Stop mongo memory server
         if (mongoMemoryServer) {
