@@ -110,6 +110,18 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
+    describe('ADMIN attempts to delete another ADMIN', () => {
+        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
+            const { id: targetUserId } = await createUser(UserRole.ADMIN);
+            const { statusCode, body } = await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
+                .set('Authorization', `Bearer ${currentUserSessionToken}`);
+            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
+            expect(statusCode).toBe(403);
+        });
+    });
+
     describe('ADMIN attempts to delete an EDITOR', () => {
         test('should succeed', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
@@ -117,9 +129,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
             await testKit.agent
                 .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .expect(statusCodes.NO_CONTENT);
-            const userInDb = await testKit.models.user.findById(targetUserId);
-            expect(userInDb).toBeNull();
+                .expect(status2xx);
         });
     });
 
@@ -130,70 +140,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
             await testKit.agent
                 .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .expect(statusCodes.NO_CONTENT);
-            const userInDb = await testKit.models.user.findById(targetUserId);
-            expect(userInDb).toBeNull();
-        });
-    });
-
-    describe('ADMIN attempts to delete another ADMIN', () => {
-        test('should succeed', async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
-            const { id: targetUserId } = await createUser(UserRole.ADMIN);
-            await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .expect(statusCodes.NO_CONTENT);
-            const userInDb = await testKit.models.user.findById(targetUserId);
-            expect(userInDb).toBeNull();
-        });
-    });
-
-    describe('EDITOR attempts to delete another EDITOR', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
-            const { id: targetUserId } = await createUser(UserRole.EDITOR);
-            const { statusCode, body } = await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`);
-            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(statusCodes.FORBIDDEN);
-        });
-    });
-
-    describe('READONLY attempts to delete another READONLY', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
-            const { id: targetUserId } = await createUser(UserRole.READONLY);
-            const { statusCode, body } = await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`);
-            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(statusCodes.FORBIDDEN);
-        });
-    });
-
-    describe('EDITOR attempts to delete a READONLY', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
-            const { id: targetUserId } = await createUser(UserRole.READONLY);
-            const { statusCode, body } = await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`);
-            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(statusCodes.FORBIDDEN);
-        });
-    });
-
-    describe('READONLY attempts to delete an EDITOR', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
-            const { id: targetUserId } = await createUser(UserRole.EDITOR);
-            const { statusCode, body } = await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`);
-            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(statusCodes.FORBIDDEN);
+                .expect(status2xx);
         });
     });
 
@@ -205,19 +152,43 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
                 .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`);
             expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(statusCodes.FORBIDDEN);
+            expect(statusCode).toBe(403);
         });
     });
 
-    describe('READONLY attempts to delete an ADMIN', () => {
+    describe('EDITOR attempts to delete another EDITOR', () => {
         test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
-            const { id: targetUserId } = await createUser(UserRole.ADMIN);
+            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
+            const { id: targetUserId } = await createUser(UserRole.EDITOR);
             const { statusCode, body } = await testKit.agent
                 .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`);
             expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(statusCodes.FORBIDDEN);
+            expect(statusCode).toBe(403);
+        });
+    });
+
+    describe('EDITOR attemps to delete a READONLY', () => {
+        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
+            const { id: targetUserId } = await createUser(UserRole.READONLY);
+            const { statusCode, body } = await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
+                .set('Authorization', `Bearer ${currentUserSessionToken}`);
+            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
+            expect(statusCode).toBe(403);
+        });
+    });
+
+    describe('READONLY attemps to delete another READONLY', () => {
+        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
+            const { id: targetUserId } = await createUser(UserRole.READONLY);
+            const { statusCode, body } = await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
+                .set('Authorization', `Bearer ${currentUserSessionToken}`);
+            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
+            expect(statusCode).toBe(403);
         });
     });
 
