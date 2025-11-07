@@ -52,7 +52,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             expect(isHashed).toBeTruthy();
         });
 
-        test(`return status 200 and ${authSuccessMessages.PASSWORD_RESET_SUCCESS} plain message`, async () => {
+        test(`return status 200 and ${authSuccessMessages.PASSWORD_RESET_SUCCESS} plain text`, async () => {
             const { email } = await createUser(getRandomRole());
             const { token } = testKit.passwordRecovJwt.generate('1m', {
                 email,
@@ -62,7 +62,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 token,
                 newPassword: testKit.userData.password,
             });
-            expect(res.body).toBe(authSuccessMessages.PASSWORD_RESET_SUCCESS);
+            expect(res.text).toBe(authSuccessMessages.PASSWORD_RESET_SUCCESS);
             expect(res.status).toBe(200);
         });
     });
