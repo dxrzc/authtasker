@@ -76,13 +76,11 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             // Create some tasks for the user
             const task1 = await testKit.models.task.create({
-                title: 'Task 1',
-                description: 'Description 1',
+                ...testKit.taskData.task,
                 user: id,
             });
             const task2 = await testKit.models.task.create({
-                title: 'Task 2',
-                description: 'Description 2',
+                ...testKit.taskData.task,
                 user: id,
             });
             // Delete user
