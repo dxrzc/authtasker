@@ -56,12 +56,11 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             const rawName =
                 faker.string.alpha(usersLimits.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
             const expectedName = rawName.toLowerCase().trim();
-            const res = await testKit.agent
+            await testKit.agent
                 .patch(`${testKit.urls.usersAPI}/${id}`)
                 .set('Authorization', `Bearer ${sessionToken}`)
-                .send({ name: rawName });
-            // .expect(status2xx);
-            console.log(res.body);
+                .send({ name: rawName })
+                .expect(status2xx);
             const userInDb = await testKit.models.user.findById(id).exec();
             expect(userInDb).not.toBeNull();
             expect(userInDb?.name).toBe(expectedName);
