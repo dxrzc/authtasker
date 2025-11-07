@@ -15,13 +15,31 @@ beforeEach(() => {
     nodemailerMock.reset(); // reset mock before each test
 });
 
+afterEach(async () => {
+    // Clean up database collections between tests
+    const collections = testKit.models.user.db.collections;
+    await Promise.all(Object.values(collections).map((collection) => collection.deleteMany({})));
+
+    // Clean up Redis keys between tests
+    await testKit.redisService.flushAll();
+});
+
 let mongoMemoryServer: MongoMemoryServer;
 let mongoDatabase: MongoDatabase;
 let redisDatabase: RedisDatabase;
 
 async function cleanup() {
-    await mongoMemoryServer.stop();
-    await Promise.all([redisDatabase.disconnect(), mongoDatabase.disconnect()]);
+    try {
+        // Disconnect databases first
+        await Promise.all([redisDatabase.disconnect(), mongoDatabase.disconnect()]);
+
+        // Stop mongo memory server
+        if (mongoMemoryServer) {
+            await mongoMemoryServer.stop();
+        }
+    } catch (error) {
+        console.error('Error during cleanup:', error);
+    }
 }
 
 beforeAll(async () => {

@@ -63,9 +63,16 @@ export class RedisDatabase {
     }
 
     async disconnect(): Promise<void> {
+        const disconnectPromises: Promise<string>[] = [];
+
         if (this.client.status === 'ready') {
-            await this.client.quit();
-            // await this.subscriber.quit();
+            disconnectPromises.push(this.client.quit());
         }
+
+        if (this.subscriber && this.subscriber.status === 'ready') {
+            disconnectPromises.push(this.subscriber.quit());
+        }
+
+        await Promise.all(disconnectPromises);
     }
 }

@@ -57,4 +57,8 @@ export class RedisService {
     async delete(key: string): Promise<void> {
         await this.redis.del(key);
     }
+
+    async flushAll(): Promise<void> {
+        await this.redis.flushall();
+    }
 }
