@@ -260,6 +260,19 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
+    describe('ADMIN attempts to update another ADMIN', () => {
+        test('should return 403 status code and "${authErrors.FORBIDDEN}" message', async () => {
+            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
+            const { id: targetUserId } = await createUser(UserRole.ADMIN);
+            const { statusCode, body } = await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${targetUserId}`)
+                .set('Authorization', `Bearer ${currentUserSessionToken}`)
+                .send({ name: testKit.userData.name });
+            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
+            expect(statusCode).toBe(403);
+        });
+    });
+
     describe('ADMIN attempts to update an EDITOR', () => {
         test('should succeed', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
@@ -284,6 +297,19 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
+    describe('EDITOR attempts to update an ADMIN', () => {
+        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
+            const { id: targetUserId } = await createUser(UserRole.ADMIN);
+            const { statusCode, body } = await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${targetUserId}`)
+                .set('Authorization', `Bearer ${currentUserSessionToken}`)
+                .send({ name: testKit.userData.name });
+            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
+            expect(statusCode).toBe(403);
+        });
+    });
+
     describe('EDITOR attempts to update another EDITOR', () => {
         test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
@@ -297,9 +323,9 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('READONLY attemps to update another READONLY', () => {
+    describe('EDITOR attemps to update a READONLY', () => {
         test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
+            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent
                 .patch(`${testKit.urls.usersAPI}/${targetUserId}`)
@@ -310,9 +336,9 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('EDITOR attemps to update a READONLY', () => {
+    describe('READONLY attemps to update another READONLY', () => {
         test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
+            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent
                 .patch(`${testKit.urls.usersAPI}/${targetUserId}`)
