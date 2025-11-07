@@ -168,7 +168,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('EDITOR attemps to delete a READONLY', () => {
+    describe('EDITOR attempts to delete a READONLY', () => {
         test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
@@ -180,7 +180,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('READONLY attemps to delete another READONLY', () => {
+    describe('READONLY attempts to delete another READONLY', () => {
         test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
