@@ -3,9 +3,12 @@ import { hasSufficientRole } from 'src/functions/roles/has-sufficent-role';
 
 describe('hasSufficientRole', () => {
     describe('readonly is the minimum role required', () => {
-        test.each([UserRole.READONLY, UserRole.EDITOR, UserRole.ADMIN] as const)('return true for %s', (role) => {
-            expect(hasSufficientRole(UserRole.READONLY, role)).toBeTruthy();
-        });
+        test.each([UserRole.READONLY, UserRole.EDITOR, UserRole.ADMIN] as const)(
+            'return true for %s',
+            (role) => {
+                expect(hasSufficientRole(UserRole.READONLY, role)).toBeTruthy();
+            },
+        );
     });
 
     describe('editor is the minimum role required', () => {

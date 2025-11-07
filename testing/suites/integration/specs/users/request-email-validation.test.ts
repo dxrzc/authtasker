@@ -17,8 +17,9 @@ const { mock } = nodemailer as unknown as NodemailerMock;
 describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
     describe('Session token not provided', () => {
         test(`should return 401 status code and "${authErrors.INVALID_TOKEN}" message`, async () => {
-            const { statusCode, body } = await testKit.agent
-                .post(testKit.urls.requestEmailValidation);
+            const { statusCode, body } = await testKit.agent.post(
+                testKit.urls.requestEmailValidation,
+            );
             expect(body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
             expect(statusCode).toBe(statusCodes.UNAUTHORIZED);
         });
