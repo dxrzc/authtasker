@@ -3,10 +3,14 @@ import { testKit } from '@integration/kit/test.kit';
 import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
 import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
+import { rateLimiting } from 'src/constants/rate-limiting.constants';
+import { statusCodes } from 'src/constants/status-codes.constants';
 import { usersLimits } from 'src/constants/user.constants';
+import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
 import { authErrors } from 'src/messages/auth.error.messages';
+import { commonErrors } from 'src/messages/common.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 
 describe(`POST ${testKit.urls.logoutAll}`, () => {
@@ -101,6 +105,25 @@ describe(`POST ${testKit.urls.logoutAll}`, () => {
             });
             expect(response.body).toStrictEqual({ error: usersApiErrors.NOT_FOUND });
             expect(response.statusCode).toBe(404);
+        });
+    });
+
+    describe(`More than ${rateLimiting[RateLimiter.critical].max} requests in ${rateLimiting[RateLimiter.critical].windowMs / 1000}s`, () => {
+        test(`should return 429 status code and ${commonErrors.TOO_MANY_REQUESTS} message`, async () => {
+            const ip = faker.internet.ip();
+            const { email, unhashedPassword } = await createUser(getRandomRole());
+            for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
+                await testKit.agent
+                    .post(testKit.urls.logoutAll)
+                    .set('X-Forwarded-For', ip)
+                    .send({ email, password: unhashedPassword });
+            }
+            const response = await testKit.agent
+                .post(testKit.urls.logoutAll)
+                .set('X-Forwarded-For', ip)
+                .send({ email, password: unhashedPassword });
+            expect(response.body).toStrictEqual({ error: commonErrors.TOO_MANY_REQUESTS });
+            expect(response.statusCode).toBe(statusCodes.TOO_MANY_REQUESTS);
         });
     });
 });
