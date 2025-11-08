@@ -7,6 +7,7 @@ import { statusCodes } from 'src/constants/status-codes.constants';
 import { usersLimits } from 'src/constants/user.constants';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
+import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 
@@ -51,6 +52,16 @@ describe(`POST ${registrationUrl}`, () => {
                 .expect(status2xx);
             expect(body.refreshToken).toBeDefined();
             expect(testKit.refreshJwt.verify(body.refreshToken)).not.toBeNull();
+        });
+
+        test('refresh token should be stored in Redis', async () => {
+            const { body } = await testKit.agent
+                .post(registrationUrl)
+                .send(testKit.userData.user)
+                .expect(status2xx);
+            const redisKey = makeRefreshTokenKey(body.user.id, body.refreshToken);
+            const inRedis = await testKit.redisService.get(redisKey);
+            expect(inRedis).toBeDefined();
         });
 
         test('should return a valid session token', async () => {

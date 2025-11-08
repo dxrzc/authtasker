@@ -8,6 +8,7 @@ import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
+import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
 
 describe(`POST ${testKit.urls.refreshToken}`, () => {
     describe('Refresh token is not provided in body', () => {
@@ -63,6 +64,18 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
                 .expect(200);
             expect(body.sessionToken).toBeDefined();
             expect(body.refreshToken).toBeDefined();
+        });
+
+        test('old refresh token should be deleted from Redis', async () => {
+            const { refreshToken, id } = await createUser(getRandomRole());
+            await testKit.agent
+                .post(testKit.urls.refreshToken)
+                .send({ refreshToken })
+                .expect(status2xx);
+            const { jti } = testKit.refreshJwt.verify(refreshToken)!;
+            const redisKey = makeRefreshTokenKey(id, jti);
+            const inRedis = await testKit.redisService.get(redisKey);
+            expect(inRedis).toBeNull();
         });
     });
 
