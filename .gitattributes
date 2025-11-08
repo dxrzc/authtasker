@@ -1,2 +1,10 @@
 # Use LF line endings for all text files (consistent across OSes)
 * text=auto eol=lf
+
+# Ensure specific file types are treated as text
+*.js text
+*.ts text
+*.json text
+*.yml text
+*.yaml text
+*.env text
