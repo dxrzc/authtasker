@@ -13,11 +13,35 @@ import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token
 
 describe(`POST ${testKit.urls.refreshToken}`, () => {
     describe('Refresh token is not provided in body', () => {
-        test(`return status 400 BAD REQUEST ${authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY} message`, async () => {
-            const expectedStatus = 400;
+        test(`return 400 status code ${authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY} message`, async () => {
             const { statusCode, body } = await testKit.agent.post(testKit.urls.refreshToken);
             expect(body).toStrictEqual({ error: authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY });
-            expect(statusCode).toBe(expectedStatus);
+            expect(statusCode).toBe(400);
+        });
+    });
+
+    describe('Session token provided instead of refresh token', () => {
+        test(`return 401 status code and  ${authErrors.INVALID_TOKEN} message`, async () => {
+            const { body, statusCode } = await testKit.agent.post(testKit.urls.refreshToken).send({
+                // session token
+                refreshToken: testKit.sessionJwt.generate('1m', {
+                    id: 'non-existent-user-id',
+                }),
+            });
+            expect(body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(statusCode).toBe(401);
+        });
+    });
+
+    describe('User in token does not exist', () => {
+        test(`return 401 status code and ${authErrors.INVALID_TOKEN} message`, async () => {
+            const { refreshToken, id } = await createUser(getRandomRole());
+            await testKit.models.user.findByIdAndDelete(id);
+            const { body, statusCode } = await testKit.agent
+                .post(testKit.urls.refreshToken)
+                .send({ refreshToken });
+            expect(body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(statusCode).toBe(401);
         });
     });
 
@@ -89,6 +113,30 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
             const redisKey = makeRefreshTokenIndexKey(id);
             const inRedis = await testKit.redisService.belongsToSet(redisKey, jti);
             expect(inRedis).toBeFalsy();
+        });
+
+        test('new refresh token should be stored in Redis', async () => {
+            const { refreshToken, id } = await createUser(getRandomRole());
+            await testKit.agent
+                .post(testKit.urls.refreshToken)
+                .send({ refreshToken })
+                .expect(status2xx);
+            const { jti } = testKit.refreshJwt.verify(refreshToken)!;
+            const redisKey = makeRefreshTokenKey(id, jti);
+            const inRedis = await testKit.redisService.get(redisKey);
+            expect(inRedis).toBeDefined();
+        });
+
+        test('new refresh token should be stored in refresh tokens index in Redis', async () => {
+            const { refreshToken, id } = await createUser(getRandomRole());
+            await testKit.agent
+                .post(testKit.urls.refreshToken)
+                .send({ refreshToken })
+                .expect(status2xx);
+            const { jti } = testKit.refreshJwt.verify(refreshToken)!;
+            const redisKey = makeRefreshTokenIndexKey(id);
+            const inRedis = await testKit.redisService.belongsToSet(redisKey, jti);
+            expect(inRedis).toBeTruthy();
         });
     });
 
