@@ -117,26 +117,28 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
 
         test('new refresh token should be stored in Redis', async () => {
             const { refreshToken, id } = await createUser(getRandomRole());
-            await testKit.agent
+            const { body } = await testKit.agent
                 .post(testKit.urls.refreshToken)
                 .send({ refreshToken })
                 .expect(status2xx);
-            const { jti } = testKit.refreshJwt.verify(refreshToken)!;
-            const redisKey = makeRefreshTokenKey(id, jti);
-            const inRedis = await testKit.redisService.get(redisKey);
-            expect(inRedis).toBeDefined();
+            const newRefreshToken = body.refreshToken;
+            const { jti: newTokenJti } = testKit.refreshJwt.verify(newRefreshToken)!;
+            const newTokenRedisKey = makeRefreshTokenKey(id, newTokenJti);
+            const newTokenInRedis = await testKit.redisService.get(newTokenRedisKey);
+            expect(newTokenInRedis).not.toBeNull();
         });
 
         test('new refresh token should be stored in refresh tokens index in Redis', async () => {
             const { refreshToken, id } = await createUser(getRandomRole());
-            await testKit.agent
+            const { body } = await testKit.agent
                 .post(testKit.urls.refreshToken)
                 .send({ refreshToken })
                 .expect(status2xx);
-            const { jti } = testKit.refreshJwt.verify(refreshToken)!;
-            const redisKey = makeRefreshTokenIndexKey(id);
-            const inRedis = await testKit.redisService.belongsToSet(redisKey, jti);
-            expect(inRedis).toBeTruthy();
+            const newRefreshToken = body.refreshToken;
+            const { jti: newTokenJti } = testKit.refreshJwt.verify(newRefreshToken)!;
+            const setKey = makeRefreshTokenIndexKey(id);
+            const tokenExistsInSet = await testKit.redisService.belongsToSet(setKey, newTokenJti);
+            expect(tokenExistsInSet).toBeTruthy();
         });
     });
 
