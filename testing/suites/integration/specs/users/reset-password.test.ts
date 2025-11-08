@@ -16,7 +16,7 @@ import { authSuccessMessages } from 'src/messages/auth.success.messages';
 
 describe(`POST ${testKit.urls.resetPassword}`, () => {
     describe('Successful password resetting', () => {
-        test('token used should be blacklisted', async () => {
+        test('session token should be blacklisted', async () => {
             const { email } = await createUser(getRandomRole());
             const { token, jti } = testKit.passwordRecovJwt.generate('1m', {
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
@@ -35,6 +35,8 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             );
             expect(tokenInRedisStore).toBeTruthy();
         });
+
+        test.todo('all refresh token associated with user should be deleted');
 
         test('user password should be hashed in database', async () => {
             const { email, id } = await createUser(getRandomRole());
