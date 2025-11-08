@@ -9,6 +9,7 @@ import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
+import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 
 describe(`POST ${testKit.urls.refreshToken}`, () => {
     describe('Refresh token is not provided in body', () => {
@@ -76,6 +77,18 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
             const redisKey = makeRefreshTokenKey(id, jti);
             const inRedis = await testKit.redisService.get(redisKey);
             expect(inRedis).toBeNull();
+        });
+
+        test('old refresh token should be deleted from refresh tokens index in Redis', async () => {
+            const { refreshToken, id } = await createUser(getRandomRole());
+            await testKit.agent
+                .post(testKit.urls.refreshToken)
+                .send({ refreshToken })
+                .expect(status2xx);
+            const { jti } = testKit.refreshJwt.verify(refreshToken)!;
+            const redisKey = makeRefreshTokenIndexKey(id);
+            const inRedis = await testKit.redisService.belongsToSet(redisKey, jti);
+            expect(inRedis).toBeFalsy();
         });
     });
 
