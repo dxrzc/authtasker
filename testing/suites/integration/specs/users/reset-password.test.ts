@@ -13,6 +13,8 @@ import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
+import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
+import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 
 describe(`POST ${testKit.urls.resetPassword}`, () => {
     describe('Successful password resetting', () => {
@@ -36,7 +38,68 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             expect(tokenInRedisStore).toBeTruthy();
         });
 
-        test.todo('all refresh token associated with user should be deleted');
+        test('all refresh token associated with user should be deleted from redis', async () => {
+            // register (token 1)
+            const {
+                refreshToken: refreshTkn1,
+                email,
+                unhashedPassword,
+                id,
+            } = await createUser(getRandomRole());
+            // login (token 2)
+            const { body } = await testKit.agent
+                .post(testKit.urls.login)
+                .send({ email, password: unhashedPassword })
+                .expect(status2xx);
+            const refreshTkn2 = body.refreshToken;
+            // reset password
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+                email,
+            });
+            await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .send({
+                    newPassword: testKit.userData.password,
+                    token,
+                })
+                .expect(status2xx);
+            // get jtis
+            const { jti: tkn1Jti } = testKit.refreshJwt.verify(refreshTkn1)!;
+            const { jti: tkn2Jti } = testKit.refreshJwt.verify(refreshTkn2)!;
+            const tkn1InRedis = await testKit.redisService.get(makeRefreshTokenKey(id, tkn1Jti));
+            const tkn2InRedis = await testKit.redisService.get(makeRefreshTokenKey(id, tkn2Jti));
+            expect(tkn1InRedis).toBeNull();
+            expect(tkn2InRedis).toBeNull();
+        });
+
+        test('delete all the refresh tokens from index in Redis', async () => {
+            // register (token 1)
+            const { email, unhashedPassword, id } = await createUser(getRandomRole());
+            const indexKey = makeRefreshTokenIndexKey(id);
+            // login (token 2)
+            await testKit.agent
+                .post(testKit.urls.login)
+                .send({ email, password: unhashedPassword })
+                .expect(status2xx);
+            // index size should be 2
+            await expect(testKit.redisService.getSetSize(indexKey)).resolves.toBe(2);
+            // reset password
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+                email,
+            });
+            await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .send({
+                    newPassword: testKit.userData.password,
+                    token,
+                })
+                .expect(status2xx);
+            // index size should be 0
+            const indexSize = await testKit.redisService.getSetSize(indexKey);
+            expect(indexSize).toBe(0);
+        });
 
         test('user password should be hashed in database', async () => {
             const { email, id } = await createUser(getRandomRole());
