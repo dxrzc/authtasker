@@ -117,7 +117,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             expect(isHashed).toBeTruthy();
         });
 
-        test(`return status 200 and password reset success plain text`, async () => {
+        test('return status 200 and password reset success plain text', async () => {
             const { email } = await createUser(getRandomRole());
             const { token } = testKit.passwordRecovJwt.generate('1m', {
                 email,
@@ -148,17 +148,17 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
     });
 
     describe('Token not provided', () => {
-        test('return status 400 and invalid token error message', async () => {
+        test('return status 401 and invalid token error message', async () => {
             const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 newPassword: testKit.userData.password,
             });
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
-            expect(res.status).toBe(400);
+            expect(res.status).toBe(401);
         });
     });
 
     describe('Token not signed by this server', () => {
-        test('return status 400 and invalid token error message', async () => {
+        test('return status 401 and invalid token error message', async () => {
             const randomEmail = testKit.userData.email;
             const { token: invalidToken } = new JwtService('randomKey').generate('10m', {
                 email: randomEmail,
@@ -169,12 +169,12 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 newPassword: testKit.userData.password,
             });
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
-            expect(res.status).toBe(400);
+            expect(res.status).toBe(401);
         });
     });
 
     describe('Invalid token purpose', () => {
-        test('return status 400 and invalid token error message', async () => {
+        test('return status 401 and invalid token error message', async () => {
             const { token: tokenWithWrongPurpose } = testKit.passwordRecovJwt.generate('1m', {
                 email: 'test@gmail.com',
                 purpose: tokenPurposes.SESSION,
@@ -184,12 +184,12 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 newPassword: testKit.userData.password,
             });
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
-            expect(res.status).toBe(400);
+            expect(res.status).toBe(401);
         });
     });
 
     describe('Email not in token', () => {
-        test('return status 400 and invalid token error message', async () => {
+        test('return status 401 and invalid token error message', async () => {
             const { token: tokenWithNoEmail } = testKit.passwordRecovJwt.generate('1m', {
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
             });
@@ -198,12 +198,12 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 newPassword: testKit.userData.password,
             });
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
-            expect(res.status).toBe(400);
+            expect(res.status).toBe(401);
         });
     });
 
     describe('Correct token but blacklisted', () => {
-        test('return status 400 and invalid token error message', async () => {
+        test('return status 401 and invalid token error message', async () => {
             const { token, jti } = testKit.passwordRecovJwt.generate('1m', {
                 email: 'test@gmail.com',
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
@@ -214,7 +214,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 newPassword: testKit.userData.password,
             });
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
-            expect(res.status).toBe(400);
+            expect(res.status).toBe(401);
         });
     });
 
@@ -229,6 +229,24 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 token,
                 newPassword: faker.internet.password({
                     length: usersLimits.MAX_PASSWORD_LENGTH + 1,
+                }),
+            });
+            expect(res.body).toStrictEqual({ error: usersApiErrors.INVALID_PASSWORD_LENGTH });
+            expect(res.status).toBe(400);
+        });
+    });
+
+    describe('Password length is too short', () => {
+        test('return status 400 and invalid password length error message', async () => {
+            const { email } = await createUser(getRandomRole());
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                email,
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+            });
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
+                token,
+                newPassword: faker.internet.password({
+                    length: usersLimits.MIN_PASSWORD_LENGTH - 1,
                 }),
             });
             expect(res.body).toStrictEqual({ error: usersApiErrors.INVALID_PASSWORD_LENGTH });
