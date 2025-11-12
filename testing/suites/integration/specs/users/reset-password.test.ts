@@ -18,7 +18,7 @@ import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token
 
 describe(`POST ${testKit.urls.resetPassword}`, () => {
     describe('Successful password resetting', () => {
-        test('session token should be blacklisted', async () => {
+        test('session token is blacklisted', async () => {
             const { email } = await createUser(getRandomRole());
             const { token, jti } = testKit.passwordRecovJwt.generate('1m', {
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
@@ -38,7 +38,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             expect(tokenInRedisStore).toBeTruthy();
         });
 
-        test('all refresh token associated with user should be deleted from redis', async () => {
+        test('all refresh token associated with user are deleted from redis', async () => {
             // register (token 1)
             const {
                 refreshToken: refreshTkn1,
@@ -101,7 +101,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             expect(indexSize).toBe(0);
         });
 
-        test('user password should be hashed in database', async () => {
+        test('user password is hashed in database', async () => {
             const { email, id } = await createUser(getRandomRole());
             const newPassword = testKit.userData.password;
             const { token } = testKit.passwordRecovJwt.generate('1m', {
@@ -117,7 +117,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             expect(isHashed).toBeTruthy();
         });
 
-        test(`return status 200 and ${authSuccessMessages.PASSWORD_RESET_SUCCESS} plain text`, async () => {
+        test(`return status 200 and password reset success plain text`, async () => {
             const { email } = await createUser(getRandomRole());
             const { token } = testKit.passwordRecovJwt.generate('1m', {
                 email,
@@ -133,7 +133,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
     });
 
     describe('User with email in token not found', () => {
-        test('return status 404 USER_NOT_FOUND error message', async () => {
+        test('return status 404 user not found error message', async () => {
             const { token } = testKit.passwordRecovJwt.generate('1m', {
                 email: testKit.userData.email,
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
@@ -148,7 +148,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
     });
 
     describe('Token not provided', () => {
-        test('return status 400 and INVALID_TOKEN error message', async () => {
+        test('return status 400 and invalid token error message', async () => {
             const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 newPassword: testKit.userData.password,
             });
@@ -158,7 +158,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
     });
 
     describe('Token not signed by this server', () => {
-        test('return status 400 and INVALID_TOKEN error message', async () => {
+        test('return status 400 and invalid token error message', async () => {
             const randomEmail = testKit.userData.email;
             const { token: invalidToken } = new JwtService('randomKey').generate('10m', {
                 email: randomEmail,
@@ -174,7 +174,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
     });
 
     describe('Invalid token purpose', () => {
-        test('return status 400 and INVALID_TOKEN error message', async () => {
+        test('return status 400 and invalid token error message', async () => {
             const { token: tokenWithWrongPurpose } = testKit.passwordRecovJwt.generate('1m', {
                 email: 'test@gmail.com',
                 purpose: tokenPurposes.SESSION,
@@ -189,7 +189,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
     });
 
     describe('Email not in token', () => {
-        test('return status 400 and INVALID_TOKEN error message', async () => {
+        test('return status 400 and invalid token error message', async () => {
             const { token: tokenWithNoEmail } = testKit.passwordRecovJwt.generate('1m', {
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
             });
@@ -203,7 +203,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
     });
 
     describe('Correct token but blacklisted', () => {
-        test('return status 400 and INVALID_TOKEN error message', async () => {
+        test('return status 400 and invalid token error message', async () => {
             const { token, jti } = testKit.passwordRecovJwt.generate('1m', {
                 email: 'test@gmail.com',
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
@@ -219,7 +219,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
     });
 
     describe('Password length exceeds the max password length', () => {
-        test('return status 400 and INVALID_PASSWORD_LENGTH error message', async () => {
+        test('return status 400 and invalid password length error message', async () => {
             const { email } = await createUser(getRandomRole());
             const { token } = testKit.passwordRecovJwt.generate('1m', {
                 email,
@@ -237,7 +237,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
     });
 
     describe(`More than ${rateLimiting[RateLimiter.critical].max} requests in ${rateLimiting[RateLimiter.critical].windowMs / 1000}s`, () => {
-        test('should return 429 status code and TOO_MANY_REQUESTS message', async () => {
+        test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             const { email } = await createUser(getRandomRole());
             const { token } = testKit.passwordRecovJwt.generate('1m', {

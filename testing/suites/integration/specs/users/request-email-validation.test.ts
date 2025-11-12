@@ -16,7 +16,7 @@ const { mock } = nodemailer as unknown as NodemailerMock;
 
 describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
     describe('Session token not provided', () => {
-        test(`should return 401 status code and "${authErrors.INVALID_TOKEN}" message`, async () => {
+        test(`return 401 status code and invalid token error message`, async () => {
             const { statusCode, body } = await testKit.agent.post(
                 testKit.urls.requestEmailValidation,
             );
@@ -26,7 +26,7 @@ describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
     });
 
     describe('User email is already verified', () => {
-        test(`should return BAD REQUEST status code and ${usersApiErrors.EMAIL_ALREADY_VERIFIED} message`, async () => {
+        test(`return 400 status code and email already verified error message`, async () => {
             const { id, sessionToken } = await createUser(UserRole.READONLY);
             await testKit.models.user.findByIdAndUpdate(id, { emailValidated: true });
             const response = await testKit.agent
@@ -38,7 +38,7 @@ describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
     });
 
     describe('Successful request', () => {
-        test('email should be sent to the user email address', async () => {
+        test('email is sent to the user email address', async () => {
             const { sessionToken, email } = await createUser(UserRole.READONLY);
             await testKit.agent
                 .post(testKit.urls.requestEmailValidation)
@@ -60,7 +60,7 @@ describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
     });
 
     describe(`More than ${rateLimiting[RateLimiter.critical].max} requests in ${rateLimiting[RateLimiter.critical].windowMs / 1000}s`, () => {
-        test('should return 429 status code and TOO_MANY_REQUESTS message', async () => {
+        test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             const { sessionToken } = await createUser(UserRole.READONLY);
             for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {

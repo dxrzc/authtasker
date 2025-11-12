@@ -74,7 +74,7 @@ describe(`POST ${testKit.urls.logoutAll}`, () => {
     });
 
     describe('Invalid password length', () => {
-        test(`return 400 status code and ${authErrors.INVALID_CREDENTIALS} message`, async () => {
+        test(`return 400 status code and invalid credentials error message`, async () => {
             const { email } = await createUser(getRandomRole());
             const response = await testKit.agent.post(testKit.urls.logoutAll).send({
                 password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1),
@@ -86,7 +86,7 @@ describe(`POST ${testKit.urls.logoutAll}`, () => {
     });
 
     describe('Password does not match user in email', () => {
-        test(`return 400 status code and ${authErrors.INVALID_CREDENTIALS} message`, async () => {
+        test(`return 400 status code and invalid credentials error message`, async () => {
             const { email } = await createUser(getRandomRole());
             const response = await testKit.agent.post(testKit.urls.logoutAll).send({
                 password: testKit.userData.password,
@@ -98,7 +98,7 @@ describe(`POST ${testKit.urls.logoutAll}`, () => {
     });
 
     describe('Email does not exist', () => {
-        test(`return 404 status code and ${usersApiErrors.NOT_FOUND} message`, async () => {
+        test(`return 404 status code and user not found error message`, async () => {
             const response = await testKit.agent.post(testKit.urls.logoutAll).send({
                 password: testKit.userData.password,
                 email: testKit.userData.email,
@@ -109,7 +109,7 @@ describe(`POST ${testKit.urls.logoutAll}`, () => {
     });
 
     describe(`More than ${rateLimiting[RateLimiter.critical].max} requests in ${rateLimiting[RateLimiter.critical].windowMs / 1000}s`, () => {
-        test(`should return 429 status code and ${commonErrors.TOO_MANY_REQUESTS} message`, async () => {
+        test(`return 429 status code and too many requests error message`, async () => {
             const ip = faker.internet.ip();
             const { email, unhashedPassword } = await createUser(getRandomRole());
             for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
