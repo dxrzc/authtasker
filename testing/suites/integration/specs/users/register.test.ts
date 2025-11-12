@@ -46,7 +46,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(userInDb?.name).toBe(expectedName);
         });
 
-        test('should return a valid refresh token', async () => {
+        test('return a valid refresh token', async () => {
             const { body } = await testKit.agent
                 .post(registrationUrl)
                 .send(testKit.userData.user)

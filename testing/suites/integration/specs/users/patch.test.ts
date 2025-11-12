@@ -276,7 +276,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('ADMIN attempts to update an EDITOR', () => {
-        test('should succeed', async () => {
+        test('successfully updates user', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
             const { id: targetUserId } = await createUser(UserRole.EDITOR);
             await testKit.agent
@@ -288,7 +288,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('ADMIN attempts to update a READONLY', () => {
-        test('should succeed', async () => {
+        test('successfully updates user', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             await testKit.agent
@@ -326,7 +326,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('EDITOR attempts to update a READONLY', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+        test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent
@@ -339,7 +339,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('READONLY attemps to update another READONLY', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+        test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent

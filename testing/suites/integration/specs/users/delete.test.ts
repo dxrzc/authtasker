@@ -121,7 +121,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('ADMIN attempts to delete an EDITOR', () => {
-        test('should succeed', async () => {
+        test('successfully deletes user', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
             const { id: targetUserId } = await createUser(UserRole.EDITOR);
             await testKit.agent
@@ -132,7 +132,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('ADMIN attempts to delete a READONLY', () => {
-        test('should succeed', async () => {
+        test('successfully deletes user', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             await testKit.agent
