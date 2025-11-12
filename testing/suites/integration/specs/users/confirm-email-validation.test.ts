@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker/.';
 import { testKit } from '@integration/kit/test.kit';
 import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
+import { Types } from 'mongoose';
 import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { tokenPurposes } from 'src/constants/token-purposes.constants';
 import { JwtTypes } from 'src/enums/jwt-types.enum';
@@ -119,6 +120,19 @@ describe(`POST ${testKit.urls.confirmEmailValidation}/:token`, () => {
             await testKit.jwtBlacklistService.blacklist(JwtTypes.emailValidation, jti, 10000);
             const res = await testKit.agent
                 .post(`${testKit.urls.confirmEmailValidation}/:${badToken}`)
+                .expect(401);
+            expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+        });
+    });
+
+    describe('User in token does not exist', () => {
+        test('return 401 status code and invalid token error message', async () => {
+            const { token } = testKit.emailValidationJwt.generate('1m', {
+                id: new Types.ObjectId().toString(),
+                purpose: tokenPurposes.EMAIL_VALIDATION,
+            });
+            const res = await testKit.agent
+                .post(`${testKit.urls.confirmEmailValidation}/:${token}`)
                 .expect(401);
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
         });
