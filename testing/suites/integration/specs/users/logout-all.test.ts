@@ -108,7 +108,7 @@ describe(`POST ${testKit.urls.logoutAll}`, () => {
         });
     });
 
-    describe('More than 3 requests in 60s', () => {
+    describe('Too many requests', () => {
         test(`return 429 status code and too many requests error message`, async () => {
             const ip = faker.internet.ip();
             const { email, unhashedPassword } = await createUser(getRandomRole());

@@ -142,7 +142,7 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
         });
     });
 
-    describe('More than 3 requests in 60s', () => {
+    describe('Too many requests', () => {
         test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
