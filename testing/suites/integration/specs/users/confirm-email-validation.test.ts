@@ -76,42 +76,42 @@ describe(`POST ${testKit.urls.confirmEmailValidation}/:token`, () => {
     });
 
     describe('Token not provided', () => {
-        test('return 400 status code and invalid token error message', async () => {
+        test('return 401 status code and invalid token error message', async () => {
             const res = await testKit.agent
                 .post(`${testKit.urls.confirmEmailValidation}/:`)
-                .expect(400);
+                .expect(401);
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
         });
     });
 
     describe('Token purpose is not valid', () => {
-        test('return 400 status code and invalid token error message', async () => {
+        test('return 401 status code and invalid token error message', async () => {
             const { token: badToken } = testKit.passwordRecovJwt.generate('1m', {
                 email: 'test@gmail.com',
                 purpose: tokenPurposes.PASSWORD_RECOVERY, // bad purpose
             });
             const res = await testKit.agent
                 .post(`${testKit.urls.confirmEmailValidation}/:${badToken}`)
-                .expect(400);
+                .expect(401);
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
         });
     });
 
     describe('Token not signed by this servr', () => {
-        test('return 400 status code and invalid token error message', async () => {
+        test('return 401 status code and invalid token error message', async () => {
             const { token: badToken } = new JwtService('randomKey').generate('10m', {
                 purpose: tokenPurposes.EMAIL_VALIDATION,
                 email: testKit.userData.email,
             });
             const res = await testKit.agent
                 .post(`${testKit.urls.confirmEmailValidation}/:${badToken}`)
-                .expect(400);
+                .expect(401);
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
         });
     });
 
     describe('Token is blacklisted', () => {
-        test('return 400 status code and invalid token error message', async () => {
+        test('return 401 status code and invalid token error message', async () => {
             const { token: badToken, jti } = testKit.emailValidationJwt.generate('1m', {
                 email: testKit.userData.email,
                 purpose: tokenPurposes.EMAIL_VALIDATION,
@@ -119,7 +119,7 @@ describe(`POST ${testKit.urls.confirmEmailValidation}/:token`, () => {
             await testKit.jwtBlacklistService.blacklist(JwtTypes.emailValidation, jti, 10000);
             const res = await testKit.agent
                 .post(`${testKit.urls.confirmEmailValidation}/:${badToken}`)
-                .expect(400);
+                .expect(401);
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
         });
     });
