@@ -190,7 +190,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('More than 100 requests in 300s', () => {
+    describe('Too many requests', () => {
         test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             const { sessionToken, id } = await createUser(UserRole.READONLY);

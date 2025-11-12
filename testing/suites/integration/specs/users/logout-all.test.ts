@@ -11,7 +11,6 @@ import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
-import { usersApiErrors } from 'src/messages/users-api.error.messages';
 
 describe(`POST ${testKit.urls.logoutAll}`, () => {
     describe('Successful logoutAll', () => {
@@ -74,42 +73,42 @@ describe(`POST ${testKit.urls.logoutAll}`, () => {
     });
 
     describe('Invalid password length', () => {
-        test(`return 400 status code and invalid credentials error message`, async () => {
+        test('return 401 status code and invalid credentials error message', async () => {
             const { email } = await createUser(getRandomRole());
             const response = await testKit.agent.post(testKit.urls.logoutAll).send({
                 password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1),
                 email,
             });
             expect(response.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
-            expect(response.statusCode).toBe(400);
+            expect(response.statusCode).toBe(401);
         });
     });
 
     describe('Password does not match user in email', () => {
-        test(`return 400 status code and invalid credentials error message`, async () => {
+        test('return 401 status code and invalid credentials error message', async () => {
             const { email } = await createUser(getRandomRole());
             const response = await testKit.agent.post(testKit.urls.logoutAll).send({
                 password: testKit.userData.password,
                 email,
             });
             expect(response.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
-            expect(response.statusCode).toBe(400);
+            expect(response.statusCode).toBe(401);
         });
     });
 
     describe('Email does not exist', () => {
-        test(`return 404 status code and user not found error message`, async () => {
+        test('return 401 status code and invalid credentials error message', async () => {
             const response = await testKit.agent.post(testKit.urls.logoutAll).send({
                 password: testKit.userData.password,
                 email: testKit.userData.email,
             });
-            expect(response.body).toStrictEqual({ error: usersApiErrors.NOT_FOUND });
-            expect(response.statusCode).toBe(404);
+            expect(response.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
+            expect(response.statusCode).toBe(401);
         });
     });
 
     describe('Too many requests', () => {
-        test(`return 429 status code and too many requests error message`, async () => {
+        test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             const { email, unhashedPassword } = await createUser(getRandomRole());
             for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {

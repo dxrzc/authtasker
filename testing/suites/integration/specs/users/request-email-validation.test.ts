@@ -26,14 +26,14 @@ describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
     });
 
     describe('User email is already verified', () => {
-        test(`return 400 status code and email already verified error message`, async () => {
+        test('return 403 status code and email already verified error message', async () => {
             const { id, sessionToken } = await createUser(UserRole.READONLY);
             await testKit.models.user.findByIdAndUpdate(id, { emailValidated: true });
             const response = await testKit.agent
                 .post(testKit.urls.requestEmailValidation)
                 .set('Authorization', `Bearer ${sessionToken}`);
             expect(response.body).toStrictEqual({ error: usersApiErrors.EMAIL_ALREADY_VERIFIED });
-            expect(response.statusCode).toBe(400);
+            expect(response.statusCode).toBe(403);
         });
     });
 

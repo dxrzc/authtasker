@@ -77,13 +77,14 @@ describe(`POST ${testKit.urls.logout}`, () => {
             expect(inRedis).toBeFalsy();
         });
 
-        test('return 204 status code', async () => {
+        test('return 204 status code and no body', async () => {
             const { sessionToken, refreshToken } = await createUser(getRandomRole());
-            await testKit.agent
+            const res = await testKit.agent
                 .post(testKit.urls.logout)
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .send({ refreshToken })
                 .expect(204);
+            expect(res.body).toStrictEqual({});
         });
     });
 

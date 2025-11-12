@@ -87,52 +87,52 @@ describe(`POST ${testKit.urls.login}`, () => {
     });
 
     describe('Email does not exist', () => {
-        test('return 400 status code and invalid credentials error', async () => {
+        test('return 401 status code and invalid credentials error', async () => {
             const res = await testKit.agent.post(testKit.urls.login).send({
                 email: testKit.userData.email,
                 password: testKit.userData.password,
             });
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
-            expect(res.statusCode).toBe(statusCodes.BAD_REQUEST);
+            expect(res.statusCode).toBe(401);
         });
     });
 
     describe('Password does not match', () => {
-        test('return 400 status code and invalid credentials error', async () => {
+        test('return 401 status code and invalid credentials error', async () => {
             const { email } = await createUser();
             const res = await testKit.agent.post(testKit.urls.login).send({
                 password: testKit.userData.password,
                 email,
             });
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
-            expect(res.statusCode).toBe(statusCodes.BAD_REQUEST);
+            expect(res.statusCode).toBe(401);
         });
     });
 
     describe('Password is too long', () => {
-        test('return 400 status code and invalid credentials error', async () => {
+        test('return 401 status code and invalid credentials error', async () => {
             const res = await testKit.agent.post(testKit.urls.login).send({
                 password: faker.string.alpha(200),
                 email: testKit.userData.email,
             });
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
-            expect(res.statusCode).toBe(statusCodes.BAD_REQUEST);
+            expect(res.statusCode).toBe(401);
         });
     });
 
     describe('Invalid email format', () => {
-        test('return 400 status code and invalid credentials error', async () => {
+        test('return 401 status code and invalid credentials error', async () => {
             const res = await testKit.agent.post(testKit.urls.login).send({
                 password: testKit.userData.password,
                 email: faker.string.alpha(200),
             });
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
-            expect(res.statusCode).toBe(statusCodes.BAD_REQUEST);
+            expect(res.statusCode).toBe(401);
         });
     });
 
     describe('User exceeds the max refresh tokens per user', () => {
-        test('return 403 status code and refresh token limit exceed error', async () => {
+        test('return 403 status code and refresh token limit exceeded error', async () => {
             const maxRefresh = testKit.configService.MAX_REFRESH_TOKENS_PER_USER;
             const user = testKit.userData.user;
             const loginInfo = {
