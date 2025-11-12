@@ -14,7 +14,7 @@ describe('GET /api/users/me', () => {
     });
 
     describe('Session token not provided', () => {
-        test(`should return 401 status code and ${authErrors.INVALID_TOKEN} message`, async () => {
+        test(`return 401 status code and invalid token error message`, async () => {
             const response = await testKit.agent.get(testKit.urls.myProfile);
             expect(response.statusCode).toBe(401);
             expect(response.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });

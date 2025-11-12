@@ -15,7 +15,7 @@ import { commonErrors } from 'src/messages/common.error.messages';
 
 describe(`POST ${testKit.urls.logout}`, () => {
     describe('Session token not provided', () => {
-        test(`should return 401 status code and "${authErrors.INVALID_TOKEN}" message`, async () => {
+        test(`return 401 status code and invalid token error message`, async () => {
             const response = await testKit.agent.post(testKit.urls.logout);
             expect(response.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
             expect(response.statusCode).toBe(401);
@@ -23,7 +23,7 @@ describe(`POST ${testKit.urls.logout}`, () => {
     });
 
     describe('Refresh token not provided', () => {
-        test(`return 400 status code and ${authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY}`, async () => {
+        test(`return 400 status code and refresh token not provided in body error message`, async () => {
             const error = authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY;
             const { sessionToken } = await createUser(getRandomRole());
             const response = await testKit.agent
@@ -36,7 +36,7 @@ describe(`POST ${testKit.urls.logout}`, () => {
     });
 
     describe('Successful logout', () => {
-        test('session token should be blacklisted', async () => {
+        test('session token is blacklisted', async () => {
             const { sessionToken, refreshToken } = await createUser(UserRole.EDITOR);
             await testKit.agent
                 .post(testKit.urls.logout)
@@ -51,7 +51,7 @@ describe(`POST ${testKit.urls.logout}`, () => {
             expect(blacklisted).toBeTruthy();
         });
 
-        test('refresh token should be deleted from Redis', async () => {
+        test('refresh token is deleted from Redis', async () => {
             const { sessionToken, refreshToken, id } = await createUser(getRandomRole());
             await testKit.agent
                 .post(testKit.urls.logout)
@@ -64,7 +64,7 @@ describe(`POST ${testKit.urls.logout}`, () => {
             expect(inRedis).toBeNull();
         });
 
-        test('old refresh token should be deleted from refresh tokens index in Redis', async () => {
+        test('old refresh token is deleted from refresh tokens index in Redis', async () => {
             const { refreshToken, id, sessionToken } = await createUser(getRandomRole());
             await testKit.agent
                 .post(testKit.urls.logout)
@@ -87,8 +87,8 @@ describe(`POST ${testKit.urls.logout}`, () => {
         });
     });
 
-    describe(`More than ${rateLimiting[RateLimiter.critical].max} requests in ${rateLimiting[RateLimiter.critical].windowMs / 1000}s`, () => {
-        test(`should return 429 status code and ${commonErrors.TOO_MANY_REQUESTS} message`, async () => {
+    describe('More than 3 requests in 60s', () => {
+        test(`return 429 status code and too many requests error message`, async () => {
             const ip = faker.internet.ip();
             const { sessionToken } = await createUser(getRandomRole());
             for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {

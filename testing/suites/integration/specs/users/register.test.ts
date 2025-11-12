@@ -16,7 +16,7 @@ const registrationUrl = testKit.urls.register;
 
 describe(`POST ${registrationUrl}`, () => {
     describe('Successful registration', () => {
-        test(`default role should be "${UserRole.READONLY}"`, async () => {
+        test(`default role is "readonly"`, async () => {
             const user = testKit.userData.user;
             await testKit.agent.post(registrationUrl).send(user).expect(status2xx);
             const userInDb = await testKit.models.user.findOne({ email: user.email }).exec();
@@ -24,7 +24,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(userInDb?.role).toBe(UserRole.READONLY);
         });
 
-        test('email should be saved in db with no changes', async () => {
+        test('email is saved in db with no changes', async () => {
             const user = testKit.userData.user;
             await testKit.agent.post(registrationUrl).send(user).expect(status2xx);
             const userInDb = await testKit.models.user.findOne({ email: user.email }).exec();
@@ -32,7 +32,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(userInDb?.email).toBe(user.email);
         });
 
-        test('name should be transformed into lowercase and spaces are trimmed', async () => {
+        test('name is transformed into lowercase and spaces are trimmed', async () => {
             const rawName =
                 faker.string.alpha(usersLimits.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
             const expectedName = rawName.toLowerCase().trim();
@@ -46,7 +46,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(userInDb?.name).toBe(expectedName);
         });
 
-        test('should return a valid refresh token', async () => {
+        test('return a valid refresh token', async () => {
             const { body } = await testKit.agent
                 .post(registrationUrl)
                 .send(testKit.userData.user)
@@ -55,7 +55,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(testKit.refreshJwt.verify(body.refreshToken)).not.toBeNull();
         });
 
-        test('refresh token should be stored in Redis', async () => {
+        test('refresh token is stored in Redis', async () => {
             const { body } = await testKit.agent
                 .post(registrationUrl)
                 .send(testKit.userData.user)
@@ -65,7 +65,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(inRedis).toBeDefined();
         });
 
-        test('refresh token should be added to refresh tokens index', async () => {
+        test('refresh token is added to refresh tokens index', async () => {
             const { body } = await testKit.agent
                 .post(registrationUrl)
                 .send(testKit.userData.user)
@@ -76,7 +76,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(inRedis).toBeTruthy();
         });
 
-        test('should return a valid session token', async () => {
+        test('return a valid session token', async () => {
             const { body } = await testKit.agent
                 .post(registrationUrl)
                 .send(testKit.userData.user)
@@ -85,7 +85,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(testKit.sessionJwt.verify(body.sessionToken)).not.toBeNull();
         });
 
-        test('should not return password in body', async () => {
+        test('password is not returned in body', async () => {
             const { body } = await testKit.agent
                 .post(registrationUrl)
                 .send(testKit.userData.user)
@@ -93,7 +93,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(body.user.password).toBeUndefined();
         });
 
-        test('password should be hashed in database', async () => {
+        test('password is hashed in database', async () => {
             const userData = testKit.userData.user;
             const { body } = await testKit.agent
                 .post(registrationUrl)
@@ -110,7 +110,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(isPasswordCorrectlyHashed).toBe(true);
         });
 
-        test('should return 201 status code, user data and tokens', async () => {
+        test('return 201 status code, user data and tokens', async () => {
             const userData = testKit.userData.user;
             const response = await testKit.agent
                 .post(registrationUrl)
@@ -136,7 +136,7 @@ describe(`POST ${registrationUrl}`, () => {
     });
 
     describe('Username already exists', () => {
-        test('should return CONFLICT status code and USER_ALREADY_EXISTS message', async () => {
+        test('return 409 status code and user already exists error message', async () => {
             const { name } = await createUser();
             const res = await testKit.agent.post(registrationUrl).send({
                 password: testKit.userData.password,
@@ -149,7 +149,7 @@ describe(`POST ${registrationUrl}`, () => {
     });
 
     describe('Email already exists', () => {
-        test('should return CONFLICT status code and USER_ALREADY_EXISTS message', async () => {
+        test('return 409 status code and user already exists error message', async () => {
             const { email } = await createUser();
             const res = await testKit.agent.post(registrationUrl).send({
                 password: testKit.userData.password,
@@ -162,7 +162,7 @@ describe(`POST ${registrationUrl}`, () => {
     });
 
     describe('Email is not a valid email', () => {
-        test('should return BAD_REQUEST status code and INVALID_EMAIL message', async () => {
+        test('return 400 status code and invalid email error message', async () => {
             const res = await testKit.agent.post(registrationUrl).send({
                 password: testKit.userData.password,
                 name: testKit.userData.name,
@@ -173,8 +173,8 @@ describe(`POST ${registrationUrl}`, () => {
         });
     });
 
-    describe(`More than ${rateLimiting[RateLimiter.critical].max} requests in ${rateLimiting[RateLimiter.critical].windowMs / 1000}s`, () => {
-        test('should return 429 status code and TOO_MANY_REQUESTS message', async () => {
+    describe('More than 3 requests in 60s', () => {
+        test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
                 await testKit.agent.post(registrationUrl).send({}).set('X-Forwarded-For', ip);

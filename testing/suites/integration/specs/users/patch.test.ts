@@ -17,7 +17,7 @@ import { usersLimits } from 'src/constants/user.constants';
 
 describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     describe('Session token not provided', () => {
-        test(`should return 401 status code and "${authErrors.INVALID_TOKEN}" message`, async () => {
+        test(`return 401 status code and invalid token error message`, async () => {
             const { id } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent
                 .patch(`${testKit.urls.usersAPI}/${id}`)
@@ -28,7 +28,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('Successful update', () => {
-        test('should return status 200 and the updated user data in db', async () => {
+        test('return status 200 and the updated user data in db', async () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             const { body, statusCode } = await testKit.agent
                 .patch(`${testKit.urls.usersAPI}/${id}`)
@@ -51,7 +51,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             });
         });
 
-        test('name should be transformed to lowercase and trimmed in db', async () => {
+        test('name is transformed to lowercase and trimmed in db', async () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             const rawName =
                 faker.string.alpha(usersLimits.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
@@ -226,7 +226,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('No field to update is provided', () => {
-        test(`return 400 status code and "${usersApiErrors.NO_PROPERTIES_TO_UPDATE}" message`, async () => {
+        test(`return 400 status code and no properties to update error message`, async () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent
                 .patch(`${testKit.urls.usersAPI}/${id}`)
@@ -238,7 +238,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('User email already exists', () => {
-        test(`return 409 status code and "${usersApiErrors.ALREADY_EXISTS}" message`, async () => {
+        test(`return 409 status code and user already exists error message`, async () => {
             const user1 = await testKit.models.user.create(testKit.userData.user);
             const response = await testKit.agent.post(testKit.urls.register).send({
                 ...testKit.userData.user,
@@ -250,7 +250,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('Username already exists', () => {
-        test(`return 409 status code and "${usersApiErrors.ALREADY_EXISTS}" message`, async () => {
+        test(`return 409 status code and user already exists error message`, async () => {
             const existingUser = await createUser();
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent
@@ -263,7 +263,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('ADMIN attempts to update another ADMIN', () => {
-        test('should return 403 status code and "${authErrors.FORBIDDEN}" message', async () => {
+        test('return 403 status code and forbidden error message', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
             const { id: targetUserId } = await createUser(UserRole.ADMIN);
             const { statusCode, body } = await testKit.agent
@@ -276,7 +276,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('ADMIN attempts to update an EDITOR', () => {
-        test('should succeed', async () => {
+        test('successfully updates user', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
             const { id: targetUserId } = await createUser(UserRole.EDITOR);
             await testKit.agent
@@ -288,7 +288,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('ADMIN attempts to update a READONLY', () => {
-        test('should succeed', async () => {
+        test('successfully updates user', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             await testKit.agent
@@ -300,7 +300,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('EDITOR attempts to update an ADMIN', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+        test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
             const { id: targetUserId } = await createUser(UserRole.ADMIN);
             const { statusCode, body } = await testKit.agent
@@ -313,7 +313,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('EDITOR attempts to update another EDITOR', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+        test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
             const { id: targetUserId } = await createUser(UserRole.EDITOR);
             const { statusCode, body } = await testKit.agent
@@ -326,7 +326,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('EDITOR attempts to update a READONLY', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+        test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent
@@ -339,7 +339,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('READONLY attemps to update another READONLY', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+        test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent
@@ -351,8 +351,8 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe(`More than ${rateLimiting[RateLimiter.relaxed].max} requests in ${rateLimiting[RateLimiter.relaxed].windowMs / 1000}s`, () => {
-        test('should return 429 status code and TOO_MANY_REQUESTS message', async () => {
+    describe('More than 100 requests in 300s', () => {
+        test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             for (let i = 0; i < rateLimiting[RateLimiter.relaxed].max; i++) {

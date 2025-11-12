@@ -16,7 +16,7 @@ import { Types } from 'mongoose';
 
 describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     describe('Session token not provided', () => {
-        test(`should return 401 status code and "${authErrors.INVALID_TOKEN}" message`, async () => {
+        test(`return 401 status code and invalid token error message`, async () => {
             const { id } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent
                 .delete(`${testKit.urls.usersAPI}/${id}`)
@@ -27,7 +27,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('Successful deletion', () => {
-        test('should return status 204 and remove user from database', async () => {
+        test('return status 204 and remove user from database', async () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             const { statusCode } = await testKit.agent
                 .delete(`${testKit.urls.usersAPI}/${id}`)
@@ -37,7 +37,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
             expect(userInDb).toBeNull();
         });
 
-        test('should revoke all refresh tokens from redis', async () => {
+        test('revoke all refresh tokens from redis', async () => {
             const {
                 refreshToken,
                 id,
@@ -72,7 +72,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
             expect(token2InRedis).toBeNull();
         });
 
-        test('should remove all tasks associated with the user', async () => {
+        test('remove all tasks associated with the user', async () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             // Create some tasks for the user
             const task1 = await testKit.models.task.create({
@@ -97,7 +97,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('User not found', () => {
-        test(`should return 404 status code and "${usersApiErrors.NOT_FOUND}" message`, async () => {
+        test(`return 404 status code and user not found error message`, async () => {
             const { sessionToken } = await createUser(UserRole.ADMIN);
             const nonExistentId = new Types.ObjectId().toString();
             const { statusCode, body } = await testKit.agent
@@ -109,7 +109,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('ADMIN attempts to delete another ADMIN', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+        test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
             const { id: targetUserId } = await createUser(UserRole.ADMIN);
             const { statusCode, body } = await testKit.agent
@@ -121,7 +121,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('ADMIN attempts to delete an EDITOR', () => {
-        test('should succeed', async () => {
+        test('successfully deletes user', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
             const { id: targetUserId } = await createUser(UserRole.EDITOR);
             await testKit.agent
@@ -132,7 +132,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('ADMIN attempts to delete a READONLY', () => {
-        test('should succeed', async () => {
+        test('successfully deletes user', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             await testKit.agent
@@ -143,7 +143,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('EDITOR attempts to delete an ADMIN', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+        test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
             const { id: targetUserId } = await createUser(UserRole.ADMIN);
             const { statusCode, body } = await testKit.agent
@@ -155,7 +155,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('EDITOR attempts to delete another EDITOR', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+        test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
             const { id: targetUserId } = await createUser(UserRole.EDITOR);
             const { statusCode, body } = await testKit.agent
@@ -167,7 +167,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('EDITOR attempts to delete a READONLY', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+        test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent
@@ -179,7 +179,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('READONLY attempts to delete another READONLY', () => {
-        test(`should return 403 status code and "${authErrors.FORBIDDEN}" message`, async () => {
+        test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
             const { id: targetUserId } = await createUser(UserRole.READONLY);
             const { statusCode, body } = await testKit.agent
@@ -190,8 +190,8 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe(`More than ${rateLimiting[RateLimiter.relaxed].max} requests in ${rateLimiting[RateLimiter.relaxed].windowMs / 1000}s`, () => {
-        test('should return 429 status code and TOO_MANY_REQUESTS message', async () => {
+    describe('More than 100 requests in 300s', () => {
+        test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             for (let i = 0; i < rateLimiting[RateLimiter.relaxed].max; i++) {

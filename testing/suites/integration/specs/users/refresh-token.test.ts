@@ -13,7 +13,7 @@ import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token
 
 describe(`POST ${testKit.urls.refreshToken}`, () => {
     describe('Refresh token is not provided in body', () => {
-        test(`return 400 status code ${authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY} message`, async () => {
+        test(`return 400 status code and refresh token not provided in body error message`, async () => {
             const { statusCode, body } = await testKit.agent.post(testKit.urls.refreshToken);
             expect(body).toStrictEqual({ error: authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY });
             expect(statusCode).toBe(400);
@@ -21,7 +21,7 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
     });
 
     describe('Session token provided instead of refresh token', () => {
-        test(`return 401 status code and  ${authErrors.INVALID_TOKEN} message`, async () => {
+        test(`return 401 status code and invalid token error message`, async () => {
             const { body, statusCode } = await testKit.agent.post(testKit.urls.refreshToken).send({
                 // session token
                 refreshToken: testKit.sessionJwt.generate('1m', {
@@ -34,7 +34,7 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
     });
 
     describe('User in token does not exist', () => {
-        test(`return 401 status code and ${authErrors.INVALID_TOKEN} message`, async () => {
+        test(`return 401 status code and invalid token error message`, async () => {
             const { refreshToken, id } = await createUser(getRandomRole());
             await testKit.models.user.findByIdAndDelete(id);
             const { body, statusCode } = await testKit.agent
@@ -91,7 +91,7 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
             expect(body.refreshToken).toBeDefined();
         });
 
-        test('old refresh token should be deleted from Redis', async () => {
+        test('old refresh token is deleted from Redis', async () => {
             const { refreshToken, id } = await createUser(getRandomRole());
             await testKit.agent
                 .post(testKit.urls.refreshToken)
@@ -103,7 +103,7 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
             expect(inRedis).toBeNull();
         });
 
-        test('old refresh token should be deleted from refresh tokens index in Redis', async () => {
+        test('old refresh token is deleted from refresh tokens index in Redis', async () => {
             const { refreshToken, id } = await createUser(getRandomRole());
             await testKit.agent
                 .post(testKit.urls.refreshToken)
@@ -115,7 +115,7 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
             expect(inRedis).toBeFalsy();
         });
 
-        test('new refresh token should be stored in Redis', async () => {
+        test('new refresh token is stored in Redis', async () => {
             const { refreshToken, id } = await createUser(getRandomRole());
             const { body } = await testKit.agent
                 .post(testKit.urls.refreshToken)
@@ -128,7 +128,7 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
             expect(newTokenInRedis).not.toBeNull();
         });
 
-        test('new refresh token should be stored in refresh tokens index in Redis', async () => {
+        test('new refresh token is stored in refresh tokens index in Redis', async () => {
             const { refreshToken, id } = await createUser(getRandomRole());
             const { body } = await testKit.agent
                 .post(testKit.urls.refreshToken)
@@ -142,8 +142,8 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
         });
     });
 
-    describe(`More than ${rateLimiting[RateLimiter.critical].max} requests in ${rateLimiting[RateLimiter.critical].windowMs / 1000}s`, () => {
-        test('should return 429 status code and TOO_MANY_REQUESTS message', async () => {
+    describe('More than 3 requests in 60s', () => {
+        test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
                 await testKit.agent
