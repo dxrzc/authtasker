@@ -24,6 +24,14 @@ describe(`POST ${registrationUrl}`, () => {
             expect(userInDb?.role).toBe(UserRole.READONLY);
         });
 
+        test('emailValidated property is false by default', async () => {
+            const user = testKit.userData.user;
+            await testKit.agent.post(registrationUrl).send(user).expect(status2xx);
+            const userInDb = await testKit.models.user.findOne({ email: user.email }).exec();
+            expect(userInDb).not.toBeNull();
+            expect(userInDb?.emailValidated).toBeFalsy();
+        });
+
         test('email is saved in db with no changes', async () => {
             const user = testKit.userData.user;
             await testKit.agent.post(registrationUrl).send(user).expect(status2xx);
