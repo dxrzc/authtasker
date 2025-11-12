@@ -123,12 +123,11 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 email,
                 purpose: tokenPurposes.PASSWORD_RECOVERY,
             });
-            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
-                token,
-                newPassword: testKit.userData.password,
-            });
-            expect(res.text).toBe(authSuccessMessages.PASSWORD_RESET_SUCCESS);
-            expect(res.status).toBe(200);
+            const res = await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .send({ token, newPassword: testKit.userData.password })
+                .expect(200);
+            expect(res.body).toStrictEqual({ message: authSuccessMessages.PASSWORD_RESET_SUCCESS });
         });
     });
 
