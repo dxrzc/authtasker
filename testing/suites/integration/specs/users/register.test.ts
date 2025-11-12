@@ -173,7 +173,7 @@ describe(`POST ${registrationUrl}`, () => {
         });
     });
 
-    describe(`More than ${rateLimiting[RateLimiter.critical].max} requests in ${rateLimiting[RateLimiter.critical].windowMs / 1000}s`, () => {
+    describe('More than 3 requests in 60s', () => {
         test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {

@@ -351,7 +351,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe(`More than ${rateLimiting[RateLimiter.relaxed].max} requests in ${rateLimiting[RateLimiter.relaxed].windowMs / 1000}s`, () => {
+    describe('More than 100 requests in 300s', () => {
         test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             const { sessionToken, id } = await createUser(UserRole.READONLY);
