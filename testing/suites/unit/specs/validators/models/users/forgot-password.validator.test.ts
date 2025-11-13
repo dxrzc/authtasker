@@ -13,7 +13,7 @@ describe('ForgotPasswordValidator', () => {
     describe('Valid password provided', () => {
         test('return ForgotPasswordValidator instance', async () => {
             await expect(
-                forgotPasswordValidator.validate({ username: usersData.name() }),
+                forgotPasswordValidator.validate({ username: usersData.name }),
             ).resolves.toBeInstanceOf(ForgotPasswordValidator);
         });
     });
@@ -21,7 +21,7 @@ describe('ForgotPasswordValidator', () => {
     describe('Valid email provided', () => {
         test('return ForgotPasswordValidator instance', async () => {
             await expect(
-                forgotPasswordValidator.validate({ email: usersData.email() }),
+                forgotPasswordValidator.validate({ email: usersData.email }),
             ).resolves.toBeInstanceOf(ForgotPasswordValidator);
         });
     });
@@ -55,8 +55,8 @@ describe('ForgotPasswordValidator', () => {
         test('throw InvalidInput INVALID_FORGOT_PASSWORD_INPUT message', async () => {
             await expect(
                 forgotPasswordValidator.validate({
-                    username: usersData.name(),
-                    email: usersData.email(),
+                    username: usersData.name,
+                    email: usersData.email,
                 }),
             ).rejects.toThrow(new InvalidInputError(usersApiErrors.INVALID_FORGOT_PASSWORD_INPUT));
         });

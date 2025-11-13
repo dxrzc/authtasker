@@ -6,7 +6,7 @@
     "node": "22.x"
   },
   "scripts": {
-    "lint": "eslint \"{src,test}/**/*.ts\" --fix",
+    "lint": "eslint \"{src,testing}/**/*.ts\" --fix",
     "dev": "docker compose up --attach app",
     "test:unit": "jest --config testing/jest/jest.unit.config.ts",
     "test:integration": "jest --config testing/jest/jest.integration.config.ts"

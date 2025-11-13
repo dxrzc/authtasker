@@ -17,10 +17,10 @@ export class TasksSeedService {
 
     private generateRandomTask(): TaskRequest {
         return {
-            name: this.dataGenerator.name(),
-            description: this.dataGenerator.description(),
-            status: this.dataGenerator.status(),
-            priority: this.dataGenerator.priority(),
+            name: this.dataGenerator.name,
+            description: this.dataGenerator.description,
+            status: this.dataGenerator.status,
+            priority: this.dataGenerator.priority,
         };
     }
 

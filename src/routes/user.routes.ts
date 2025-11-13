@@ -1,16 +1,16 @@
 import { Router } from 'express';
-import { ApiType } from 'src/enums/api-type.enum';
 import { UserService } from 'src/services/user.service';
 import { UserController } from 'src/controllers/user.controller';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
 import { SystemLoggerService } from 'src/services/system-logger.service';
-import { RateLimiterMiddleware } from 'src/middlewares/api-limiter.middleware';
+import { RateLimiterMiddleware } from 'src/middlewares/rate-limiter.middleware';
 import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
 import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
 import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
 import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';
 import { ForgotPasswordValidator } from 'src/validators/models/user/forgot-password.validator';
 import { UserRole } from 'src/enums/user-role.enum';
+import { RateLimiter } from 'src/enums/rate-limiter.enum';
 
 export class UserRoutes {
     private readonly userController: UserController;
@@ -37,98 +37,98 @@ export class UserRoutes {
 
         router.get(
             '/reset-password',
-            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.userController.resetPasswordForm,
         );
 
         router.get(
             '/me',
-            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.me,
         );
 
         router.post(
             '/register',
-            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.userController.create,
         );
 
         router.post(
             '/login',
-            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.userController.login,
         );
 
         router.post(
             '/logoutFromAll',
-            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.userController.logoutFromAll,
         );
 
         router.post(
             '/refresh-token',
-            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.userController.refresh,
         );
 
         router.post(
             '/requestEmailValidation',
-            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.requestEmailValidation,
         );
 
         router.post(
             '/logout',
-            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.logout,
         );
 
         router.get(
             '/confirmEmailValidation/:token',
-            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.userController.confirmEmailValidation,
         );
 
         router.delete(
             '/:id',
-            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.deleteOne,
         );
 
         router.patch(
             '/:id',
-            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.updateOne,
         );
 
         router.get(
             '/:id',
-            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.findOne,
         );
 
         router.get(
             '/',
-            this.apiLimiterMiddleware.middleware(ApiType.coreApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.findAll,
         );
 
         router.post(
             '/forgot-password',
-            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.userController.requestPasswordRecovery,
         );
 
         router.post(
             '/reset-password',
-            this.apiLimiterMiddleware.middleware(ApiType.authApi),
+            this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.userController.resetPasswordd,
         );
 

@@ -11,8 +11,8 @@ import { RefreshTokenService } from 'src/services/refresh-token.service';
 
 beforeAll(() => {
     const configSvc = new ConfigService();
-    testKit.tasksDataGenerator = new TasksDataGenerator();
-    testKit.userDataGenerator = new UserDataGenerator();
+    testKit.taskData = new TasksDataGenerator();
+    testKit.userData = new UserDataGenerator();
     testKit.models = new ModelLoader({ emitEvents: false });
     testKit.configService = configSvc;
     testKit.sessionJwt = new JwtService(configSvc.JWT_SESSION_PRIVATE_KEY);

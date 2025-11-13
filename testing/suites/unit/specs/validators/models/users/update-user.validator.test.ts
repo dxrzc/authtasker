@@ -57,8 +57,8 @@ describe('UpdateUserValidator', () => {
 
     test('throw InvalidInputError when unexpected property is provided', async () => {
         const data = {
-            name: usersData.name(),
-            email: usersData.email(),
+            name: usersData.name,
+            email: usersData.email,
             unknown: 'surprise',
         };
         await expect(
@@ -68,7 +68,7 @@ describe('UpdateUserValidator', () => {
 
     describe('valid input', () => {
         test('return UpdateUserValidator instance', async () => {
-            const data = { name: usersData.name() };
+            const data = { name: usersData.name };
             const result = await updateUserValidator.validateNewAndTransform(data);
             expect(result).toBeInstanceOf(UpdateUserValidator);
         });
@@ -82,9 +82,9 @@ describe('UpdateUserValidator', () => {
 
         test('return all other properties unchanged', async () => {
             const data = {
-                name: usersData.name(),
-                email: usersData.email(),
-                password: usersData.password(),
+                name: usersData.name,
+                email: usersData.email,
+                password: usersData.password,
             };
             const result = await updateUserValidator.validateNewAndTransform(data);
             expect(result.email).toBe(data.email);

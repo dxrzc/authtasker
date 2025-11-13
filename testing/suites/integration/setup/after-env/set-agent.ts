@@ -7,12 +7,12 @@ beforeAll(() => {
         get: () => {
             const client = request(testKit.server);
             const field = 'X-Forwarded-For';
-            const randomIp = faker.internet.ip();
             return {
-                get: (url: string) => client.get(url).set(field, randomIp),
-                post: (url: string) => client.post(url).set(field, randomIp),
-                put: (url: string) => client.put(url).set(field, randomIp),
-                delete: (url: string) => client.delete(url).set(field, randomIp),
+                get: (url: string) => client.get(url).set(field, faker.internet.ip()),
+                post: (url: string) => client.post(url).set(field, faker.internet.ip()),
+                put: (url: string) => client.put(url).set(field, faker.internet.ip()),
+                delete: (url: string) => client.delete(url).set(field, faker.internet.ip()),
+                patch: (url: string) => client.patch(url).set(field, faker.internet.ip()),
             };
         },
     });

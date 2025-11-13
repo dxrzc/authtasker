@@ -6,43 +6,44 @@ export class UserDataGenerator {
 
     private generateRandomName() {
         const randomSufix = faker.number.int({ max: 100 });
-
-        // generated a number between 0 and 1
+        const suffixLength = randomSufix.toString().length;
+        const maxBaseLength = usersLimits.MAX_NAME_LENGTH - suffixLength;
+        // Choose randomly between username and first name
         const random = Math.round(Math.random());
-
-        const randomName = random === 0 ? faker.internet.username() : faker.person.firstName();
-
-        return randomName.concat(randomSufix.toString());
+        let baseName = random === 0 ? faker.internet.username() : faker.person.firstName();
+        // Ensure base name does not exceed available space
+        if (baseName.length > maxBaseLength) {
+            baseName = baseName.substring(0, maxBaseLength);
+        }
+        const fullName = baseName.concat(randomSufix.toString());
+        // Ensure minimum length is met
+        if (fullName.length < usersLimits.MIN_NAME_LENGTH) {
+            const paddingNeeded = usersLimits.MIN_NAME_LENGTH - fullName.length;
+            return fullName + 'x'.repeat(paddingNeeded);
+        }
+        return fullName;
     }
 
-    name() {
-        let name: string;
-
-        do {
-            name = this.generateRandomName();
-        } while (
-            name.length > usersLimits.MAX_NAME_LENGTH ||
-            name.length < usersLimits.MIN_NAME_LENGTH
-        );
-
+    get name() {
+        const name = this.generateRandomName();
         return name.toLowerCase().trim();
     }
 
-    email() {
+    get email() {
         return faker.internet.email();
     }
 
-    password() {
+    get password() {
         return faker.internet.password({
             length: usersLimits.MAX_PASSWORD_LENGTH,
         });
     }
 
-    fullUser() {
+    get user() {
         return {
-            name: this.name(),
-            email: this.email(),
-            password: this.password(),
+            password: this.password,
+            email: this.email,
+            name: this.name,
         };
     }
 }

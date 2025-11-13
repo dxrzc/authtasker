@@ -17,4 +17,5 @@ beforeAll(() => {
         testKit.loggerServiceMock,
     );
     testKit.server = server['app'];
+    testKit.server.set('trust proxy', 'loopback'); // Trust only loopback proxies
 });

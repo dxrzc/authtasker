@@ -1,0 +1,284 @@
+import { faker } from '@faker-js/faker';
+import { JwtTypes } from 'src/enums/jwt-types.enum';
+import { JwtService } from 'src/services/jwt.service';
+import { testKit } from '@integration/kit/test.kit';
+import { createUser } from '@integration/utils/create-user.util';
+import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
+import { tokenPurposes } from 'src/constants/token-purposes.constants';
+import { status2xx } from '@integration/utils/status-2xx.util';
+import { authErrors } from 'src/messages/auth.error.messages';
+import { usersApiErrors } from 'src/messages/users-api.error.messages';
+import { usersLimits } from 'src/constants/user.constants';
+import { RateLimiter } from 'src/enums/rate-limiter.enum';
+import { rateLimiting } from 'src/constants/rate-limiting.constants';
+import { commonErrors } from 'src/messages/common.error.messages';
+import { authSuccessMessages } from 'src/messages/auth.success.messages';
+import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
+import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
+
+describe(`POST ${testKit.urls.resetPassword}`, () => {
+    describe('Successful password resetting', () => {
+        test('session token is blacklisted', async () => {
+            const { email } = await createUser(getRandomRole());
+            const { token, jti } = testKit.passwordRecovJwt.generate('1m', {
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+                email,
+            });
+            await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .send({
+                    newPassword: testKit.userData.password,
+                    token,
+                })
+                .expect(status2xx);
+            const tokenInRedisStore = await testKit.jwtBlacklistService.tokenInBlacklist(
+                JwtTypes.passwordRecovery,
+                jti,
+            );
+            expect(tokenInRedisStore).toBeTruthy();
+        });
+
+        test('all refresh token associated with user are deleted from redis', async () => {
+            // register (token 1)
+            const {
+                refreshToken: refreshTkn1,
+                email,
+                unhashedPassword,
+                id,
+            } = await createUser(getRandomRole());
+            // login (token 2)
+            const { body } = await testKit.agent
+                .post(testKit.urls.login)
+                .send({ email, password: unhashedPassword })
+                .expect(status2xx);
+            const refreshTkn2 = body.refreshToken;
+            // reset password
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+                email,
+            });
+            await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .send({
+                    newPassword: testKit.userData.password,
+                    token,
+                })
+                .expect(status2xx);
+            // get jtis
+            const { jti: tkn1Jti } = testKit.refreshJwt.verify(refreshTkn1)!;
+            const { jti: tkn2Jti } = testKit.refreshJwt.verify(refreshTkn2)!;
+            const tkn1InRedis = await testKit.redisService.get(makeRefreshTokenKey(id, tkn1Jti));
+            const tkn2InRedis = await testKit.redisService.get(makeRefreshTokenKey(id, tkn2Jti));
+            expect(tkn1InRedis).toBeNull();
+            expect(tkn2InRedis).toBeNull();
+        });
+
+        test('delete all the refresh tokens from index in Redis', async () => {
+            // register (token 1)
+            const { email, unhashedPassword, id } = await createUser(getRandomRole());
+            const indexKey = makeRefreshTokenIndexKey(id);
+            // login (token 2)
+            await testKit.agent
+                .post(testKit.urls.login)
+                .send({ email, password: unhashedPassword })
+                .expect(status2xx);
+            // index size should be 2
+            await expect(testKit.redisService.getSetSize(indexKey)).resolves.toBe(2);
+            // reset password
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+                email,
+            });
+            await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .send({
+                    newPassword: testKit.userData.password,
+                    token,
+                })
+                .expect(status2xx);
+            // index size should be 0
+            const indexSize = await testKit.redisService.getSetSize(indexKey);
+            expect(indexSize).toBe(0);
+        });
+
+        test('user password is hashed in database', async () => {
+            const { email, id } = await createUser(getRandomRole());
+            const newPassword = testKit.userData.password;
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                email,
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+            });
+            await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .send({ token, newPassword })
+                .expect(status2xx);
+            const userInDb = await testKit.models.user.findById(id).exec();
+            const isHashed = await testKit.hashingService.compare(newPassword, userInDb!.password);
+            expect(isHashed).toBeTruthy();
+        });
+
+        test('return status 200 and password reset success plain text', async () => {
+            const { email } = await createUser(getRandomRole());
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                email,
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+            });
+            const res = await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .send({ token, newPassword: testKit.userData.password })
+                .expect(200);
+            expect(res.body).toStrictEqual({ message: authSuccessMessages.PASSWORD_RESET_SUCCESS });
+        });
+    });
+
+    describe('User with email in token not found', () => {
+        test('return status 404 user not found error message', async () => {
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                email: testKit.userData.email,
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+            });
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
+                token,
+                newPassword: testKit.userData.password,
+            });
+            expect(res.body).toStrictEqual({ error: usersApiErrors.NOT_FOUND });
+            expect(res.status).toBe(404);
+        });
+    });
+
+    describe('Token not provided', () => {
+        test('return status 401 and invalid token error message', async () => {
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
+                newPassword: testKit.userData.password,
+            });
+            expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(res.status).toBe(401);
+        });
+    });
+
+    describe('Token not signed by this server', () => {
+        test('return status 401 and invalid token error message', async () => {
+            const randomEmail = testKit.userData.email;
+            const { token: invalidToken } = new JwtService('randomKey').generate('10m', {
+                email: randomEmail,
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+            });
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
+                token: invalidToken,
+                newPassword: testKit.userData.password,
+            });
+            expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(res.status).toBe(401);
+        });
+    });
+
+    describe('Invalid token purpose', () => {
+        test('return status 401 and invalid token error message', async () => {
+            const { token: tokenWithWrongPurpose } = testKit.passwordRecovJwt.generate('1m', {
+                email: 'test@gmail.com',
+                purpose: tokenPurposes.SESSION,
+            });
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
+                token: tokenWithWrongPurpose,
+                newPassword: testKit.userData.password,
+            });
+            expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(res.status).toBe(401);
+        });
+    });
+
+    describe('Email not in token', () => {
+        test('return status 401 and invalid token error message', async () => {
+            const { token: tokenWithNoEmail } = testKit.passwordRecovJwt.generate('1m', {
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+            });
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
+                token: tokenWithNoEmail,
+                newPassword: testKit.userData.password,
+            });
+            expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(res.status).toBe(401);
+        });
+    });
+
+    describe('Correct token but blacklisted', () => {
+        test('return status 401 and invalid token error message', async () => {
+            const { token, jti } = testKit.passwordRecovJwt.generate('1m', {
+                email: 'test@gmail.com',
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+            });
+            await testKit.jwtBlacklistService.blacklist(JwtTypes.passwordRecovery, jti, 10000);
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
+                token,
+                newPassword: testKit.userData.password,
+            });
+            expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(res.status).toBe(401);
+        });
+    });
+
+    describe('Password length exceeds the max password length', () => {
+        test('return status 400 and invalid password length error message', async () => {
+            const { email } = await createUser(getRandomRole());
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                email,
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+            });
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
+                token,
+                newPassword: faker.internet.password({
+                    length: usersLimits.MAX_PASSWORD_LENGTH + 1,
+                }),
+            });
+            expect(res.body).toStrictEqual({ error: usersApiErrors.INVALID_PASSWORD_LENGTH });
+            expect(res.status).toBe(400);
+        });
+    });
+
+    describe('Password length is too short', () => {
+        test('return status 400 and invalid password length error message', async () => {
+            const { email } = await createUser(getRandomRole());
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                email,
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+            });
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
+                token,
+                newPassword: faker.internet.password({
+                    length: usersLimits.MIN_PASSWORD_LENGTH - 1,
+                }),
+            });
+            expect(res.body).toStrictEqual({ error: usersApiErrors.INVALID_PASSWORD_LENGTH });
+            expect(res.status).toBe(400);
+        });
+    });
+
+    describe('Too many requests', () => {
+        test('return 429 status code and too many requests error message', async () => {
+            const ip = faker.internet.ip();
+            const { email } = await createUser(getRandomRole());
+            const { token } = testKit.passwordRecovJwt.generate('1m', {
+                email,
+                purpose: tokenPurposes.PASSWORD_RECOVERY,
+            });
+            for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
+                await testKit.agent
+                    .post(testKit.urls.resetPassword)
+                    .set('X-Forwarded-For', ip)
+                    .send({
+                        token,
+                        newPassword: testKit.userData.password,
+                    });
+            }
+            const res = await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .set('X-Forwarded-For', ip)
+                .send({
+                    token,
+                    newPassword: testKit.userData.password,
+                });
+            expect(res.status).toBe(429);
+            expect(res.body).toStrictEqual({ error: commonErrors.TOO_MANY_REQUESTS });
+        });
+    });
+});

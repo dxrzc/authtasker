@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'async_hooks';
 import { IAsyncLocalStorageStore } from 'src/interfaces/others/async-local-storage.interface';
-import { RateLimiterMiddleware } from 'src/middlewares/api-limiter.middleware';
+import { RateLimiterMiddleware } from 'src/middlewares/rate-limiter.middleware';
 import { RequestContextMiddleware } from 'src/middlewares/request-context.middleware';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
 import { ConfigService } from 'src/services/config.service';
@@ -13,7 +13,7 @@ export function buildMiddlewares(
     asyncLocalStorage: AsyncLocalStorage<IAsyncLocalStorageStore>,
     services: ReturnType<typeof buildServices>,
 ) {
-    const rateLimiterMiddleware = new RateLimiterMiddleware(configService, loggerService);
+    const rateLimiterMiddleware = new RateLimiterMiddleware(loggerService);
     const rolesMiddleware = new RolesMiddleware(services.sessionTokenService, loggerService);
     const requestContextMiddleware = new RequestContextMiddleware(asyncLocalStorage, loggerService);
     return { rateLimiterMiddleware, rolesMiddleware, requestContextMiddleware };

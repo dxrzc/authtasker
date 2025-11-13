@@ -11,5 +11,9 @@ export const modificationAuthFixture = [
 
     { currentUserRole: UserRole.READONLY, targetUserRole: UserRole.ADMIN, expected: 'forbidden' },
     { currentUserRole: UserRole.READONLY, targetUserRole: UserRole.EDITOR, expected: 'forbidden' },
-    { currentUserRole: UserRole.READONLY, targetUserRole: UserRole.READONLY, expected: 'forbidden' },
+    {
+        currentUserRole: UserRole.READONLY,
+        targetUserRole: UserRole.READONLY,
+        expected: 'forbidden',
+    },
 ] as const;
