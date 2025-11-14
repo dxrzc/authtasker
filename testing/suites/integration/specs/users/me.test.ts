@@ -3,7 +3,7 @@ import { createUser } from '@integration/utils/create-user.util';
 import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
 import { authErrors } from 'src/messages/auth.error.messages';
 
-describe('GET /api/users/me', () => {
+describe(`GET ${testKit.urls.myProfile}`, () => {
     test('return status 200 and the profile of the user in token', async () => {
         const { sessionToken, id, email, name } = await createUser(getRandomRole());
         const response = await testKit.agent
