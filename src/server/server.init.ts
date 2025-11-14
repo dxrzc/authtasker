@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import { Server as HttpServer } from 'http';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { HttpError } from 'src/errors/http-error.class';
-import { InvalidInputError } from 'src/errors/invalid-input-error.class';
+import { InvalidCredentialsInput, InvalidInputError } from 'src/errors/invalid-input-error.class';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
@@ -46,7 +46,11 @@ export class Server {
                 // Validators don't log errors
                 const errorMessage = err.message;
                 this.logger.error(`Validation error: ${errorMessage}`);
-                res.status(statusCodes.BAD_REQUEST).json({ error: errorMessage });
+                if (err instanceof InvalidCredentialsInput) {
+                    res.status(statusCodes.UNAUTHORIZED).json({ error: errorMessage });
+                } else {
+                    res.status(statusCodes.BAD_REQUEST).json({ error: errorMessage });
+                }
                 return;
             }
             // Internal Server Error
