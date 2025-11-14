@@ -10,7 +10,6 @@ const config: Config = {
     setupFilesAfterEnv: [
         `${integrationSuitePath}/setup/after-env/set-environment.ts`,
         `${integrationSuitePath}/setup/after-env/set-databases.ts`,
-        `${integrationSuitePath}/setup/after-env/set-kit.ts`,
         `${integrationSuitePath}/setup/after-env/set-app.ts`,
         `${integrationSuitePath}/setup/after-env/set-agent.ts`,
     ],
