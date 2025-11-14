@@ -24,7 +24,6 @@ import { LoginUserValidator } from 'src/validators/models/user/login-user.valida
 import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
 import { PaginationCacheService } from './pagination-cache.service';
-import { ForgotPasswordValidator } from 'src/validators/models/user/forgot-password.validator';
 import { PasswordRecoveryTokenService } from './password-recovery-token.service';
 import { UserRole } from 'src/enums/user-role.enum';
 import { validateYourEmailTemplate } from 'src/templates/validate-your-email.template';
@@ -388,27 +387,14 @@ export class UserService {
         );
     }
 
-    async requestPasswordRecovery(input: ForgotPasswordValidator): Promise<void> {
-        let userEmail: string;
-        if (input.username) {
-            const userInDb = await this.userModel.findOne({ name: input.username }).exec();
-            if (!userInDb) {
-                this.loggerService.info(
-                    `User with username "${input.username}" not found, skipping password recovery`,
-                );
-                return;
-            }
-            userEmail = userInDb.email;
-        } else {
-            const userInDb = await this.userModel.findOne({ email: input.email }).exec();
-            if (!userInDb) {
-                this.loggerService.info(
-                    `User with email "${input.email}" not found, skipping password recovery`,
-                );
-                return;
-            }
-            userEmail = input.email as string;
+    async requestPasswordRecovery(email: string): Promise<void> {
+        const userInDb = await this.userModel.findOne({ email }).exec();
+        if (!userInDb) {
+            this.loggerService.info(
+                `User with email "${email}" not found, skipping password recovery`,
+            );
+            return;
         }
-        await this.sendForgotPasswordLink(userEmail);
+        await this.sendForgotPasswordLink(email);
     }
 }

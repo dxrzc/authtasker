@@ -6,7 +6,7 @@ import { paginationSettings } from 'src/constants/pagination.constants';
 import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
 import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
-import { ForgotPasswordValidator } from 'src/validators/models/user/forgot-password.validator';
+import { PasswordRecoveryValidator } from 'src/validators/models/user/forgot-password.validator';
 import { HttpError } from 'src/errors/http-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';
@@ -20,7 +20,7 @@ export class UserController {
         private readonly createUserValidator: CreateUserValidator,
         private readonly updateUserValidator: UpdateUserValidator,
         private readonly loginUserValidator: LoginUserValidator,
-        private readonly forgotPasswordValidator: ForgotPasswordValidator,
+        private readonly passwordRecoveryValidator: PasswordRecoveryValidator,
         private readonly resetPasswordValidator: ResetPasswordValidator,
         private readonly loggerService: LoggerService,
     ) {}
@@ -128,9 +128,11 @@ export class UserController {
         req: Request,
         res: Response,
     ): Promise<void> => {
-        const nameOrEmail = await this.forgotPasswordValidator.validate(req.body);
-        await this.userService.requestPasswordRecovery(nameOrEmail);
-        res.status(statusCodes.OK).send('If that account exists, you will receive an email.');
+        const { email } = await this.passwordRecoveryValidator.validate(req.body);
+        await this.userService.requestPasswordRecovery(email);
+        res.status(statusCodes.OK).send({
+            message: authSuccessMessages.PASSWORD_RECOVERY_REQUESTED,
+        });
     };
 
     public readonly resetPasswordd = async (req: Request, res: Response): Promise<void> => {
