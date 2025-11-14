@@ -73,7 +73,7 @@ export class UserRoutes {
         );
 
         router.post(
-            '/requestEmailValidation',
+            '/request-email-validation',
             this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.requestEmailValidation,
@@ -87,8 +87,8 @@ export class UserRoutes {
         );
 
         router.get(
-            '/confirmEmailValidation/:token',
-            this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
+            '/confirm-email-validation',
+            this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.userController.confirmEmailValidation,
         );
 

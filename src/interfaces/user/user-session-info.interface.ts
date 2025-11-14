@@ -1,8 +1,9 @@
 import { UserRole } from 'src/enums/user-role.enum';
 
-// user info obtained by roles middleware
-export interface UserFromRequest {
+// User information attached to request after authentication
+export interface UserSessionInfo {
     id: string;
+    email: string;
     role: UserRole;
     sessionJti: string;
     sessionTokenExpUnix: number;

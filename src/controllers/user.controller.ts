@@ -27,7 +27,7 @@ export class UserController {
 
     public readonly me = async (req: Request, res: Response): Promise<void> => {
         const { id } = userInfoInReq(req);
-        const me = await this.userService.findOne(id, { noStore: true });
+        const me = await this.userService.findOne(id, { cache: true });
         res.status(statusCodes.OK).json(me);
     };
 
@@ -59,8 +59,8 @@ export class UserController {
             this.loggerService.error('Refresh token was not in body');
             throw HttpError.badRequest(authErrors.REFRESH_TOKEN_NOT_PROVIDED_IN_BODY);
         }
-        const requestUserInfo = userInfoInReq(req);
-        await this.userService.logout(requestUserInfo, req.body.refreshToken);
+        const userSessionInfo = userInfoInReq(req);
+        await this.userService.logout(userSessionInfo, req.body.refreshToken);
         res.status(statusCodes.NO_CONTENT).end();
     };
 
@@ -71,24 +71,30 @@ export class UserController {
     };
 
     public readonly requestEmailValidation = async (req: Request, res: Response): Promise<void> => {
-        const requestUserInfo = userInfoInReq(req);
-        await this.userService.requestEmailValidation(requestUserInfo.id);
+        const userSessionInfo = userInfoInReq(req);
+        await this.userService.requestEmailValidation(userSessionInfo);
         res.status(statusCodes.NO_CONTENT).end();
     };
 
     public readonly confirmEmailValidation = async (req: Request, res: Response): Promise<void> => {
-        const token = req.params.token;
+        const token = req.query.token;
+        if (!token || typeof token !== 'string') {
+            this.loggerService.error('Invalid email validation token in query');
+            throw HttpError.badRequest(authErrors.INVALID_TOKEN);
+        }
         await this.userService.confirmEmailValidation(token);
-        res.status(statusCodes.OK).send({ message: 'Email successfully validated' });
+        res.status(statusCodes.OK).send({
+            message: authSuccessMessages.EMAIL_VALIDATED_SUCCESSFULLY,
+        });
     };
 
     public readonly findOne = async (req: Request, res: Response): Promise<void> => {
         const id = req.params.id;
-        const cacheOptions = buildCacheOptions(req);
-        const userFound = await this.userService.findOne(id, cacheOptions);
+        const userFound = await this.userService.findOne(id, { cache: true });
         res.status(statusCodes.OK).json(userFound);
     };
 
+    // TODO:
     public readonly findAll = async (req: Request, res: Response): Promise<void> => {
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
@@ -99,8 +105,8 @@ export class UserController {
 
     public readonly deleteOne = async (req: Request, res: Response): Promise<void> => {
         const userIdToDelete = req.params.id;
-        const requestUserInfo = userInfoInReq(req);
-        await this.userService.deleteOne(requestUserInfo, userIdToDelete);
+        const userSessionInfo = userInfoInReq(req);
+        await this.userService.deleteOne(userSessionInfo, userIdToDelete);
         res.status(statusCodes.NO_CONTENT).end();
     };
 
@@ -109,9 +115,9 @@ export class UserController {
         const propertiesToUpdate = req.body;
         const validUpdate =
             await this.updateUserValidator.validateNewAndTransform(propertiesToUpdate);
-        const requestUserInfo = userInfoInReq(req);
+        const userSessionInfo = userInfoInReq(req);
         const updated = await this.userService.updateOne(
-            requestUserInfo,
+            userSessionInfo,
             userIdToUpdate,
             validUpdate,
         );
@@ -129,10 +135,16 @@ export class UserController {
 
     public readonly resetPasswordd = async (req: Request, res: Response): Promise<void> => {
         const token = req.body.token;
+        if (!token || typeof token !== 'string') {
+            this.loggerService.error('Invalid password recovery token in body');
+            throw HttpError.badRequest(authErrors.INVALID_TOKEN);
+        }
         const rawPassword = req.body.newPassword;
         const { password } = await this.resetPasswordValidator.validate({ password: rawPassword });
         await this.userService.resetPassword(password, token);
-        res.status(statusCodes.OK).send(authSuccessMessages.PASSWORD_RESET_SUCCESS);
+        res.status(statusCodes.OK).send({
+            message: authSuccessMessages.PASSWORD_RESET_SUCCESS,
+        });
     };
 
     public readonly resetPasswordForm = async (req: Request, res: Response): Promise<void> => {

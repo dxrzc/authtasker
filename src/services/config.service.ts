@@ -61,6 +61,7 @@ export class ConfigService {
 
     public readonly MAIL_SERVICE_PASS = env.get('MAIL_SERVICE_PASS').required().asString();
 
+    // web url is appended with a default "/" when read
     public readonly WEB_URL = env.get('WEB_URL').required().asUrlString();
 
     public readonly HTTP_LOGS = env.get('HTTP_LOGS').asBool();

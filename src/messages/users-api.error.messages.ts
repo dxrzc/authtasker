@@ -2,7 +2,6 @@ export const usersApiErrors = {
     // db
     NOT_FOUND: 'User not found',
     ALREADY_EXISTS: 'User already exists',
-    EMAIL_ALREADY_VERIFIED: 'User email already verified',
     // validation
     INVALID_NAME_LENGTH: 'Invalid name length',
     INVALID_EMAIL_LENGTH: 'Invalid email length',
