@@ -80,15 +80,6 @@ export class UserService {
         return userFound;
     }
 
-    private async findOneByEmailOrThrow(email: string): Promise<UserDocument> {
-        const userInDb = await this.userModel.findOne({ email }).exec();
-        if (!userInDb) {
-            this.loggerService.error(`User with email ${email} not found`);
-            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
-        }
-        return userInDb;
-    }
-
     // check whether current user can modify target user
     private async verifyUserModificationRights(
         sessionUser: UserSessionInfo,
