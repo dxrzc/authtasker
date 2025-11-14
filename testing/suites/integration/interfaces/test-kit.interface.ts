@@ -4,13 +4,15 @@ import { UserDataGenerator } from 'src/generators/user.generator';
 import { ModelLoader } from 'src/models/model.loader';
 import { ConfigService } from 'src/services/config.service';
 import { HashingService } from 'src/services/hashing.service';
-import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
-import { JwtService } from 'src/services/jwt.service';
 import { LoggerService } from 'src/services/logger.service';
 import { PasswordRecoveryTokenService } from 'src/services/password-recovery-token.service';
 import { RedisService } from 'src/services/redis.service';
 import { RefreshTokenService } from 'src/services/refresh-token.service';
 import { TestAgent } from './test-agent.interface';
+import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
+import { EmailValidationTokenService } from 'src/services/email-validation-token.service';
+import { JwtService } from 'src/services/jwt.service';
+import { SessionTokenService } from 'src/services/session-token.service';
 
 export interface ITestKit {
     configService: ConfigService;
@@ -19,14 +21,14 @@ export interface ITestKit {
     userData: UserDataGenerator;
     taskData: TasksDataGenerator;
     loggerServiceMock: LoggerService;
-    sessionJwt: JwtService;
     refreshJwt: JwtService;
-    emailValidationJwt: JwtService;
-    passwordRecovJwt: JwtService;
+    sessionJwt: JwtService;
     jwtBlacklistService: JwtBlackListService;
     hashingService: HashingService;
     refreshTokenService: RefreshTokenService;
     passwordRecoveryTokenService: PasswordRecoveryTokenService;
+    sessionTokenService: SessionTokenService;
+    emailValidationTokenService: EmailValidationTokenService;
     server: Express;
     agent: TestAgent;
     urls: {

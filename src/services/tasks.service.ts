@@ -43,7 +43,7 @@ export class TasksService {
         targetTaskId: string,
     ): Promise<TaskDocument> {
         const task = (await this.findOne(targetTaskId, { noStore: true })) as TaskDocument;
-        const taskOwner = await this.userService.findOne(task.user.toString(), { noStore: true });
+        const taskOwner = await this.userService.findOne(task.user.toString(), { cache: false });
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
             role: taskOwner.role,
             id: taskOwner.id,
@@ -120,7 +120,7 @@ export class TasksService {
 
     async findAllByUser(userId: string, limit: number, page: number, options: ICacheOptions) {
         // verifies that user exists or throws
-        await this.userService.findOne(userId, { noStore: true });
+        await this.userService.findOne(userId, { cache: false });
         // validate limit and page
         const totalDocuments = await this.tasksModel.find({ user: userId }).countDocuments().exec();
         if (totalDocuments === 0) return [];

@@ -8,9 +8,9 @@ import { LoginUserValidator } from 'src/validators/models/user/login-user.valida
 import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
 import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
 import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';
-import { ForgotPasswordValidator } from 'src/validators/models/user/forgot-password.validator';
 import { UserRole } from 'src/enums/user-role.enum';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
+import { PasswordRecoveryValidator } from 'src/validators/models/user/forgot-password.validator';
 
 export class UserRoutes {
     private readonly userController: UserController;
@@ -25,7 +25,7 @@ export class UserRoutes {
             new CreateUserValidator(),
             new UpdateUserValidator(),
             new LoginUserValidator(),
-            new ForgotPasswordValidator(),
+            new PasswordRecoveryValidator(),
             new ResetPasswordValidator(),
             userService.loggerService,
         );
@@ -73,7 +73,7 @@ export class UserRoutes {
         );
 
         router.post(
-            '/requestEmailValidation',
+            '/request-email-validation',
             this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.requestEmailValidation,
@@ -87,8 +87,8 @@ export class UserRoutes {
         );
 
         router.get(
-            '/confirmEmailValidation/:token',
-            this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
+            '/confirm-email-validation',
+            this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.userController.confirmEmailValidation,
         );
 

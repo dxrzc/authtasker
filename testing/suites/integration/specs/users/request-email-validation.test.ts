@@ -4,7 +4,6 @@ import { status2xx } from '@integration/utils/status-2xx.util';
 import * as nodemailer from 'nodemailer';
 import { NodemailerMock } from 'nodemailer-mock';
 import { UserRole } from 'src/enums/user-role.enum';
-import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
@@ -26,14 +25,13 @@ describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
     });
 
     describe('User email is already verified', () => {
-        test('return 403 status code and email already verified error message', async () => {
-            const { id, sessionToken } = await createUser(UserRole.READONLY);
-            await testKit.models.user.findByIdAndUpdate(id, { emailValidated: true });
+        test('return 409 status code and email already verified error message', async () => {
+            const { sessionToken } = await createUser(UserRole.EDITOR);
             const response = await testKit.agent
                 .post(testKit.urls.requestEmailValidation)
                 .set('Authorization', `Bearer ${sessionToken}`);
-            expect(response.body).toStrictEqual({ error: usersApiErrors.EMAIL_ALREADY_VERIFIED });
-            expect(response.statusCode).toBe(403);
+            expect(response.body).toStrictEqual({ error: authErrors.EMAIL_ALREADY_VERIFIED });
+            expect(response.statusCode).toBe(409);
         });
     });
 

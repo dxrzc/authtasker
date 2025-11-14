@@ -17,7 +17,7 @@ import { TasksService } from 'src/services/tasks.service';
 import { UserService } from 'src/services/user.service';
 import { Models } from 'src/types/models/models.type';
 import { TaskResponse } from 'src/types/tasks/task-response.type';
-import { UserResponse } from 'src/types/user/user-response.type';
+import { UserDocument } from 'src/types/user/user-document.type';
 
 export function buildServices(
     configService: ConfigService,
@@ -66,7 +66,7 @@ export function buildServices(
         loggerService,
     );
     // Cache services
-    const usersCacheService = new CacheService<UserResponse>(
+    const usersCacheService = new CacheService<UserDocument>(
         models.userModel,
         loggerService,
         redisService,
