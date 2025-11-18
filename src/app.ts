@@ -60,7 +60,7 @@ async function main() {
 
     // redis
     const redisDb = new RedisDatabase({
-        listenConnectionEvents: true,
+        listenToConnectionEvents: true,
         redisUri: configService.REDIS_URI,
     });
     const redisInstance = await redisDb.connect();

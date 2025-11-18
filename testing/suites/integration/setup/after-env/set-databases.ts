@@ -42,7 +42,7 @@ beforeAll(async () => {
         // Redis (in-memory) with "ioredis-mock" url is not needed.
         const redisUri = faker.internet.url();
         redisDatabase = new RedisDatabase({
-            listenConnectionEvents: false,
+            listenToConnectionEvents: false,
             redisUri,
         });
 

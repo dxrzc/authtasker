@@ -3,7 +3,7 @@ import { SystemLoggerService } from 'src/services/system-logger.service';
 
 type RedisDbOptions = {
     redisUri: string;
-    listenConnectionEvents: boolean;
+    listenToConnectionEvents: boolean;
 };
 
 export class RedisDatabase {
@@ -21,7 +21,7 @@ export class RedisDatabase {
             lazyConnect: true,
         });
 
-        if (this.opts.listenConnectionEvents) {
+        if (this.opts.listenToConnectionEvents) {
             this.setupRedisEventListener();
         }
     }
