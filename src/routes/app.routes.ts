@@ -12,6 +12,7 @@ import { buildServices } from './factories/services.factory';
 import { HealthRoutes } from './health.routes';
 import { TasksRoutes } from './tasks.routes';
 import { UserRoutes } from './user.routes';
+import { createAdmin } from 'src/admin/create-admin';
 
 export class AppRoutes {
     private readonly healthController: HealthController;
@@ -73,6 +74,10 @@ export class AppRoutes {
     private buildHealthRoutes(): Router {
         const healthRoutes = new HealthRoutes(this.middlewares.rolesMiddleware);
         return healthRoutes.routes;
+    }
+
+    async createInitialAdminUser(): Promise<void> {
+        await createAdmin(this.models.userModel, this.configService, this.services.hashingService);
     }
 
     get routes(): Router {

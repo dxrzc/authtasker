@@ -69,6 +69,7 @@ async function main() {
 
     // server
     const appRoutes = new AppRoutes(configService, loggerService, asyncLocalStorage, redisService);
+    await appRoutes.createInitialAdminUser();
     const server = new Server(configService.PORT, appRoutes.routes, loggerService);
     await server.start();
     ShutdownManager.server = server;
