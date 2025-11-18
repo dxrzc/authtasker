@@ -3,6 +3,7 @@ import { PickType } from '@nestjs/mapped-types';
 import { CreateUserValidator } from './create-user.validator';
 import { validationOptionsConfig } from 'src/validators/config/validation.config';
 import { InvalidCredentialsInput } from 'src/errors/invalid-input-error.class';
+import { returnFirstError } from 'src/validators/helpers/return-first-error.helper';
 
 export class LoginUserValidator extends PickType(CreateUserValidator, [
     'email',
@@ -13,7 +14,7 @@ export class LoginUserValidator extends PickType(CreateUserValidator, [
         Object.assign(user, data);
 
         const errors = await validate(user, validationOptionsConfig);
-        if (errors.length > 0) throw new InvalidCredentialsInput();
+        if (errors.length > 0) throw new InvalidCredentialsInput(returnFirstError(errors));
 
         return user;
     }

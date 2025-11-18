@@ -2,14 +2,15 @@ import { faker } from '@faker-js/faker/.';
 import { testKit } from '@integration/kit/test.kit';
 import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
+import { stringValueToSeconds } from '@integration/utils/string-value-to-seconds.util';
 import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
 import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { statusCodes } from 'src/constants/status-codes.constants';
-import { JwtTypes } from 'src/enums/jwt-types.enum';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
+import { makeSessionTokenBlacklistKey } from 'src/functions/token/make-session-token-blacklist-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
 
@@ -36,7 +37,7 @@ describe(`POST ${testKit.urls.logout}`, () => {
     });
 
     describe('Successful logout', () => {
-        test('session token is blacklisted', async () => {
+        test('session token is blacklisted for the remaining ttl in redis', async () => {
             const { sessionToken, refreshToken } = await createUser(UserRole.EDITOR);
             await testKit.agent
                 .post(testKit.urls.logout)
@@ -44,11 +45,15 @@ describe(`POST ${testKit.urls.logout}`, () => {
                 .send({ refreshToken })
                 .expect(status2xx);
             const sessionJti = testKit.sessionJwt.verify(sessionToken)!.jti;
-            const blacklisted = await testKit.jwtBlacklistService.tokenInBlacklist(
-                JwtTypes.session,
-                sessionJti,
+            const redisKey = makeSessionTokenBlacklistKey(sessionJti);
+            const tokenInRedis = await testKit.redisService.get(redisKey);
+            const ttlSeconds = await testKit.redisService.getTtl(redisKey);
+            const expectedTtlSeconds = stringValueToSeconds(
+                testKit.configService.JWT_SESSION_EXP_TIME,
             );
-            expect(blacklisted).toBeTruthy();
+            expect(tokenInRedis).toBe(1);
+            expect(ttlSeconds).toBeGreaterThanOrEqual(expectedTtlSeconds - 2);
+            expect(ttlSeconds).toBeLessThanOrEqual(expectedTtlSeconds);
         });
 
         test('refresh token is deleted from Redis', async () => {

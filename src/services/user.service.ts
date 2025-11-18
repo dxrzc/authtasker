@@ -101,7 +101,7 @@ export class UserService {
 
     private async sendEmailValidationLink(email: string): Promise<void> {
         const token = this.emailValidationTokenService.generate(email);
-        const link = `${this.configService.WEB_URL}api/users/confirm-email-validation/${token}`;
+        const link = `${this.configService.WEB_URL}api/users/confirm-email-validation?token=${token}`;
         await this.emailService.sendMail({
             html: validateYourEmailTemplate(link),
             subject: 'Email validation',

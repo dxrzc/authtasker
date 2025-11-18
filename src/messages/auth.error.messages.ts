@@ -1,5 +1,6 @@
 export const authErrors = {
     FORBIDDEN: 'You do not have permission to perform this action',
+    EMAIL_NOT_VERIFIED: 'Verify your email to perform this action',
     INVALID_TOKEN: 'Invalid token',
     INVALID_CREDENTIALS: 'Invalid credentials',
     EMAIL_ALREADY_VERIFIED: 'Email is already verified',
