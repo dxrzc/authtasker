@@ -15,7 +15,11 @@ export function buildMiddlewares(
     services: ReturnType<typeof buildServices>,
     redisClient: Redis,
 ) {
-    const rateLimiterMiddleware = new RateLimiterMiddleware(loggerService, redisClient);
+    const rateLimiterMiddleware = new RateLimiterMiddleware(
+        loggerService,
+        redisClient,
+        configService,
+    );
     const rolesMiddleware = new RolesMiddleware(services.sessionTokenService, loggerService);
     const requestContextMiddleware = new RequestContextMiddleware(asyncLocalStorage, loggerService);
     return { rateLimiterMiddleware, rolesMiddleware, requestContextMiddleware };

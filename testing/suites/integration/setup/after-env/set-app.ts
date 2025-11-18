@@ -16,6 +16,7 @@ beforeAll(() => {
         testKit.loggerServiceMock,
         new AsyncLocalStorage<IAsyncLocalStorageStore>(),
         testKit.redisService,
+        testKit.redisService['redis'],
     );
     const server = new Server(
         testKit.configService.PORT,

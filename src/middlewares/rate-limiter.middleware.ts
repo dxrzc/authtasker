@@ -5,11 +5,13 @@ import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
 import { RedisStore, type RedisReply } from 'rate-limit-redis';
 import Redis from 'ioredis';
+import { ConfigService } from 'src/services/config.service';
 
 export class RateLimiterMiddleware {
     constructor(
         private readonly loggerService: LoggerService,
         private readonly redisClient: Redis,
+        private readonly configService: ConfigService,
     ) {}
 
     middleware(type: RateLimiter) {
@@ -25,10 +27,13 @@ export class RateLimiterMiddleware {
             standardHeaders: false,
             legacyHeaders: false,
             ...settings,
-            store: new RedisStore({
-                sendCommand: (command: string, ...args: string[]) =>
-                    this.redisClient.call(command, ...args) as Promise<RedisReply>,
-            }),
+            store:
+                this.configService.NODE_ENV === 'integration'
+                    ? undefined
+                    : new RedisStore({
+                          sendCommand: (command: string, ...args: string[]) =>
+                              this.redisClient.call(command, ...args) as Promise<RedisReply>,
+                      }),
         });
     }
 }
