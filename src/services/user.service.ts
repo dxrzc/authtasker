@@ -285,7 +285,6 @@ export class UserService {
         return await this.findOneByIdOrThrow(id);
     }
 
-    // TODO:
     async findAll(limit: number, page: number, options: ICacheOptions): Promise<UserDocument[]> {
         // validate limit and page
         const totalDocuments = await this.userModel.countDocuments().exec();
