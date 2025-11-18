@@ -6,7 +6,7 @@ import { paginationSettings } from 'src/constants/pagination.constants';
 import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
 import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
-import { PasswordRecoveryValidator } from 'src/validators/models/user/forgot-password.validator';
+import { PasswordRecoveryValidator } from 'src/validators/models/user/password-recovery.validator';
 import { HttpError } from 'src/errors/http-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';

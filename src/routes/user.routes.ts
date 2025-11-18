@@ -10,7 +10,7 @@ import { CreateUserValidator } from 'src/validators/models/user/create-user.vali
 import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';
 import { UserRole } from 'src/enums/user-role.enum';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
-import { PasswordRecoveryValidator } from 'src/validators/models/user/forgot-password.validator';
+import { PasswordRecoveryValidator } from 'src/validators/models/user/password-recovery.validator';
 
 export class UserRoutes {
     private readonly userController: UserController;
