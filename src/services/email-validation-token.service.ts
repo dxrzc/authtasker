@@ -35,7 +35,7 @@ export class EmailValidationTokenService {
         return token;
     }
 
-    async blacklist(jti: string, tokenExp: number): Promise<void> {
+    private async blacklist(jti: string, tokenExp: number): Promise<void> {
         const remainingTokenTTL = calculateTokenTTL(tokenExp);
         if (remainingTokenTTL > 0) {
             this.loggerService.info(`Email validation token "${jti}" blacklisted`);
