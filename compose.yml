@@ -1,12 +1,14 @@
 services:
-  app:
-    # TODO: depends-on
+  app:    
     restart: always
     pull_policy: never
     init: true    
     build:
       context: .
       target: development
+    depends_on:
+      - redis-db
+      - mongo-db
     ports:
       - ${SERVER_PORT:-3000}:3000    
     volumes:
