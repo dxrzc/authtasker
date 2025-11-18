@@ -61,7 +61,7 @@ export class UserRoutes {
         );
 
         router.post(
-            '/logoutFromAll',
+            '/logout-from-all-sessions',
             this.apiLimiterMiddleware.middleware(RateLimiter.critical),
             this.userController.logoutFromAll,
         );
