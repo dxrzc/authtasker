@@ -13,6 +13,8 @@ import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
 import { EmailValidationTokenService } from 'src/services/email-validation-token.service';
 import { JwtService } from 'src/services/jwt.service';
 import { SessionTokenService } from 'src/services/session-token.service';
+import { CacheService } from 'src/services/cache.service';
+import { TaskResponse } from 'src/types/tasks/task-response.type';
 
 export interface ITestKit {
     configService: ConfigService;
@@ -20,6 +22,7 @@ export interface ITestKit {
     models: ModelLoader;
     userData: UserDataGenerator;
     taskData: TasksDataGenerator;
+    tasksCacheService: CacheService<TaskResponse>;
     loggerServiceMock: LoggerService;
     refreshJwt: JwtService;
     sessionJwt: JwtService;

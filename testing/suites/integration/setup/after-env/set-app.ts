@@ -31,6 +31,7 @@ beforeAll(() => {
     testKit.passwordRecoveryTokenService = appRoutes['services']['passwordRecoveryTokenService'];
     testKit.emailValidationTokenService = appRoutes['services']['emailValidationTokenService'];
     testKit.sessionTokenService = appRoutes['services']['sessionTokenService'];
+    testKit.tasksCacheService = appRoutes['services']['tasksCacheService'];
     testKit.refreshJwt = testKit.refreshTokenService['jwtService'];
     testKit.sessionJwt = testKit.sessionTokenService['jwtService'];
     testKit.server = server['app'];
