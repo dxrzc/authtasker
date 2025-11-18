@@ -13,6 +13,7 @@ import { HealthRoutes } from './health.routes';
 import { TasksRoutes } from './tasks.routes';
 import { UserRoutes } from './user.routes';
 import { createAdmin } from 'src/admin/create-admin';
+import { Redis } from 'ioredis';
 
 export class AppRoutes {
     private readonly healthController: HealthController;
@@ -25,6 +26,7 @@ export class AppRoutes {
         private readonly loggerService: LoggerService,
         private readonly asyncLocalStorage: AsyncLocalStorage<IAsyncLocalStorageStore>,
         private readonly redisService: RedisService,
+        private readonly redisClient: Redis,
     ) {
         this.models = buildModels(this.configService);
         this.services = buildServices(
@@ -38,6 +40,7 @@ export class AppRoutes {
             this.loggerService,
             this.asyncLocalStorage,
             this.services,
+            this.redisClient,
         );
         this.healthController = new HealthController();
     }

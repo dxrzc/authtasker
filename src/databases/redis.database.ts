@@ -7,11 +7,11 @@ type RedisDbOptions = {
 };
 
 export class RedisDatabase {
-    private readonly client: Redis;
+    private readonly _client: Redis;
     private subscriber: Redis;
 
     constructor(private readonly opts: RedisDbOptions) {
-        this.client = new Redis(this.opts.redisUri, {
+        this._client = new Redis(this.opts.redisUri, {
             db: 0,
             lazyConnect: true,
             retryStrategy: (times) => Math.min(times * 50, 2000),
@@ -26,9 +26,13 @@ export class RedisDatabase {
         }
     }
 
+    get client() {
+        return this._client;
+    }
+
     async subscribe(event: string, listener: (key: string, client: Redis) => void) {
         this.subscriber.on('message', (channel, expiredKey) => {
-            listener(expiredKey, this.client);
+            listener(expiredKey, this._client);
         });
         await this.subscriber.subscribe(event, (err) => {
             if (err) throw new Error(`Failed to subscribe: ${err}`);
@@ -37,34 +41,34 @@ export class RedisDatabase {
     }
 
     private setupRedisEventListener() {
-        this.client.on('ready', () => {
+        this._client.on('ready', () => {
             SystemLoggerService.info('Redis connected successfully');
         });
 
-        this.client.on('error', (error) => {
+        this._client.on('error', (error) => {
             SystemLoggerService.error('Redis connection error:', error.message);
         });
 
-        this.client.on('close', () => {
+        this._client.on('close', () => {
             SystemLoggerService.warn('Redis connection closed');
         });
 
-        this.client.on('end', () => {
+        this._client.on('end', () => {
             SystemLoggerService.warn('Redis connection ended');
         });
     }
 
     async connect(): Promise<Redis> {
-        if (!['reconnecting', 'connecting', 'connect', 'ready'].includes(this.client.status)) {
-            await this.client.connect();
+        if (!['reconnecting', 'connecting', 'connect', 'ready'].includes(this._client.status)) {
+            await this._client.connect();
             // await this.subscriber.connect();
         }
-        return this.client;
+        return this._client;
     }
 
     async disconnect(): Promise<void> {
-        if (this.client.status === 'ready') {
-            await this.client.quit();
+        if (this._client.status === 'ready') {
+            await this._client.quit();
             // await this.subscriber.quit();
         }
     }

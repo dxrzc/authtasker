@@ -6,14 +6,16 @@ import { RolesMiddleware } from 'src/middlewares/roles.middleware';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { buildServices } from './services.factory';
+import Redis from 'ioredis';
 
 export function buildMiddlewares(
     configService: ConfigService,
     loggerService: LoggerService,
     asyncLocalStorage: AsyncLocalStorage<IAsyncLocalStorageStore>,
     services: ReturnType<typeof buildServices>,
+    redisClient: Redis,
 ) {
-    const rateLimiterMiddleware = new RateLimiterMiddleware(loggerService);
+    const rateLimiterMiddleware = new RateLimiterMiddleware(loggerService, redisClient);
     const rolesMiddleware = new RolesMiddleware(services.sessionTokenService, loggerService);
     const requestContextMiddleware = new RequestContextMiddleware(asyncLocalStorage, loggerService);
     return { rateLimiterMiddleware, rolesMiddleware, requestContextMiddleware };

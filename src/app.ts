@@ -68,7 +68,13 @@ async function main() {
     ShutdownManager.redisDb = redisDb;
 
     // server
-    const appRoutes = new AppRoutes(configService, loggerService, asyncLocalStorage, redisService);
+    const appRoutes = new AppRoutes(
+        configService,
+        loggerService,
+        asyncLocalStorage,
+        redisService,
+        redisDb.client,
+    );
     await appRoutes.createInitialAdminUser();
     const server = new Server(configService.PORT, appRoutes.routes, loggerService);
     await server.start();

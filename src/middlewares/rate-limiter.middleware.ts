@@ -3,14 +3,17 @@ import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
+import { RedisStore, type RedisReply } from 'rate-limit-redis';
+import Redis from 'ioredis';
 
 export class RateLimiterMiddleware {
-    constructor(private readonly loggerService: LoggerService) {}
+    constructor(
+        private readonly loggerService: LoggerService,
+        private readonly redisClient: Redis,
+    ) {}
 
     middleware(type: RateLimiter) {
         const settings = rateLimiting[type];
-
-        // TODO: use a redis store
 
         return rateLimit({
             message: () => {
@@ -22,6 +25,10 @@ export class RateLimiterMiddleware {
             standardHeaders: false,
             legacyHeaders: false,
             ...settings,
+            store: new RedisStore({
+                sendCommand: (command: string, ...args: string[]) =>
+                    this.redisClient.call(command, ...args) as Promise<RedisReply>,
+            }),
         });
     }
 }
