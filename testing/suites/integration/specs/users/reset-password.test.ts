@@ -15,10 +15,12 @@ import { commonErrors } from 'src/messages/common.error.messages';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
+import { makePasswordRecoveryTokenBlacklistKey } from 'src/functions/token/make-password-recovery-token-blacklist-key';
+import { stringValueToSeconds } from '@integration/utils/string-value-to-seconds.util';
 
 describe(`POST ${testKit.urls.resetPassword}`, () => {
     describe('Successful password resetting', () => {
-        test('session token is blacklisted', async () => {
+        test('token is blacklisted for the remaining ttl in redis', async () => {
             const { email } = await createUser(getRandomRole());
             const { token, jti } = testKit.passwordRecoveryTokenService.generate(email, {
                 meta: true,
@@ -30,11 +32,15 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                     token,
                 })
                 .expect(status2xx);
-            const tokenInRedisStore = await testKit.jwtBlacklistService.tokenInBlacklist(
-                JwtTypes.passwordRecovery,
-                jti,
+            const redisKey = makePasswordRecoveryTokenBlacklistKey(jti);
+            const tokenInRedis = await testKit.redisService.get(redisKey);
+            const ttlSeconds = await testKit.redisService.getTtl(redisKey);
+            const expectedTtlSeconds = stringValueToSeconds(
+                testKit.configService.JWT_PASSWORD_RECOVERY_EXP_TIME,
             );
-            expect(tokenInRedisStore).toBeTruthy();
+            expect(tokenInRedis).toBe(1);
+            expect(ttlSeconds).toBeGreaterThanOrEqual(expectedTtlSeconds - 2);
+            expect(ttlSeconds).toBeLessThanOrEqual(expectedTtlSeconds);
         });
 
         test('all refresh token associated with user are deleted from redis', async () => {

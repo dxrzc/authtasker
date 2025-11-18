@@ -2,12 +2,14 @@ import { faker } from '@faker-js/faker/.';
 import { testKit } from '@integration/kit/test.kit';
 import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
+import { stringValueToSeconds } from '@integration/utils/string-value-to-seconds.util';
 import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { tokenPurposes } from 'src/constants/token-purposes.constants';
 import { JwtTypes } from 'src/enums/jwt-types.enum';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
+import { makeEmailValidationBlacklistKey } from 'src/functions/token/make-email-validation-token-blacklist-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
@@ -35,17 +37,21 @@ describe(`POST ${testKit.urls.confirmEmailValidation}`, () => {
             expect(userInDb?.emailValidated).toBeTruthy();
         });
 
-        test('token is blacklisted', async () => {
+        test('token is blacklisted for the remaining ttl in redis', async () => {
             const { email } = await createUser();
             const { token, jti } = testKit.emailValidationTokenService.generate(email, {
                 meta: true,
             });
             await testKit.agent.get(`${testKit.urls.confirmEmailValidation}?token=${token}`);
-            const tokenIsBlacklisted = await testKit.jwtBlacklistService.tokenInBlacklist(
-                JwtTypes.emailValidation,
-                jti,
+            const redisKey = makeEmailValidationBlacklistKey(jti);
+            const tokenInRedis = await testKit.redisService.get(redisKey);
+            const ttlSeconds = await testKit.redisService.getTtl(redisKey);
+            const expectedTtlSeconds = stringValueToSeconds(
+                testKit.configService.JWT_EMAIL_VALIDATION_EXP_TIME,
             );
-            expect(tokenIsBlacklisted).toBe(true);
+            expect(tokenInRedis).toBe(1);
+            expect(ttlSeconds).toBeGreaterThanOrEqual(expectedTtlSeconds - 2);
+            expect(ttlSeconds).toBeLessThanOrEqual(expectedTtlSeconds);
         });
 
         test('return 200 status code and success message email validated succesfully message', async () => {
