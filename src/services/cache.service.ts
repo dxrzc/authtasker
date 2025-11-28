@@ -49,6 +49,34 @@ export class CacheService<Data extends { id: string }> {
         return null;
     }
 
+    async getPagination(
+        offset: number,
+        limit: number,
+        options?: {
+            find: Record<string, any>;
+        },
+    ): Promise<Data[]> {
+        const base = options?.find ? this.model.find(options?.find) : this.model.find();
+        const idsInData = await base
+            .skip(offset)
+            .limit(limit)
+            .sort({ createdAt: 1 })
+            .select('id')
+            .exec();
+        const ids = idsInData.map((d) => d._id.toString() as string);
+        return Promise.all(
+            ids.map(async (id) => {
+                const inCache = await this.get(id);
+                if (!inCache) {
+                    const indb = await this.model.findById(id);
+                    await this.cache(indb);
+                    return indb;
+                }
+                return inCache;
+            }),
+        );
+    }
+
     async cache(data: Data): Promise<void> {
         const resourceID = data.id;
         const dataInDB: DataInCache<Data> = {
