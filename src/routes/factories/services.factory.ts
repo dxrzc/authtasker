@@ -16,7 +16,7 @@ import { SessionTokenService } from 'src/services/session-token.service';
 import { TasksService } from 'src/services/tasks.service';
 import { UserService } from 'src/services/user.service';
 import { Models } from 'src/types/models/models.type';
-import { TaskResponse } from 'src/types/tasks/task-response.type';
+import { TaskDocument } from 'src/types/tasks/task-document.type';
 import { UserDocument } from 'src/types/user/user-document.type';
 
 export function buildServices(
@@ -74,7 +74,7 @@ export function buildServices(
         configService.CACHE_HARD_TTL_SECONDS,
         makeUsersCacheKey,
     );
-    const tasksCacheService = new CacheService<TaskResponse>(
+    const tasksCacheService = new CacheService<TaskDocument>(
         models.tasksModel,
         loggerService,
         redisService,
