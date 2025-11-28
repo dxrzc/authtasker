@@ -1,6 +1,6 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { statusCodes } from 'src/constants/status-codes.constants';
-import { hasSufficientRole } from 'src/functions/roles/has-sufficent-role';
+import { hasSufficientRole } from 'src/functions/roles/has-sufficient-role';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { LoggerService } from 'src/services/logger.service';
 import { SessionTokenService } from 'src/services/session-token.service';

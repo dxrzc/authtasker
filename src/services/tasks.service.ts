@@ -8,7 +8,7 @@ import { paginationRules } from 'src/functions/pagination/pagination-rules';
 import { TaskResponse } from 'src/types/tasks/task-response.type';
 import { TaskDocument } from 'src/types/tasks/task-document.type';
 import { HttpError } from 'src/errors/http-error.class';
-import { UserIdentity } from 'src/interfaces/user/user-indentity.interface';
+import { UserIdentity } from 'src/interfaces/user/user-identity.interface';
 import { ICacheOptions } from 'src/interfaces/cache/cache-options.interface';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { handleDuplicatedKeyInDb } from 'src/functions/errors/handle-duplicated-key-in-db';

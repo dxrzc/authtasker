@@ -1,5 +1,5 @@
 import { UserRole } from 'src/enums/user-role.enum';
-import { hasSufficientRole } from 'src/functions/roles/has-sufficent-role';
+import { hasSufficientRole } from 'src/functions/roles/has-sufficient-role';
 
 describe('hasSufficientRole', () => {
     describe('readonly is the minimum role required', () => {

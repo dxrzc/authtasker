@@ -1,5 +1,5 @@
 import { UserRole } from 'src/enums/user-role.enum';
-import { UserIdentity } from 'src/interfaces/user/user-indentity.interface';
+import { UserIdentity } from 'src/interfaces/user/user-identity.interface';
 
 // checks if requestUser can perform modifications on targetUser
 export function modificationAccessControl(requestUser: UserIdentity, targetUser: UserIdentity) {

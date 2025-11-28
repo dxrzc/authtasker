@@ -4,7 +4,7 @@ import { Config } from 'jest';
 
 export const baseJestConfig: Config = {
     testEnvironment: 'jest-environment-node',
-    rootDir: process.cwd(), // workidr
+    rootDir: process.cwd(), // workdir
     preset: 'ts-jest',
     moduleNameMapper: {
         '^src/(.*)$': '<rootDir>/src/$1',

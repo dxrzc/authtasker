@@ -95,7 +95,7 @@ export class RefreshTokenService {
         userId: string,
     ): Promise<RefreshTokenMetadata> {
         await this.deleteToken(userId, oldJti);
-        // generate a new token with the remaning exp time of the previous one
+        // generate a new token with the remaining exp time of the previous one
         const expSeconds = calculateTokenTTL(oldTokenExpDateUnix);
         const { token, jti } = this.generateToken(userId, expSeconds);
         await this.storeToken(userId, jti, expSeconds);
