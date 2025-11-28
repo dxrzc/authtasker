@@ -129,7 +129,7 @@ export class UserRoutes {
         router.post(
             '/reset-password',
             this.apiLimiterMiddleware.middleware(RateLimiter.critical),
-            this.userController.resetPasswordd,
+            this.userController.resetPassword,
         );
 
         return router;

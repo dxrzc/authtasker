@@ -134,7 +134,7 @@ export class UserController {
         });
     };
 
-    public readonly resetPasswordd = async (req: Request, res: Response): Promise<void> => {
+    public readonly resetPassword = async (req: Request, res: Response): Promise<void> => {
         const token = req.body.token;
         if (!token || typeof token !== 'string') {
             this.loggerService.error('Invalid password recovery token in body');
