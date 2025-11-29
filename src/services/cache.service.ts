@@ -60,7 +60,7 @@ export class CacheService<Data extends { id: string }> {
         const idsInData = await base
             .skip(offset)
             .limit(limit)
-            .sort({ createdAt: 1 })
+            .sort({ createdAt: 1, _id: 1 })
             .select('id')
             .exec();
         const ids = idsInData.map((d) => d._id.toString() as string);
