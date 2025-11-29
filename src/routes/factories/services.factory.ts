@@ -8,7 +8,6 @@ import { HashingService } from 'src/services/hashing.service';
 import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
 import { JwtService } from 'src/services/jwt.service';
 import { LoggerService } from 'src/services/logger.service';
-import { PaginationCacheService } from 'src/services/pagination-cache.service';
 import { PasswordRecoveryTokenService } from 'src/services/password-recovery-token.service';
 import { RedisService } from 'src/services/redis.service';
 import { RefreshTokenService } from 'src/services/refresh-token.service';
@@ -82,11 +81,6 @@ export function buildServices(
         configService.CACHE_HARD_TTL_SECONDS,
         makeTasksCacheKey,
     );
-    const paginationCacheService = new PaginationCacheService(
-        loggerService,
-        redisService,
-        configService,
-    );
     // Domain services
     const userService = new UserService(
         configService,
@@ -99,7 +93,6 @@ export function buildServices(
         refreshTokenService,
         emailValidationTokenService,
         usersCacheService,
-        paginationCacheService,
         passwordRecoveryTokenService,
     );
     const tasksService = new TasksService(
@@ -107,7 +100,6 @@ export function buildServices(
         models.tasksModel,
         userService,
         tasksCacheService,
-        paginationCacheService,
     );
 
     return {
@@ -120,7 +112,6 @@ export function buildServices(
         passwordRecoveryTokenService,
         usersCacheService,
         tasksCacheService,
-        paginationCacheService,
         userService,
         tasksService,
     } as const;

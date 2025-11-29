@@ -22,7 +22,6 @@ import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
 import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
-import { PaginationCacheService } from './pagination-cache.service';
 import { PasswordRecoveryTokenService } from './password-recovery-token.service';
 import { UserRole } from 'src/enums/user-role.enum';
 import { validateYourEmailTemplate } from 'src/templates/validate-your-email.template';
@@ -42,7 +41,6 @@ export class UserService {
         private readonly refreshTokenService: RefreshTokenService,
         private readonly emailValidationTokenService: EmailValidationTokenService,
         private readonly cacheService: CacheService<UserDocument>,
-        private readonly paginationCache: PaginationCacheService,
         private readonly passwordRecoveryTokenService: PasswordRecoveryTokenService,
     ) {}
 
