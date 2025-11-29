@@ -29,6 +29,19 @@ export class RedisService {
         return null;
     }
 
+    async mget<T>(keys: string[]): Promise<(T | null)[]> {
+        const data = await this.redis.mget(keys);
+        return data.map((d) => {
+            if (!d) return null;
+            try {
+                return JSON.parse(d);
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            } catch (error) {
+                return d as T;
+            }
+        });
+    }
+
     async addToSet(key: string, member: string): Promise<void> {
         await this.redis.sadd(key, member);
     }
