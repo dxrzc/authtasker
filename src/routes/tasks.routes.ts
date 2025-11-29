@@ -54,7 +54,7 @@ export class TasksRoutes {
         );
 
         router.get(
-            '/allByUser/:id',
+            '/all-by-user/:id',
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.tasksController.findAllByUser,
         );
