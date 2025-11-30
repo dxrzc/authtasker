@@ -9,12 +9,10 @@ import { LoggerService } from 'src/services/logger.service';
 import { SessionTokenService } from './session-token.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
 import { HashingService } from 'src/services/hashing.service';
-import { paginationRules } from 'src/functions/pagination/pagination-rules';
 import { UserResponse } from 'src/types/user/user-response.type';
 import { UserDocument } from 'src/types/user/user-document.type';
 import { HttpError } from 'src/errors/http-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
-import { ICacheOptions } from 'src/interfaces/cache/cache-options.interface';
 import { EmailValidationTokenService } from './email-validation-token.service';
 import { UserSessionInfo } from 'src/interfaces/user/user-session-info.interface';
 import { handleDuplicatedKeyInDb } from 'src/functions/errors/handle-duplicated-key-in-db';
@@ -23,13 +21,14 @@ import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
 import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
 import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
-import { PaginationCacheService } from './pagination-cache.service';
 import { PasswordRecoveryTokenService } from './password-recovery-token.service';
 import { UserRole } from 'src/enums/user-role.enum';
 import { validateYourEmailTemplate } from 'src/templates/validate-your-email.template';
 import { IFindOptions } from 'src/interfaces/others/find-options.interface';
 import { allSettledAndThrow } from 'src/functions/js/all-settled-and-throw';
 import { resetYourPasswordTemplate } from 'src/templates/reset-your-password.template';
+import { calculatePagination } from 'src/functions/pagination/calculate-pagination';
+import { IPagination } from 'src/interfaces/pagination/pagination.interface';
 
 export class UserService {
     constructor(
@@ -43,7 +42,6 @@ export class UserService {
         private readonly refreshTokenService: RefreshTokenService,
         private readonly emailValidationTokenService: EmailValidationTokenService,
         private readonly cacheService: CacheService<UserDocument>,
-        private readonly paginationCache: PaginationCacheService,
         private readonly passwordRecoveryTokenService: PasswordRecoveryTokenService,
     ) {}
 
@@ -285,34 +283,17 @@ export class UserService {
         return await this.findOneByIdOrThrow(id);
     }
 
-    async findAll(limit: number, page: number, options: ICacheOptions): Promise<UserDocument[]> {
+    async findAll(limit: number, page: number): Promise<IPagination<UserDocument>> {
         // validate limit and page
         const totalDocuments = await this.userModel.countDocuments().exec();
-        if (totalDocuments === 0) return [];
-        const offset = paginationRules(limit, page, totalDocuments);
-        // bypass read-write in cache
-        if (options.noStore) {
-            this.loggerService.info(`Bypassing cache for users page=${page} limit=${limit}`);
-            return await this.userModel
-                .find()
-                .skip(offset)
-                .limit(limit)
-                .sort({ createdAt: 1 })
-                .exec();
-        }
-        // check if combination of limit and page is cached
-        const chunk = await this.paginationCache.get<UserDocument[]>(Apis.users, page, limit);
-        if (chunk) return chunk;
-        // data is not cached
-        const data = await this.userModel
-            .find()
-            .skip(offset)
-            .limit(limit)
-            .sort({ createdAt: 1 })
-            .exec();
-        // cache pagination obtained
-        await this.paginationCache.cache(Apis.users, page, limit, data);
-        return data;
+        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
+        const data = await this.cacheService.getPagination(offset, limit);
+        return {
+            currentPage: page,
+            totalDocuments,
+            totalPages,
+            data,
+        };
     }
 
     async deleteOne(requestUserInfo: UserSessionInfo, targetUserId: string): Promise<void> {

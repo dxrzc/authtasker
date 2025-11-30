@@ -1,3 +1,4 @@
+import { Apis } from 'src/enums/apis.enum';
 import { makeTasksCacheKey } from 'src/functions/cache/make-tasks-cache-key';
 import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
 import { CacheService } from 'src/services/cache.service';
@@ -8,7 +9,6 @@ import { HashingService } from 'src/services/hashing.service';
 import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
 import { JwtService } from 'src/services/jwt.service';
 import { LoggerService } from 'src/services/logger.service';
-import { PaginationCacheService } from 'src/services/pagination-cache.service';
 import { PasswordRecoveryTokenService } from 'src/services/password-recovery-token.service';
 import { RedisService } from 'src/services/redis.service';
 import { RefreshTokenService } from 'src/services/refresh-token.service';
@@ -16,7 +16,7 @@ import { SessionTokenService } from 'src/services/session-token.service';
 import { TasksService } from 'src/services/tasks.service';
 import { UserService } from 'src/services/user.service';
 import { Models } from 'src/types/models/models.type';
-import { TaskResponse } from 'src/types/tasks/task-response.type';
+import { TaskDocument } from 'src/types/tasks/task-document.type';
 import { UserDocument } from 'src/types/user/user-document.type';
 
 export function buildServices(
@@ -73,19 +73,16 @@ export function buildServices(
         configService.USERS_API_CACHE_TTL_SECONDS,
         configService.CACHE_HARD_TTL_SECONDS,
         makeUsersCacheKey,
+        Apis.users,
     );
-    const tasksCacheService = new CacheService<TaskResponse>(
+    const tasksCacheService = new CacheService<TaskDocument>(
         models.tasksModel,
         loggerService,
         redisService,
         configService.TASKS_API_CACHE_TTL_SECONDS,
         configService.CACHE_HARD_TTL_SECONDS,
         makeTasksCacheKey,
-    );
-    const paginationCacheService = new PaginationCacheService(
-        loggerService,
-        redisService,
-        configService,
+        Apis.tasks,
     );
     // Domain services
     const userService = new UserService(
@@ -99,7 +96,6 @@ export function buildServices(
         refreshTokenService,
         emailValidationTokenService,
         usersCacheService,
-        paginationCacheService,
         passwordRecoveryTokenService,
     );
     const tasksService = new TasksService(
@@ -107,7 +103,6 @@ export function buildServices(
         models.tasksModel,
         userService,
         tasksCacheService,
-        paginationCacheService,
     );
 
     return {
@@ -120,7 +115,6 @@ export function buildServices(
         passwordRecoveryTokenService,
         usersCacheService,
         tasksCacheService,
-        paginationCacheService,
         userService,
         tasksService,
     } as const;

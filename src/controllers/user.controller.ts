@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { UserService } from 'src/services/user.service';
-import { buildCacheOptions } from 'src/functions/cache/build-cache-options';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { paginationSettings } from 'src/constants/pagination.constants';
 import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
@@ -97,8 +96,7 @@ export class UserController {
     public readonly findAll = async (req: Request, res: Response): Promise<void> => {
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
-        const cacheOptions = buildCacheOptions(req);
-        const usersFound = await this.userService.findAll(limit, page, cacheOptions);
+        const usersFound = await this.userService.findAll(limit, page);
         res.status(statusCodes.OK).json(usersFound);
     };
 

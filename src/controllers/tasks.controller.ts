@@ -4,7 +4,6 @@ import { statusCodes } from 'src/constants/status-codes.constants';
 import { paginationSettings } from 'src/constants/pagination.constants';
 import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
-import { buildCacheOptions } from 'src/functions/cache/build-cache-options';
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
 
 export class TasksController {
@@ -23,16 +22,14 @@ export class TasksController {
 
     public readonly findOne = async (req: Request, res: Response) => {
         const id = req.params.id;
-        const options = buildCacheOptions(req);
-        const taskFound = await this.tasksService.findOne(id, options);
+        const taskFound = await this.tasksService.findOne(id, { cache: true });
         res.status(statusCodes.OK).json(taskFound);
     };
 
     public readonly findAll = async (req: Request, res: Response) => {
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
-        const options = buildCacheOptions(req);
-        const tasksFound = await this.tasksService.findAll(limit, page, options);
+        const tasksFound = await this.tasksService.findAll(limit, page);
         res.status(statusCodes.OK).json(tasksFound);
     };
 
@@ -40,8 +37,7 @@ export class TasksController {
         const userId = req.params.id;
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
-        const cacheOptions = buildCacheOptions(req);
-        const tasksFound = await this.tasksService.findAllByUser(userId, limit, page, cacheOptions);
+        const tasksFound = await this.tasksService.findAllByUser(userId, limit, page);
         res.status(statusCodes.OK).json(tasksFound);
     };
 
