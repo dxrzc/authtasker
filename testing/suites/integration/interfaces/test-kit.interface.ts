@@ -53,6 +53,7 @@ export interface ITestKit {
         createTask: string;
         findAllTasksByUser: string;
         findAllTasksByStatus: string;
+        findAllTasksByPriority: string;
         refreshToken: string;
         health: string;
     };

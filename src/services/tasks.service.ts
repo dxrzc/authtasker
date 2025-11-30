@@ -18,6 +18,7 @@ import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.val
 import { IFindOptions } from 'src/interfaces/others/find-options.interface';
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
 import { TasksStatus } from 'src/types/tasks/task-status.type';
+import { TasksPriority } from 'src/types/tasks/task-priority.type';
 
 export class TasksService {
     constructor(
@@ -132,6 +133,24 @@ export class TasksService {
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
         const data = await this.cacheService.getPagination(offset, limit, {
             find: { status },
+        });
+        return {
+            currentPage: page,
+            totalDocuments,
+            totalPages,
+            data,
+        };
+    }
+
+    async findAllByPriority(
+        priority: TasksPriority,
+        limit: number,
+        page: number,
+    ): Promise<IPagination<TaskDocument>> {
+        const totalDocuments = await this.tasksModel.countDocuments({ priority }).exec();
+        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
+        const data = await this.cacheService.getPagination(offset, limit, {
+            find: { priority },
         });
         return {
             currentPage: page,
