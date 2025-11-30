@@ -144,6 +144,9 @@ export class CacheService<Data extends { id: string }> {
         },
     ): Promise<Data[]> {
         const ids = await this.getPageIds(offset, limit, options);
+        if (ids.length === 0) {
+            return [];
+        }
         const { results, missingIds } = await this.checkCacheAndCollectMissingIds(ids);
         // Batch fetch missing items from DB
         if (missingIds.length > 0) {

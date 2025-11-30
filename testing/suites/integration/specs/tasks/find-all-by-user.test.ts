@@ -62,6 +62,21 @@ describe(`GET ${testKit.urls.findAllTasksByUser}/:id?limit=...&page=...`, () => 
         });
     });
 
+    describe('Page beyond available data', () => {
+        test('return 200 status code with empty data array when requesting page beyond available tasks', async () => {
+            const { sessionToken, id } = await createUser(UserRole.EDITOR);
+            await createTasksForUser(id, 3); // Create 3 tasks
+            // Request page 5 with limit 2 (only 3 tasks exist, so max page is 2)
+            const response = await testKit.agent
+                .get(`${testKit.urls.findAllTasksByUser}/${id}?limit=${2}&page=${5}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            expect(response.body.data).toStrictEqual([]);
+            expect(response.body.totalDocuments).toBe(3);
+            expect(response.body.totalPages).toBe(2);
+        });
+    });
+
     describe('Limit is not number', () => {
         test('return 400 status code and invalid limit error message', async () => {
             const invalidLimit = 'A12####';
