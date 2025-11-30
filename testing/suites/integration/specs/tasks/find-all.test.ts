@@ -94,10 +94,10 @@ describe(`GET ${testKit.urls.tasksAPI}?limit=...&page=...`, () => {
                 .expect(status2xx);
             const tasksInResponseId = response.body.data.map((t: TaskDocument) => t.id);
             expect(tasksInResponseId).toHaveLength(tasksReturned);
-            tasksInResponseId.forEach(async (taskId: string) => {
+            await Promise.all(tasksInResponseId.map(async (taskId: string) => {
                 const inCache = await testKit.tasksCacheService.get(taskId);
                 expect(inCache).not.toBeNull();
-            });
+            }));
         });
 
         test('total documents should be the total number of tasks', async () => {
