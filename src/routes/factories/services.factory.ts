@@ -1,3 +1,4 @@
+import { Apis } from 'src/enums/apis.enum';
 import { makeTasksCacheKey } from 'src/functions/cache/make-tasks-cache-key';
 import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
 import { CacheService } from 'src/services/cache.service';
@@ -72,6 +73,7 @@ export function buildServices(
         configService.USERS_API_CACHE_TTL_SECONDS,
         configService.CACHE_HARD_TTL_SECONDS,
         makeUsersCacheKey,
+        Apis.users,
     );
     const tasksCacheService = new CacheService<TaskDocument>(
         models.tasksModel,
@@ -80,6 +82,7 @@ export function buildServices(
         configService.TASKS_API_CACHE_TTL_SECONDS,
         configService.CACHE_HARD_TTL_SECONDS,
         makeTasksCacheKey,
+        Apis.tasks,
     );
     // Domain services
     const userService = new UserService(
