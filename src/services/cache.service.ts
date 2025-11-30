@@ -64,17 +64,50 @@ export class CacheService<Data extends { id: string }> {
             .select('id')
             .exec();
         const ids = idsInData.map((d) => d._id.toString() as string);
-        return Promise.all(
-            ids.map(async (id) => {
-                const inCache = await this.get(id);
-                if (!inCache) {
-                    const indb = await this.model.findById(id);
-                    await this.cache(indb);
-                    return indb;
+        // Batch fetch from cache
+        const cacheKeys = ids.map((id) => this.cacheKeyMaker(id));
+        const cachedResults = await this.redisService.mget<DataInCache<Data>>(...cacheKeys);
+        const results: Data[] = [];
+        const missingIds: string[] = [];
+        // Check cache and collect missing ids
+        for (let i = 0; i < ids.length; i++) {
+            const resourceInCache = cachedResults[i];
+            if (resourceInCache) {
+                const resourceExpired = isDataInCacheExpired(resourceInCache.cachedAtUnix, this.ttls);
+                if (!resourceExpired) {
+                    results[i] = resourceInCache.data;
+                } else {
+                    const expiredButFresh = await this.revalidate(ids[i], resourceInCache.cachedAtUnix);
+                    if (expiredButFresh) {
+                        await this.cache(resourceInCache.data);
+                        results[i] = resourceInCache.data;
+                    } else {
+                        missingIds.push(ids[i]);
+                    }
                 }
-                return inCache;
-            }),
-        );
+            } else {
+                missingIds.push(ids[i]);
+            }
+        }
+        // Batch fetch missing items from DB
+        if (missingIds.length > 0) {
+            const missingDocs = await this.model.find({ _id: { $in: missingIds } }).exec();
+            // Map for quick lookup
+            const missingDocsMap = new Map<string, Data>();
+            for (const doc of missingDocs) {
+                missingDocsMap.set(doc._id.toString(), doc);
+                await this.cache(doc);
+            }
+            // Fill in results in correct order
+            for (let i = 0; i < ids.length; i++) {
+                if (!results[i]) {
+                    const doc = missingDocsMap.get(ids[i]);
+                    results[i] = doc || null;
+                }
+            }
+        }
+        // Filter out any nulls (in case some ids not found in DB)
+        return results.filter((item) => item !== null);
     }
 
     async cache(data: Data): Promise<void> {
