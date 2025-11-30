@@ -131,7 +131,8 @@ describe(`GET ${testKit.urls.findAllTasksByUser}/:id?limit=...&page=...`, () => 
                 .expect(status2xx);
             const tasksInResponseId = response.body.data.map((t: TaskDocument) => t.id);
             expect(tasksInResponseId).toHaveLength(tasksReturned);
-            await Promise.all(tasksInResponseId.map(async (taskId: string) => {
+            await Promise.all(
+                tasksInResponseId.map(async (taskId: string) => {
                 const inCache = await testKit.tasksCacheService.get(taskId);
                 expect(inCache).not.toBeNull();
             }));
