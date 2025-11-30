@@ -8,6 +8,7 @@ import { SystemLoggerService } from 'src/services/system-logger.service';
 import { TasksService } from 'src/services/tasks.service';
 import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
+import { TaskStatusValidator } from 'src/validators/models/tasks/task-status.validator';
 
 export class TasksRoutes {
     private readonly tasksController: TasksController;
@@ -21,6 +22,7 @@ export class TasksRoutes {
             this.tasksService,
             new CreateTaskValidator(),
             new UpdateTaskValidator(),
+            new TaskStatusValidator(),
         );
         SystemLoggerService.info('Task routes loaded');
     }
@@ -57,6 +59,12 @@ export class TasksRoutes {
             '/all-by-user/:id',
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.tasksController.findAllByUser,
+        );
+
+        router.get(
+            '/all-by-status/:status',
+            this.rolesMiddleware.middleware(UserRole.READONLY),
+            this.tasksController.findAllByStatus,
         );
 
         router.patch(

@@ -4,6 +4,7 @@ import { statusCodes } from 'src/constants/status-codes.constants';
 import { paginationSettings } from 'src/constants/pagination.constants';
 import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
+import { TaskStatusValidator } from 'src/validators/models/tasks/task-status.validator';
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
 
 export class TasksController {
@@ -11,6 +12,7 @@ export class TasksController {
         private readonly tasksService: TasksService,
         private readonly createTaskValidator: CreateTaskValidator,
         private readonly updateTaskValidator: UpdateTaskValidator,
+        private readonly taskStatusValidator: TaskStatusValidator,
     ) {}
 
     public readonly create = async (req: Request, res: Response) => {
@@ -38,6 +40,14 @@ export class TasksController {
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
         const tasksFound = await this.tasksService.findAllByUser(userId, limit, page);
+        res.status(statusCodes.OK).json(tasksFound);
+    };
+
+    public readonly findAllByStatus = async (req: Request, res: Response) => {
+        const status = this.taskStatusValidator.validateStatus(req.params.status);
+        const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
+        const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
+        const tasksFound = await this.tasksService.findAllByStatus(status, limit, page);
         res.status(statusCodes.OK).json(tasksFound);
     };
 
