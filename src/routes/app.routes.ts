@@ -14,6 +14,9 @@ import { TasksRoutes } from './tasks.routes';
 import { UserRoutes } from './user.routes';
 import { createAdmin } from 'src/admin/create-admin';
 import { Redis } from 'ioredis';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yaml';
+import { readFileSync } from 'fs';
 
 export class AppRoutes {
     private readonly healthController: HealthController;
@@ -85,6 +88,11 @@ export class AppRoutes {
 
     get routes(): Router {
         const router = Router();
+
+        const file = readFileSync(`${process.cwd()}/src/docs/swagger.yaml`, 'utf8');
+        const swaggerDocument = YAML.parse(file);
+        router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
         router.use(this.middlewares.requestContextMiddleware.middleware());
         router.use('/system', this.buildHealthRoutes());
         router.use('/api/users', this.buildUserRoutes());
