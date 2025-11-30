@@ -73,11 +73,17 @@ export class CacheService<Data extends { id: string }> {
         for (let i = 0; i < ids.length; i++) {
             const resourceInCache = cachedResults[i];
             if (resourceInCache) {
-                const resourceExpired = isDataInCacheExpired(resourceInCache.cachedAtUnix, this.ttls);
+                const resourceExpired = isDataInCacheExpired(
+                    resourceInCache.cachedAtUnix,
+                    this.ttls,
+                );
                 if (!resourceExpired) {
                     results[i] = resourceInCache.data;
                 } else {
-                    const expiredButFresh = await this.revalidate(ids[i], resourceInCache.cachedAtUnix);
+                    const expiredButFresh = await this.revalidate(
+                        ids[i],
+                        resourceInCache.cachedAtUnix,
+                    );
                     if (expiredButFresh) {
                         await this.cache(resourceInCache.data);
                         results[i] = resourceInCache.data;

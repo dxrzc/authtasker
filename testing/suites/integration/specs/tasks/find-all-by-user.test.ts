@@ -133,9 +133,10 @@ describe(`GET ${testKit.urls.findAllTasksByUser}/:id?limit=...&page=...`, () => 
             expect(tasksInResponseId).toHaveLength(tasksReturned);
             await Promise.all(
                 tasksInResponseId.map(async (taskId: string) => {
-                const inCache = await testKit.tasksCacheService.get(taskId);
-                expect(inCache).not.toBeNull();
-            }));
+                    const inCache = await testKit.tasksCacheService.get(taskId);
+                    expect(inCache).not.toBeNull();
+                }),
+            );
         });
 
         test('total documents should be only the number of tasks created by the user', async () => {

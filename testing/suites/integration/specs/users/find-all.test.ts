@@ -98,10 +98,12 @@ describe(`GET ${testKit.urls.usersAPI}?limit=...&page=...`, () => {
                 .expect(status2xx);
             const usersInResponseId = response.body.data.map((u: UserDocument) => u.id);
             expect(usersInResponseId.length).toBeGreaterThan(0);
-            await Promise.all(usersInResponseId.map(async (userId: string) => {
-                const inCache = await testKit.usersCacheService.get(userId);
-                expect(inCache).not.toBeNull();
-            }));
+            await Promise.all(
+                usersInResponseId.map(async (userId: string) => {
+                    const inCache = await testKit.usersCacheService.get(userId);
+                    expect(inCache).not.toBeNull();
+                }),
+            );
         });
 
         test('total documents should be the total number of users', async () => {
