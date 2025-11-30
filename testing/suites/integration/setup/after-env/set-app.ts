@@ -33,6 +33,7 @@ beforeAll(() => {
     testKit.emailValidationTokenService = appRoutes['services']['emailValidationTokenService'];
     testKit.sessionTokenService = appRoutes['services']['sessionTokenService'];
     testKit.tasksCacheService = appRoutes['services']['tasksCacheService'];
+    testKit.usersCacheService = appRoutes['services']['usersCacheService'];
     testKit.refreshJwt = testKit.refreshTokenService['jwtService'];
     testKit.sessionJwt = testKit.sessionTokenService['jwtService'];
     testKit.server = server['app'];

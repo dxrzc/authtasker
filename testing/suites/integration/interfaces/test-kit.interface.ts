@@ -15,6 +15,7 @@ import { JwtService } from 'src/services/jwt.service';
 import { SessionTokenService } from 'src/services/session-token.service';
 import { CacheService } from 'src/services/cache.service';
 import { TaskResponse } from 'src/types/tasks/task-response.type';
+import { UserDocument } from 'src/types/user/user-document.type';
 
 export interface ITestKit {
     configService: ConfigService;
@@ -23,6 +24,7 @@ export interface ITestKit {
     userData: UserDataGenerator;
     taskData: TasksDataGenerator;
     tasksCacheService: CacheService<TaskResponse>;
+    usersCacheService: CacheService<UserDocument>;
     loggerServiceMock: LoggerService;
     refreshJwt: JwtService;
     sessionJwt: JwtService;
