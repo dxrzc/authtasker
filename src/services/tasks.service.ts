@@ -128,13 +128,10 @@ export class TasksService {
         limit: number,
         page: number,
     ): Promise<IPagination<TaskDocument>> {
-        const totalDocuments = await this.tasksModel
-            .find({ status: status })
-            .countDocuments()
-            .exec();
+        const totalDocuments = await this.tasksModel.countDocuments({ status }).exec();
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
         const data = await this.cacheService.getPagination(offset, limit, {
-            find: { status: status },
+            find: { status },
         });
         return {
             currentPage: page,
