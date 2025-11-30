@@ -1,7 +1,10 @@
 import { HttpError } from 'src/errors/http-error.class';
 import { paginationErrors } from 'src/messages/pagination.error.messages';
 
-export function paginationRules(limit: number, page: number, totalDocuments: number) {
+export function calculatePagination(limit: number, page: number, totalDocuments: number) {
+    if (isNaN(limit)) throw HttpError.badRequest(paginationErrors.INVALID_LIMIT);
+    if (isNaN(page)) throw HttpError.badRequest(paginationErrors.INVALID_PAGE);
+
     if (limit <= 0) throw HttpError.badRequest(paginationErrors.INVALID_LIMIT);
     if (limit > 100) throw HttpError.badRequest(paginationErrors.LIMIT_TOO_LARGE);
 
@@ -9,8 +12,7 @@ export function paginationRules(limit: number, page: number, totalDocuments: num
     const totalPages = Math.ceil(totalDocuments / limit);
 
     if (page <= 0) throw HttpError.badRequest(paginationErrors.INVALID_PAGE);
-    if (page > totalPages) throw HttpError.badRequest(paginationErrors.PAGE_TOO_LARGE);
 
     const offset = (page - 1) * limit;
-    return offset;
+    return { offset, totalPages };
 }
