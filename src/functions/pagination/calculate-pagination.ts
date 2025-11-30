@@ -12,6 +12,7 @@ export function calculatePagination(limit: number, page: number, totalDocuments:
     const totalPages = Math.ceil(totalDocuments / limit);
 
     if (page <= 0) throw HttpError.badRequest(paginationErrors.INVALID_PAGE);
+    if (page > totalPages) throw HttpError.badRequest(paginationErrors.INVALID_PAGE);
 
     const offset = (page - 1) * limit;
     return { offset, totalPages };

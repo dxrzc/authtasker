@@ -27,21 +27,22 @@ describe('calculatePagination', () => {
             expect(result).toEqual({ offset: 0, totalPages: 3 });
         });
 
-        test('should handle totalDocuments = 0', () => {
+        test('should throw badRequest if totalDocuments = 0', () => {
             const limit = 10;
             const page = 1;
             const totalDocuments = 0;
-            const result = calculatePagination(limit, page, totalDocuments);
-            expect(result).toEqual({ offset: 0, totalPages: 0 });
+            expect(() => calculatePagination(limit, page, totalDocuments)).toThrow(
+                paginationErrors.INVALID_PAGE,
+            );
         });
 
-        test('should calculate offset correctly even if page > totalPages', () => {
-            // The function does not throw if page > totalPages, it just calculates offset.
+        test('should throw badRequest if page > totalPages', () => {
             const limit = 10;
             const page = 5;
             const totalDocuments = 20; // totalPages = 2
-            const result = calculatePagination(limit, page, totalDocuments);
-            expect(result).toEqual({ offset: 40, totalPages: 2 });
+            expect(() => calculatePagination(limit, page, totalDocuments)).toThrow(
+                paginationErrors.INVALID_PAGE,
+            );
         });
     });
 
