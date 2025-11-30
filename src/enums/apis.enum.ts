@@ -1,4 +1,4 @@
 export enum Apis {
-    users = 'users',
-    tasks = 'tasks',
+    users = 'user',
+    tasks = 'task',
 }
