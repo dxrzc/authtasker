@@ -4,7 +4,7 @@ import { Model, Types } from 'mongoose';
 import { CacheService } from './cache.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
-import { paginationRules } from 'src/functions/pagination/pagination-rules';
+import { calculatePagination } from 'src/functions/pagination/calculate-pagination';
 import { TaskResponse } from 'src/types/tasks/task-response.type';
 import { TaskDocument } from 'src/types/tasks/task-document.type';
 import { HttpError } from 'src/errors/http-error.class';
@@ -16,6 +16,7 @@ import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
 import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
 import { IFindOptions } from 'src/interfaces/others/find-options.interface';
+import { IPagination } from 'src/interfaces/pagination/pagination.interface';
 
 export class TasksService {
     constructor(
@@ -88,22 +89,37 @@ export class TasksService {
         return taskFound;
     }
 
-    async findAll(limit: number, page: number): Promise<TaskDocument[]> {
+    async findAll(limit: number, page: number): Promise<IPagination<TaskDocument>> {
         // validate limit and page
         const totalDocuments = await this.tasksModel.countDocuments().exec();
-        if (totalDocuments === 0) return [];
-        const offset = paginationRules(limit, page, totalDocuments);
-        return await this.cacheService.getPagination(offset, limit);
+        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
+        const data = await this.cacheService.getPagination(offset, limit);
+        return {
+            currentPage: page,
+            totalDocuments,
+            totalPages,
+            data,
+        };
     }
 
-    async findAllByUser(userId: string, limit: number, page: number) {
+    async findAllByUser(
+        userId: string,
+        limit: number,
+        page: number,
+    ): Promise<IPagination<TaskDocument>> {
         // verifies that user exists or throws
         await this.userService.findOne(userId, { cache: false });
-        // validate limit and page
         const totalDocuments = await this.tasksModel.find({ user: userId }).countDocuments().exec();
-        if (totalDocuments === 0) return [];
-        const offset = paginationRules(limit, page, totalDocuments);
-        return await this.cacheService.getPagination(offset, limit, { find: { user: userId } });
+        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
+        const data = await this.cacheService.getPagination(offset, limit, {
+            find: { user: userId },
+        });
+        return {
+            currentPage: page,
+            totalDocuments,
+            totalPages,
+            data,
+        };
     }
 
     async deleteOne(requestUserInfo: UserIdentity, taskId: string): Promise<void> {
