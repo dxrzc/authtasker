@@ -18,6 +18,24 @@ describe(`GET ${testKit.urls.usersAPI}?limit=...&page=...`, () => {
         });
     });
 
+    describe('Page beyond available data', () => {
+        test('return 200 status code with empty data array when requesting page beyond available users', async () => {
+            // Create some users
+            await createUser(UserRole.EDITOR);
+            await createUser(UserRole.EDITOR);
+            await createUser(UserRole.EDITOR);
+            const { sessionToken } = await createUser(UserRole.READONLY);
+            const totalUsers = await testKit.models.user.countDocuments().exec();
+            // Request page far beyond available data
+            const response = await testKit.agent
+                .get(`${testKit.urls.usersAPI}?limit=${2}&page=${100}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            expect(response.body.data).toStrictEqual([]);
+            expect(response.body.totalDocuments).toBe(totalUsers);
+        });
+    });
+
     describe('Limit is not number', () => {
         test('return 400 status code and invalid limit error message', async () => {
             const invalidLimit = 'A12####';
