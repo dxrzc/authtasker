@@ -5,6 +5,7 @@ import { paginationSettings } from 'src/constants/pagination.constants';
 import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
 import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
 import { TaskStatusValidator } from 'src/validators/models/tasks/task-status.validator';
+import { TaskPriorityValidator } from 'src/validators/models/tasks/task-priority.validator';
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
 
 export class TasksController {
@@ -13,6 +14,7 @@ export class TasksController {
         private readonly createTaskValidator: CreateTaskValidator,
         private readonly updateTaskValidator: UpdateTaskValidator,
         private readonly taskStatusValidator: TaskStatusValidator,
+        private readonly taskPriorityValidator: TaskPriorityValidator,
     ) {}
 
     public readonly create = async (req: Request, res: Response) => {
@@ -48,6 +50,14 @@ export class TasksController {
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
         const tasksFound = await this.tasksService.findAllByStatus(status, limit, page);
+        res.status(statusCodes.OK).json(tasksFound);
+    };
+
+    public readonly findAllByPriority = async (req: Request, res: Response) => {
+        const priority = this.taskPriorityValidator.validatePriority(req.params.priority);
+        const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
+        const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
+        const tasksFound = await this.tasksService.findAllByPriority(priority, limit, page);
         res.status(statusCodes.OK).json(tasksFound);
     };
 

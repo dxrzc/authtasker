@@ -18,6 +18,7 @@ export const testKit: ITestKit = {
         createTask: `/api/tasks/create`,
         findAllTasksByUser: '/api/tasks/all-by-user',
         findAllTasksByStatus: '/api/tasks/all-by-status',
+        findAllTasksByPriority: '/api/tasks/all-by-priority',
         refreshToken: '/api/users/refresh-token',
         health: '/health',
     },
