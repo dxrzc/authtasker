@@ -138,7 +138,7 @@ describe(`GET ${testKit.urls.findAllTasksByUser}/:id?limit=...&page=...`, () => 
         });
 
         test('total documents should be only the number of tasks created by the user', async () => {
-            // sumulate tasks for other users
+            // simulate tasks for other users
             await createTasksForUser((await createUser(UserRole.EDITOR)).id, 2);
             await createTasksForUser((await createUser(UserRole.EDITOR)).id, 2);
             // user to test
