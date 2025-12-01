@@ -429,6 +429,58 @@ paths:
               example:
                 error: Internal server error
 
+  /api/users/request-email-validation:
+    post:
+      operationId: requestEmailValidation
+      summary: Request email validation
+      description: |
+        Sends an email validation link to the authenticated user's email address.
+        This endpoint is only available for users with the READONLY role (unvalidated email).
+        Once the user validates their email via the link, their role will be upgraded to EDITOR.
+        The validation link is sent to the email associated with the authenticated user's session.
+        Requires authentication via Bearer token.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Email validation link sent successfully
+        '401':
+          description: Unauthorized (Invalid or missing session token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '409':
+          description: >
+            Conflict. The user's email is already verified.
+            This endpoint is only available for users with READONLY role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Email is already verified
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
   /api/users/{id}:
     get:
       operationId: getUserById
