@@ -76,6 +76,26 @@ components:
           type: string
           description: The refresh token to use for obtaining new tokens
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: The user's full name. Will be converted to lowercase and trimmed.
+          example: John Doe
+        email:
+          type: string
+          format: email
+          description: The user's email address. Updating this will trigger security actions.
+          example: john@example.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 50
+          description: The user's password. Updating this will trigger security actions.
+          example: newpassword123
     User:
       type: object
       required:
@@ -606,6 +626,146 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: User not found
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+    patch:
+      operationId: updateUserById
+      summary: Update user by ID
+      description: |
+        Updates a specific user by their unique ID.
+        Requires authentication via Bearer token.
+        
+        **Permission rules:**
+        - Users can update **their own account** (self-update)
+        - **Admin users** can update users with READONLY or EDITOR roles
+        - **Admin users cannot update other admin users**
+        - Users with READONLY or EDITOR roles cannot update other users
+        
+        **Updatable fields:**
+        - `name` - Will be converted to lowercase and trimmed before saving
+        - `email` - Updating this triggers security actions (see below)
+        - `password` - Updating this triggers security actions (see below)
+        
+        All fields are optional. At least one field must be provided.
+        
+        **Special behaviors when email is updated:**
+        - For non-admin users: role is downgraded to READONLY and emailValidated is set to false
+        - For admin users: role and emailValidated remain unchanged (no downgrade occurs)
+        - All refresh tokens are revoked
+        - The current session token is blacklisted
+        - User is removed from cache
+        
+        **Special behaviors when password is updated:**
+        - All refresh tokens are revoked
+        - The current session token is blacklisted
+        - User is removed from cache
+        
+        **Note:** If email or password is updated, the user will need to log in again with new credentials.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The user ID to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - No properties to update are provided in the request body
+              - Invalid field values (e.g., name too short/long, invalid email format, password too short/long)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                noProperties:
+                  value:
+                    error: No properties to update
+                invalidInput:
+                  value:
+                    error: Invalid input
+        '401':
+          description: >
+            Unauthorized. This can happen when:
+              - No authorization token is provided
+              - The provided token is invalid or expired
+              - The token was not signed by this server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '403':
+          description: >
+            Forbidden. This can happen when:
+              - A non-admin user attempts to update another user
+              - An admin user attempts to update another admin user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: You do not have permission to perform this action
+        '404':
+          description: >
+            User not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No user exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: User not found
+        '409':
+          description: >
+            Conflict. This can happen when:
+              - The new email is already registered by another user
+              - The new name is already taken by another user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                emailExists:
+                  value:
+                    error: Email already exists
+                nameExists:
+                  value:
+                    error: User already exists
         '429':
           description: Too many requests
           content:
