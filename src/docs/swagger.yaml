@@ -67,6 +67,15 @@ components:
           type: string
           description: The refresh token to invalidate
           example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: The refresh token to use for obtaining new tokens
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
     User:
       type: object
       required:
@@ -124,6 +133,20 @@ components:
           type: string
           description: Token used to refresh the session token
           example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+    RefreshTokenResponse:
+      type: object
+      required:
+        - sessionToken
+        - refreshToken
+      properties:
+        sessionToken:
+          type: string
+          description: New JWT token for session authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          description: New token used to refresh the session token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
     Error:
       type: object
       properties:
@@ -327,6 +350,68 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: Invalid credentials
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/refresh-token:
+    post:
+      operationId: refreshToken
+      summary: Refresh session token
+      description: |
+        Generates a new session token and refresh token using a valid refresh token.
+        This endpoint implements token rotation: the old refresh token is invalidated and a new one is issued.
+        The new refresh token maintains the same expiration time as the original token.
+        Does not require authentication via Bearer token, only a valid refresh token in the request body.
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Tokens refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        '400':
+          description: Refresh token not provided in request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Refresh token expected in body
+        '401':
+          description: >
+            Unauthorized. This can happen when:
+              - The refresh token is expired
+              - The refresh token was not signed by this server
+              - The refresh token has been revoked
+              - The user in the token does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
         '429':
           description: Too many requests
           content:
