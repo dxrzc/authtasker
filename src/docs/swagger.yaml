@@ -174,6 +174,31 @@ components:
           type: string
           description: Error message
           example: Error description
+    UsersPaginationResponse:
+      type: object
+      required:
+        - totalDocuments
+        - totalPages
+        - currentPage
+        - data
+      properties:
+        totalDocuments:
+          type: integer
+          description: Total number of users in the database
+          example: 42
+        totalPages:
+          type: integer
+          description: Total number of pages based on the limit
+          example: 9
+        currentPage:
+          type: integer
+          description: The current page number being returned
+          example: 1
+        data:
+          type: array
+          description: Array of user objects for the current page
+          items:
+            $ref: '#/components/schemas/User'
 
 paths:
   /api/users/register:
@@ -766,6 +791,142 @@ paths:
                 nameExists:
                   value:
                     error: User already exists
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users:
+    get:
+      operationId: findAllUsers
+      summary: Get all users with pagination
+      description: |
+        Retrieves a paginated list of all users in the system.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Pagination:**
+        - Results are paginated with configurable `page` and `limit` query parameters
+        - Default limit: 5 users per page (configurable via query parameter)
+        - Default page: 1 (first page)
+        - Maximum limit: 100 users per page
+        - Minimum page: 1
+        - Results are sorted by creation date (oldest first) and then by ID
+        
+        **Pagination rules:**
+        - If `page` is not provided or invalid, defaults to 1
+        - If `limit` is not provided or invalid, defaults to 5
+        - If `limit` exceeds 100, returns a 400 error
+        - If `limit` or `page` is less than or equal to 0, returns a 400 error
+        - The `totalPages` is calculated as `ceil(totalDocuments / limit)`
+        - If the requested page exceeds the total pages, an empty data array is returned
+        
+        **Cache behavior:**
+        - This endpoint uses **revalidation caching** for optimal performance
+        - Individual user records are cached in Redis with configurable TTLs
+        - When a cached user record expires (soft TTL), the system checks if the data was modified in the database
+        - If the cached data is still fresh (not modified since caching), it's re-cached and returned immediately
+        - If the cached data is stale (modified since caching), it's fetched from the database and re-cached
+        - Cache configuration (default values):
+          - Soft TTL (`USERS_API_CACHE_TTL_SECONDS`): 10 seconds - time before revalidation check
+          - Hard TTL (`CACHE_HARD_TTL_SECONDS`): 30 seconds - maximum time in cache regardless of revalidation
+        - The pagination query itself (IDs for each page) is fetched from the database on each request
+        - User records that are not in cache will be fetched from the database and cached for subsequent requests
+        - Cache is automatically invalidated when users are updated or deleted
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: Page number to retrieve (starts at 1)
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 5
+          required: false
+          description: Number of users per page (max 100)
+          example: 10
+      responses:
+        '200':
+          description: Paginated list of users retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersPaginationResponse'
+              example:
+                totalDocuments: 42
+                totalPages: 5
+                currentPage: 1
+                data:
+                  - id: 60d0fe4f5311236168a109ca
+                    name: john doe
+                    email: john@example.com
+                    role: editor
+                    emailValidated: true
+                    createdAt: '2021-06-21T12:00:00.000Z'
+                    updatedAt: '2021-06-21T12:00:00.000Z'
+                  - id: 60d0fe4f5311236168a109cb
+                    name: jane smith
+                    email: jane@example.com
+                    role: readonly
+                    emailValidated: false
+                    createdAt: '2021-06-21T13:00:00.000Z'
+                    updatedAt: '2021-06-21T13:00:00.000Z'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - The `page` parameter is not a valid positive integer
+              - The `limit` parameter is not a valid positive integer
+              - The `limit` parameter exceeds 100
+              - The `page` or `limit` parameter is less than or equal to 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidPage:
+                  value:
+                    error: Invalid page
+                invalidLimit:
+                  value:
+                    error: Invalid limit
+                limitTooLarge:
+                  value:
+                    error: Limit is too large
+        '401':
+          description: >
+            Unauthorized. This can happen when:
+              - No authorization token is provided
+              - The provided token is invalid or expired
+              - The token was not signed by this server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
         '429':
           description: Too many requests
           content:
