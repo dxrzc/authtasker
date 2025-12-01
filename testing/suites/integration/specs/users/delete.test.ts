@@ -5,6 +5,7 @@ import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
 import { UserRole } from 'src/enums/user-role.enum';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
+import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
@@ -93,6 +94,26 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
             const task2InDb = await testKit.models.task.findById(task2._id);
             expect(task1InDb).toBeNull();
             expect(task2InDb).toBeNull();
+        });
+
+        test('remove user from cache', async () => {
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            // cache the user
+            await testKit.agent
+                .get(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(statusCodes.OK);
+            const cacheKey = makeUsersCacheKey(id);
+            const cachedUserBefore = await testKit.redisService.get(cacheKey);
+            expect(cachedUserBefore).not.toBeNull();
+            // delete user
+            await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(statusCodes.NO_CONTENT);
+            // removed from cache
+            const cachedUserAfter = await testKit.redisService.get(cacheKey);
+            expect(cachedUserAfter).toBeNull();
         });
     });
 
