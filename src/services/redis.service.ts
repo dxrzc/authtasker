@@ -29,7 +29,6 @@ export class RedisService {
         return null;
     }
 
-
     async mget<T>(keys: string[]): Promise<(T | null)[]> {
         const data = await this.redis.mget(keys);
         return data.map((d) => {
