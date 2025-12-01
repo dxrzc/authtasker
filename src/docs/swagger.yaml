@@ -557,6 +557,7 @@ paths:
         - The user record is removed from the database
         - All refresh tokens associated with the user are revoked
         - All tasks associated with the user are permanently deleted
+        - User in the cache is invalidated if present
       tags:
         - Users
       security:

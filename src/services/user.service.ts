@@ -185,6 +185,7 @@ export class UserService {
         user.emailValidated = true;
         user.role = UserRole.EDITOR;
         await user.save();
+        await this.cacheService.delete(user.id);
         this.loggerService.info(`User ${user.id} email validated, role updated to EDITOR`);
     }
 
@@ -301,6 +302,7 @@ export class UserService {
         await allSettledAndThrow([
             this.userModel.deleteOne({ _id: targetUserId }).exec(),
             this.refreshTokenService.revokeAll(targetUserId),
+            this.cacheService.delete(targetUserId),
         ]);
         this.loggerService.info(`User ${targetUserId} deleted`);
         // remove all tasks associated
@@ -332,6 +334,7 @@ export class UserService {
         }
         try {
             await userDocument.save();
+            await this.cacheService.delete(targetUserId);
             this.loggerService.info(`User ${targetUserId} updated`);
             return userDocument;
         } catch (error: any) {
