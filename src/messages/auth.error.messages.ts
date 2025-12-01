@@ -5,5 +5,5 @@ export const authErrors = {
     INVALID_CREDENTIALS: 'Invalid credentials',
     EMAIL_ALREADY_VERIFIED: 'Email is already verified',
     REFRESH_TOKEN_NOT_PROVIDED_IN_BODY: 'Refresh token expected in body',
-    REFRESH_TOKEN_LIMIT_EXCEEDED: 'Maximum number of active sessions reached',
+    REFRESH_TOKEN_LIMIT_EXCEEDED: 'Refresh token limit exceeded',
 };
