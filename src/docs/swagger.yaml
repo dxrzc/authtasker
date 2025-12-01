@@ -504,6 +504,54 @@ paths:
               example:
                 error: Internal server error
 
+  /api/users/me:
+    get:
+      operationId: getMyProfile
+      summary: Get authenticated user's profile
+      description: |
+        Retrieves the profile information of the currently authenticated user.
+        Returns the user's own details based on the session token provided in the Authorization header.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Cache behavior:**
+        - User data is retrieved from cache when available
+        - If not in cache, data is fetched from the database and then cached
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
   /api/users/request-email-validation:
     post:
       operationId: requestEmailValidation
@@ -533,6 +581,103 @@ paths:
           description: >
             Conflict. The user's email is already verified.
             This endpoint is only available for users with READONLY role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Email is already verified
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/confirm-email-validation:
+    get:
+      operationId: confirmEmailValidation
+      summary: Confirm email validation
+      description: |
+        Confirms the user's email address using a validation token.
+        This endpoint is accessed via the email validation link sent to the user's email.
+        Does not require authentication as it uses a token-based approach.
+        
+        **Token validation:**
+        - The token must be valid and not expired
+        - The token must be signed by this server
+        - The token must not be blacklisted (already used)
+        - The token purpose must be EMAIL_VALIDATION
+        - The email in the token must match an existing user
+        
+        **Upon successful validation:**
+        - User's `emailValidated` field is set to `true`
+        - User's role is upgraded from READONLY to EDITOR
+        - The token is blacklisted to prevent reuse (one-time use only)
+        - User is removed from cache to ensure fresh data on next request
+        
+        **Token lifecycle:**
+        - The token has a limited lifetime (configured server-side)
+        - Once used, the token is blacklisted for its remaining TTL
+        - Attempting to use an already consumed token returns a 401 error
+      tags:
+        - Users
+      parameters:
+        - in: query
+          name: token
+          schema:
+            type: string
+          required: true
+          description: The email validation token received via email
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Email validated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                message: Email successfully validated
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - Token is not provided in query parameters
+              - Token format is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '401':
+          description: >
+            Unauthorized. This can happen when:
+              - The token is invalid or expired
+              - The token was not signed by this server
+              - The token purpose is not EMAIL_VALIDATION
+              - The token has already been used (blacklisted)
+              - The user associated with the email in the token doesn't exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '409':
+          description: >
+            Conflict. The user's email is already validated.
+            This can happen if the user has already confirmed their email previously.
           content:
             application/json:
               schema:
