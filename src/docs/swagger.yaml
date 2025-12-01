@@ -676,7 +676,7 @@ paths:
                 error: Invalid token
         '409':
           description: >
-            Conflict. The user's email is already validated.
+            Conflict. The user's email is already verified.
             This can happen if the user has already confirmed their email previously.
           content:
             application/json:
