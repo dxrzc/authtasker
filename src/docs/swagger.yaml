@@ -214,7 +214,7 @@ paths:
               example:
                 error: Invalid credentials
         '403':
-          description: Forbidden. Maximum number of active sessions reached.
+          description: User has reached the maximum number of refresh tokens allowed
           content:
             application/json:
               schema:
