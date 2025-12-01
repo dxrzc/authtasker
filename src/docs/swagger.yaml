@@ -344,7 +344,7 @@ paths:
               example:
                 error: Refresh token was not in body
         '401':
-          description: Unauthorized (Invalid session or refresh token)
+          description: Unauthorized (Invalid or missing token)
           content:
             application/json:
               schema:
@@ -388,7 +388,7 @@ paths:
         '204':
           description: All sessions successfully invalidated
         '401':
-          description: Unauthorized (Invalid credentials)
+          description: Unauthorized (Invalid or missing credentials)
           content:
             application/json:
               schema:
@@ -445,12 +445,7 @@ paths:
               example:
                 error: Refresh token expected in body
         '401':
-          description: >
-            Unauthorized. This can happen when:
-              - The refresh token is expired
-              - The refresh token was not signed by this server
-              - The refresh token has been revoked
-              - The user in the token does not exist
+          description: Unauthorized (Invalid or missing token)
           content:
             application/json:
               schema:
@@ -492,7 +487,7 @@ paths:
         '204':
           description: Email validation link sent successfully
         '401':
-          description: Unauthorized (Invalid or missing session token)
+          description: Unauthorized (Invalid or missing token)
           content:
             application/json:
               schema:
@@ -553,7 +548,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
         '401':
-          description: Unauthorized
+          description: Unauthorized (Invalid or missing token)
           content:
             application/json:
               schema:
@@ -618,11 +613,7 @@ paths:
         '204':
           description: User deleted successfully
         '401':
-          description: >
-            Unauthorized. This can happen when:
-              - No authorization token is provided
-              - The provided token is invalid or expired
-              - The token was not signed by this server
+          description: Unauthorized (Invalid or missing token)
           content:
             application/json:
               schema:
@@ -742,11 +733,7 @@ paths:
                   value:
                     error: Invalid input
         '401':
-          description: >
-            Unauthorized. This can happen when:
-              - No authorization token is provided
-              - The provided token is invalid or expired
-              - The token was not signed by this server
+          description: Unauthorized (Invalid or missing token)
           content:
             application/json:
               schema:
@@ -908,11 +895,7 @@ paths:
                   value:
                     error: Limit is too large
         '401':
-          description: >
-            Unauthorized. This can happen when:
-              - No authorization token is provided
-              - The provided token is invalid or expired
-              - The token was not signed by this server
+          description: Unauthorized (Invalid or missing token)
           content:
             application/json:
               schema:
