@@ -59,8 +59,8 @@ export class AppRoutes {
         } catch (err) {
             this.loggerService.error(
                 'Failed to load Swagger documentation. API documentation will not be available:',
-                err,
             );
+            throw err;
         }
     }
 
