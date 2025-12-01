@@ -14,12 +14,17 @@ import { TasksRoutes } from './tasks.routes';
 import { UserRoutes } from './user.routes';
 import { createAdmin } from 'src/admin/create-admin';
 import { Redis } from 'ioredis';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yaml';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export class AppRoutes {
     private readonly healthController: HealthController;
     private readonly services: ReturnType<typeof buildServices>;
     private readonly middlewares: ReturnType<typeof buildMiddlewares>;
     private readonly models: ReturnType<typeof buildModels>;
+    private swaggerDocument: any;
 
     constructor(
         private readonly configService: ConfigService,
@@ -43,6 +48,20 @@ export class AppRoutes {
             this.redisClient,
         );
         this.healthController = new HealthController();
+        this.loadSwaggerDocument();
+    }
+
+    private loadSwaggerDocument(): void {
+        try {
+            const swaggerPath = join(process.cwd(), 'src', 'docs', 'swagger.yaml');
+            const file = readFileSync(swaggerPath, 'utf8');
+            this.swaggerDocument = YAML.parse(file);
+        } catch (err) {
+            this.loggerService.error(
+                'Failed to load Swagger documentation. API documentation will not be available:',
+            );
+            throw err;
+        }
     }
 
     private buildUserRoutes(): Router {
@@ -85,6 +104,11 @@ export class AppRoutes {
 
     get routes(): Router {
         const router = Router();
+
+        if (this.swaggerDocument) {
+            router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(this.swaggerDocument));
+        }
+
         router.use(this.middlewares.requestContextMiddleware.middleware());
         router.use('/system', this.buildHealthRoutes());
         router.use('/api/users', this.buildUserRoutes());

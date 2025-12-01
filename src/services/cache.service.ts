@@ -171,4 +171,9 @@ export class CacheService<Data extends { id: string }> {
         };
         await this.redisService.set(this.cacheKeyMaker(resourceID), dataInDB, this.hardTtls);
     }
+
+    async delete(id: string): Promise<void> {
+        const cacheKey = this.cacheKeyMaker(id);
+        await this.redisService.delete(cacheKey);
+    }
 }

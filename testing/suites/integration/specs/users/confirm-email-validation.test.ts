@@ -10,6 +10,7 @@ import { JwtTypes } from 'src/enums/jwt-types.enum';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
 import { makeEmailValidationBlacklistKey } from 'src/functions/token/make-email-validation-token-blacklist-key';
+import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
@@ -63,6 +64,25 @@ describe(`POST ${testKit.urls.confirmEmailValidation}`, () => {
             expect(res.body).toStrictEqual({
                 message: authSuccessMessages.EMAIL_VALIDATED_SUCCESSFULLY,
             });
+        });
+
+        test('remove user from cache', async () => {
+            const { id, email, sessionToken } = await createUser();
+            // cache the user
+            await testKit.agent
+                .get(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(statusCodes.OK);
+            const cacheKey = makeUsersCacheKey(id);
+            const cachedUserBefore = await testKit.redisService.get(cacheKey);
+            expect(cachedUserBefore).not.toBeNull();
+            const token = testKit.emailValidationTokenService.generate(email);
+            await testKit.agent
+                .get(`${testKit.urls.confirmEmailValidation}?token=${token}`)
+                .expect(statusCodes.OK);
+            // verify user is removed from cache
+            const cachedUserAfter = await testKit.redisService.get(cacheKey);
+            expect(cachedUserAfter).toBeNull();
         });
     });
 

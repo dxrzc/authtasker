@@ -1,0 +1,2317 @@
+openapi: 3.0.0
+info:
+  title: Authtasker API
+  version: 1.0.0
+  contact:
+    name: Diego Rodriguez    
+    email: diegorodriguezc.dev@gmail.com
+
+servers:
+  - url: https://api.myapp.com
+    description: Production
+  - url: http://localhost:3000
+    description: Local development
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CreateUserRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          minLength: 5
+          maxLength: 15
+          description: The user's full name
+          example: John Doe
+        email:
+          type: string
+          format: email
+          description: The user's email address
+          example: john@example.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 20
+          description: The user's password
+          example: password123
+    LoginUserRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: The user's email address
+          example: john@example.com
+        password:
+          type: string
+          description: The user's password
+          example: password123
+    LogoutRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: The refresh token to invalidate
+          example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: The refresh token to use for obtaining new tokens
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 5
+          maxLength: 15
+          description: The user's full name. Will be converted to lowercase and trimmed.
+          example: John Doe
+        email:
+          type: string
+          format: email
+          description: The user's email address. Updating this will trigger security actions.
+          example: john@example.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 20
+          description: The user's password. Updating this will trigger security actions.
+          example: newpassword123
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - role
+        - emailValidated
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the user
+          example: 60d0fe4f5311236168a109ca
+        name:
+          type: string
+          description: The user's full name
+          example: john doe
+        email:
+          type: string
+          description: The user's email address
+          example: john@example.com
+        role:
+          type: string
+          description: The user's role in the system
+          enum: [admin, editor, readonly]
+          example: readonly
+        emailValidated:
+          type: boolean
+          description: Whether the user's email has been validated
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the user was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the user was last updated
+    AuthResponse:
+      type: object
+      required:
+        - user
+        - sessionToken
+        - refreshToken
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        sessionToken:
+          type: string
+          description: JWT token for session authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          description: Token used to refresh the session token
+          example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+    RefreshTokenResponse:
+      type: object
+      required:
+        - sessionToken
+        - refreshToken
+      properties:
+        sessionToken:
+          type: string
+          description: New JWT token for session authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          description: New token used to refresh the session token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: Error description
+    UsersPaginationResponse:
+      type: object
+      required:
+        - totalDocuments
+        - totalPages
+        - currentPage
+        - data
+      properties:
+        totalDocuments:
+          type: integer
+          description: Total number of users in the database
+          example: 42
+        totalPages:
+          type: integer
+          description: Total number of pages based on the limit
+          example: 9
+        currentPage:
+          type: integer
+          description: The current page number being returned
+          example: 1
+        data:
+          type: array
+          description: Array of user objects for the current page
+          items:
+            $ref: '#/components/schemas/User'
+    PasswordRecoveryRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: The user's email address to send password recovery link
+          example: john@example.com
+    ResetPasswordRequest:
+      type: object
+      required:
+        - token
+        - newPassword
+      properties:
+        token:
+          type: string
+          description: The password recovery token received via email
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 20
+          description: The new password for the user account
+          example: newpassword123
+    SuccessMessage:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: Operation completed successfully
+    CreateTaskRequest:
+      type: object
+      required:
+        - name
+        - description
+        - status
+        - priority
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 40
+          description: The task name. Will be converted to lowercase and trimmed.
+          example: complete project documentation
+        description:
+          type: string
+          minLength: 10
+          maxLength: 120
+          description: The task description
+          example: Write comprehensive API documentation for all endpoints
+        status:
+          type: string
+          enum: [pending, in progress, completed, archived]
+          description: The task status
+          example: pending
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: The task priority
+          example: high
+    UpdateTaskRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 40
+          description: The task name. Will be converted to lowercase and trimmed.
+          example: complete project documentation
+        description:
+          type: string
+          minLength: 10
+          maxLength: 120
+          description: The task description
+          example: Write comprehensive API documentation for all endpoints
+        status:
+          type: string
+          enum: [pending, in progress, completed, archived]
+          description: The task status
+          example: in progress
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: The task priority
+          example: high
+    Task:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - status
+        - priority
+        - user
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the task
+          example: 60d0fe4f5311236168a109ca
+        name:
+          type: string
+          description: The task name
+          example: complete project documentation
+        description:
+          type: string
+          description: The task description
+          example: Write comprehensive API documentation for all endpoints
+        status:
+          type: string
+          enum: [pending, in progress, completed, archived]
+          description: The task status
+          example: pending
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: The task priority
+          example: high
+        user:
+          type: string
+          description: User ID who created the task
+          example: 60d0fe4f5311236168a109ca
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the task was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the task was last updated
+    TasksPaginationResponse:
+      type: object
+      required:
+        - totalDocuments
+        - totalPages
+        - currentPage
+        - data
+      properties:
+        totalDocuments:
+          type: integer
+          description: Total number of tasks in the database (or matching the filter)
+          example: 42
+        totalPages:
+          type: integer
+          description: Total number of pages based on the limit
+          example: 9
+        currentPage:
+          type: integer
+          description: The current page number being returned
+          example: 1
+        data:
+          type: array
+          description: Array of task objects for the current page
+          items:
+            $ref: '#/components/schemas/Task'
+
+paths:
+  /api/users/register:
+    post:
+      operationId: registerUser
+      summary: Register a new user
+      description: |
+        Creates a new user account. Changes the name to lowercase before storing.
+        Returns the created user along with session and refresh tokens.
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid input
+        '409':
+          description: >
+            Conflict. This can happen when:
+              - The email is already registered
+              - The name is already taken
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Email already exists
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/login:
+    post:
+      operationId: loginUser
+      summary: Login a user
+      description: |
+        Authenticates a user using their email and password.
+        Returns a session token and a refresh token for maintaining the session.
+        There is a limit on the number of active sessions (refresh tokens) per user.
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+      responses:
+        '200':
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid credentials
+        '403':
+          description: User has reached the maximum number of refresh tokens allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Refresh token limit exceeded
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/logout:
+    post:
+      operationId: logoutUser
+      summary: Logout a user
+      description: |
+        Logs out the user by invalidating the provided refresh token and the current session token.
+        Requires authentication via Bearer token.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '204':
+          description: Logout successful
+        '400':
+          description: Refresh token not provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Refresh token was not in body
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/logout-all:
+    post:
+      operationId: logoutFromAll
+      summary: Logout from all sessions
+      description: |
+        Logs out the user from all active sessions by revoking all refresh tokens.
+        This endpoint requires the user's email and password for authentication.
+        Does not require a session token, making it useful when the user wants to invalidate all sessions from any device.
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+      responses:
+        '204':
+          description: All sessions successfully invalidated
+        '401':
+          description: Unauthorized (Invalid or missing credentials)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid credentials
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/refresh-token:
+    post:
+      operationId: refreshToken
+      summary: Refresh session token
+      description: |
+        Generates a new session token and refresh token using a valid refresh token.
+        This endpoint implements token rotation: the old refresh token is invalidated and a new one is issued.
+        The new refresh token maintains the same expiration time as the original token.
+        Does not require authentication via Bearer token, only a valid refresh token in the request body.
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Tokens refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        '400':
+          description: Refresh token not provided in request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Refresh token expected in body
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/me:
+    get:
+      operationId: getMyProfile
+      summary: Get authenticated user's profile
+      description: |
+        Retrieves the profile information of the currently authenticated user.
+        Returns the user's own details based on the session token provided in the Authorization header.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Cache behavior:**
+        - User data is retrieved from cache when available
+        - If not in cache, data is fetched from the database and then cached
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/request-email-validation:
+    post:
+      operationId: requestEmailValidation
+      summary: Request email validation
+      description: |
+        Sends an email validation link to the authenticated user's email address.
+        This endpoint is only available for users with the READONLY role (unvalidated email).
+        Once the user validates their email via the link, their role will be upgraded to EDITOR.
+        The validation link is sent to the email associated with the authenticated user's session.
+        Requires authentication via Bearer token (minimum role: READONLY).
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Email validation link sent successfully
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '409':
+          description: >
+            Conflict. The user's email is already verified.
+            This endpoint is only available for users with READONLY role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Email is already verified
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/confirm-email-validation:
+    get:
+      operationId: confirmEmailValidation
+      summary: Confirm email validation
+      description: |
+        Confirms the user's email address using a validation token.
+        This endpoint is accessed via the email validation link sent to the user's email.
+        Does not require authentication as it uses a token-based approach.
+        
+        **Token validation:**
+        - The token must be valid and not expired
+        - The token must be signed by this server
+        - The token must not be blacklisted (already used)
+        - The token purpose must be EMAIL_VALIDATION
+        - The email in the token must match an existing user
+        
+        **Upon successful validation:**
+        - User's `emailValidated` field is set to `true`
+        - User's role is upgraded from READONLY to EDITOR
+        - The token is blacklisted to prevent reuse (one-time use only)
+        - User is removed from cache to ensure fresh data on next request
+        
+        **Token lifecycle:**
+        - The token has a limited lifetime (configured server-side)
+        - Once used, the token is blacklisted for its remaining TTL
+        - Attempting to use an already consumed token returns a 401 error
+      tags:
+        - Users
+      parameters:
+        - in: query
+          name: token
+          schema:
+            type: string
+          required: true
+          description: The email validation token received via email
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Email validated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                message: Email successfully validated
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - Token is not provided in query parameters
+              - Token format is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '401':
+          description: >
+            Unauthorized. This can happen when:
+              - The token is invalid or expired
+              - The token was not signed by this server
+              - The token purpose is not EMAIL_VALIDATION
+              - The token has already been used (blacklisted)
+              - The user associated with the email in the token doesn't exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '409':
+          description: >
+            Conflict. The user's email is already verified.
+            This can happen if the user has already confirmed their email previously.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Email is already verified
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/{id}:
+    get:
+      operationId: getUserById
+      summary: Get user by ID
+      description: |
+        Retrieves detailed information about a specific user by their unique ID.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        The user data may be retrieved from the cache if available.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The unique identifier of the user
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '404':
+          description: >
+            User not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No user exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: User not found
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+    delete:
+      operationId: deleteUserById
+      summary: Delete user by ID
+      description: |
+        Deletes a specific user by their unique ID.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Permission rules:**
+        - Users can delete **their own account** (self-deletion)
+        - **Admin users** can delete other users with READONLY or EDITOR roles
+        - **Admin users cannot delete other admin users**
+        - Users with READONLY or EDITOR roles cannot delete other users
+        
+        When a user is deleted:
+        - The user record is removed from the database
+        - All refresh tokens associated with the user are revoked
+        - All tasks associated with the user are permanently deleted
+        - User in the cache is invalidated if present
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The unique identifier of the user to delete
+      responses:
+        '204':
+          description: User deleted successfully
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '403':
+          description: >
+            Forbidden. This can happen when:
+              - A non-admin user attempts to delete another user
+              - An admin user attempts to delete another admin user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: You do not have permission to perform this action
+        '404':
+          description: >
+            User not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No user exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: User not found
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+    patch:
+      operationId: updateUserById
+      summary: Update user by ID
+      description: |
+        Updates a specific user by their unique ID.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Permission rules:**
+        - Users can update **their own account** (self-update)
+        - **Admin users** can update users with READONLY or EDITOR roles
+        - **Admin users cannot update other admin users**
+        - Users with READONLY or EDITOR roles cannot update other users
+        
+        **Updatable fields:**
+        - `name` - Will be converted to lowercase and trimmed before saving
+        - `email` - Updating this triggers security actions (see below)
+        - `password` - Updating this triggers security actions (see below)
+        
+        All fields are optional. At least one field must be provided.
+        
+        **Special behaviors when email is updated:**
+        - For non-admin users: role is downgraded to READONLY and emailValidated is set to false
+        - For admin users: role and emailValidated remain unchanged (no downgrade occurs)
+        - All refresh tokens are revoked
+        - The current session token is blacklisted
+        - User is removed from cache
+        
+        **Special behaviors when password is updated:**
+        - All refresh tokens are revoked
+        - The current session token is blacklisted
+        - User is removed from cache
+        
+        **Note:** If email or password is updated, the user will need to log in again with new credentials.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The unique identifier of the user to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - No properties to update are provided in the request body
+              - Invalid field values (e.g., name too short/long, invalid email format, password too short/long)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                noProperties:
+                  value:
+                    error: No properties to update
+                invalidInput:
+                  value:
+                    error: Invalid input
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '403':
+          description: >
+            Forbidden. This can happen when:
+              - A non-admin user attempts to update another user
+              - An admin user attempts to update another admin user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: You do not have permission to perform this action
+        '404':
+          description: >
+            User not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No user exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: User not found
+        '409':
+          description: >
+            Conflict. This can happen when:
+              - The new email is already registered by another user
+              - The new name is already taken by another user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                emailExists:
+                  value:
+                    error: Email already exists
+                nameExists:
+                  value:
+                    error: User already exists
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users:
+    get:
+      operationId: findAllUsers
+      summary: Get all users with pagination
+      description: |
+        Retrieves a paginated list of all users in the system.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Pagination:**
+        - Results are paginated with configurable `page` and `limit` query parameters
+        - Default limit: 5 users per page (configurable via query parameter)
+        - Default page: 1 (first page)
+        - Maximum limit: 100 users per page
+        - Minimum page: 1
+        - Results are sorted by creation date (oldest first) and then by ID
+        
+        **Pagination rules:**
+        - If `page` is not provided or invalid, defaults to 1
+        - If `limit` is not provided or invalid, defaults to 5
+        - If `limit` exceeds 100, returns a 400 error
+        - If `limit` or `page` is less than or equal to 0, returns a 400 error
+        - The `totalPages` is calculated as `ceil(totalDocuments / limit)`
+        - If the requested page exceeds the total pages, an empty data array is returned
+        
+        **Cache behavior:**
+        - Individual user records are retrieved from cache when available
+        - User records not in cache are fetched from the database and then cached
+        - Cache is automatically invalidated when users are updated or deleted
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: Page number to retrieve (starts at 1)
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 5
+          required: false
+          description: Number of users per page (max 100)
+          example: 10
+      responses:
+        '200':
+          description: Paginated list of users retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersPaginationResponse'
+              example:
+                totalDocuments: 42
+                totalPages: 5
+                currentPage: 1
+                data:
+                  - id: 60d0fe4f5311236168a109ca
+                    name: john doe
+                    email: john@example.com
+                    role: editor
+                    emailValidated: true
+                    createdAt: '2021-06-21T12:00:00.000Z'
+                    updatedAt: '2021-06-21T12:00:00.000Z'
+                  - id: 60d0fe4f5311236168a109cb
+                    name: jane smith
+                    email: jane@example.com
+                    role: readonly
+                    emailValidated: false
+                    createdAt: '2021-06-21T13:00:00.000Z'
+                    updatedAt: '2021-06-21T13:00:00.000Z'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - The `page` parameter is not a valid positive integer
+              - The `limit` parameter is not a valid positive integer
+              - The `limit` parameter exceeds 100
+              - The `page` or `limit` parameter is less than or equal to 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidPage:
+                  value:
+                    error: Invalid page
+                invalidLimit:
+                  value:
+                    error: Invalid limit
+                limitTooLarge:
+                  value:
+                    error: Limit is too large
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/forgot-password:
+    post:
+      operationId: requestPasswordRecovery
+      summary: Request password recovery
+      description: |
+        Initiates the password recovery process by sending a password reset link to the user's email address.
+        This endpoint does not require authentication.
+        
+        **Security considerations:**
+        - Always returns a success message regardless of whether the email exists (to prevent email enumeration)
+        - If the email exists in the system, a password recovery token is generated and sent via email
+        - If the email doesn't exist, no email is sent but the same success message is returned
+        - The password recovery token has a limited lifetime (configured server-side)
+        - Rate limiting is applied to prevent abuse
+        
+        **Password recovery flow:**
+        1. User requests password recovery by providing their email
+        2. System generates a password recovery token (JWT) with the user's email
+        3. Token is sent to the user's email with a reset link
+        4. User clicks the link which contains the token as a query parameter
+        5. User is presented with a form to enter a new password (GET /api/users/reset-password)
+        6. User submits the form with the token and new password (POST /api/users/reset-password)
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordRecoveryRequest'
+      responses:
+        '200':
+          description: >
+            Password recovery email sent successfully (or email doesn't exist but returns same message for security).
+            Check your email for the password reset link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                message: If that account exists, you will receive an email.
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - Email is not provided in the request body
+              - Email format is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                emailNotProvided:
+                  value:
+                    error: Email not provided
+                invalidEmail:
+                  value:
+                    error: Invalid email
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/reset-password:
+    get:
+      operationId: resetPasswordForm
+      summary: Display password reset form
+      description: |
+        Displays an HTML form for resetting the user's password.
+        This endpoint is accessed via the password reset link sent to the user's email.
+        Does not require authentication as it uses a token-based approach.
+        
+        **Usage:**
+        - This endpoint is typically accessed by clicking the password reset link in the email
+        - The link contains a `token` query parameter generated during the password recovery request
+        - Returns an HTML form where users can enter their new password
+        - The form submits to POST /api/users/reset-password with the token and new password
+        
+        **Token validation:**
+        - The token must be valid and not expired
+        - The token must be signed by this server
+        - The token must not be blacklisted (already used)
+        - The token purpose must be PASSWORD_RECOVERY
+      tags:
+        - Users
+      parameters:
+        - in: query
+          name: token
+          schema:
+            type: string
+          required: true
+          description: The password recovery token received via email
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: HTML form for password reset
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with a form to reset password
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - Token is not provided in query parameters
+              - Token format is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+    post:
+      operationId: resetPassword
+      summary: Reset user password
+      description: |
+        Resets the user's password using a valid password recovery token.
+        This endpoint does not require authentication as it uses a token-based approach.
+        
+        **Security behaviors:**
+        - The password recovery token is blacklisted after successful use (one-time use only)
+        - All refresh tokens associated with the user are revoked (forces re-login on all devices)
+        - All active sessions are invalidated
+        - The new password is hashed before storing in the database
+        
+        **Token validation:**
+        - The token must be valid and not expired
+        - The token must be signed by this server
+        - The token must not be blacklisted (already used)
+        - The token purpose must be PASSWORD_RECOVERY
+        - The email in the token must match an existing user
+        
+        **Password requirements:**
+        - Minimum length: 8 characters
+        - Maximum length: 20 characters
+        
+        **After successful password reset:**
+        - User must log in again with the new password on all devices
+        - Previous sessions and refresh tokens are no longer valid
+        - The password recovery token cannot be reused
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                message: Password has been successfully reset
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - Token is not provided in the request body
+              - New password is not provided in the request body
+              - New password is too short (less than 8 characters)
+              - New password is too long (more than 20 characters)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidToken:
+                  value:
+                    error: Invalid token
+                invalidPasswordLength:
+                  value:
+                    error: Invalid password length
+        '401':
+          description: >
+            Unauthorized. This can happen when:
+              - The token is invalid or expired
+              - The token was not signed by this server
+              - The token purpose is not PASSWORD_RECOVERY
+              - The token has already been used (blacklisted)
+              - The user associated with the email in the token doesn't exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks/create:
+    post:
+      operationId: createTask
+      summary: Create a new task
+      description: |
+        Creates a new task for the authenticated user.
+        Requires authentication via Bearer token (minimum role: EDITOR).
+        
+        **Task properties:**
+        - `name` - Will be converted to lowercase and trimmed before saving
+        - `description` - Task description (10-120 characters)
+        - `status` - Task status: pending, in progress, completed, or archived
+        - `priority` - Task priority: low, medium, or high
+        
+        The task is automatically associated with the authenticated user who creates it.
+        
+        **Validation rules:**
+        - Task name must be unique across all tasks
+        - Name must be between 3-40 characters
+        - Description must be between 10-120 characters
+        - Status must be one of: pending, in progress, completed, archived
+        - Priority must be one of: low, medium, high
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - Invalid field values (name too short/long, description too short/long, invalid status, invalid priority)
+              - Required fields are missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidInput:
+                  value:
+                    error: Invalid input
+                invalidStatus:
+                  value:
+                    error: Invalid status
+                invalidPriority:
+                  value:
+                    error: Invalid priority
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '403':
+          description: >
+            Forbidden. User role is READONLY.
+            Only EDITOR and ADMIN users can create tasks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Forbidden
+        '409':
+          description: >
+            Conflict. Task with the same name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Task already exists
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks/{id}:
+    get:
+      operationId: getTaskById
+      summary: Get task by ID
+      description: |
+        Retrieves detailed information about a specific task by its unique ID.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Cache behavior:**
+        - Task data is retrieved from cache when available
+        - If not in cache, data is fetched from the database and then cached
+        
+        **Access control:**
+        - All authenticated users can view any task
+        - No ownership restrictions on viewing tasks
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The task ID (MongoDB ObjectId)
+          example: 60d0fe4f5311236168a109ca
+      responses:
+        '200':
+          description: Task details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '404':
+          description: >
+            Task not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No task exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Task not found
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+    delete:
+      operationId: deleteTaskById
+      summary: Delete task by ID
+      description: |
+        Deletes a specific task by its unique ID.
+        Requires authentication via Bearer token (minimum role: EDITOR).
+        
+        **Permission rules:**
+        - Users can delete **their own tasks** (self-deletion)
+        - **Admin users** can delete tasks owned by users with READONLY or EDITOR roles
+        - **Admin users cannot delete tasks owned by other admin users**
+        - Users with READONLY or EDITOR roles cannot delete tasks owned by other users
+        
+        When a task is deleted:
+        - The task record is permanently removed from the database
+        - Task is removed from cache if present
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The task ID to delete (MongoDB ObjectId)
+          example: 60d0fe4f5311236168a109ca
+      responses:
+        '204':
+          description: Task deleted successfully
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '403':
+          description: >
+            Forbidden. This can happen when:
+              - User has READONLY role (cannot delete any tasks)
+              - A non-owner attempts to delete another user's task
+              - An admin user attempts to delete a task owned by another admin user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Forbidden
+        '404':
+          description: >
+            Task not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No task exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Task not found
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+    patch:
+      operationId: updateTaskById
+      summary: Update task by ID
+      description: |
+        Updates a specific task by its unique ID.
+        Requires authentication via Bearer token (minimum role: EDITOR).
+        
+        **Permission rules:**
+        - Users can update **their own tasks** (self-update)
+        - **Admin users** can update tasks owned by users with READONLY or EDITOR roles
+        - **Admin users cannot update tasks owned by other admin users**
+        - Users with READONLY or EDITOR roles cannot update tasks owned by other users
+        
+        **Updatable fields:**
+        - `name` - Will be converted to lowercase and trimmed before saving
+        - `description` - Task description
+        - `status` - Task status
+        - `priority` - Task priority
+        
+        All fields are optional. At least one field must be provided.
+        
+        **Validation rules:**
+        - If name is updated, it must be unique across all tasks
+        - Name must be between 3-40 characters
+        - Description must be between 10-120 characters
+        - Status must be one of: pending, in progress, completed, archived
+        - Priority must be one of: low, medium, high
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The task ID to update (MongoDB ObjectId)
+          example: 60d0fe4f5311236168a109ca
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - No properties to update are provided in the request body
+              - Invalid field values (name too short/long, description too short/long, invalid status, invalid priority)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                noProperties:
+                  value:
+                    error: No properties to update
+                invalidInput:
+                  value:
+                    error: Invalid input
+                invalidStatus:
+                  value:
+                    error: Invalid status
+                invalidPriority:
+                  value:
+                    error: Invalid priority
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '403':
+          description: >
+            Forbidden. This can happen when:
+              - User has READONLY role (cannot update any tasks)
+              - A non-owner attempts to update another user's task
+              - An admin user attempts to update a task owned by another admin user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Forbidden
+        '404':
+          description: >
+            Task not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No task exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Task not found
+        '409':
+          description: >
+            Conflict. Task with the new name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Task already exists
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks:
+    get:
+      operationId: findAllTasks
+      summary: Get all tasks with pagination
+      description: |
+        Retrieves a paginated list of all tasks in the system.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Pagination:**
+        - Results are paginated with configurable `page` and `limit` query parameters
+        - Default limit: 5 tasks per page (configurable via query parameter)
+        - Default page: 1 (first page)
+        - Maximum limit: 100 tasks per page
+        - Minimum page: 1
+        - Results are sorted by creation date (oldest first) and then by ID
+        
+        **Pagination rules:**
+        - If `page` is not provided or invalid, defaults to 1
+        - If `limit` is not provided or invalid, defaults to 5
+        - If `limit` exceeds 100, returns a 400 error
+        - If `limit` or `page` is less than or equal to 0, returns a 400 error
+        - The `totalPages` is calculated as `ceil(totalDocuments / limit)`
+        - If the requested page exceeds the total pages, an empty data array is returned
+        
+        **Cache behavior:**
+        - Individual task records are retrieved from cache when available
+        - Task records not in cache are fetched from the database and then cached
+        - Cache is automatically invalidated when tasks are updated or deleted
+        
+        **Access control:**
+        - All authenticated users can view all tasks (no filtering by ownership)
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: Page number to retrieve (starts at 1)
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 5
+          required: false
+          description: Number of tasks per page (max 100)
+          example: 10
+      responses:
+        '200':
+          description: Paginated list of tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksPaginationResponse'
+              example:
+                totalDocuments: 42
+                totalPages: 5
+                currentPage: 1
+                data:
+                  - id: 60d0fe4f5311236168a109ca
+                    name: complete project documentation
+                    description: Write comprehensive API documentation for all endpoints
+                    status: pending
+                    priority: high
+                    user: 60d0fe4f5311236168a109ca
+                    createdAt: '2021-06-21T12:00:00.000Z'
+                    updatedAt: '2021-06-21T12:00:00.000Z'
+                  - id: 60d0fe4f5311236168a109cb
+                    name: fix authentication bug
+                    description: Resolve issue with JWT token validation in middleware
+                    status: in progress
+                    priority: medium
+                    user: 60d0fe4f5311236168a109cb
+                    createdAt: '2021-06-21T13:00:00.000Z'
+                    updatedAt: '2021-06-21T13:00:00.000Z'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - The `page` parameter is not a valid positive integer
+              - The `limit` parameter is not a valid positive integer
+              - The `limit` parameter exceeds 100
+              - The `page` or `limit` parameter is less than or equal to 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidPage:
+                  value:
+                    error: Invalid page
+                invalidLimit:
+                  value:
+                    error: Invalid limit
+                limitTooLarge:
+                  value:
+                    error: Limit is too large
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks/all-by-user/{id}:
+    get:
+      operationId: findAllTasksByUser
+      summary: Get all tasks for a specific user with pagination
+      description: |
+        Retrieves a paginated list of all tasks owned by a specific user.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Filtering:**
+        - Returns only tasks where the `user` field matches the provided user ID
+        - Verifies that the user exists before querying tasks
+        - If the user doesn't exist, returns a 404 error
+        
+        **Pagination:**
+        - Results are paginated with configurable `page` and `limit` query parameters
+        - Default limit: 5 tasks per page (configurable via query parameter)
+        - Default page: 1 (first page)
+        - Maximum limit: 100 tasks per page
+        - Results are sorted by creation date (oldest first) and then by ID
+        
+        **Cache behavior:**
+        - Individual task records are retrieved from cache when available
+        - Task records not in cache are fetched from the database and then cached
+        
+        **Access control:**
+        - All authenticated users can view tasks owned by any user (no privacy restrictions)
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The user ID to filter tasks by (MongoDB ObjectId)
+          example: 60d0fe4f5311236168a109ca
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: Page number to retrieve (starts at 1)
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 5
+          required: false
+          description: Number of tasks per page (max 100)
+          example: 10
+      responses:
+        '200':
+          description: Paginated list of user's tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksPaginationResponse'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - The `page` parameter is not a valid positive integer
+              - The `limit` parameter is not a valid positive integer
+              - The `limit` parameter exceeds 100
+              - The `page` or `limit` parameter is less than or equal to 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidPage:
+                  value:
+                    error: Invalid page
+                invalidLimit:
+                  value:
+                    error: Invalid limit
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '404':
+          description: >
+            User not found or invalid ID. This can happen when:
+              - The provided user ID is not a valid MongoDB ObjectId
+              - No user exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: User not found
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks/all-by-status/{status}:
+    get:
+      operationId: findAllTasksByStatus
+      summary: Get all tasks by status with pagination
+      description: |
+        Retrieves a paginated list of all tasks with a specific status.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Status filtering:**
+        - Returns only tasks with the specified status
+        - Valid statuses: pending, in progress, completed, archived
+        - Status parameter is case-sensitive
+        - If an invalid status is provided, returns a 400 error
+        
+        **Pagination:**
+        - Results are paginated with configurable `page` and `limit` query parameters
+        - Default limit: 5 tasks per page (configurable via query parameter)
+        - Default page: 1 (first page)
+        - Maximum limit: 100 tasks per page
+        - Results are sorted by creation date (oldest first) and then by ID
+        
+        **Cache behavior:**
+        - Individual task records are retrieved from cache when available
+        - Task records not in cache are fetched from the database and then cached
+        
+        **Access control:**
+        - All authenticated users can view tasks with any status (no filtering by ownership)
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: status
+          schema:
+            type: string
+            enum: [pending, in progress, completed, archived]
+          required: true
+          description: The status to filter tasks by
+          example: pending
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: Page number to retrieve (starts at 1)
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 5
+          required: false
+          description: Number of tasks per page (max 100)
+          example: 10
+      responses:
+        '200':
+          description: Paginated list of tasks with specified status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksPaginationResponse'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - The status parameter is invalid (not one of: pending, in progress, completed, archived)
+              - The `page` parameter is not a valid positive integer
+              - The `limit` parameter is not a valid positive integer
+              - The `limit` parameter exceeds 100
+              - The `page` or `limit` parameter is less than or equal to 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidStatus:
+                  value:
+                    error: Invalid status
+                invalidPage:
+                  value:
+                    error: Invalid page
+                invalidLimit:
+                  value:
+                    error: Invalid limit
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks/all-by-priority/{priority}:
+    get:
+      operationId: findAllTasksByPriority
+      summary: Get all tasks by priority with pagination
+      description: |
+        Retrieves a paginated list of all tasks with a specific priority.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Priority filtering:**
+        - Returns only tasks with the specified priority
+        - Valid priorities: low, medium, high
+        - Priority parameter is case-sensitive
+        - If an invalid priority is provided, returns a 400 error
+        
+        **Pagination:**
+        - Results are paginated with configurable `page` and `limit` query parameters
+        - Default limit: 5 tasks per page (configurable via query parameter)
+        - Default page: 1 (first page)
+        - Maximum limit: 100 tasks per page
+        - Results are sorted by creation date (oldest first) and then by ID
+        
+        **Cache behavior:**
+        - Individual task records are retrieved from cache when available
+        - Task records not in cache are fetched from the database and then cached
+        
+        **Access control:**
+        - All authenticated users can view tasks with any priority (no filtering by ownership)
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: priority
+          schema:
+            type: string
+            enum: [low, medium, high]
+          required: true
+          description: The priority to filter tasks by
+          example: high
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: Page number to retrieve (starts at 1)
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 5
+          required: false
+          description: Number of tasks per page (max 100)
+          example: 10
+      responses:
+        '200':
+          description: Paginated list of tasks with specified priority retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksPaginationResponse'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - The priority parameter is invalid (not one of: low, medium, high)
+              - The `page` parameter is not a valid positive integer
+              - The `limit` parameter is not a valid positive integer
+              - The `limit` parameter exceeds 100
+              - The `page` or `limit` parameter is less than or equal to 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidPriority:
+                  value:
+                    error: Invalid priority
+                invalidPage:
+                  value:
+                    error: Invalid page
+                invalidLimit:
+                  value:
+                    error: Invalid limit
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error

@@ -16,7 +16,7 @@ export class RolesMiddleware {
         return async (req: Request, res: Response, next: NextFunction) => {
             // verify token presence
             const authorizationHeader = req.header('authorization');
-            if (!authorizationHeader || !authorizationHeader.startsWith('Bearer')) {
+            if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
                 this.loggerService.error('No authorization token provided');
                 res.status(statusCodes.UNAUTHORIZED).json({ error: authErrors.INVALID_TOKEN });
                 return;

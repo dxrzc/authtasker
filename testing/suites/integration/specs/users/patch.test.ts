@@ -5,6 +5,7 @@ import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
 import { UserRole } from 'src/enums/user-role.enum';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
+import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
 import { makeSessionTokenBlacklistKey } from 'src/functions/token/make-session-token-blacklist-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
@@ -89,6 +90,27 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
                 userInDb!.password,
             );
             expect(isPasswordCorrectlyHashed).toBe(true);
+        });
+
+        test('remove user from cache', async () => {
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            // cache the user
+            await testKit.agent
+                .get(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(statusCodes.OK);
+            const cacheKey = makeUsersCacheKey(id);
+            const cachedUserBefore = await testKit.redisService.get(cacheKey);
+            expect(cachedUserBefore).not.toBeNull();
+            // update user
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ name: testKit.userData.name })
+                .expect(statusCodes.OK);
+            // verify user is removed from cache
+            const cachedUserAfter = await testKit.redisService.get(cacheKey);
+            expect(cachedUserAfter).toBeNull();
         });
     });
 
