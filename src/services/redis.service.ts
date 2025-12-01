@@ -29,6 +29,10 @@ export class RedisService {
         return null;
     }
 
+    async del(key: string): Promise<void> {
+        await this.redis.del(key);
+    }
+
     async mget<T>(keys: string[]): Promise<(T | null)[]> {
         const data = await this.redis.mget(keys);
         return data.map((d) => {
