@@ -58,6 +58,15 @@ components:
           type: string
           description: The user's password
           example: password123
+    LogoutRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: The refresh token to invalidate
+          example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
     User:
       type: object
       required:
@@ -221,6 +230,59 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: Refresh token limit exceeded
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/logout:
+    post:
+      operationId: logoutUser
+      summary: Logout a user
+      description: |
+        Logs out the user by invalidating the provided refresh token and the current session token.
+        Requires a valid session token in the Authorization header.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '204':
+          description: Logout successful
+        '400':
+          description: Refresh token not provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Refresh token was not in body
+        '401':
+          description: Unauthorized (Invalid session or refresh token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
         '429':
           description: Too many requests
           content:
