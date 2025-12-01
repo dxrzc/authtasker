@@ -356,7 +356,7 @@ paths:
       summary: Logout a user
       description: |
         Logs out the user by invalidating the provided refresh token and the current session token.
-        Requires a valid session token in the Authorization header.
+        Requires authentication via Bearer token.
       tags:
         - Users
       security:
@@ -513,7 +513,7 @@ paths:
         This endpoint is only available for users with the READONLY role (unvalidated email).
         Once the user validates their email via the link, their role will be upgraded to EDITOR.
         The validation link is sent to the email associated with the authenticated user's session.
-        Requires authentication via Bearer token.
+        Requires authentication via Bearer token (minimum role: READONLY).
       tags:
         - Users
       security:
@@ -562,7 +562,7 @@ paths:
       summary: Get user by ID
       description: |
         Retrieves detailed information about a specific user by their unique ID.
-        Requires authentication.
+        Requires authentication via Bearer token (minimum role: READONLY).
         The user data may be retrieved from the cache if available.
       tags:
         - Users
@@ -574,7 +574,7 @@ paths:
           schema:
             type: string
           required: true
-          description: The user ID
+          description: The unique identifier of the user
       responses:
         '200':
           description: User details
@@ -591,7 +591,10 @@ paths:
               example:
                 error: Invalid token
         '404':
-          description: User not found or invalid ID
+          description: >
+            User not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No user exists with the provided ID
           content:
             application/json:
               schema:
@@ -643,7 +646,7 @@ paths:
           schema:
             type: string
           required: true
-          description: The user ID to delete
+          description: The unique identifier of the user to delete
       responses:
         '204':
           description: User deleted successfully
@@ -693,13 +696,12 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: Internal server error
-
     patch:
       operationId: updateUserById
       summary: Update user by ID
       description: |
         Updates a specific user by their unique ID.
-        Requires authentication via Bearer token.
+        Requires authentication via Bearer token (minimum role: READONLY).
         
         **Permission rules:**
         - Users can update **their own account** (self-update)
@@ -737,7 +739,7 @@ paths:
           schema:
             type: string
           required: true
-          description: The user ID to update
+          description: The unique identifier of the user to update
       requestBody:
         required: true
         content:
