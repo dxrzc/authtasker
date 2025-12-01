@@ -539,3 +539,85 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: Internal server error
+
+    delete:
+      operationId: deleteUserById
+      summary: Delete user by ID
+      description: |
+        Deletes a specific user by their unique ID.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Permission rules:**
+        - Users can delete **their own account** (self-deletion)
+        - **Admin users** can delete other users with READONLY or EDITOR roles
+        - **Admin users cannot delete other admin users**
+        - Users with READONLY or EDITOR roles cannot delete other users
+        
+        When a user is deleted:
+        - The user record is removed from the database
+        - All refresh tokens associated with the user are revoked
+        - All tasks associated with the user are permanently deleted
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The user ID to delete
+      responses:
+        '204':
+          description: User deleted successfully
+        '401':
+          description: >
+            Unauthorized. This can happen when:
+              - No authorization token is provided
+              - The provided token is invalid or expired
+              - The token was not signed by this server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '403':
+          description: >
+            Forbidden. This can happen when:
+              - A non-admin user attempts to delete another user
+              - An admin user attempts to delete another admin user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: You do not have permission to perform this action
+        '404':
+          description: >
+            User not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No user exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: User not found
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
