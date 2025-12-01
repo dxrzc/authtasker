@@ -234,6 +234,132 @@ components:
           type: string
           description: Success message
           example: Operation completed successfully
+    CreateTaskRequest:
+      type: object
+      required:
+        - name
+        - description
+        - status
+        - priority
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 40
+          description: The task name. Will be converted to lowercase and trimmed.
+          example: complete project documentation
+        description:
+          type: string
+          minLength: 10
+          maxLength: 120
+          description: The task description
+          example: Write comprehensive API documentation for all endpoints
+        status:
+          type: string
+          enum: [pending, in progress, completed, archived]
+          description: The task status
+          example: pending
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: The task priority
+          example: high
+    UpdateTaskRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 40
+          description: The task name. Will be converted to lowercase and trimmed.
+          example: complete project documentation
+        description:
+          type: string
+          minLength: 10
+          maxLength: 120
+          description: The task description
+          example: Write comprehensive API documentation for all endpoints
+        status:
+          type: string
+          enum: [pending, in progress, completed, archived]
+          description: The task status
+          example: in progress
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: The task priority
+          example: high
+    Task:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - status
+        - priority
+        - user
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the task
+          example: 60d0fe4f5311236168a109ca
+        name:
+          type: string
+          description: The task name
+          example: complete project documentation
+        description:
+          type: string
+          description: The task description
+          example: Write comprehensive API documentation for all endpoints
+        status:
+          type: string
+          enum: [pending, in progress, completed, archived]
+          description: The task status
+          example: pending
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: The task priority
+          example: high
+        user:
+          type: string
+          description: User ID who created the task
+          example: 60d0fe4f5311236168a109ca
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the task was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the task was last updated
+    TasksPaginationResponse:
+      type: object
+      required:
+        - totalDocuments
+        - totalPages
+        - currentPage
+        - data
+      properties:
+        totalDocuments:
+          type: integer
+          description: Total number of tasks in the database (or matching the filter)
+          example: 42
+        totalPages:
+          type: integer
+          description: Total number of pages based on the limit
+          example: 9
+        currentPage:
+          type: integer
+          description: The current page number being returned
+          example: 1
+        data:
+          type: array
+          description: Array of task objects for the current page
+          items:
+            $ref: '#/components/schemas/Task'
 
 paths:
   /api/users/register:
@@ -1310,6 +1436,861 @@ paths:
               - The token purpose is not PASSWORD_RECOVERY
               - The token has already been used (blacklisted)
               - The user associated with the email in the token doesn't exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks/create:
+    post:
+      operationId: createTask
+      summary: Create a new task
+      description: |
+        Creates a new task for the authenticated user.
+        Requires authentication via Bearer token (minimum role: EDITOR).
+        
+        **Task properties:**
+        - `name` - Will be converted to lowercase and trimmed before saving
+        - `description` - Task description (10-120 characters)
+        - `status` - Task status: pending, in progress, completed, or archived
+        - `priority` - Task priority: low, medium, or high
+        
+        The task is automatically associated with the authenticated user who creates it.
+        
+        **Validation rules:**
+        - Task name must be unique across all tasks
+        - Name must be between 3-40 characters
+        - Description must be between 10-120 characters
+        - Status must be one of: pending, in progress, completed, archived
+        - Priority must be one of: low, medium, high
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - Invalid field values (name too short/long, description too short/long, invalid status, invalid priority)
+              - Required fields are missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidInput:
+                  value:
+                    error: Invalid input
+                invalidStatus:
+                  value:
+                    error: Invalid status
+                invalidPriority:
+                  value:
+                    error: Invalid priority
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '403':
+          description: >
+            Forbidden. User role is READONLY.
+            Only EDITOR and ADMIN users can create tasks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Forbidden
+        '409':
+          description: >
+            Conflict. Task with the same name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Task already exists
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks/{id}:
+    get:
+      operationId: getTaskById
+      summary: Get task by ID
+      description: |
+        Retrieves detailed information about a specific task by its unique ID.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Cache behavior:**
+        - Task data is retrieved from cache when available
+        - If not in cache, data is fetched from the database and then cached
+        
+        **Access control:**
+        - All authenticated users can view any task
+        - No ownership restrictions on viewing tasks
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The task ID (MongoDB ObjectId)
+          example: 60d0fe4f5311236168a109ca
+      responses:
+        '200':
+          description: Task details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '404':
+          description: >
+            Task not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No task exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Task not found
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+    delete:
+      operationId: deleteTaskById
+      summary: Delete task by ID
+      description: |
+        Deletes a specific task by its unique ID.
+        Requires authentication via Bearer token (minimum role: EDITOR).
+        
+        **Permission rules:**
+        - Users can delete **their own tasks** (self-deletion)
+        - **Admin users** can delete tasks owned by users with READONLY or EDITOR roles
+        - **Admin users cannot delete tasks owned by other admin users**
+        - Users with READONLY or EDITOR roles cannot delete tasks owned by other users
+        
+        When a task is deleted:
+        - The task record is permanently removed from the database
+        - Task is removed from cache if present
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The task ID to delete (MongoDB ObjectId)
+          example: 60d0fe4f5311236168a109ca
+      responses:
+        '204':
+          description: Task deleted successfully
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '403':
+          description: >
+            Forbidden. This can happen when:
+              - User has READONLY role (cannot delete any tasks)
+              - A non-owner attempts to delete another user's task
+              - An admin user attempts to delete a task owned by another admin user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Forbidden
+        '404':
+          description: >
+            Task not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No task exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Task not found
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+    patch:
+      operationId: updateTaskById
+      summary: Update task by ID
+      description: |
+        Updates a specific task by its unique ID.
+        Requires authentication via Bearer token (minimum role: EDITOR).
+        
+        **Permission rules:**
+        - Users can update **their own tasks** (self-update)
+        - **Admin users** can update tasks owned by users with READONLY or EDITOR roles
+        - **Admin users cannot update tasks owned by other admin users**
+        - Users with READONLY or EDITOR roles cannot update tasks owned by other users
+        
+        **Updatable fields:**
+        - `name` - Will be converted to lowercase and trimmed before saving
+        - `description` - Task description
+        - `status` - Task status
+        - `priority` - Task priority
+        
+        All fields are optional. At least one field must be provided.
+        
+        **Validation rules:**
+        - If name is updated, it must be unique across all tasks
+        - Name must be between 3-40 characters
+        - Description must be between 10-120 characters
+        - Status must be one of: pending, in progress, completed, archived
+        - Priority must be one of: low, medium, high
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The task ID to update (MongoDB ObjectId)
+          example: 60d0fe4f5311236168a109ca
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - No properties to update are provided in the request body
+              - Invalid field values (name too short/long, description too short/long, invalid status, invalid priority)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                noProperties:
+                  value:
+                    error: No properties to update
+                invalidInput:
+                  value:
+                    error: Invalid input
+                invalidStatus:
+                  value:
+                    error: Invalid status
+                invalidPriority:
+                  value:
+                    error: Invalid priority
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '403':
+          description: >
+            Forbidden. This can happen when:
+              - User has READONLY role (cannot update any tasks)
+              - A non-owner attempts to update another user's task
+              - An admin user attempts to update a task owned by another admin user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Forbidden
+        '404':
+          description: >
+            Task not found or invalid ID. This can happen when:
+              - The provided ID is not a valid MongoDB ObjectId
+              - No task exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Task not found
+        '409':
+          description: >
+            Conflict. Task with the new name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Task already exists
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks:
+    get:
+      operationId: findAllTasks
+      summary: Get all tasks with pagination
+      description: |
+        Retrieves a paginated list of all tasks in the system.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Pagination:**
+        - Results are paginated with configurable `page` and `limit` query parameters
+        - Default limit: 5 tasks per page (configurable via query parameter)
+        - Default page: 1 (first page)
+        - Maximum limit: 100 tasks per page
+        - Minimum page: 1
+        - Results are sorted by creation date (oldest first) and then by ID
+        
+        **Pagination rules:**
+        - If `page` is not provided or invalid, defaults to 1
+        - If `limit` is not provided or invalid, defaults to 5
+        - If `limit` exceeds 100, returns a 400 error
+        - If `limit` or `page` is less than or equal to 0, returns a 400 error
+        - The `totalPages` is calculated as `ceil(totalDocuments / limit)`
+        - If the requested page exceeds the total pages, an empty data array is returned
+        
+        **Cache behavior:**
+        - Individual task records are retrieved from cache when available
+        - Task records not in cache are fetched from the database and then cached
+        - Cache is automatically invalidated when tasks are updated or deleted
+        
+        **Access control:**
+        - All authenticated users can view all tasks (no filtering by ownership)
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: Page number to retrieve (starts at 1)
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 5
+          required: false
+          description: Number of tasks per page (max 100)
+          example: 10
+      responses:
+        '200':
+          description: Paginated list of tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksPaginationResponse'
+              example:
+                totalDocuments: 42
+                totalPages: 5
+                currentPage: 1
+                data:
+                  - id: 60d0fe4f5311236168a109ca
+                    name: complete project documentation
+                    description: Write comprehensive API documentation for all endpoints
+                    status: pending
+                    priority: high
+                    user: 60d0fe4f5311236168a109ca
+                    createdAt: '2021-06-21T12:00:00.000Z'
+                    updatedAt: '2021-06-21T12:00:00.000Z'
+                  - id: 60d0fe4f5311236168a109cb
+                    name: fix authentication bug
+                    description: Resolve issue with JWT token validation in middleware
+                    status: in progress
+                    priority: medium
+                    user: 60d0fe4f5311236168a109cb
+                    createdAt: '2021-06-21T13:00:00.000Z'
+                    updatedAt: '2021-06-21T13:00:00.000Z'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - The `page` parameter is not a valid positive integer
+              - The `limit` parameter is not a valid positive integer
+              - The `limit` parameter exceeds 100
+              - The `page` or `limit` parameter is less than or equal to 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidPage:
+                  value:
+                    error: Invalid page
+                invalidLimit:
+                  value:
+                    error: Invalid limit
+                limitTooLarge:
+                  value:
+                    error: Limit is too large
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks/all-by-user/{id}:
+    get:
+      operationId: findAllTasksByUser
+      summary: Get all tasks for a specific user with pagination
+      description: |
+        Retrieves a paginated list of all tasks owned by a specific user.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Filtering:**
+        - Returns only tasks where the `user` field matches the provided user ID
+        - Verifies that the user exists before querying tasks
+        - If the user doesn't exist, returns a 404 error
+        
+        **Pagination:**
+        - Results are paginated with configurable `page` and `limit` query parameters
+        - Default limit: 5 tasks per page (configurable via query parameter)
+        - Default page: 1 (first page)
+        - Maximum limit: 100 tasks per page
+        - Results are sorted by creation date (oldest first) and then by ID
+        
+        **Cache behavior:**
+        - Individual task records are retrieved from cache when available
+        - Task records not in cache are fetched from the database and then cached
+        
+        **Access control:**
+        - All authenticated users can view tasks owned by any user (no privacy restrictions)
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The user ID to filter tasks by (MongoDB ObjectId)
+          example: 60d0fe4f5311236168a109ca
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: Page number to retrieve (starts at 1)
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 5
+          required: false
+          description: Number of tasks per page (max 100)
+          example: 10
+      responses:
+        '200':
+          description: Paginated list of user's tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksPaginationResponse'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - The `page` parameter is not a valid positive integer
+              - The `limit` parameter is not a valid positive integer
+              - The `limit` parameter exceeds 100
+              - The `page` or `limit` parameter is less than or equal to 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidPage:
+                  value:
+                    error: Invalid page
+                invalidLimit:
+                  value:
+                    error: Invalid limit
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '404':
+          description: >
+            User not found or invalid ID. This can happen when:
+              - The provided user ID is not a valid MongoDB ObjectId
+              - No user exists with the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: User not found
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks/all-by-status/{status}:
+    get:
+      operationId: findAllTasksByStatus
+      summary: Get all tasks by status with pagination
+      description: |
+        Retrieves a paginated list of all tasks with a specific status.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Status filtering:**
+        - Returns only tasks with the specified status
+        - Valid statuses: pending, in progress, completed, archived
+        - Status parameter is case-sensitive
+        - If an invalid status is provided, returns a 400 error
+        
+        **Pagination:**
+        - Results are paginated with configurable `page` and `limit` query parameters
+        - Default limit: 5 tasks per page (configurable via query parameter)
+        - Default page: 1 (first page)
+        - Maximum limit: 100 tasks per page
+        - Results are sorted by creation date (oldest first) and then by ID
+        
+        **Cache behavior:**
+        - Individual task records are retrieved from cache when available
+        - Task records not in cache are fetched from the database and then cached
+        
+        **Access control:**
+        - All authenticated users can view tasks with any status (no filtering by ownership)
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: status
+          schema:
+            type: string
+            enum: [pending, in progress, completed, archived]
+          required: true
+          description: The status to filter tasks by
+          example: pending
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: Page number to retrieve (starts at 1)
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 5
+          required: false
+          description: Number of tasks per page (max 100)
+          example: 10
+      responses:
+        '200':
+          description: Paginated list of tasks with specified status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksPaginationResponse'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - The status parameter is invalid (not one of: pending, in progress, completed, archived)
+              - The `page` parameter is not a valid positive integer
+              - The `limit` parameter is not a valid positive integer
+              - The `limit` parameter exceeds 100
+              - The `page` or `limit` parameter is less than or equal to 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidStatus:
+                  value:
+                    error: Invalid status
+                invalidPage:
+                  value:
+                    error: Invalid page
+                invalidLimit:
+                  value:
+                    error: Invalid limit
+        '401':
+          description: Unauthorized (Invalid or missing token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/tasks/all-by-priority/{priority}:
+    get:
+      operationId: findAllTasksByPriority
+      summary: Get all tasks by priority with pagination
+      description: |
+        Retrieves a paginated list of all tasks with a specific priority.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Priority filtering:**
+        - Returns only tasks with the specified priority
+        - Valid priorities: low, medium, high
+        - Priority parameter is case-sensitive
+        - If an invalid priority is provided, returns a 400 error
+        
+        **Pagination:**
+        - Results are paginated with configurable `page` and `limit` query parameters
+        - Default limit: 5 tasks per page (configurable via query parameter)
+        - Default page: 1 (first page)
+        - Maximum limit: 100 tasks per page
+        - Results are sorted by creation date (oldest first) and then by ID
+        
+        **Cache behavior:**
+        - Individual task records are retrieved from cache when available
+        - Task records not in cache are fetched from the database and then cached
+        
+        **Access control:**
+        - All authenticated users can view tasks with any priority (no filtering by ownership)
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: priority
+          schema:
+            type: string
+            enum: [low, medium, high]
+          required: true
+          description: The priority to filter tasks by
+          example: high
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          description: Page number to retrieve (starts at 1)
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 5
+          required: false
+          description: Number of tasks per page (max 100)
+          example: 10
+      responses:
+        '200':
+          description: Paginated list of tasks with specified priority retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksPaginationResponse'
+        '400':
+          description: >
+            Bad request. This can happen when:
+              - The priority parameter is invalid (not one of: low, medium, high)
+              - The `page` parameter is not a valid positive integer
+              - The `limit` parameter is not a valid positive integer
+              - The `limit` parameter exceeds 100
+              - The `page` or `limit` parameter is less than or equal to 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidPriority:
+                  value:
+                    error: Invalid priority
+                invalidPage:
+                  value:
+                    error: Invalid page
+                invalidLimit:
+                  value:
+                    error: Invalid limit
+        '401':
+          description: Unauthorized (Invalid or missing token)
           content:
             application/json:
               schema:
