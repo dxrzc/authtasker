@@ -648,7 +648,7 @@ paths:
       summary: Update user by ID
       description: |
         Updates a specific user by their unique ID.
-        Requires authentication via Bearer token (minimum role: READONLY).
+        Requires authentication via Bearer token.
         
         **Permission rules:**
         - Users can update **their own account** (self-update)
@@ -665,7 +665,7 @@ paths:
         
         **Special behaviors when email is updated:**
         - For non-admin users: role is downgraded to READONLY and emailValidated is set to false
-        - For admin users: role and emailValidated remain unchanged
+        - For admin users: role and emailValidated remain unchanged (no downgrade occurs)
         - All refresh tokens are revoked
         - The current session token is blacklisted
         - User is removed from cache
@@ -767,7 +767,7 @@ paths:
                   value:
                     error: User already exists
         '429':
-          description: Too many requests (rate limit exceeded)
+          description: Too many requests
           content:
             application/json:
               schema:
