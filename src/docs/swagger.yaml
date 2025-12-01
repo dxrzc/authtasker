@@ -76,7 +76,7 @@ components:
         name:
           type: string
           description: The user's full name
-          example: John Doe
+          example: john doe
         email:
           type: string
           description: The user's email address
@@ -84,8 +84,8 @@ components:
         role:
           type: string
           description: The user's role in the system
-          enum: [ADMIN, EDITOR, READONLY]
-          example: READONLY
+          enum: [admin, editor, readonly]
+          example: readonly
         emailValidated:
           type: boolean
           description: Whether the user's email has been validated
@@ -129,7 +129,7 @@ paths:
       operationId: registerUser
       summary: Register a new user
       description: |
-        Creates a new user account with the provided details.
+        Creates a new user account. Changes the name to lowercase before storing.
         Returns the created user along with session and refresh tokens.
       tags:
         - Users
