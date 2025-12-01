@@ -57,7 +57,10 @@ export class AppRoutes {
             const file = readFileSync(swaggerPath, 'utf8');
             this.swaggerDocument = YAML.parse(file);
         } catch (err) {
-            this.loggerService.error('Failed to load Swagger documentation. API documentation will not be available:', err);
+            this.loggerService.error(
+                'Failed to load Swagger documentation. API documentation will not be available:',
+                err,
+            );
         }
     }
 
