@@ -833,16 +833,8 @@ paths:
         - If the requested page exceeds the total pages, an empty data array is returned
         
         **Cache behavior:**
-        - This endpoint uses **revalidation caching** for optimal performance
-        - Individual user records are cached in Redis with configurable TTLs
-        - When a cached user record expires (soft TTL), the system checks if the data was modified in the database
-        - If the cached data is still fresh (not modified since caching), it's re-cached and returned immediately
-        - If the cached data is stale (modified since caching), it's fetched from the database and re-cached
-        - Cache configuration (default values):
-          - Soft TTL (`USERS_API_CACHE_TTL_SECONDS`): 10 seconds - time before revalidation check
-          - Hard TTL (`CACHE_HARD_TTL_SECONDS`): 30 seconds - maximum time in cache regardless of revalidation
-        - The pagination query itself (IDs for each page) is fetched from the database on each request
-        - User records that are not in cache will be fetched from the database and cached for subsequent requests
+        - Individual user records are retrieved from cache when available
+        - User records not in cache are fetched from the database and then cached
         - Cache is automatically invalidated when users are updated or deleted
       tags:
         - Users
