@@ -189,6 +189,7 @@ paths:
       description: |
         Authenticates a user using their email and password.
         Returns a session token and a refresh token for maintaining the session.
+        There is a limit on the number of active sessions (refresh tokens) per user.
       tags:
         - Users
       requestBody:
@@ -212,6 +213,14 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: Invalid credentials
+        '403':
+          description: Forbidden. Maximum number of active sessions reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Refresh token limit exceeded
         '429':
           description: Too many requests
           content:
