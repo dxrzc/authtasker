@@ -300,6 +300,50 @@ paths:
               example:
                 error: Internal server error
 
+  /api/users/logout-all:
+    post:
+      operationId: logoutFromAll
+      summary: Logout from all sessions
+      description: |
+        Logs out the user from all active sessions by revoking all refresh tokens.
+        This endpoint requires the user's email and password for authentication.
+        Does not require a session token, making it useful when the user wants to invalidate all sessions from any device.
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+      responses:
+        '204':
+          description: All sessions successfully invalidated
+        '401':
+          description: Unauthorized (Invalid credentials)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid credentials
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
   /api/users/{id}:
     get:
       operationId: getUserById
