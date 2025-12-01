@@ -128,6 +128,9 @@ paths:
     post:
       operationId: registerUser
       summary: Register a new user
+      description: |
+        Creates a new user account with the provided details.
+        Returns the created user along with session and refresh tokens.
       tags:
         - Users
       requestBody:
@@ -183,6 +186,9 @@ paths:
     post:
       operationId: loginUser
       summary: Login a user
+      description: |
+        Authenticates a user using their email and password.
+        Returns a session token and a refresh token for maintaining the session.
       tags:
         - Users
       requestBody:
@@ -227,6 +233,10 @@ paths:
     get:
       operationId: getUserById
       summary: Get user by ID
+      description: |
+        Retrieves detailed information about a specific user by their unique ID.
+        Requires authentication.
+        The user data may be retrieved from the cache if available.
       tags:
         - Users
       security:
