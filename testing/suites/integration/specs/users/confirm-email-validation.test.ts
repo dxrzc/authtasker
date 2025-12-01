@@ -80,7 +80,7 @@ describe(`POST ${testKit.urls.confirmEmailValidation}`, () => {
             await testKit.agent
                 .get(`${testKit.urls.confirmEmailValidation}?token=${token}`)
                 .expect(statusCodes.OK);
-            // Verify user is removed from cache
+            // verify user is removed from cache
             const cachedUserAfter = await testKit.redisService.get(cacheKey);
             expect(cachedUserAfter).toBeNull();
         });
