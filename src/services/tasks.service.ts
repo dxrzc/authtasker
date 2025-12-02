@@ -13,8 +13,8 @@ import { authErrors } from 'src/messages/auth.error.messages';
 import { handleDuplicatedKeyInDb } from 'src/functions/errors/handle-duplicated-key-in-db';
 import { modificationAccessControl } from 'src/functions/roles/modification-access-control';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
-import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
-import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
+import { CreateTaskDto } from 'src/validators/models/tasks/create-task.dto';
+import { UpdateTaskDto } from 'src/validators/models/tasks/update-task.dto';
 import { IFindOptions } from 'src/interfaces/others/find-options.interface';
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
 import { TasksStatus } from 'src/types/tasks/task-status.type';
@@ -55,7 +55,7 @@ export class TasksService {
         return task;
     }
 
-    async create(task: CreateTaskValidator, user: string): Promise<TaskDocument> {
+    async create(task: CreateTaskDto, user: string): Promise<TaskDocument> {
         try {
             const taskCreated = await this.tasksModel.create({ ...task, user });
             this.loggerService.info(`Task ${taskCreated.id} created`);
@@ -169,7 +169,7 @@ export class TasksService {
     async updateOne(
         requestUserInfo: UserIdentity,
         targetTaskId: string,
-        task: UpdateTaskValidator,
+        task: UpdateTaskDto,
     ): Promise<TaskDocument> {
         const targetTask = await this.authorizeTaskModification(requestUserInfo, targetTaskId);
         // set new properties in document

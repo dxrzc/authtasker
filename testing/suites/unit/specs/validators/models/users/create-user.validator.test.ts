@@ -3,9 +3,9 @@ import { usersLimits } from 'src/constants/user.constants';
 import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { UserDataGenerator } from 'src/generators/user.generator';
-import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
+import { CreateUserDto } from 'src/validators/models/user/create-user.validator';
 
-const createUserValidator = new CreateUserValidator();
+const createUserValidator = new CreateUserDto();
 const usersData = new UserDataGenerator();
 
 describe('CreateUserValidator', () => {
@@ -108,7 +108,7 @@ describe('CreateUserValidator', () => {
                 password: usersData.password,
             };
             const result = await createUserValidator.validateAndTransform(data);
-            expect(result).toBeInstanceOf(CreateUserValidator);
+            expect(result).toBeInstanceOf(CreateUserDto);
         });
 
         test('transform name to lowercase and trim it', async () => {

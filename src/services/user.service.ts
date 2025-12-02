@@ -18,9 +18,9 @@ import { UserSessionInfo } from 'src/interfaces/user/user-session-info.interface
 import { handleDuplicatedKeyInDb } from 'src/functions/errors/handle-duplicated-key-in-db';
 import { modificationAccessControl } from 'src/functions/roles/modification-access-control';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
-import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
-import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
+import { LoginUserDto } from 'src/validators/models/user/login-user.dto';
+import { CreateUserDto } from 'src/validators/models/user/create-user.dto';
+import { UpdateUserDto } from 'src/validators/models/user/update-user.dto';
 import { PasswordRecoveryTokenService } from './password-recovery-token.service';
 import { UserRole } from 'src/enums/user-role.enum';
 import { validateYourEmailTemplate } from 'src/templates/validate-your-email.template';
@@ -110,7 +110,7 @@ export class UserService {
 
     private async updateUserDocumentProperties(
         userDocument: UserDocument,
-        propertiesUpdated: UpdateUserValidator,
+        propertiesUpdated: UpdateUserDto,
     ): Promise<void> {
         if (propertiesUpdated.email) {
             this.loggerService.info(`User ${userDocument.id} email updated`);
@@ -189,7 +189,7 @@ export class UserService {
         this.loggerService.info(`User ${user.id} email validated, role updated to EDITOR`);
     }
 
-    async create(user: CreateUserValidator) {
+    async create(user: CreateUserDto) {
         try {
             // hashing password
             user.password = await this.hashPassword(user.password);
@@ -212,7 +212,7 @@ export class UserService {
         }
     }
 
-    async login(loginCredentials: LoginUserValidator) {
+    async login(loginCredentials: LoginUserDto) {
         // user existence
         const userDb = await this.userModel.findOne({ email: loginCredentials.email }).exec();
         if (!userDb) {
@@ -308,7 +308,7 @@ export class UserService {
     async updateOne(
         requestUserInfo: UserSessionInfo,
         targetUserId: string,
-        propertiesUpdated: UpdateUserValidator,
+        propertiesUpdated: UpdateUserDto,
     ): Promise<UserDocument> {
         const userDocument = await this.verifyUserModificationRights(requestUserInfo, targetUserId);
         await this.updateUserDocumentProperties(userDocument, propertiesUpdated);

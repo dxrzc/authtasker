@@ -2,13 +2,13 @@ import { Request, Response } from 'express';
 import { UserService } from 'src/services/user.service';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { paginationSettings } from 'src/constants/pagination.constants';
-import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
-import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
-import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
-import { PasswordRecoveryValidator } from 'src/validators/models/user/password-recovery.validator';
+import { LoginUserDto } from 'src/validators/models/user/login-user.dto';
+import { CreateUserDto } from 'src/validators/models/user/create-user.dto';
+import { UpdateUserDto } from 'src/validators/models/user/update-user.dto';
+import { PasswordRecoveryDto } from 'src/validators/models/user/password-recovery.dto';
 import { HttpError } from 'src/errors/http-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
-import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';
+import { ResetPasswordDto } from 'src/validators/models/user/reset-password.dto';
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
 import { LoggerService } from 'src/services/logger.service';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
@@ -17,11 +17,6 @@ import { PasswordReAuthDTO } from 'src/validators/models/user/password-reauth.dt
 export class UserController {
     constructor(
         private readonly userService: UserService,
-        private readonly createUserValidator: CreateUserValidator,
-        private readonly updateUserValidator: UpdateUserValidator,
-        private readonly loginUserValidator: LoginUserValidator,
-        private readonly passwordRecoveryValidator: PasswordRecoveryValidator,
-        private readonly resetPasswordValidator: ResetPasswordValidator,
         private readonly loggerService: LoggerService,
     ) {}
 
@@ -33,7 +28,7 @@ export class UserController {
 
     public readonly create = async (req: Request, res: Response): Promise<void> => {
         const user = req.body;
-        const validUser = await this.createUserValidator.validateAndTransform(user);
+        const validUser = await CreateUserDto.validateAndTransform(user);
         const created = await this.userService.create(validUser);
         res.status(statusCodes.CREATED).json(created);
     };
@@ -49,7 +44,7 @@ export class UserController {
 
     public readonly login = async (req: Request, res: Response): Promise<void> => {
         const user = req.body;
-        const validUser = await this.loginUserValidator.validate(user);
+        const validUser = await LoginUserDto.validate(user);
         const loggedIn = await this.userService.login(validUser);
         res.status(statusCodes.OK).json(loggedIn);
     };
@@ -111,8 +106,7 @@ export class UserController {
     public readonly updateOne = async (req: Request, res: Response): Promise<void> => {
         const userIdToUpdate = req.params.id;
         const propertiesToUpdate = req.body;
-        const validUpdate =
-            await this.updateUserValidator.validateNewAndTransform(propertiesToUpdate);
+        const validUpdate = await UpdateUserDto.validateNewAndTransform(propertiesToUpdate);
         const userSessionInfo = userInfoInReq(req);
         const updated = await this.userService.updateOne(
             userSessionInfo,
@@ -126,7 +120,7 @@ export class UserController {
         req: Request,
         res: Response,
     ): Promise<void> => {
-        const { email } = await this.passwordRecoveryValidator.validate(req.body);
+        const { email } = await PasswordRecoveryDto.validate(req.body);
         await this.userService.requestPasswordRecovery(email);
         res.status(statusCodes.OK).send({
             message: authSuccessMessages.PASSWORD_RECOVERY_REQUESTED,
@@ -140,7 +134,7 @@ export class UserController {
             throw HttpError.badRequest(authErrors.INVALID_TOKEN);
         }
         const rawPassword = req.body.newPassword;
-        const { password } = await this.resetPasswordValidator.validate({ password: rawPassword });
+        const { password } = await ResetPasswordDto.validate({ password: rawPassword });
         await this.userService.resetPassword(password, token);
         res.status(statusCodes.OK).send({
             message: authSuccessMessages.PASSWORD_RESET_SUCCESS,

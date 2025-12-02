@@ -9,7 +9,7 @@ import { returnFirstError } from 'src/validators/helpers/return-first-error.help
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
 import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 
-export class CreateTaskValidator {
+export class CreateTaskDto {
     @IsDefined({ message: tasksApiErrors.NAME_NOT_PROVIDED })
     @MinLength(tasksLimits.MIN_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
     @MaxLength(tasksLimits.MAX_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
@@ -31,13 +31,13 @@ export class CreateTaskValidator {
     @IsIn(tasksPriority, { message: tasksApiErrors.INVALID_PRIORITY })
     priority!: TasksPriority;
 
-    async validateAndTransform(data: object): Promise<CreateTaskValidator> {
-        const task = new CreateTaskValidator();
+    static async validateAndTransform(data: object): Promise<CreateTaskDto> {
+        const task = new CreateTaskDto();
         Object.assign(task, data);
 
         const errors = await validate(task, validationOptionsConfig);
         if (errors.length > 0) throw new InvalidInputError(returnFirstError(errors));
 
-        return plainToInstance(CreateTaskValidator, task);
+        return plainToInstance(CreateTaskDto, task);
     }
 }

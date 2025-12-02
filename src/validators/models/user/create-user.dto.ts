@@ -7,7 +7,7 @@ import { returnFirstError } from 'src/validators/helpers/return-first-error.help
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 
-export class CreateUserValidator {
+export class CreateUserDto {
     @IsDefined({ message: usersApiErrors.NAME_NOT_PROVIDED })
     @MinLength(usersLimits.MIN_NAME_LENGTH, { message: usersApiErrors.INVALID_NAME_LENGTH })
     @MaxLength(usersLimits.MAX_NAME_LENGTH, { message: usersApiErrors.INVALID_NAME_LENGTH })
@@ -23,13 +23,11 @@ export class CreateUserValidator {
     @MaxLength(usersLimits.MAX_PASSWORD_LENGTH, { message: usersApiErrors.INVALID_PASSWORD_LENGTH })
     password!: string;
 
-    async validateAndTransform(data: object): Promise<CreateUserValidator> {
-        const user = new CreateUserValidator();
+    static async validateAndTransform(data: object): Promise<CreateUserDto> {
+        const user = new CreateUserDto();
         Object.assign(user, data);
-
         const errors = await validate(user, validationOptionsConfig);
         if (errors.length > 0) throw new InvalidInputError(returnFirstError(errors));
-
-        return plainToInstance(CreateUserValidator, user);
+        return plainToInstance(CreateUserDto, user);
     }
 }
