@@ -1,11 +1,11 @@
-import { plainToInstance, Transform } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { tasksLimits } from 'src/constants/tasks.constants';
 import { TasksStatus, tasksStatus } from 'src/types/tasks/task-status.type';
 import { toLowerCaseAndTrim } from 'src/dtos/helpers/to-lowercase.helper';
 import { IsDefined, IsIn, MaxLength, MinLength } from 'class-validator';
 import { tasksPriority, TasksPriority } from 'src/types/tasks/task-priority.type';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
-import { validateDto } from 'src/functions/dtos/validate-dto';
+import { validateAndTransformDto } from 'src/functions/dtos/validate-dto';
 
 export class CreateTaskDto {
     @IsDefined({ message: tasksApiErrors.NAME_NOT_PROVIDED })
@@ -32,7 +32,6 @@ export class CreateTaskDto {
     priority!: TasksPriority;
 
     static async validateAndTransform(data: object): Promise<CreateTaskDto> {
-        const validatedData = await validateDto(CreateTaskDto, data);
-        return plainToInstance(CreateTaskDto, validatedData);
+        return await validateAndTransformDto(CreateTaskDto, data);
     }
 }

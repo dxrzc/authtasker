@@ -1,15 +1,13 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { plainToInstance } from 'class-transformer';
 import { CreateTaskDto } from './create-task.dto';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
 import { InvalidInputError } from 'src/errors/invalid-input-error.class';
-import { validateDto } from 'src/functions/dtos/validate-dto';
+import { validateAndTransformDto } from 'src/functions/dtos/validate-dto';
 
 export class UpdateTaskDto extends PartialType(CreateTaskDto) {
     static async validateNewAndTransform(data: object): Promise<UpdateTaskDto> {
         if (Object.keys(data).length === 0)
             throw new InvalidInputError(tasksApiErrors.NO_PROPERTIES_TO_UPDATE);
-        const validatedData = await validateDto(UpdateTaskDto, data);
-        return plainToInstance(UpdateTaskDto, validatedData);
+        return await validateAndTransformDto(UpdateTaskDto, data);
     }
 }

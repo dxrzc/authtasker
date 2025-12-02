@@ -1,4 +1,4 @@
-import { validateDto } from 'src/functions/dtos/validate-dto';
+import { validateAndTransformDto } from 'src/functions/dtos/validate-dto';
 import { usersLimits } from 'src/constants/user.constants';
 import { IsDefined, IsEmail, MaxLength, MinLength } from 'class-validator';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
@@ -15,6 +15,6 @@ export class LoginUserDto {
     password!: string;
 
     static async validate(data: object): Promise<LoginUserDto> {
-        return await validateDto(LoginUserDto, data);
+        return await validateAndTransformDto(LoginUserDto, data);
     }
 }
