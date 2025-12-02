@@ -75,7 +75,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             expect(tkn2InRedis).toBeNull();
         });
 
-        test('delete all the refresh tokens from index in Redis', async () => {
+        test('clear user refresh token index in Redis', async () => {
             // register (token 1)
             const { email, unhashedPassword, id } = await createUser(getRandomRole());
             const indexKey = makeRefreshTokenIndexKey(id);
@@ -85,7 +85,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 .send({ email, password: unhashedPassword })
                 .expect(status2xx);
             // index size should be 2
-            await expect(testKit.redisService.getSetSize(indexKey)).resolves.toBe(2);
+            await expect(testKit.redisService.getListSize(indexKey)).resolves.toBe(2);
             // reset password
             const token = testKit.passwordRecoveryTokenService.generate(email);
             await testKit.agent
@@ -96,7 +96,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 })
                 .expect(status2xx);
             // index size should be 0
-            const indexSize = await testKit.redisService.getSetSize(indexKey);
+            const indexSize = await testKit.redisService.getListSize(indexKey);
             expect(indexSize).toBe(0);
         });
 
