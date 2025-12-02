@@ -1,1 +1,6 @@
-export const toLowerCaseAndTrim = ({ value }: { value: string }) => value.toLowerCase().trim();
+export const toLowerCaseAndTrim = ({ value }: { value: unknown }) => {
+    if (typeof value === 'string') {
+        return value.toLowerCase().trim();
+    }
+    return value;
+};
