@@ -135,7 +135,7 @@ describe(`POST ${testKit.urls.login}`, () => {
     describe('User exceeds the max refresh tokens per user', () => {
         test('delete the oldest refresh token from redis store', async () => {
             const { email, unhashedPassword, refreshToken, id } = await createUser(getRandomRole()); // 1 refresh token
-            for (let i = 0; i < testKit.configService.MAX_REFRESH_TOKENS_PER_USER - 2; i++) {
+            for (let i = 0; i < testKit.configService.MAX_REFRESH_TOKENS_PER_USER - 1; i++) {
                 await testKit.agent
                     .post(testKit.urls.login)
                     .send({ password: unhashedPassword, email })
@@ -155,7 +155,7 @@ describe(`POST ${testKit.urls.login}`, () => {
 
         test('delete the oldest refresh token from tokens index in redis', async () => {
             const { email, unhashedPassword, refreshToken, id } = await createUser(getRandomRole()); // 1 refresh token
-            for (let i = 0; i < testKit.configService.MAX_REFRESH_TOKENS_PER_USER - 2; i++) {
+            for (let i = 0; i < testKit.configService.MAX_REFRESH_TOKENS_PER_USER - 1; i++) {
                 await testKit.agent
                     .post(testKit.urls.login)
                     .send({ password: unhashedPassword, email })
@@ -165,7 +165,7 @@ describe(`POST ${testKit.urls.login}`, () => {
             const { jti } = testKit.refreshJwt.verify(refreshToken)!;
             const indexInRedisKey = makeRefreshTokenIndexKey(id);
             await expect(
-                testKit.redisService.belongsToSet(indexInRedisKey, jti),
+                testKit.redisService.belongsToList(indexInRedisKey, jti),
             ).resolves.toBeTruthy();
             // this login should evict the oldest token
             await testKit.agent
@@ -173,7 +173,7 @@ describe(`POST ${testKit.urls.login}`, () => {
                 .send({ password: unhashedPassword, email })
                 .expect(status2xx);
             await expect(
-                testKit.redisService.belongsToSet(indexInRedisKey, jti),
+                testKit.redisService.belongsToList(indexInRedisKey, jti),
             ).resolves.toBeFalsy();
         });
     });
