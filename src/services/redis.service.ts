@@ -46,6 +46,14 @@ export class RedisService {
         await this.redis.sadd(key, member);
     }
 
+    async addToList(key: string, member: string): Promise<void> {
+        await this.redis.rpush(key, member);
+    }
+
+    async popFrontOfList(key: string): Promise<string | null> {
+        return await this.redis.lpop(key);
+    }
+
     async deleteFromSet(key: string, member: string): Promise<void> {
         await this.redis.srem(key, member);
     }
