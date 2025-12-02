@@ -1,11 +1,9 @@
 import { plainToInstance, Transform } from 'class-transformer';
 import { usersLimits } from 'src/constants/user.constants';
 import { toLowerCaseAndTrim } from 'src/validators/helpers/to-lowercase.helper';
-import { validationOptionsConfig } from 'src/validators/config/validation.config';
-import { IsDefined, IsEmail, MaxLength, MinLength, validate } from 'class-validator';
-import { returnFirstError } from 'src/validators/helpers/return-first-error.helper';
+import { IsDefined, IsEmail, MaxLength, MinLength } from 'class-validator';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { InvalidInputError } from 'src/errors/invalid-input-error.class';
+import { validateDto } from 'src/functions/dtos/validate-dto';
 
 export class CreateUserDto {
     @IsDefined({ message: usersApiErrors.NAME_NOT_PROVIDED })
@@ -24,10 +22,7 @@ export class CreateUserDto {
     password!: string;
 
     static async validateAndTransform(data: object): Promise<CreateUserDto> {
-        const user = new CreateUserDto();
-        Object.assign(user, data);
-        const errors = await validate(user, validationOptionsConfig);
-        if (errors.length > 0) throw new InvalidInputError(returnFirstError(errors));
-        return plainToInstance(CreateUserDto, user);
+        const validatedData = await validateDto(CreateUserDto, data);
+        return plainToInstance(CreateUserDto, validatedData);
     }
 }

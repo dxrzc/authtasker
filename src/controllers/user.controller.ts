@@ -12,7 +12,7 @@ import { ResetPasswordDto } from 'src/validators/models/user/reset-password.dto'
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
 import { LoggerService } from 'src/services/logger.service';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
-import { PasswordReAuthDTO } from 'src/validators/models/user/password-reauth.dto';
+import { PasswordReauthenticationDto } from 'src/validators/models/user/password-reauthentication.dto';
 
 export class UserController {
     constructor(
@@ -60,7 +60,7 @@ export class UserController {
     };
 
     public readonly logoutAll = async (req: Request, res: Response): Promise<void> => {
-        const { password } = await PasswordReAuthDTO.validate(req.body);
+        const { password } = await PasswordReauthenticationDto.validate(req.body);
         await this.userService.logoutAll(password, userInfoInReq(req));
         res.status(statusCodes.NO_CONTENT).end();
     };
@@ -106,7 +106,7 @@ export class UserController {
     public readonly updateOne = async (req: Request, res: Response): Promise<void> => {
         const userIdToUpdate = req.params.id;
         const propertiesToUpdate = req.body;
-        const validUpdate = await UpdateUserDto.validateNewAndTransform(propertiesToUpdate);
+        const validUpdate = await UpdateUserDto.validateAndTransform(propertiesToUpdate);
         const userSessionInfo = userInfoInReq(req);
         const updated = await this.userService.updateOne(
             userSessionInfo,
