@@ -58,6 +58,10 @@ export class RedisService {
         return await this.redis.llen(key);
     }
 
+    async deleteFromList(key: string, member: string): Promise<void> {
+        await this.redis.lrem(key, 0, member);
+    }
+
     async deleteFromSet(key: string, member: string): Promise<void> {
         await this.redis.srem(key, member);
     }
