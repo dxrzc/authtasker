@@ -1,4 +1,4 @@
-import { faker } from '@faker-js/faker/.';
+import { faker } from '@faker-js/faker';
 import { testKit } from '@integration/kit/test.kit';
 import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
