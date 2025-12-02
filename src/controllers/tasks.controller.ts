@@ -40,7 +40,7 @@ export class TasksController {
     };
 
     public readonly findAllByStatus = async (req: Request, res: Response) => {
-        const status = TaskStatusDto.validateStatus(req.params.status);
+        const { status } = await TaskStatusDto.validate({ status: req.params.status });
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
         const tasksFound = await this.tasksService.findAllByStatus(status, limit, page);
@@ -48,7 +48,7 @@ export class TasksController {
     };
 
     public readonly findAllByPriority = async (req: Request, res: Response) => {
-        const priority = TaskPriorityDto.validatePriority(req.params.priority);
+        const { priority } = await TaskPriorityDto.validate({ priority: req.params.priority });
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
         const tasksFound = await this.tasksService.findAllByPriority(priority, limit, page);
