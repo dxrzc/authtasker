@@ -54,6 +54,10 @@ export class RedisService {
         return await this.redis.lpop(key);
     }
 
+    async getListSize(key: string): Promise<number> {
+        return await this.redis.llen(key);
+    }
+
     async deleteFromSet(key: string, member: string): Promise<void> {
         await this.redis.srem(key, member);
     }
