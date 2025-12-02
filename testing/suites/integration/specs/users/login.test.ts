@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker/.';
 import { testKit } from '@integration/kit/test.kit';
 import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
+import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
@@ -132,21 +133,48 @@ describe(`POST ${testKit.urls.login}`, () => {
     });
 
     describe('User exceeds the max refresh tokens per user', () => {
-        test('return 403 status code and refresh token limit exceeded error', async () => {
-            const maxRefresh = testKit.configService.MAX_REFRESH_TOKENS_PER_USER;
-            const user = testKit.userData.user;
-            const loginInfo = {
-                email: user.email,
-                password: user.password,
-            };
-            // create assigns one refresh token
-            await testKit.agent.post(testKit.urls.register).send(user).expect(status2xx);
-            // assign more tokens to reach the limit
-            for (let i = 0; i < maxRefresh - 1; i++)
-                await testKit.agent.post(testKit.urls.login).send(loginInfo).expect(status2xx);
-            const response = await testKit.agent.post(testKit.urls.login).send(loginInfo);
-            expect(response.body).toStrictEqual({ error: authErrors.REFRESH_TOKEN_LIMIT_EXCEEDED });
-            expect(response.statusCode).toBe(403);
+        test('delete the oldest refresh token from redis store', async () => {
+            const { email, unhashedPassword, refreshToken, id } = await createUser(getRandomRole()); // 1 refresh token
+            for (let i = 0; i < testKit.configService.MAX_REFRESH_TOKENS_PER_USER - 1; i++) {
+                await testKit.agent
+                    .post(testKit.urls.login)
+                    .send({ password: unhashedPassword, email })
+                    .expect(status2xx);
+            }
+            // track oldest token
+            const { jti } = testKit.refreshJwt.verify(refreshToken)!;
+            const oldestTokenRedisKey = makeRefreshTokenKey(id, jti);
+            await expect(testKit.redisService.get(oldestTokenRedisKey)).resolves.not.toBeNull();
+            // this login should evict the oldest token
+            await testKit.agent
+                .post(testKit.urls.login)
+                .send({ password: unhashedPassword, email })
+                .expect(status2xx);
+            await expect(testKit.redisService.get(oldestTokenRedisKey)).resolves.toBeNull();
+        });
+
+        test('delete the oldest refresh token from tokens index in redis', async () => {
+            const { email, unhashedPassword, refreshToken, id } = await createUser(getRandomRole()); // 1 refresh token
+            for (let i = 0; i < testKit.configService.MAX_REFRESH_TOKENS_PER_USER - 1; i++) {
+                await testKit.agent
+                    .post(testKit.urls.login)
+                    .send({ password: unhashedPassword, email })
+                    .expect(status2xx);
+            }
+            // track oldest token
+            const { jti } = testKit.refreshJwt.verify(refreshToken)!;
+            const indexInRedisKey = makeRefreshTokenIndexKey(id);
+            await expect(
+                testKit.redisService.belongsToList(indexInRedisKey, jti),
+            ).resolves.toBeTruthy();
+            // this login should evict the oldest token
+            await testKit.agent
+                .post(testKit.urls.login)
+                .send({ password: unhashedPassword, email })
+                .expect(status2xx);
+            await expect(
+                testKit.redisService.belongsToList(indexInRedisKey, jti),
+            ).resolves.toBeFalsy();
         });
     });
 });

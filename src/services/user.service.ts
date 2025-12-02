@@ -224,8 +224,7 @@ export class UserService {
         // check refresh token limit
         const userRefreshTokens = await this.refreshTokenService.countUserTokens(userDb.id);
         if (userRefreshTokens === this.configService.MAX_REFRESH_TOKENS_PER_USER) {
-            this.loggerService.error('User has reached the maximum of active refresh tokens');
-            throw HttpError.forbidden(authErrors.REFRESH_TOKEN_LIMIT_EXCEEDED);
+            await this.refreshTokenService.deleteOldest(userDb.id);
         }
         // tokens
         const sessionToken = this.sessionTokenService.generate(userDb.id);
@@ -252,15 +251,9 @@ export class UserService {
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
-    async logoutFromAll(userCredentials: LoginUserValidator) {
-        const userData = await this.userModel.findOne({ email: userCredentials.email }).exec();
-        if (!userData) {
-            this.loggerService.error(`User ${userCredentials.email} not found`);
-            throw HttpError.unAuthorized(authErrors.INVALID_CREDENTIALS);
-        }
-        // password comparison
-        await this.passwordsMatchOrThrow(userData.password, userCredentials.password);
-        // revoke all session tokens
+    async logoutAll(password: string, user: UserSessionInfo): Promise<void> {
+        const userData = await this.findOneByIdOrThrow(user.id);
+        await this.passwordsMatchOrThrow(userData.password, password);
         await this.refreshTokenService.revokeAll(userData.id);
         this.loggerService.info(`All refresh tokens of user ${userData.id} have been revoked`);
     }

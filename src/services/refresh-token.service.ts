@@ -151,4 +151,17 @@ export class RefreshTokenService {
     async countUserTokens(userId: string): Promise<number> {
         return await this.redisService.getListSize(makeRefreshTokenIndexKey(userId));
     }
+
+    async deleteOldest(userId: string): Promise<void> {
+        const indexKey = makeRefreshTokenIndexKey(userId);
+        const oldestTokenJti = await this.redisService.getFrontOfList(indexKey);
+        if (!oldestTokenJti) {
+            this.loggerService.warn(
+                `Tried to delete oldest refresh token of user "${userId}" but none found`,
+            );
+            return;
+        }
+        await this.revokeToken(userId, oldestTokenJti);
+        this.loggerService.info(`Oldest refresh token of user "${userId}" deleted`);
+    }
 }
