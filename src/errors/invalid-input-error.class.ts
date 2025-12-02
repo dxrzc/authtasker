@@ -3,9 +3,3 @@ export class InvalidInputError extends Error {
         super(message);
     }
 }
-
-export class InvalidCredentialsInput extends InvalidInputError {
-    constructor(message: string) {
-        super(message);
-    }
-}

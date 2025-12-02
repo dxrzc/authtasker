@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import { Server as HttpServer } from 'http';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { HttpError } from 'src/errors/http-error.class';
-import { InvalidCredentialsInput, InvalidInputError } from 'src/errors/invalid-input-error.class';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
@@ -44,10 +44,10 @@ export class Server {
                 return;
             }
             if (err instanceof InvalidInputError) {
-                // Validators don't log errors
                 const errorMessage = err.message;
                 this.logger.error(`Validation error: ${errorMessage}`);
-                if (err instanceof InvalidCredentialsInput) {
+                if (errorMessage === authErrors.INVALID_CREDENTIALS) {
+                    // Special case for invalid credentials to avoid leaking info
                     res.status(statusCodes.UNAUTHORIZED).json({
                         error: authErrors.INVALID_CREDENTIALS,
                     });

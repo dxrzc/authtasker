@@ -5,6 +5,8 @@ export const tasksApiErrors = {
     // validation
     NAME_NOT_PROVIDED: 'Task name not provided',
     DESCRIPTION_NOT_PROVIDED: 'Task description not provided',
+    STATUS_NOT_PROVIDED: 'Task status not provided',
+    PRIORITY_NOT_PROVIDED: 'Task priority not provided',
     INVALID_NAME_LENGTH: 'Invalid name length',
     INVALID_DESCRIPTION_LENGTH: 'Invalid description length',
     INVALID_STATUS: 'Invalid task status',

@@ -4,13 +4,8 @@ import { UserController } from 'src/controllers/user.controller';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 import { RateLimiterMiddleware } from 'src/middlewares/rate-limiter.middleware';
-import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
-import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
-import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
-import { ResetPasswordValidator } from 'src/validators/models/user/reset-password.validator';
 import { UserRole } from 'src/enums/user-role.enum';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
-import { PasswordRecoveryValidator } from 'src/validators/models/user/password-recovery.validator';
 
 export class UserRoutes {
     private readonly userController: UserController;
@@ -20,15 +15,7 @@ export class UserRoutes {
         private readonly rolesMiddleware: RolesMiddleware,
         private readonly userService: UserService,
     ) {
-        this.userController = new UserController(
-            this.userService,
-            new CreateUserValidator(),
-            new UpdateUserValidator(),
-            new LoginUserValidator(),
-            new PasswordRecoveryValidator(),
-            new ResetPasswordValidator(),
-            userService.loggerService,
-        );
+        this.userController = new UserController(this.userService, userService.loggerService);
         SystemLoggerService.info('User routes loaded');
     }
 
@@ -63,7 +50,8 @@ export class UserRoutes {
         router.post(
             '/logout-all',
             this.apiLimiterMiddleware.middleware(RateLimiter.critical),
-            this.userController.logoutFromAll,
+            this.rolesMiddleware.middleware(UserRole.READONLY),
+            this.userController.logoutAll,
         );
 
         router.post(

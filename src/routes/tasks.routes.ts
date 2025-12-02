@@ -6,10 +6,6 @@ import { RateLimiterMiddleware } from 'src/middlewares/rate-limiter.middleware';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 import { TasksService } from 'src/services/tasks.service';
-import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
-import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
-import { TaskStatusValidator } from 'src/validators/models/tasks/task-status.validator';
-import { TaskPriorityValidator } from 'src/validators/models/tasks/task-priority.validator';
 
 export class TasksRoutes {
     private readonly tasksController: TasksController;
@@ -19,13 +15,7 @@ export class TasksRoutes {
         private readonly rolesMiddleware: RolesMiddleware,
         private readonly tasksService: TasksService,
     ) {
-        this.tasksController = new TasksController(
-            this.tasksService,
-            new CreateTaskValidator(),
-            new UpdateTaskValidator(),
-            new TaskStatusValidator(),
-            new TaskPriorityValidator(),
-        );
+        this.tasksController = new TasksController(this.tasksService);
         SystemLoggerService.info('Task routes loaded');
     }
 

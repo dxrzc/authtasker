@@ -18,9 +18,9 @@ import { UserSessionInfo } from 'src/interfaces/user/user-session-info.interface
 import { handleDuplicatedKeyInDb } from 'src/functions/errors/handle-duplicated-key-in-db';
 import { modificationAccessControl } from 'src/functions/roles/modification-access-control';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
-import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
-import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
+import { LoginUserDto } from 'src/dtos/models/user/login-user.dto';
+import { CreateUserDto } from 'src/dtos/models/user/create-user.dto';
+import { UpdateUserDto } from 'src/dtos/models/user/update-user.dto';
 import { PasswordRecoveryTokenService } from './password-recovery-token.service';
 import { UserRole } from 'src/enums/user-role.enum';
 import { validateYourEmailTemplate } from 'src/templates/validate-your-email.template';
@@ -110,7 +110,7 @@ export class UserService {
 
     private async updateUserDocumentProperties(
         userDocument: UserDocument,
-        propertiesUpdated: UpdateUserValidator,
+        propertiesUpdated: UpdateUserDto,
     ): Promise<void> {
         if (propertiesUpdated.email) {
             this.loggerService.info(`User ${userDocument.id} email updated`);
@@ -189,7 +189,7 @@ export class UserService {
         this.loggerService.info(`User ${user.id} email validated, role updated to EDITOR`);
     }
 
-    async create(user: CreateUserValidator) {
+    async create(user: CreateUserDto) {
         try {
             // hashing password
             user.password = await this.hashPassword(user.password);
@@ -212,7 +212,7 @@ export class UserService {
         }
     }
 
-    async login(loginCredentials: LoginUserValidator) {
+    async login(loginCredentials: LoginUserDto) {
         // user existence
         const userDb = await this.userModel.findOne({ email: loginCredentials.email }).exec();
         if (!userDb) {
@@ -224,8 +224,7 @@ export class UserService {
         // check refresh token limit
         const userRefreshTokens = await this.refreshTokenService.countUserTokens(userDb.id);
         if (userRefreshTokens === this.configService.MAX_REFRESH_TOKENS_PER_USER) {
-            this.loggerService.error('User has reached the maximum of active refresh tokens');
-            throw HttpError.forbidden(authErrors.REFRESH_TOKEN_LIMIT_EXCEEDED);
+            await this.refreshTokenService.deleteOldest(userDb.id);
         }
         // tokens
         const sessionToken = this.sessionTokenService.generate(userDb.id);
@@ -252,15 +251,9 @@ export class UserService {
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
-    async logoutFromAll(userCredentials: LoginUserValidator) {
-        const userData = await this.userModel.findOne({ email: userCredentials.email }).exec();
-        if (!userData) {
-            this.loggerService.error(`User ${userCredentials.email} not found`);
-            throw HttpError.unAuthorized(authErrors.INVALID_CREDENTIALS);
-        }
-        // password comparison
-        await this.passwordsMatchOrThrow(userData.password, userCredentials.password);
-        // revoke all session tokens
+    async logoutAll(password: string, user: UserSessionInfo): Promise<void> {
+        const userData = await this.findOneByIdOrThrow(user.id);
+        await this.passwordsMatchOrThrow(userData.password, password);
         await this.refreshTokenService.revokeAll(userData.id);
         this.loggerService.info(`All refresh tokens of user ${userData.id} have been revoked`);
     }
@@ -315,7 +308,7 @@ export class UserService {
     async updateOne(
         requestUserInfo: UserSessionInfo,
         targetUserId: string,
-        propertiesUpdated: UpdateUserValidator,
+        propertiesUpdated: UpdateUserDto,
     ): Promise<UserDocument> {
         const userDocument = await this.verifyUserModificationRights(requestUserInfo, targetUserId);
         await this.updateUserDocumentProperties(userDocument, propertiesUpdated);
