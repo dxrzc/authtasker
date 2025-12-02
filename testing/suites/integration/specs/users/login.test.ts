@@ -38,7 +38,7 @@ describe(`POST ${testKit.urls.login}`, () => {
                 .expect(status2xx);
             const { jti } = testKit.refreshJwt.verify(body.refreshToken)!;
             const redisKey = makeRefreshTokenIndexKey(body.user.id);
-            const inRedis = await testKit.redisService.belongsToSet(redisKey, jti);
+            const inRedis = await testKit.redisService.belongsToList(redisKey, jti);
             expect(inRedis).toBeTruthy();
         });
 

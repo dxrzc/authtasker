@@ -136,12 +136,12 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
                 .send({ email: testKit.userData.email })
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .expect(status2xx);
-            // tokens not in refresh tokens count set
-            const setKey = makeRefreshTokenIndexKey(id);
-            const token1InSet = await testKit.redisService.belongsToSet(setKey, refresh1Jti);
-            const token2InSet = await testKit.redisService.belongsToSet(setKey, refresh2Jti);
-            expect(token1InSet).toBeFalsy();
-            expect(token2InSet).toBeFalsy();
+            // tokens not in refresh tokens index list
+            const listKey = makeRefreshTokenIndexKey(id);
+            const token1InList = await testKit.redisService.belongsToList(listKey, refresh1Jti);
+            const token2InList = await testKit.redisService.belongsToList(listKey, refresh2Jti);
+            expect(token1InList).toBeFalsy();
+            expect(token2InList).toBeFalsy();
             // tokens not in refresh-tokens database
             const token1Key = makeRefreshTokenKey(id, refresh1Jti);
             const token2Key = makeRefreshTokenKey(id, refresh2Jti);
@@ -187,12 +187,12 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
                 .send({ password: testKit.userData.password })
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .expect(status2xx);
-            // tokens not in refresh tokens count set
-            const setKey = makeRefreshTokenIndexKey(id);
-            const token1InSet = await testKit.redisService.belongsToSet(setKey, refresh1Jti);
-            const token2InSet = await testKit.redisService.belongsToSet(setKey, refresh2Jti);
-            expect(token1InSet).toBeFalsy();
-            expect(token2InSet).toBeFalsy();
+            // tokens not in refresh tokens index list
+            const listKey = makeRefreshTokenIndexKey(id);
+            const token1InList = await testKit.redisService.belongsToList(listKey, refresh1Jti);
+            const token2InList = await testKit.redisService.belongsToList(listKey, refresh2Jti);
+            expect(token1InList).toBeFalsy();
+            expect(token2InList).toBeFalsy();
             // tokens not in refresh-tokens database
             const token1Key = makeRefreshTokenKey(id, refresh1Jti);
             const token2Key = makeRefreshTokenKey(id, refresh2Jti);

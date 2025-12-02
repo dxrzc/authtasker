@@ -111,7 +111,7 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
                 .expect(status2xx);
             const { jti } = testKit.refreshJwt.verify(refreshToken)!;
             const redisKey = makeRefreshTokenIndexKey(id);
-            const inRedis = await testKit.redisService.belongsToSet(redisKey, jti);
+            const inRedis = await testKit.redisService.belongsToList(redisKey, jti);
             expect(inRedis).toBeFalsy();
         });
 
@@ -136,9 +136,12 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
                 .expect(status2xx);
             const newRefreshToken = body.refreshToken;
             const { jti: newTokenJti } = testKit.refreshJwt.verify(newRefreshToken)!;
-            const setKey = makeRefreshTokenIndexKey(id);
-            const tokenExistsInSet = await testKit.redisService.belongsToSet(setKey, newTokenJti);
-            expect(tokenExistsInSet).toBeTruthy();
+            const listKey = makeRefreshTokenIndexKey(id);
+            const tokenExistsInList = await testKit.redisService.belongsToList(
+                listKey,
+                newTokenJti,
+            );
+            expect(tokenExistsInList).toBeTruthy();
         });
     });
 

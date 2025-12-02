@@ -46,6 +46,31 @@ export class RedisService {
         await this.redis.sadd(key, member);
     }
 
+    async addToList(key: string, member: string): Promise<void> {
+        await this.redis.rpush(key, member);
+    }
+
+    async getAllListMembers(key: string): Promise<Array<string>> {
+        return await this.redis.lrange(key, 0, -1);
+    }
+
+    async belongsToList(key: string, member: string): Promise<boolean> {
+        const listMembers = await this.redis.lrange(key, 0, -1);
+        return listMembers.includes(member);
+    }
+
+    async popFrontOfList(key: string): Promise<string | null> {
+        return await this.redis.lpop(key);
+    }
+
+    async getListSize(key: string): Promise<number> {
+        return await this.redis.llen(key);
+    }
+
+    async deleteFromList(key: string, member: string): Promise<void> {
+        await this.redis.lrem(key, 0, member);
+    }
+
     async deleteFromSet(key: string, member: string): Promise<void> {
         await this.redis.srem(key, member);
     }
