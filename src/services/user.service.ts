@@ -252,15 +252,9 @@ export class UserService {
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
-    async logoutFromAll(userCredentials: LoginUserValidator) {
-        const userData = await this.userModel.findOne({ email: userCredentials.email }).exec();
-        if (!userData) {
-            this.loggerService.error(`User ${userCredentials.email} not found`);
-            throw HttpError.unAuthorized(authErrors.INVALID_CREDENTIALS);
-        }
-        // password comparison
-        await this.passwordsMatchOrThrow(userData.password, userCredentials.password);
-        // revoke all session tokens
+    async logoutAll(password: string, user: UserSessionInfo): Promise<void> {
+        const userData = await this.findOneByIdOrThrow(user.id);
+        await this.passwordsMatchOrThrow(password, userData.password);
         await this.refreshTokenService.revokeAll(userData.id);
         this.loggerService.info(`All refresh tokens of user ${userData.id} have been revoked`);
     }
