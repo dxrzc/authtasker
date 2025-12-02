@@ -2,10 +2,10 @@ import { Request, Response } from 'express';
 import { TasksService } from 'src/services/tasks.service';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { paginationSettings } from 'src/constants/pagination.constants';
-import { CreateTaskDto } from 'src/validators/models/tasks/create-task.dto';
-import { UpdateTaskDto } from 'src/validators/models/tasks/update-task.dto';
-import { TaskStatusDto } from 'src/validators/models/tasks/task-status.dto';
-import { TaskPriorityDto } from 'src/validators/models/tasks/task-priority.dto';
+import { CreateTaskDto } from 'src/dtos/models/tasks/create-task.dto';
+import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
+import { TaskStatusDto } from 'src/dtos/models/tasks/task-status.dto';
+import { TaskPriorityDto } from 'src/dtos/models/tasks/task-priority.dto';
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
 
 export class TasksController {

@@ -2,17 +2,17 @@ import { Request, Response } from 'express';
 import { UserService } from 'src/services/user.service';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { paginationSettings } from 'src/constants/pagination.constants';
-import { LoginUserDto } from 'src/validators/models/user/login-user.dto';
-import { CreateUserDto } from 'src/validators/models/user/create-user.dto';
-import { UpdateUserDto } from 'src/validators/models/user/update-user.dto';
-import { PasswordRecoveryDto } from 'src/validators/models/user/password-recovery.dto';
+import { LoginUserDto } from 'src/dtos/models/user/login-user.dto';
+import { CreateUserDto } from 'src/dtos/models/user/create-user.dto';
+import { UpdateUserDto } from 'src/dtos/models/user/update-user.dto';
+import { PasswordRecoveryDto } from 'src/dtos/models/user/password-recovery.dto';
 import { HttpError } from 'src/errors/http-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
-import { ResetPasswordDto } from 'src/validators/models/user/reset-password.dto';
+import { ResetPasswordDto } from 'src/dtos/models/user/reset-password.dto';
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
 import { LoggerService } from 'src/services/logger.service';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
-import { PasswordReauthenticationDto } from 'src/validators/models/user/password-reauthentication.dto';
+import { PasswordReauthenticationDto } from 'src/dtos/models/user/password-reauthentication.dto';
 
 export class UserController {
     constructor(

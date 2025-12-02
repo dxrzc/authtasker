@@ -1,6 +1,6 @@
 import { plainToInstance, Transform } from 'class-transformer';
 import { usersLimits } from 'src/constants/user.constants';
-import { toLowerCaseAndTrim } from 'src/validators/helpers/to-lowercase.helper';
+import { toLowerCaseAndTrim } from 'src/dtos/helpers/to-lowercase.helper';
 import { IsDefined, IsEmail, MaxLength, MinLength } from 'class-validator';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { validateDto } from 'src/functions/dtos/validate-dto';

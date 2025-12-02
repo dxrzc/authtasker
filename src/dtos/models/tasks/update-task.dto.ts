@@ -2,8 +2,8 @@ import { validate } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 import { plainToInstance } from 'class-transformer';
 import { CreateTaskDto } from './create-task.dto';
-import { validationOptionsConfig } from 'src/validators/config/validation.config';
-import { returnFirstError } from 'src/validators/helpers/return-first-error.helper';
+import { validationOptionsConfig } from 'src/dtos/config/validation.config';
+import { returnFirstError } from 'src/dtos/helpers/return-first-error.helper';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
 import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 

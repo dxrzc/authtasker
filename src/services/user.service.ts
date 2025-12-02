@@ -18,9 +18,9 @@ import { UserSessionInfo } from 'src/interfaces/user/user-session-info.interface
 import { handleDuplicatedKeyInDb } from 'src/functions/errors/handle-duplicated-key-in-db';
 import { modificationAccessControl } from 'src/functions/roles/modification-access-control';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { LoginUserDto } from 'src/validators/models/user/login-user.dto';
-import { CreateUserDto } from 'src/validators/models/user/create-user.dto';
-import { UpdateUserDto } from 'src/validators/models/user/update-user.dto';
+import { LoginUserDto } from 'src/dtos/models/user/login-user.dto';
+import { CreateUserDto } from 'src/dtos/models/user/create-user.dto';
+import { UpdateUserDto } from 'src/dtos/models/user/update-user.dto';
 import { PasswordRecoveryTokenService } from './password-recovery-token.service';
 import { UserRole } from 'src/enums/user-role.enum';
 import { validateYourEmailTemplate } from 'src/templates/validate-your-email.template';

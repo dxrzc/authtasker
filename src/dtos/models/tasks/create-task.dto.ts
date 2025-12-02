@@ -1,11 +1,11 @@
 import { plainToInstance, Transform } from 'class-transformer';
 import { tasksLimits } from 'src/constants/tasks.constants';
 import { TasksStatus, tasksStatus } from 'src/types/tasks/task-status.type';
-import { toLowerCaseAndTrim } from 'src/validators/helpers/to-lowercase.helper';
+import { toLowerCaseAndTrim } from 'src/dtos/helpers/to-lowercase.helper';
 import { IsDefined, IsIn, MaxLength, MinLength, validate } from 'class-validator';
 import { tasksPriority, TasksPriority } from 'src/types/tasks/task-priority.type';
-import { validationOptionsConfig } from 'src/validators/config/validation.config';
-import { returnFirstError } from 'src/validators/helpers/return-first-error.helper';
+import { validationOptionsConfig } from 'src/dtos/config/validation.config';
+import { returnFirstError } from 'src/dtos/helpers/return-first-error.helper';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
 import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 
