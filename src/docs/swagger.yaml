@@ -427,7 +427,12 @@ paths:
       description: |
         Authenticates a user using their email and password.
         Returns a session token and a refresh token for maintaining the session.
-        There is a limit on the number of active sessions (refresh tokens) per user.
+        
+        **Session management:**
+        - There is a limit on the number of active sessions (refresh tokens) per user
+        - When the maximum number of refresh tokens is reached, the oldest token is automatically evicted
+        - This auto-eviction ensures users can always log in without manual session cleanup
+        - The new session token and refresh token are issued immediately after eviction
       tags:
         - Users
       requestBody:
@@ -451,14 +456,6 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 error: Invalid credentials
-        '403':
-          description: User has reached the maximum number of refresh tokens allowed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Refresh token limit exceeded
         '429':
           description: Too many requests
           content:
@@ -535,21 +532,42 @@ paths:
       summary: Logout from all sessions
       description: |
         Logs out the user from all active sessions by revoking all refresh tokens.
-        This endpoint requires the user's email and password for authentication.
-        Does not require a session token, making it useful when the user wants to invalidate all sessions from any device.
+        Requires authentication via Bearer token (minimum role: READONLY).
+        
+        **Authentication requirements:**
+        - User must be authenticated with a valid session token in the Authorization header
+        - User must provide their password in the request body for reauthentication
+        - This double authentication ensures security when performing sensitive operations
+        
+        **Use case:**
+        - Since automatic token eviction is now implemented, users no longer run out of sessions
+        - This endpoint is now protected to ensure only authenticated users can revoke all their sessions
+        - Useful for security purposes when a user suspects their account may be compromised
       tags:
         - Users
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginUserRequest'
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+                  description: The user's password for reauthentication
+                  example: password123
       responses:
         '204':
           description: All sessions successfully invalidated
         '401':
-          description: Unauthorized (Invalid or missing credentials)
+          description: >
+            Unauthorized. This can happen when:
+              - Session token is invalid or missing in Authorization header
+              - Password provided in request body is incorrect
           content:
             application/json:
               schema:
