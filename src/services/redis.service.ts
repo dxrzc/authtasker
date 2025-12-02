@@ -54,6 +54,11 @@ export class RedisService {
         return await this.redis.lrange(key, 0, -1);
     }
 
+    async belongsToList(key: string, member: string): Promise<boolean> {
+        const listMembers = await this.redis.lrange(key, 0, -1);
+        return listMembers.includes(member);
+    }
+
     async popFrontOfList(key: string): Promise<string | null> {
         return await this.redis.lpop(key);
     }
