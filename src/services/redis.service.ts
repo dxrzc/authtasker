@@ -50,6 +50,10 @@ export class RedisService {
         await this.redis.rpush(key, member);
     }
 
+    async getAllListMembers(key: string): Promise<Array<string>> {
+        return await this.redis.lrange(key, 0, -1);
+    }
+
     async popFrontOfList(key: string): Promise<string | null> {
         return await this.redis.lpop(key);
     }
