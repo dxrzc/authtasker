@@ -23,9 +23,11 @@ export class CreateTaskDto {
     })
     description!: string;
 
+    @IsDefined({ message: tasksApiErrors.STATUS_NOT_PROVIDED })
     @IsIn(tasksStatus, { message: tasksApiErrors.INVALID_STATUS })
     status!: TasksStatus;
 
+    @IsDefined({ message: tasksApiErrors.PRIORITY_NOT_PROVIDED })
     @IsIn(tasksPriority, { message: tasksApiErrors.INVALID_PRIORITY })
     priority!: TasksPriority;
 
