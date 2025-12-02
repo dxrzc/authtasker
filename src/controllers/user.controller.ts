@@ -12,6 +12,7 @@ import { ResetPasswordValidator } from 'src/validators/models/user/reset-passwor
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
 import { LoggerService } from 'src/services/logger.service';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
+import { PasswordReAuthDTO } from 'src/validators/models/user/password-reauth.dto';
 
 export class UserController {
     constructor(
@@ -63,9 +64,9 @@ export class UserController {
         res.status(statusCodes.NO_CONTENT).end();
     };
 
-    public readonly logoutFromAll = async (req: Request, res: Response): Promise<void> => {
-        const sanitizedCredentials = await this.loginUserValidator.validate(req.body);
-        await this.userService.logoutFromAll(sanitizedCredentials);
+    public readonly logoutAll = async (req: Request, res: Response): Promise<void> => {
+        const { password } = await PasswordReAuthDTO.validate(req.body);
+        await this.userService.logoutAll(password, userInfoInReq(req));
         res.status(statusCodes.NO_CONTENT).end();
     };
 
