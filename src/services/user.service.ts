@@ -224,8 +224,7 @@ export class UserService {
         // check refresh token limit
         const userRefreshTokens = await this.refreshTokenService.countUserTokens(userDb.id);
         if (userRefreshTokens === this.configService.MAX_REFRESH_TOKENS_PER_USER) {
-            this.loggerService.error('User has reached the maximum of active refresh tokens');
-            throw HttpError.forbidden(authErrors.REFRESH_TOKEN_LIMIT_EXCEEDED);
+            await this.refreshTokenService.deleteOldest(userDb.id);
         }
         // tokens
         const sessionToken = this.sessionTokenService.generate(userDb.id);
