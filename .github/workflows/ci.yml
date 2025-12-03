@@ -48,7 +48,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run unit tests
-        run: npm run test:unit -- --maxWorkers=100%                            
+        run: npm run test:unit -- --maxWorkers=100% --coverage=false                            
 
   run-integration-tests:
     name: Integration Tests
@@ -67,4 +67,4 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run integration tests
-        run: npm run test:integration -- --maxWorkers=100%          
+        run: npm run test:integration -- --maxWorkers=100% --coverage=false          
