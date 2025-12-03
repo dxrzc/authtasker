@@ -20,10 +20,12 @@ export class SeedRoutes {
         private readonly loggerService: LoggerService,
         private readonly hashingService: HashingService,
     ) {
-        SystemLoggerService.warn('Seed routes loaded');
+        SystemLoggerService.info('Seed routes loaded');
+        if (configService.isProduction)
+            throw new Error('Seeding is not allowed in production environment');
     }
 
-    build(): Router {
+    get routes(): Router {
         const router = Router();
 
         const tasksSeedService = new TasksSeedService(
@@ -33,7 +35,6 @@ export class SeedRoutes {
             this.configService,
             this.loggerService,
         );
-
         const userSeedService = new UserSeedService(
             this.configService,
             this.userModel,
@@ -41,7 +42,6 @@ export class SeedRoutes {
             new UserDataGenerator(),
             this.loggerService,
         );
-
         const seedController = new SeedController(
             this.loggerService,
             userSeedService,
@@ -50,7 +50,6 @@ export class SeedRoutes {
 
         router.post('/users/:total', seedController.seedUsers);
         router.post('/tasks/:total', seedController.seedTasks);
-
         return router;
     }
 }

@@ -7,7 +7,7 @@ import { IUser } from 'src/interfaces/user/user.interface';
 import { JwtBlackListService } from './jwt-blacklist.service';
 import { calculateTokenTTL } from 'src/functions/token/calculate-token-ttl';
 import { tokenPurposes } from 'src/constants/token-purposes.constants';
-import { UserFromRequest } from 'src/interfaces/user/user-from-request.interface';
+import { UserSessionInfo } from 'src/interfaces/user/user-session-info.interface';
 import { HttpError } from 'src/errors/http-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
 
@@ -48,7 +48,7 @@ export class SessionTokenService {
         }
     }
 
-    async consume(token: string): Promise<UserFromRequest> {
+    async consume(token: string): Promise<UserSessionInfo> {
         // token is expired or not signed by this server
         const payload = this.jwtService.verify<{ id: string }>(token);
         if (!payload) {
@@ -93,6 +93,7 @@ export class SessionTokenService {
         return {
             id: user.id,
             role: user.role,
+            email: user.email,
             sessionJti: payload.jti,
             sessionTokenExpUnix: payload.exp!,
         };

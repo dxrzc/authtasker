@@ -1,40 +1,32 @@
-import { v4 as uuidv4 } from 'uuid';
 import { AsyncLocalStorage } from 'async_hooks';
-import { LoggerService } from 'src/services/logger.service';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
+import { IAsyncLocalStorageStore } from 'src/interfaces/others/async-local-storage.interface';
+import { LoggerService } from 'src/services/logger.service';
+import { v4 as uuidv4 } from 'uuid';
 
 export class RequestContextMiddleware {
     constructor(
-        private readonly asyncLocalStorage: AsyncLocalStorage<unknown>,
-        private readonly loggerService: LoggerService,
+        private readonly asyncLocalStrg: AsyncLocalStorage<IAsyncLocalStorageStore>,
+        private readonly logger: LoggerService,
     ) {}
 
-    public middleware(): RequestHandler {
+    middleware(): RequestHandler {
         return (req: Request, res: Response, next: NextFunction) => {
-            if (req.body == null) {
-                req.body = {}; // Normalize undefined → {}
-            }
-
             const url = req.originalUrl;
             const method = req.method;
             const requestId = uuidv4();
-
+            const start = process.hrtime();
             const store = {
                 requestId,
                 method,
             };
 
-            const start = process.hrtime();
-
             res.on('finish', () => {
-                if (!req.route && res.statusCode === 404) {
-                    return;
-                }
-
+                // Do not log for non-existing routes
+                if (!req.route) return;
                 const [seconds, nanoseconds] = process.hrtime(start);
                 const durationInMs = seconds * 1000 + nanoseconds / 1000000;
-
-                this.loggerService.logRequest({
+                this.logger.logRequest({
                     ip: req.ip!,
                     method: req.method,
                     requestId: requestId,
@@ -44,10 +36,12 @@ export class RequestContextMiddleware {
                 });
             });
 
-            res.setHeader('Request-Id', requestId);
-
-            this.asyncLocalStorage.run(store, () => {
-                if (req.route) this.loggerService.info(`Incoming request ${url}`);
+            this.asyncLocalStrg.run(store, () => {
+                // Do not log or set reqId for non-existing routes
+                if (req.route) {
+                    res.setHeader('Request-Id', requestId);
+                    this.logger.info(`Incoming request ${url}`);
+                }
                 next();
             });
         };

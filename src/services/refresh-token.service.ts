@@ -11,6 +11,7 @@ import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key'
 import { authErrors } from 'src/messages/auth.error.messages';
 import { convertExpTimeToSeconds } from 'src/functions/token/convert-exp-time-to-unix';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
+import { allSettledAndThrow } from 'src/functions/js/all-settled-and-throw';
 
 interface RefreshTokenMetadata {
     token: string;
@@ -29,16 +30,16 @@ export class RefreshTokenService {
     ) {}
 
     private async deleteToken(userId: string, jti: string): Promise<void> {
-        await Promise.all([
+        await allSettledAndThrow([
             this.redisService.delete(makeRefreshTokenKey(userId, jti)),
-            this.redisService.deleteFromSet(makeRefreshTokenIndexKey(userId), jti),
+            this.redisService.deleteFromList(makeRefreshTokenIndexKey(userId), jti),
         ]);
     }
 
     private async storeToken(userId: string, jti: string, expiresInSeconds: number): Promise<void> {
-        await Promise.all([
+        await allSettledAndThrow([
             this.redisService.set(makeRefreshTokenKey(userId, jti), '1', expiresInSeconds),
-            this.redisService.addToSet(makeRefreshTokenIndexKey(userId), jti),
+            this.redisService.addToList(makeRefreshTokenIndexKey(userId), jti),
         ]);
     }
 
@@ -95,7 +96,7 @@ export class RefreshTokenService {
         userId: string,
     ): Promise<RefreshTokenMetadata> {
         await this.deleteToken(userId, oldJti);
-        // generate a new token with the remaning exp time of the previous one
+        // generate a new token with the remaining exp time of the previous one
         const expSeconds = calculateTokenTTL(oldTokenExpDateUnix);
         const { token, jti } = this.generateToken(userId, expSeconds);
         await this.storeToken(userId, jti, expSeconds);
@@ -138,8 +139,8 @@ export class RefreshTokenService {
     }
 
     async revokeAll(userId: string) {
-        const jtis = await this.redisService.getAllSetMembers(makeRefreshTokenIndexKey(userId));
-        await Promise.all(jtis.map((jti) => this.revokeToken(userId, jti)));
+        const jtis = await this.redisService.getAllListMembers(makeRefreshTokenIndexKey(userId));
+        await allSettledAndThrow(jtis.map((jti) => this.revokeToken(userId, jti)));
     }
 
     async revokeToken(userId: string, jti: string) {
@@ -148,6 +149,19 @@ export class RefreshTokenService {
     }
 
     async countUserTokens(userId: string): Promise<number> {
-        return await this.redisService.getSetSize(makeRefreshTokenIndexKey(userId));
+        return await this.redisService.getListSize(makeRefreshTokenIndexKey(userId));
+    }
+
+    async deleteOldest(userId: string): Promise<void> {
+        const indexKey = makeRefreshTokenIndexKey(userId);
+        const oldestTokenJti = await this.redisService.getFrontOfList(indexKey);
+        if (!oldestTokenJti) {
+            this.loggerService.warn(
+                `Tried to delete oldest refresh token of user "${userId}" but none found`,
+            );
+            return;
+        }
+        await this.revokeToken(userId, oldestTokenJti);
+        this.loggerService.info(`Oldest refresh token of user "${userId}" deleted`);
     }
 }

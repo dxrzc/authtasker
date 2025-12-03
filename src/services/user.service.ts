@@ -9,23 +9,26 @@ import { LoggerService } from 'src/services/logger.service';
 import { SessionTokenService } from './session-token.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
 import { HashingService } from 'src/services/hashing.service';
-import { paginationRules } from 'src/functions/pagination/pagination-rules';
 import { UserResponse } from 'src/types/user/user-response.type';
 import { UserDocument } from 'src/types/user/user-document.type';
 import { HttpError } from 'src/errors/http-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
-import { ICacheOptions } from 'src/interfaces/cache/cache-options.interface';
 import { EmailValidationTokenService } from './email-validation-token.service';
-import { UserFromRequest } from 'src/interfaces/user/user-from-request.interface';
+import { UserSessionInfo } from 'src/interfaces/user/user-session-info.interface';
 import { handleDuplicatedKeyInDb } from 'src/functions/errors/handle-duplicated-key-in-db';
 import { modificationAccessControl } from 'src/functions/roles/modification-access-control';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { LoginUserValidator } from 'src/validators/models/user/login-user.validator';
-import { CreateUserValidator } from 'src/validators/models/user/create-user.validator';
-import { UpdateUserValidator } from 'src/validators/models/user/update-user.validator';
-import { PaginationCacheService } from './pagination-cache.service';
-import { ForgotPasswordValidator } from 'src/validators/models/user/forgot-password.validator';
+import { LoginUserDto } from 'src/dtos/models/user/login-user.dto';
+import { CreateUserDto } from 'src/dtos/models/user/create-user.dto';
+import { UpdateUserDto } from 'src/dtos/models/user/update-user.dto';
 import { PasswordRecoveryTokenService } from './password-recovery-token.service';
+import { UserRole } from 'src/enums/user-role.enum';
+import { validateYourEmailTemplate } from 'src/templates/validate-your-email.template';
+import { IFindOptions } from 'src/interfaces/others/find-options.interface';
+import { allSettledAndThrow } from 'src/functions/js/all-settled-and-throw';
+import { resetYourPasswordTemplate } from 'src/templates/reset-your-password.template';
+import { calculatePagination } from 'src/functions/pagination/calculate-pagination';
+import { IPagination } from 'src/interfaces/pagination/pagination.interface';
 
 export class UserService {
     constructor(
@@ -38,72 +41,95 @@ export class UserService {
         private readonly sessionTokenService: SessionTokenService,
         private readonly refreshTokenService: RefreshTokenService,
         private readonly emailValidationTokenService: EmailValidationTokenService,
-        private readonly cacheService: CacheService<UserResponse>,
-        private readonly paginationCache: PaginationCacheService,
+        private readonly cacheService: CacheService<UserDocument>,
         private readonly passwordRecoveryTokenService: PasswordRecoveryTokenService,
     ) {}
 
-    private async findUserInDb(id: string): Promise<UserDocument> {
+    private isValidMongoIdOrThrow(id: string): void {
+        const validMongoId = Types.ObjectId.isValid(id);
+        if (!validMongoId) {
+            this.loggerService.error(`Invalid mongo id`);
+            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
+        }
+    }
+
+    private async findOneByIdOrThrow(id: string): Promise<UserDocument> {
+        this.isValidMongoIdOrThrow(id);
         const userInDb = await this.userModel.findById(id).exec();
         if (!userInDb) {
             this.loggerService.error(`User ${id} not found`);
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
         }
         return userInDb;
     }
 
-    private async authorizeUserModificationOrThrow(
-        requestUserInfo: UserFromRequest,
+    private async findOneByIdOrThrowCacheEnabled(id: string): Promise<UserDocument> {
+        this.isValidMongoIdOrThrow(id);
+        // check user in cache
+        const userInCache = await this.cacheService.get(id);
+        if (userInCache) {
+            this.loggerService.info(`User ${id} found in cache`);
+            return userInCache;
+        }
+        // user is not in cache
+        const userFound = await this.findOneByIdOrThrow(id);
+        await this.cacheService.cache(userFound);
+        this.loggerService.info(`User ${id} cached`);
+        return userFound;
+    }
+
+    // check whether current user can modify target user
+    private async verifyUserModificationRights(
+        sessionUser: UserSessionInfo,
         targetUserId: string,
     ): Promise<UserDocument> {
-        const targetUserDocument = (await this.findOne(targetUserId, {
-            noStore: true,
-        })) as UserDocument;
-        const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
+        const targetUser = await this.findOneByIdOrThrow(targetUserId);
+        const isAuthorized = modificationAccessControl(sessionUser, {
             id: targetUserId,
-            role: targetUserDocument.role,
+            role: targetUser.role,
         });
-        if (!isCurrentUserAuthorized) {
-            this.loggerService.error(`Not authorized to perform this action`);
+        if (!isAuthorized) {
+            this.loggerService.error(
+                `User ${sessionUser.id} is not authorized to modify user ${targetUserId}`,
+            );
             throw HttpError.forbidden(authErrors.FORBIDDEN);
         }
-        return targetUserDocument;
+        return targetUser;
     }
 
     private async sendEmailValidationLink(email: string): Promise<void> {
         const token = this.emailValidationTokenService.generate(email);
-        // web url is appended with a default "/" when read
-        const link = `${this.configService.WEB_URL}api/users/confirmEmailValidation/${token}`;
+        const link = `${this.configService.WEB_URL}api/users/confirm-email-validation?token=${token}`;
         await this.emailService.sendMail({
-            to: email,
+            html: validateYourEmailTemplate(link),
             subject: 'Email validation',
-            html: `
-            <h1> Validate your email </h1>
-            <p> Click below to validate your email </p>
-            <a href= "${link}"> Validate your email ${email} </a>`,
+            to: email,
         });
         this.loggerService.info(`Email validation sent to ${email}`);
     }
 
-    private async setNewPropertiesInDocument(
+    private async updateUserDocumentProperties(
         userDocument: UserDocument,
-        propertiesUpdated: UpdateUserValidator,
+        propertiesUpdated: UpdateUserDto,
     ): Promise<void> {
-        // updating email
         if (propertiesUpdated.email) {
-            if (userDocument.role !== 'admin') {
+            this.loggerService.info(`User ${userDocument.id} email updated`);
+            if (userDocument.role !== UserRole.ADMIN) {
                 userDocument.emailValidated = false;
-                userDocument.role = 'readonly';
+                userDocument.role = UserRole.READONLY;
+                this.loggerService.warn(
+                    `User ${userDocument.id} downgraded to READONLY until email is validated`,
+                );
             }
             userDocument.email = propertiesUpdated.email;
         }
-        // updating password
         if (propertiesUpdated.password) {
             userDocument.password = await this.hashingService.hash(propertiesUpdated.password);
+            this.loggerService.info(`User ${userDocument.id} password updated`);
         }
-        // updating name
         if (propertiesUpdated.name) {
             userDocument.name = propertiesUpdated.name;
+            this.loggerService.info(`User ${userDocument.id} name updated`);
         }
     }
 
@@ -111,49 +137,63 @@ export class UserService {
         hashedPassword: string,
         incomingPassword: string,
     ): Promise<void> {
-        // password hashing
         const passwordOk = await this.hashingService.compare(incomingPassword, hashedPassword);
         if (!passwordOk) {
             this.loggerService.error('Password does not match');
-            throw HttpError.badRequest(authErrors.INVALID_CREDENTIALS);
+            throw HttpError.unAuthorized(authErrors.INVALID_CREDENTIALS);
         }
     }
 
-    async requestEmailValidation(id: string): Promise<void> {
-        const user = await this.userModel.findById(id).exec();
-        if (!user) {
-            this.loggerService.error(`User with id ${id} not found`);
-            throw HttpError.badRequest(usersApiErrors.USER_NOT_FOUND);
+    private async hashPassword(password: string): Promise<string> {
+        const hash = await this.hashingService.hash(password);
+        this.loggerService.debug('Password hashed successfully');
+        return hash;
+    }
+
+    private async sendForgotPasswordLink(email: string): Promise<void> {
+        const token = this.passwordRecoveryTokenService.generate(email);
+        const link = `${this.configService.WEB_URL}api/users/reset-password?token=${token}`;
+        await this.emailService.sendMail({
+            html: resetYourPasswordTemplate(link),
+            subject: 'Password recovery',
+            to: email,
+        });
+        this.loggerService.info(`Password recovery email sent to ${email}`);
+    }
+
+    async requestEmailValidation(sessionUser: UserSessionInfo): Promise<void> {
+        if (sessionUser.role !== UserRole.READONLY) {
+            this.loggerService.error(`Email ${sessionUser.email} is already validated`);
+            throw HttpError.conflict(authErrors.EMAIL_ALREADY_VERIFIED);
         }
-        // email cannot be validated twice
-        if (user.emailValidated === true) {
-            this.loggerService.error(`Email ${user.email} is already validated`);
-            throw HttpError.badRequest(usersApiErrors.USER_EMAIL_ALREADY_VALIDATED);
-        }
-        await this.sendEmailValidationLink(user.email);
+        await this.sendEmailValidationLink(sessionUser.email);
     }
 
     async confirmEmailValidation(token: string): Promise<void> {
+        // consume token and get email
         const emailInToken = await this.emailValidationTokenService.consume(token);
-        // check user existence
         const user = await this.userModel.findOne({ email: emailInToken }).exec();
         if (!user) {
-            this.loggerService.error(`User ${emailInToken} not found`);
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+            this.loggerService.error(`User with email ${emailInToken} not found`);
+            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
         }
-        // update
+        if (user.emailValidated === true) {
+            this.loggerService.error(`User ${user.id} email is already validated`);
+            throw HttpError.conflict(authErrors.EMAIL_ALREADY_VERIFIED);
+        }
+        // upgrade
         user.emailValidated = true;
-        user.role = 'editor';
+        user.role = UserRole.EDITOR;
         await user.save();
-        this.loggerService.info(`User ${user.id} email validated`);
+        await this.cacheService.delete(user.id);
+        this.loggerService.info(`User ${user.id} email validated, role updated to EDITOR`);
     }
 
-    async create(user: CreateUserValidator) {
+    async create(user: CreateUserDto) {
         try {
-            // password hashing
-            const passwordHash = await this.hashingService.hash(user.password);
-            user.password = passwordHash;
-            // creation in db
+            // hashing password
+            user.password = await this.hashPassword(user.password);
+            // db
             const created = await this.userModel.create(user);
             const userId = created.id;
             this.loggerService.info(`User ${userId} created`);
@@ -172,20 +212,19 @@ export class UserService {
         }
     }
 
-    async login(userToLogin: LoginUserValidator) {
+    async login(loginCredentials: LoginUserDto) {
         // user existence
-        const userDb = await this.userModel.findOne({ email: userToLogin.email }).exec();
+        const userDb = await this.userModel.findOne({ email: loginCredentials.email }).exec();
         if (!userDb) {
-            this.loggerService.error(`User ${userToLogin.email} not found`);
-            throw HttpError.badRequest(authErrors.INVALID_CREDENTIALS);
+            this.loggerService.error(`User ${loginCredentials.email} not found`);
+            throw HttpError.unAuthorized(authErrors.INVALID_CREDENTIALS);
         }
         // password comparison
-        await this.passwordsMatchOrThrow(userDb.password, userToLogin.password);
-        // refresh token per user limit
+        await this.passwordsMatchOrThrow(userDb.password, loginCredentials.password);
+        // check refresh token limit
         const userRefreshTokens = await this.refreshTokenService.countUserTokens(userDb.id);
         if (userRefreshTokens === this.configService.MAX_REFRESH_TOKENS_PER_USER) {
-            this.loggerService.error('User has reached the maximum of active refresh tokens');
-            throw HttpError.forbidden(authErrors.REFRESH_TOKEN_LIMIT_EXCEEDED);
+            await this.refreshTokenService.deleteOldest(userDb.id);
         }
         // tokens
         const sessionToken = this.sessionTokenService.generate(userDb.id);
@@ -198,28 +237,23 @@ export class UserService {
         };
     }
 
-    async logout(requestUserInfo: UserFromRequest, refreshToken: string): Promise<void> {
-        // provided refresh token is valid
+    async logout(requestUserInfo: UserSessionInfo, refreshToken: string): Promise<void> {
+        // valid refresh token
         const { jti: refreshJti } = await this.refreshTokenService.validateOrThrow(refreshToken);
         // disable session and refresh tokens
-        await Promise.all([
+        await allSettledAndThrow([
+            this.refreshTokenService.revokeToken(requestUserInfo.id, refreshJti),
             this.sessionTokenService.blacklist(
                 requestUserInfo.sessionJti,
                 requestUserInfo.sessionTokenExpUnix,
             ),
-            this.refreshTokenService.revokeToken(requestUserInfo.id, refreshJti),
         ]);
         this.loggerService.info(`User ${requestUserInfo.id} logged out`);
     }
 
-    async logoutFromAll(userCredentials: LoginUserValidator) {
-        const userData = await this.userModel.findOne({ email: userCredentials.email }).exec();
-        if (!userData) {
-            this.loggerService.error(`User ${userCredentials.email} not found`);
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
-        }
-        await this.passwordsMatchOrThrow(userData.password, userCredentials.password);
-        // revoke all session tokens
+    async logoutAll(password: string, user: UserSessionInfo): Promise<void> {
+        const userData = await this.findOneByIdOrThrow(user.id);
+        await this.passwordsMatchOrThrow(userData.password, password);
         await this.refreshTokenService.revokeAll(userData.id);
         this.loggerService.info(`All refresh tokens of user ${userData.id} have been revoked`);
     }
@@ -236,93 +270,64 @@ export class UserService {
         };
     }
 
-    async findOne(id: string, options: ICacheOptions): Promise<UserDocument | UserResponse> {
-        // validate id
-        const validMongoId = Types.ObjectId.isValid(id);
-        if (!validMongoId) {
-            this.loggerService.error(`Invalid mongo id`);
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+    async findOne(id: string, options: IFindOptions): Promise<UserDocument | UserResponse> {
+        if (options.cache) {
+            return await this.findOneByIdOrThrowCacheEnabled(id);
         }
-        // bypass read-write in cache
-        if (options.noStore) {
-            this.loggerService.info(`Bypassing cache for user ${id}`);
-            return await this.findUserInDb(id);
-        }
-        // check if user is cached
-        const userInCache = await this.cacheService.get(id);
-        if (userInCache) return userInCache;
-        // user is not in cache
-        const userFound = await this.findUserInDb(id);
-        await this.cacheService.cache(userFound);
-        return userFound;
+        return await this.findOneByIdOrThrow(id);
     }
 
-    async findAll(limit: number, page: number, options: ICacheOptions): Promise<UserDocument[]> {
+    async findAll(limit: number, page: number): Promise<IPagination<UserDocument>> {
         // validate limit and page
         const totalDocuments = await this.userModel.countDocuments().exec();
-        if (totalDocuments === 0) return [];
-        const offset = paginationRules(limit, page, totalDocuments);
-        // bypass read-write in cache
-        if (options.noStore) {
-            this.loggerService.info(`Bypassing cache for users page=${page} limit=${limit}`);
-            return await this.userModel
-                .find()
-                .skip(offset)
-                .limit(limit)
-                .sort({ createdAt: 1 })
-                .exec();
-        }
-        // check if combination of limit and page is cached
-        const chunk = await this.paginationCache.get<UserDocument[]>(Apis.users, page, limit);
-        if (chunk) return chunk;
-        // data is not cached
-        const data = await this.userModel
-            .find()
-            .skip(offset)
-            .limit(limit)
-            .sort({ createdAt: 1 })
-            .exec();
-        // cache pagination obtained
-        await this.paginationCache.cache(Apis.users, page, limit, data);
-        return data;
+        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
+        const data = await this.cacheService.getPagination(offset, limit);
+        return {
+            currentPage: page,
+            totalDocuments,
+            totalPages,
+            data,
+        };
     }
 
-    async deleteOne(requestUserInfo: UserFromRequest, targetUserId: string): Promise<void> {
-        await this.authorizeUserModificationOrThrow(requestUserInfo, targetUserId);
-        await Promise.all([
-            this.userModel.deleteOne({ _id: targetUserId }),
+    async deleteOne(requestUserInfo: UserSessionInfo, targetUserId: string): Promise<void> {
+        await this.verifyUserModificationRights(requestUserInfo, targetUserId);
+        await allSettledAndThrow([
+            this.userModel.deleteOne({ _id: targetUserId }).exec(),
             this.refreshTokenService.revokeAll(targetUserId),
+            this.cacheService.delete(targetUserId),
         ]);
         this.loggerService.info(`User ${targetUserId} deleted`);
         // remove all tasks associated
-        const tasksRemoved = await this.tasksModel.deleteMany({ user: targetUserId });
-        this.loggerService.info(`${tasksRemoved.deletedCount} tasks associated to user removed`);
+        const tasksRemoved = await this.tasksModel.deleteMany({ user: targetUserId }).exec();
+        this.loggerService.info(
+            `${tasksRemoved.deletedCount} tasks associated to user ${targetUserId} removed`,
+        );
     }
 
     async updateOne(
-        requestUserInfo: UserFromRequest,
+        requestUserInfo: UserSessionInfo,
         targetUserId: string,
-        propertiesUpdated: UpdateUserValidator,
+        propertiesUpdated: UpdateUserDto,
     ): Promise<UserDocument> {
-        const userDocument = await this.authorizeUserModificationOrThrow(
-            requestUserInfo,
-            targetUserId,
-        );
-        await this.setNewPropertiesInDocument(userDocument, propertiesUpdated);
+        const userDocument = await this.verifyUserModificationRights(requestUserInfo, targetUserId);
+        await this.updateUserDocumentProperties(userDocument, propertiesUpdated);
         // revoke all refresh tokens and blacklist session token
         if (propertiesUpdated.email || propertiesUpdated.password) {
-            // TODO: use promise.all
-            await this.refreshTokenService.revokeAll(targetUserId);
-            await this.sessionTokenService.blacklist(
-                requestUserInfo.sessionJti,
-                requestUserInfo.sessionTokenExpUnix,
-            );
+            await allSettledAndThrow([
+                this.refreshTokenService.revokeAll(targetUserId),
+                this.sessionTokenService.blacklist(
+                    requestUserInfo.sessionJti,
+                    requestUserInfo.sessionTokenExpUnix,
+                ),
+            ]);
             this.loggerService.info(
                 `All refresh tokens of user ${targetUserId} were revoked due to email/password update`,
             );
         }
         try {
             await userDocument.save();
+            await this.cacheService.delete(targetUserId);
             this.loggerService.info(`User ${targetUserId} updated`);
             return userDocument;
         } catch (error: any) {
@@ -332,18 +337,14 @@ export class UserService {
         }
     }
 
-    async resetPassword(newPassword: string, token?: string): Promise<void> {
-        if (!token) {
-            this.loggerService.error(`Recovery password token not provided`);
-            throw HttpError.badRequest(authErrors.INVALID_TOKEN);
-        }
+    async resetPassword(newPassword: string, token: string): Promise<void> {
         const emailInToken = await this.passwordRecoveryTokenService.consume(token);
         const user = await this.userModel.findOne({ email: emailInToken }).exec();
         if (!user) {
             this.loggerService.error(`User ${emailInToken} not found`);
-            throw HttpError.notFound(usersApiErrors.USER_NOT_FOUND);
+            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
         }
-        user.password = await this.hashingService.hash(newPassword);
+        user.password = await this.hashPassword(newPassword);
         await user.save();
         this.loggerService.info(`User ${user.id} password updated`);
         // logout all
@@ -353,42 +354,14 @@ export class UserService {
         );
     }
 
-    private async sendForgotPasswordLink(email: string): Promise<void> {
-        const token = this.passwordRecoveryTokenService.generate(email);
-        const link = `${this.configService.WEB_URL}api/users/reset-password?token=${token}`;
-        await this.emailService.sendMail({
-            to: email,
-            subject: 'Password recovery',
-            html: `
-            <h1> Password Recovery </h1>
-            <p> Click below to recover your password </p>
-            <a href= "${link}"> Recover your password ${email} </a>`,
-        });
-        this.loggerService.info(`Password recovery email sent to ${email}`);
-    }
-
-    async requestPasswordRecovery(input: ForgotPasswordValidator): Promise<void> {
-        let userEmail: string;
-
-        if (input.username) {
-            const userInDb = await this.userModel.findOne({ name: input.username }).exec();
-            if (!userInDb) {
-                this.loggerService.info(
-                    `User with username "${input.username}" not found, skipping password recovery`,
-                );
-                return;
-            }
-            userEmail = userInDb.email;
-        } else {
-            const userInDb = await this.userModel.findOne({ email: input.email }).exec();
-            if (!userInDb) {
-                this.loggerService.info(
-                    `User with email "${input.email}" not found, skipping password recovery`,
-                );
-                return;
-            }
-            userEmail = input.email as string;
+    async requestPasswordRecovery(email: string): Promise<void> {
+        const userInDb = await this.userModel.findOne({ email }).exec();
+        if (!userInDb) {
+            this.loggerService.info(
+                `User with email "${email}" not found, skipping password recovery`,
+            );
+            return;
         }
-        await this.sendForgotPasswordLink(userEmail);
+        await this.sendForgotPasswordLink(email);
     }
 }

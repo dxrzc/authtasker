@@ -17,9 +17,9 @@ export class UserSeedService {
 
     private async generateRandomUser(): Promise<UserRequest> {
         return {
-            name: this.dataGenerator.name(),
-            email: this.dataGenerator.email(),
-            password: await this.hashingService.hash(this.dataGenerator.password()),
+            name: this.dataGenerator.name,
+            email: this.dataGenerator.email,
+            password: await this.hashingService.hash(this.dataGenerator.password),
         };
     }
 

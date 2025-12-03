@@ -29,8 +29,51 @@ export class RedisService {
         return null;
     }
 
+    async mget<T>(keys: string[]): Promise<(T | null)[]> {
+        const data = await this.redis.mget(keys);
+        return data.map((d) => {
+            if (!d) return null;
+            try {
+                return JSON.parse(d);
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            } catch (error) {
+                return d as T;
+            }
+        });
+    }
+
     async addToSet(key: string, member: string): Promise<void> {
         await this.redis.sadd(key, member);
+    }
+
+    async addToList(key: string, member: string): Promise<void> {
+        await this.redis.rpush(key, member);
+    }
+
+    async getAllListMembers(key: string): Promise<Array<string>> {
+        return await this.redis.lrange(key, 0, -1);
+    }
+
+    async belongsToList(key: string, member: string): Promise<boolean> {
+        const listMembers = await this.redis.lrange(key, 0, -1);
+        return listMembers.includes(member);
+    }
+
+    async getFrontOfList(key: string): Promise<string | null> {
+        const items = await this.redis.lrange(key, 0, 0);
+        return items.length > 0 ? items[0] : null;
+    }
+
+    async popFrontOfList(key: string): Promise<string | null> {
+        return await this.redis.lpop(key);
+    }
+
+    async getListSize(key: string): Promise<number> {
+        return await this.redis.llen(key);
+    }
+
+    async deleteFromList(key: string, member: string): Promise<void> {
+        await this.redis.lrem(key, 0, member);
     }
 
     async deleteFromSet(key: string, member: string): Promise<void> {
@@ -52,6 +95,10 @@ export class RedisService {
     async getAllKeysByPattern(pattern: string): Promise<string[]> {
         const keys = await this.redis.keys(pattern);
         return keys;
+    }
+
+    getTtl(key: string): Promise<number> {
+        return this.redis.ttl(key);
     }
 
     async delete(key: string): Promise<void> {

@@ -4,28 +4,28 @@ import { Model, Types } from 'mongoose';
 import { CacheService } from './cache.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
-import { paginationRules } from 'src/functions/pagination/pagination-rules';
+import { calculatePagination } from 'src/functions/pagination/calculate-pagination';
 import { TaskResponse } from 'src/types/tasks/task-response.type';
 import { TaskDocument } from 'src/types/tasks/task-document.type';
 import { HttpError } from 'src/errors/http-error.class';
-import { UserIdentity } from 'src/interfaces/user/user-indentity.interface';
-import { ICacheOptions } from 'src/interfaces/cache/cache-options.interface';
+import { UserIdentity } from 'src/interfaces/user/user-identity.interface';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { handleDuplicatedKeyInDb } from 'src/functions/errors/handle-duplicated-key-in-db';
 import { modificationAccessControl } from 'src/functions/roles/modification-access-control';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
-import { CreateTaskValidator } from 'src/validators/models/tasks/create-task.validator';
-import { UpdateTaskValidator } from 'src/validators/models/tasks/update-task.validator';
-import { PaginationCacheService } from './pagination-cache.service';
-import { makeTasksByUserPaginationCacheKey } from 'src/functions/cache/make-tasks-by-users-pag-cache-key';
+import { CreateTaskDto } from 'src/dtos/models/tasks/create-task.dto';
+import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
+import { IFindOptions } from 'src/interfaces/others/find-options.interface';
+import { IPagination } from 'src/interfaces/pagination/pagination.interface';
+import { TasksStatus } from 'src/types/tasks/task-status.type';
+import { TasksPriority } from 'src/types/tasks/task-priority.type';
 
 export class TasksService {
     constructor(
         private readonly loggerService: LoggerService,
         private readonly tasksModel: Model<ITasks>,
         private readonly userService: UserService,
-        private readonly cacheService: CacheService<TaskResponse>,
-        private readonly paginationCache: PaginationCacheService,
+        private readonly cacheService: CacheService<TaskDocument>,
     ) {}
 
     private async findTaskInDb(id: string): Promise<TaskDocument> {
@@ -33,7 +33,7 @@ export class TasksService {
         // id is not valid / task not found
         if (!taskFound) {
             this.loggerService.error(`Task with id ${id} not found`);
-            throw HttpError.notFound(tasksApiErrors.TASK_NOT_FOUND);
+            throw HttpError.notFound(tasksApiErrors.NOT_FOUND);
         }
         return taskFound;
     }
@@ -42,8 +42,8 @@ export class TasksService {
         requestUserInfo: UserIdentity,
         targetTaskId: string,
     ): Promise<TaskDocument> {
-        const task = (await this.findOne(targetTaskId, { noStore: true })) as TaskDocument;
-        const taskOwner = await this.userService.findOne(task.user.toString(), { noStore: true });
+        const task = (await this.findOne(targetTaskId, { cache: false })) as TaskDocument;
+        const taskOwner = await this.userService.findOne(task.user.toString(), { cache: false });
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
             role: taskOwner.role,
             id: taskOwner.id,
@@ -55,7 +55,7 @@ export class TasksService {
         return task;
     }
 
-    async create(task: CreateTaskValidator, user: string): Promise<TaskDocument> {
+    async create(task: CreateTaskDto, user: string): Promise<TaskDocument> {
         try {
             const taskCreated = await this.tasksModel.create({ ...task, user });
             this.loggerService.info(`Task ${taskCreated.id} created`);
@@ -67,17 +67,20 @@ export class TasksService {
         }
     }
 
-    async findOne(id: string, options: ICacheOptions): Promise<TaskDocument | TaskResponse> {
+    async findOne(id: string, options: IFindOptions): Promise<TaskDocument | TaskResponse> {
         // validate id
         const validMongoId = Types.ObjectId.isValid(id);
         if (!validMongoId) {
             this.loggerService.error(`Invalid mongo id`);
-            throw HttpError.notFound(tasksApiErrors.TASK_NOT_FOUND);
+            throw HttpError.notFound(tasksApiErrors.NOT_FOUND);
         }
-        // bypass read-write in cache
-        if (options.noStore) {
-            this.loggerService.info(`Bypassing cache for task ${id}`);
-            return await this.findTaskInDb(id);
+        if (!options.cache) {
+            const taskInDb = await this.tasksModel.findById(id).exec();
+            if (!taskInDb) {
+                this.loggerService.error(`Task ${id} not found`);
+                throw HttpError.notFound(tasksApiErrors.NOT_FOUND);
+            }
+            return taskInDb;
         }
         // check if user is cached
         const taskInCache = await this.cacheService.get(id);
@@ -88,66 +91,73 @@ export class TasksService {
         return taskFound;
     }
 
-    async findAll(limit: number, page: number, options: ICacheOptions): Promise<TaskDocument[]> {
+    async findAll(limit: number, page: number): Promise<IPagination<TaskDocument>> {
         // validate limit and page
         const totalDocuments = await this.tasksModel.countDocuments().exec();
-        if (totalDocuments === 0) return [];
-        const offset = paginationRules(limit, page, totalDocuments);
-        // bypass read-write in cache
-        if (options.noStore) {
-            this.loggerService.info(`Bypassing cache for tasks page=${page} limit=${limit}`);
-            return await this.tasksModel
-                .find()
-                .skip(offset)
-                .limit(limit)
-                .sort({ createdAt: 1 })
-                .exec();
-        }
-        // check if combination of limit and page is cached
-        const chunk = await this.paginationCache.get<TaskDocument[]>(Apis.tasks, page, limit);
-        if (chunk) return chunk;
-        // data is not cached
-        const data = await this.tasksModel
-            .find()
-            .skip(offset)
-            .limit(limit)
-            .sort({ createdAt: 1 })
-            .exec();
-        // cache pagination obtained
-        await this.paginationCache.cache(Apis.tasks, page, limit, data);
-        return data;
+        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
+        const data = await this.cacheService.getPagination(offset, limit);
+        return {
+            currentPage: page,
+            totalDocuments,
+            totalPages,
+            data,
+        };
     }
 
-    async findAllByUser(userId: string, limit: number, page: number, options: ICacheOptions) {
+    async findAllByUser(
+        userId: string,
+        limit: number,
+        page: number,
+    ): Promise<IPagination<TaskDocument>> {
         // verifies that user exists or throws
-        await this.userService.findOne(userId, { noStore: true });
-        // validate limit and page
+        await this.userService.findOne(userId, { cache: false });
         const totalDocuments = await this.tasksModel.find({ user: userId }).countDocuments().exec();
-        if (totalDocuments === 0) return [];
-        const offset = paginationRules(limit, page, totalDocuments);
-        // mongoose query
-        const allByUserQuery = this.tasksModel
-            .find({ user: userId })
-            .skip(offset)
-            .limit(limit)
-            .sort({ createdAt: 1 })
-            .exec();
-        // bypass read-write in cache
-        if (options.noStore) {
-            this.loggerService.info(
-                `Bypassing cache for tasks by user ${userId}, page=${page} limit=${limit}`,
-            );
-            return await allByUserQuery;
-        }
-        // check if combination of limit and page is cached
-        const cacheKey = makeTasksByUserPaginationCacheKey(userId, page, limit);
-        const chunk = await this.paginationCache.getWithKey<TaskDocument[]>(cacheKey);
-        if (chunk) return chunk;
-        // tasks not cached
-        const tasks = await allByUserQuery;
-        // cache pagination obtained
-        await this.paginationCache.cacheWithKey(cacheKey, tasks);
-        return tasks;
+        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
+        const data = await this.cacheService.getPagination(offset, limit, {
+            find: { user: userId },
+        });
+        return {
+            currentPage: page,
+            totalDocuments,
+            totalPages,
+            data,
+        };
+    }
+
+    async findAllByStatus(
+        status: TasksStatus,
+        limit: number,
+        page: number,
+    ): Promise<IPagination<TaskDocument>> {
+        const totalDocuments = await this.tasksModel.countDocuments({ status }).exec();
+        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
+        const data = await this.cacheService.getPagination(offset, limit, {
+            find: { status },
+        });
+        return {
+            currentPage: page,
+            totalDocuments,
+            totalPages,
+            data,
+        };
+    }
+
+    async findAllByPriority(
+        priority: TasksPriority,
+        limit: number,
+        page: number,
+    ): Promise<IPagination<TaskDocument>> {
+        const totalDocuments = await this.tasksModel.countDocuments({ priority }).exec();
+        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
+        const data = await this.cacheService.getPagination(offset, limit, {
+            find: { priority },
+        });
+        return {
+            currentPage: page,
+            totalDocuments,
+            totalPages,
+            data,
+        };
     }
 
     async deleteOne(requestUserInfo: UserIdentity, taskId: string): Promise<void> {
@@ -159,7 +169,7 @@ export class TasksService {
     async updateOne(
         requestUserInfo: UserIdentity,
         targetTaskId: string,
-        task: UpdateTaskValidator,
+        task: UpdateTaskDto,
     ): Promise<TaskDocument> {
         const targetTask = await this.authorizeTaskModification(requestUserInfo, targetTaskId);
         // set new properties in document

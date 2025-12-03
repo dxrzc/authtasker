@@ -1,13 +1,19 @@
+import { UserRole } from 'src/enums/user-role.enum';
+
 export const modificationAuthFixture = [
-    { currentUserRole: 'admin', targetUserRole: 'admin', expected: 'forbidden' },
-    { currentUserRole: 'admin', targetUserRole: 'editor', expected: 'authorized' },
-    { currentUserRole: 'admin', targetUserRole: 'readonly', expected: 'authorized' },
+    { currentUserRole: UserRole.ADMIN, targetUserRole: UserRole.ADMIN, expected: 'forbidden' },
+    { currentUserRole: UserRole.ADMIN, targetUserRole: UserRole.EDITOR, expected: 'authorized' },
+    { currentUserRole: UserRole.ADMIN, targetUserRole: UserRole.READONLY, expected: 'authorized' },
 
-    { currentUserRole: 'editor', targetUserRole: 'admin', expected: 'forbidden' },
-    { currentUserRole: 'editor', targetUserRole: 'editor', expected: 'forbidden' },
-    { currentUserRole: 'editor', targetUserRole: 'readonly', expected: 'forbidden' },
+    { currentUserRole: UserRole.EDITOR, targetUserRole: UserRole.ADMIN, expected: 'forbidden' },
+    { currentUserRole: UserRole.EDITOR, targetUserRole: UserRole.EDITOR, expected: 'forbidden' },
+    { currentUserRole: UserRole.EDITOR, targetUserRole: UserRole.READONLY, expected: 'forbidden' },
 
-    { currentUserRole: 'readonly', targetUserRole: 'admin', expected: 'forbidden' },
-    { currentUserRole: 'readonly', targetUserRole: 'editor', expected: 'forbidden' },
-    { currentUserRole: 'readonly', targetUserRole: 'readonly', expected: 'forbidden' },
+    { currentUserRole: UserRole.READONLY, targetUserRole: UserRole.ADMIN, expected: 'forbidden' },
+    { currentUserRole: UserRole.READONLY, targetUserRole: UserRole.EDITOR, expected: 'forbidden' },
+    {
+        currentUserRole: UserRole.READONLY,
+        targetUserRole: UserRole.READONLY,
+        expected: 'forbidden',
+    },
 ] as const;

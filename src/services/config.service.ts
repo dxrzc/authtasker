@@ -61,6 +61,7 @@ export class ConfigService {
 
     public readonly MAIL_SERVICE_PASS = env.get('MAIL_SERVICE_PASS').required().asString();
 
+    // web url is appended with a default "/" when read
     public readonly WEB_URL = env.get('WEB_URL').required().asUrlString();
 
     public readonly HTTP_LOGS = env.get('HTTP_LOGS').asBool();
@@ -70,16 +71,6 @@ export class ConfigService {
     public readonly ADMIN_EMAIL = env.get('ADMIN_EMAIL').required().asEmailString();
 
     public readonly ADMIN_PASSWORD = env.get('ADMIN_PASSWORD').required().asString();
-
-    public readonly API_MAX_REQ_PER_MINUTE = env
-        .get('API_MAX_REQ_PER_MINUTE')
-        .required()
-        .asIntPositive();
-
-    public readonly AUTH_MAX_REQ_PER_MINUTE = env
-        .get('AUTH_MAX_REQ_PER_MINUTE')
-        .required()
-        .asIntPositive();
 
     public readonly USERS_API_CACHE_TTL_SECONDS = env
         .get('USERS_API_CACHE_TTL_SECONDS')
@@ -97,4 +88,12 @@ export class ConfigService {
         .get('PAGINATION_CACHE_TTLS_SECONDS')
         .required()
         .asIntPositive();
+
+    get isProduction(): boolean {
+        return this.NODE_ENV === 'production';
+    }
+
+    get isDevelopment(): boolean {
+        return this.NODE_ENV === 'development';
+    }
 }

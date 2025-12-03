@@ -17,13 +17,13 @@ export const handleDuplicatedKeyInDb = (
             loggerService.error(
                 `User with ${duplicatedKey.join(', ')} "${keyValue.join(', ')}" already exists`,
             );
-            throw HttpError.conflict(usersApiErrors.USER_ALREADY_EXISTS);
+            throw HttpError.conflict(usersApiErrors.ALREADY_EXISTS);
         }
         case Apis.tasks: {
             loggerService.error(
                 `Task with ${duplicatedKey.join(', ')}: "${keyValue.join(', ')}" already exists`,
             );
-            throw HttpError.conflict(tasksApiErrors.taskAlreadyExists(duplicatedKey[0]));
+            throw HttpError.conflict(tasksApiErrors.ALREADY_EXISTS);
         }
     }
 };

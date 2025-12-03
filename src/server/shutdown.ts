@@ -1,6 +1,6 @@
 import { Server } from './server.init';
-import { MongoDatabase } from 'src/databases/mongo/mongo.database';
-import { RedisDatabase } from 'src/databases/redis/redis.database';
+import { MongoDatabase } from 'src/databases/mongo.database';
+import { RedisDatabase } from 'src/databases/redis.database';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 import { IShutdownParams } from 'src/interfaces/server/shutdown.interface';
 

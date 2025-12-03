@@ -1,19 +1,16 @@
 import { AsyncLocalStorage } from 'async_hooks';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
-import { Events } from './constants/events.constants';
-import { MongoDatabase } from './databases/mongo/mongo.database';
-import { RedisDatabase } from './databases/redis/redis.database';
-import { RedisSuscriber } from './databases/redis/redis.suscriber';
-import { EventManager } from './events/eventManager';
-import { IAsyncLocalStorageStore } from './interfaces/common/async-local-storage.interface';
-import { createErrorHandlerMiddleware } from './middlewares/error-handler.middleware';
-import { AppRoutes } from './routes/server.routes';
+import { MongoDatabase } from './databases/mongo.database';
+import { RedisDatabase } from './databases/redis.database';
+import { AppRoutes } from './routes/app.routes';
 import { Server } from './server/server.init';
 import { ShutdownManager } from './server/shutdown';
 import { RedisService } from './services/redis.service';
 import { SystemLoggerService } from './services/system-logger.service';
+import { IAsyncLocalStorageStore } from './interfaces/others/async-local-storage.interface';
 
+// TODO:
 // process.on('SIGINT', () => {
 //     void ShutdownManager.shutdown({
 //         cause: 'SIGINT',
@@ -44,20 +41,6 @@ process.on('uncaughtException', (err) => {
     });
 });
 
-EventManager.listen(Events.MONGO_CONNECTION_ERROR, () => {
-    void ShutdownManager.shutdown({
-        cause: 'Mongo database connection lost',
-        exitCode: 1,
-    });
-});
-
-EventManager.listen(Events.REDIS_CONNECTION_ERROR, () => {
-    void ShutdownManager.shutdown({
-        cause: 'Redis database connection lost',
-        exitCode: 1,
-    });
-});
-
 async function main() {
     // envs
     const configService = new ConfigService();
@@ -68,28 +51,33 @@ async function main() {
     const loggerService = new LoggerService(configService, asyncLocalStorage);
 
     // mongo
-    const mongoDb = new MongoDatabase(configService, loggerService);
+    const mongoDb = new MongoDatabase(loggerService, {
+        listenConnectionEvents: true,
+        listenModelEvents: configService.isDevelopment,
+        mongoUri: configService.MONGO_URI,
+    });
     await mongoDb.connect();
     ShutdownManager.mongoDb = mongoDb;
 
     // redis
-    const redisDb = new RedisDatabase(configService);
+    const redisDb = new RedisDatabase({
+        listenToConnectionEvents: true,
+        redisUri: configService.REDIS_URI,
+    });
     const redisInstance = await redisDb.connect();
     const redisService = new RedisService(redisInstance);
-    new RedisSuscriber(configService, redisInstance);
     ShutdownManager.redisDb = redisDb;
 
     // server
-    const server = new Server(
-        configService.PORT,
-        await new AppRoutes(
-            configService,
-            loggerService,
-            asyncLocalStorage,
-            redisService,
-        ).buildApp(),
-        createErrorHandlerMiddleware(loggerService),
+    const appRoutes = new AppRoutes(
+        configService,
+        loggerService,
+        asyncLocalStorage,
+        redisService,
+        redisDb.client,
     );
+    await appRoutes.createInitialAdminUser();
+    const server = new Server(configService.PORT, appRoutes.routes, loggerService);
     await server.start();
     ShutdownManager.server = server;
 }

@@ -1,19 +1,19 @@
 import { faker } from '@faker-js/faker';
 import { tasksLimits } from 'src/constants/tasks.constants';
-import { TasksStatus, tasksStatus } from 'src/types/tasks/task-status.type';
 import { TasksPriority, tasksPriority } from 'src/types/tasks/task-priority.type';
+import { TasksStatus, tasksStatus } from 'src/types/tasks/task-status.type';
 
 export class TasksDataGenerator {
     constructor() {}
 
-    name(): string {
+    get name(): string {
         const prefix = 'Task ';
         const random = faker.string.alpha(tasksLimits.MAX_NAME_LENGTH - prefix.length);
         const name = `${prefix}${random}`;
         return name.toLowerCase().trim();
     }
 
-    description(): string {
+    get description(): string {
         let description: string;
         let length: number;
 
@@ -28,26 +28,26 @@ export class TasksDataGenerator {
         return description;
     }
 
-    status(): TasksStatus {
+    get status(): TasksStatus {
         const n = faker.number.int({
             max: tasksStatus.length - 1,
         });
         return tasksStatus.at(n)!;
     }
 
-    priority(): TasksPriority {
+    get priority(): TasksPriority {
         const n = faker.number.int({
             max: tasksPriority.length - 1,
         });
         return tasksPriority.at(n)!;
     }
 
-    fullTask() {
+    get task() {
         return {
-            name: this.name(),
-            description: this.description(),
-            status: this.status(),
-            priority: this.priority(),
+            name: this.name,
+            description: this.description,
+            status: this.status,
+            priority: this.priority,
         };
     }
 }

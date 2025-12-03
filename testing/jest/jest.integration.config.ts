@@ -6,8 +6,13 @@ const integrationSuitePath = '<rootDir>/testing/suites/integration';
 const config: Config = {
     ...baseJestConfig,
     maxWorkers: 3,
-    
-    setupFilesAfterEnv: [`${integrationSuitePath}/setup/setup-after-env.ts`],
+
+    setupFilesAfterEnv: [
+        `${integrationSuitePath}/setup/after-env/set-environment.ts`,
+        `${integrationSuitePath}/setup/after-env/set-databases.ts`,
+        `${integrationSuitePath}/setup/after-env/set-app.ts`,
+        `${integrationSuitePath}/setup/after-env/set-agent.ts`,
+    ],
 
     collectCoverage: true,
     collectCoverageFrom: ['<rootDir>/src/**/*.ts', `!${integrationSuitePath}/**`],
@@ -20,7 +25,7 @@ const config: Config = {
         ...baseJestConfig.moduleNameMapper,
         '^@integration/(.*)$': `${integrationSuitePath}/$1`,
         '^ioredis$': 'ioredis-mock',
-        '^nodemailer$': `${integrationSuitePath}/mocks/nodemailer.ts`,
+        '^nodemailer$': `${integrationSuitePath}/mocks/nodemailer.mock.ts`,
     },
 };
 
