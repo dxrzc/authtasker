@@ -35,6 +35,8 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     needs: run-linter
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -52,6 +54,8 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     needs: run-linter
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
