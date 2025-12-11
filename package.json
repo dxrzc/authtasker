@@ -19,7 +19,6 @@
     "@eslint/js": "^9.39.0",
     "@faker-js/faker": "^9.2.0",
     "@types/bcrypt": "^6.0.0",
-    "@types/bcryptjs": "^2.4.6",
     "@types/connect-timeout": "^0.0.39",
     "@types/express": "^5.0.1",
     "@types/imapflow": "^1.0.21",
