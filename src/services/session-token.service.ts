@@ -26,7 +26,7 @@ export class SessionTokenService {
             purpose: tokenPurposes.SESSION,
             id: userId,
         });
-        this.loggerService.info(`Session token ${jti} generated, expires at ${expTime}`);
+        this.loggerService.info(`Session token ${jti} generated`);
         return token;
     }
 

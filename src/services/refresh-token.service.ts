@@ -113,7 +113,7 @@ export class RefreshTokenService {
         const expSeconds = convertExpTimeToSeconds(expTime as StringValue);
         const { token, jti } = this.generateToken(userId, expTime);
         await this.storeToken(userId, jti, expSeconds);
-        this.loggerService.info(`Refresh token ${jti} generated, expires at ${expTime}`);
+        this.loggerService.info(`Refresh token ${jti} generated`);
         return !options?.meta
             ? token
             : {
@@ -133,7 +133,7 @@ export class RefreshTokenService {
         const { jti, expDateUnix, userId } = await this.validateOrThrow(token);
         const newTokenData = await this.replaceRefreshToken(jti, expDateUnix, userId);
         this.loggerService.info(
-            `New refresh token generated: "${newTokenData.token}" for token rotation expires in ${newTokenData.expSeconds}s`,
+            `New refresh token generated for token rotation`,
         );
         return !options?.meta ? newTokenData.token : newTokenData;
     }
