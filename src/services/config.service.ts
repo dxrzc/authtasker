@@ -16,6 +16,8 @@ export class ConfigService {
 
     public readonly JWT_SESSION_EXP_TIME = env.get('JWT_SESSION_EXP_TIME').required().asString();
 
+    public readonly PASSWORD_PEPPER = env.get('PASSWORD_PEPPER').required().asString();
+
     public readonly JWT_PASSWORD_RECOVERY_EXP_TIME = env
         .get('JWT_PASSWORD_RECOVERY_EXP_TIME')
         .required()

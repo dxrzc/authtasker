@@ -9,6 +9,7 @@ import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
+import { IUser } from 'src/interfaces/user/user.interface';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 
@@ -101,21 +102,21 @@ describe(`POST ${registrationUrl}`, () => {
             expect(body.user.password).toBeUndefined();
         });
 
-        test('password is hashed in database', async () => {
+        test('prehash with HMAC-SHA256 of password is hashed and stored in database', async () => {
             const userData = testKit.userData.user;
             const { body } = await testKit.agent
                 .post(registrationUrl)
                 .send(userData)
                 .expect(status2xx);
-            const userInDb = await testKit.models.user.findById(body.user.id).exec();
-            expect(userInDb).not.toBeNull();
-            expect(userInDb?.password).toBeDefined();
-            expect(userInDb?.password).not.toBe(userData.password);
-            const isPasswordCorrectlyHashed = await testKit.hashingService.compare(
-                userData.password,
-                userInDb!.password,
-            );
-            expect(isPasswordCorrectlyHashed).toBe(true);
+            const { password: passwordHash } = (await testKit.models.user
+                .findById(body.user.id)
+                .select('password')
+                .exec()) as IUser;
+            expect(passwordHash).toBeDefined();
+            const pepper = testKit.configService.PASSWORD_PEPPER;
+            const hmac = testKit.hashingService.computeSHA256HMACpreHash(userData.password, pepper);
+            const equal = await testKit.hashingService.compare(hmac, passwordHash);
+            expect(equal).toBeTruthy();
         });
 
         test('return 201 status code, user data and tokens', async () => {
