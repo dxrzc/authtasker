@@ -4,7 +4,9 @@ import crypto from 'crypto';
 export class HashingService {
     constructor(private readonly saltRounds: number) {}
 
-    computeSHA256HMAC(input: string, pepper: string) {
+    // Pre-hash with HMAC-SHA256.
+    // Not intended to be the only hashing step for passwords. (CodeQL)
+    computeSHA256HMACpreHash(input: string, pepper: string) {
         const hmac = crypto.createHmac('sha256', pepper).update(input).digest('hex');
         return hmac;
     }

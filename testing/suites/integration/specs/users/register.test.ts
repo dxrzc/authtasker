@@ -102,7 +102,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(body.user.password).toBeUndefined();
         });
 
-        test('hmac of password and pepper is hashed and stored in database', async () => {
+        test('prehash with HMAC-SHA256 of password is hashed and stored in database', async () => {
             const userData = testKit.userData.user;
             const { body } = await testKit.agent
                 .post(registrationUrl)
@@ -116,7 +116,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(passwordHash).toBeDefined();
             // hash provided password
             const pepper = testKit.configService.PASSWORD_PEPPER;
-            const hmac = testKit.hashingService.computeSHA256HMAC(userData.password, pepper);
+            const hmac = testKit.hashingService.computeSHA256HMACpreHash(userData.password, pepper);
             const equal = await testKit.hashingService.compare(hmac, passwordHash);
             expect(equal).toBeTruthy();
         });

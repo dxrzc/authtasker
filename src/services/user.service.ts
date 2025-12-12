@@ -134,7 +134,7 @@ export class UserService {
     }
 
     private computeSHA256PasswordHash(rawPassword: string): string {
-        return this.hashingService.computeSHA256HMAC(
+        return this.hashingService.computeSHA256HMACpreHash(
             rawPassword,
             this.configService.PASSWORD_PEPPER,
         );
