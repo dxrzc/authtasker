@@ -4,9 +4,14 @@ import crypto from 'crypto';
 export class HashingService {
     constructor(private readonly saltRounds: number) {}
 
-    // Pre-hash with HMAC-SHA256.
-    // Not intended to be the only hashing step for passwords. (CodeQL)
-    computeSHA256HMACpreHash(input: string, pepper: string) {
+    /**
+     * Pre hashes the input using SHA-256 HMAC with the provided pepper.
+     * This is not intended to be a secure hash by itself, but rather a preprocessing step before any stronger hashing.
+     * @param input string to be hashed
+     * @param pepper pepper value for HMAC
+     * @returns SHA-256 HMAC of the input
+     */
+    computeSHA256HMACpreHash(input: string, pepper: string): string {
         const hmac = crypto.createHmac('sha256', pepper).update(input).digest('hex');
         return hmac;
     }
