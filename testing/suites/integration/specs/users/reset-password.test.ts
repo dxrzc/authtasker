@@ -100,7 +100,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             expect(indexSize).toBe(0);
         });
 
-        test('user password is hashed in database', async () => {
+        test('prehash with HMAC-SHA256 of password is hashed and stored in database', async () => {
             const { email, id } = await createUser(getRandomRole());
             const newPassword = testKit.userData.password;
             const token = testKit.passwordRecoveryTokenService.generate(email);
@@ -109,7 +109,9 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 .send({ token, newPassword })
                 .expect(status2xx);
             const userInDb = await testKit.models.user.findById(id).exec();
-            const isHashed = await testKit.hashingService.compare(newPassword, userInDb!.password);
+            const pepper = testKit.configService.PASSWORD_PEPPER;
+            const hmac = testKit.hashingService.computeSHA256HMACpreHash(newPassword, pepper);
+            const isHashed = await testKit.hashingService.compare(hmac, userInDb!.password);
             expect(isHashed).toBeTruthy();
         });
 
