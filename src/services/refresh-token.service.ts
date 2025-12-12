@@ -132,9 +132,7 @@ export class RefreshTokenService {
     ): Promise<string | RefreshTokenMetadata> {
         const { jti, expDateUnix, userId } = await this.validateOrThrow(token);
         const newTokenData = await this.replaceRefreshToken(jti, expDateUnix, userId);
-        this.loggerService.info(
-            `New refresh token generated for token rotation`,
-        );
+        this.loggerService.info(`New refresh token generated for token rotation`);
         return !options?.meta ? newTokenData.token : newTokenData;
     }
 
