@@ -133,7 +133,7 @@ export class UserService {
         }
     }
 
-    private computeSHA256PasswordHash(rawPassword: string): string {
+    private computeSHA256PasswordHash(rawPassword: string): Buffer {
         return this.hashingService.computeSHA256HMACpreHash(
             rawPassword,
             this.configService.PASSWORD_PEPPER,
