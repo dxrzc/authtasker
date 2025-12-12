@@ -108,13 +108,11 @@ describe(`POST ${registrationUrl}`, () => {
                 .post(registrationUrl)
                 .send(userData)
                 .expect(status2xx);
-            // get password hash
             const { password: passwordHash } = (await testKit.models.user
                 .findById(body.user.id)
                 .select('password')
                 .exec()) as IUser;
             expect(passwordHash).toBeDefined();
-            // hash provided password
             const pepper = testKit.configService.PASSWORD_PEPPER;
             const hmac = testKit.hashingService.computeSHA256HMACpreHash(userData.password, pepper);
             const equal = await testKit.hashingService.compare(hmac, passwordHash);
