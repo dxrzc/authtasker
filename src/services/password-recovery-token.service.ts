@@ -24,7 +24,7 @@ export class PasswordRecoveryTokenService {
             email,
             purpose: tokenPurposes.PASSWORD_RECOVERY,
         });
-        this.loggerService.info(`Password recovery token ${jti} generated, expires at ${expTime}`);
+        this.loggerService.info(`Password recovery token ${jti} generated`);
 
         if (options?.meta) {
             return { token, jti };
