@@ -133,21 +133,30 @@ export class UserService {
         }
     }
 
+    private computeSHA256PasswordHash(rawPassword: string): string {
+        return this.hashingService.computeSHA256HMAC(
+            rawPassword,
+            this.configService.PASSWORD_PEPPER,
+        );
+    }
+
+    // Hashes to SHA-256 first in order to allow passwords longer than bcrypt limit.
+    private async hashPassword(rawPassword: string): Promise<string> {
+        const sha256Password = this.computeSHA256PasswordHash(rawPassword);
+        const hash = await this.hashingService.hash(sha256Password);
+        return hash;
+    }
+
     private async passwordsMatchOrThrow(
         hashedPassword: string,
         incomingPassword: string,
     ): Promise<void> {
-        const passwordOk = await this.hashingService.compare(incomingPassword, hashedPassword);
-        if (!passwordOk) {
+        const passwordSHA256Hash = this.computeSHA256PasswordHash(incomingPassword);
+        const passwordMatch = await this.hashingService.compare(passwordSHA256Hash, hashedPassword);
+        if (!passwordMatch) {
             this.loggerService.error('Password does not match');
             throw HttpError.unAuthorized(authErrors.INVALID_CREDENTIALS);
         }
-    }
-
-    private async hashPassword(password: string): Promise<string> {
-        const hash = await this.hashingService.hash(password);
-        this.loggerService.debug('Password hashed successfully');
-        return hash;
     }
 
     private async sendForgotPasswordLink(email: string): Promise<void> {
