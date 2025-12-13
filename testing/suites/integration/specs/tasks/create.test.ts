@@ -78,6 +78,28 @@ describe(`POST ${testKit.urls.createTask}`, () => {
         });
     });
 
+    describe('User role is EDITOR', () => {
+        test('user can create task successfully', async () => {
+            const { sessionToken } = await createUser(UserRole.EDITOR);
+            await testKit.agent
+                .post(testKit.urls.createTask)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send(testKit.taskData.task)
+                .expect(status2xx);
+        });
+    });
+
+    describe('User role is ADMIN', () => {
+        test('user can create task successfully', async () => {
+            const { sessionToken } = await createUser(UserRole.ADMIN);
+            await testKit.agent
+                .post(testKit.urls.createTask)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send(testKit.taskData.task)
+                .expect(status2xx);
+        });
+    });
+
     describe('Task name already exists', () => {
         test('return 409 conflict and task already exists error message', async () => {
             const { sessionToken: userSess1 } = await createUser(UserRole.EDITOR);
