@@ -129,6 +129,30 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
+    describe.each(Object.values(UserRole))('%s attempts to delete themselves', (role) => {
+        test('successfully deletes user', async () => {
+            const { sessionToken, id } = await createUser(role);
+            await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(statusCodes.NO_CONTENT);
+        });
+    });
+
+    describe.each([UserRole.EDITOR, UserRole.READONLY])(
+        'Admin attempts to delete a %s',
+        (targetRole) => {
+            test('successfully deletes user', async () => {
+                const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
+                const { id: targetUserId } = await createUser(targetRole);
+                await testKit.agent
+                    .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
+                    .set('Authorization', `Bearer ${currentUserSessionToken}`)
+                    .expect(statusCodes.NO_CONTENT);
+            });
+        },
+    );
+
     describe('ADMIN attempts to delete another ADMIN', () => {
         test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
@@ -141,32 +165,10 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('ADMIN attempts to delete an EDITOR', () => {
-        test('successfully deletes user', async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
-            const { id: targetUserId } = await createUser(UserRole.EDITOR);
-            await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .expect(status2xx);
-        });
-    });
-
-    describe('ADMIN attempts to delete a READONLY', () => {
-        test('successfully deletes user', async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
-            const { id: targetUserId } = await createUser(UserRole.READONLY);
-            await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .expect(status2xx);
-        });
-    });
-
-    describe('EDITOR attempts to delete an ADMIN', () => {
+    describe.each(Object.values(UserRole))('EDITOR attempts to delete a %s', (targetRole) => {
         test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
-            const { id: targetUserId } = await createUser(UserRole.ADMIN);
+            const { id: targetUserId } = await createUser(targetRole);
             const { statusCode, body } = await testKit.agent
                 .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`);
@@ -175,34 +177,10 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('EDITOR attempts to delete another EDITOR', () => {
-        test(`return 403 status code and forbidden error message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
-            const { id: targetUserId } = await createUser(UserRole.EDITOR);
-            const { statusCode, body } = await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`);
-            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(403);
-        });
-    });
-
-    describe('EDITOR attempts to delete a READONLY', () => {
-        test(`return 403 status code and forbidden error message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
-            const { id: targetUserId } = await createUser(UserRole.READONLY);
-            const { statusCode, body } = await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`);
-            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(403);
-        });
-    });
-
-    describe('READONLY attempts to delete another READONLY', () => {
+    describe.each(Object.values(UserRole))('READONLY attempts to delete a %s', (targetRole) => {
         test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
-            const { id: targetUserId } = await createUser(UserRole.READONLY);
+            const { id: targetUserId } = await createUser(targetRole);
             const { statusCode, body } = await testKit.agent
                 .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`);

@@ -45,6 +45,21 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
         });
     });
 
+    describe('Refresh token not in redis', () => {
+        test('return 401 status code and invalid token error message', async () => {
+            const { refreshToken } = await createUser(getRandomRole());
+            // delete refresh token from redis
+            const { jti, id } = testKit.refreshJwt.verify(refreshToken)!;
+            const redisKey = makeRefreshTokenKey(id, jti);
+            await testKit.redisService.delete(redisKey);
+            const { body, statusCode } = await testKit.agent
+                .post(testKit.urls.refreshToken)
+                .send({ refreshToken });
+            expect(body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(statusCode).toBe(401);
+        });
+    });
+
     describe('Token successfully refreshed', () => {
         test('return a valid session token', async () => {
             const { refreshToken } = await createUser(getRandomRole());

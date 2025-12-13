@@ -36,7 +36,7 @@ describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
     });
 
     describe('Successful request', () => {
-        test('email is sent to the user email address', async () => {
+        test('email is sent to the user email address with a valid token for email validation', async () => {
             const { sessionToken, email } = await createUser(UserRole.READONLY);
             await testKit.agent
                 .post(testKit.urls.requestEmailValidation)
@@ -45,6 +45,11 @@ describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
             const sentEmails = mock.getSentMail();
             expect(sentEmails.length).toBe(1);
             expect(sentEmails[0].to).toBe(email);
+            const html = sentEmails[0].html as string;
+            const tokenMatch = html.match(/token=([^"]+)/);
+            expect(tokenMatch).not.toBeNull();
+            const token = tokenMatch![1];
+            await expect(testKit.emailValidationTokenService.consume(token)).resolves.not.toThrow();
         });
 
         test('return 204 status code and no body', async () => {
