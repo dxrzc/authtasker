@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import crypto from 'crypto';
 import { JwtTypes } from 'src/enums/jwt-types.enum';
 import { JwtService } from 'src/services/jwt.service';
 import { testKit } from '@integration/kit/test.kit';
@@ -100,7 +101,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             expect(indexSize).toBe(0);
         });
 
-        test('prehash with HMAC-SHA256 of password is hashed and stored in database', async () => {
+        test('password peppered with HMAC-SHA256 is hashed and stored in database', async () => {
             const { email, id } = await createUser(getRandomRole());
             const newPassword = testKit.userData.password;
             const token = testKit.passwordRecoveryTokenService.generate(email);
@@ -110,7 +111,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 .expect(status2xx);
             const userInDb = await testKit.models.user.findById(id).exec();
             const pepper = testKit.configService.PASSWORD_PEPPER;
-            const hmac = testKit.hashingService.computeSHA256HMACpreHash(newPassword, pepper);
+            const hmac = crypto.createHmac('sha256', pepper).update(newPassword).digest();
             const isHashed = await testKit.hashingService.compare(hmac, userInDb!.password);
             expect(isHashed).toBeTruthy();
         });
@@ -157,6 +158,21 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             });
             const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 token: invalidToken,
+                newPassword: testKit.userData.password,
+            });
+            expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(res.status).toBe(401);
+        });
+    });
+
+    describe('Email not in token', () => {
+        test('return status 401 and invalid token error message', async () => {
+            const { token } = testKit.passwordRecoveryTokenService['jwtService'].generate(
+                testKit.configService.JWT_PASSWORD_RECOVERY_EXP_TIME,
+                { purpose: tokenPurposes.PASSWORD_RECOVERY },
+            );
+            const res = await testKit.agent.post(testKit.urls.resetPassword).send({
+                token,
                 newPassword: testKit.userData.password,
             });
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_TOKEN });

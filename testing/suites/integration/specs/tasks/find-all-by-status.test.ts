@@ -33,6 +33,26 @@ describe(`GET ${testKit.urls.findAllTasksByStatus}/:status?limit=...&page=...`, 
         });
     });
 
+    describe('No tasks with matching status', () => {
+        test('return 200 status code and empty array for data, 0 pages, 0 totalDocuments', async () => {
+            const { sessionToken, id } = await createUser(UserRole.EDITOR);
+            // Create tasks with different statuses
+            await createTasksWithStatus(id, 'pending', 2);
+            await createTasksWithStatus(id, 'in progress', 2);
+            // Query for completed status which doesn't exist
+            const response = await testKit.agent
+                .get(`${testKit.urls.findAllTasksByStatus}/completed?limit=${10}&page=${1}`)
+                .set('Authorization', `Bearer ${sessionToken}`);
+            expect(response.body).toStrictEqual({
+                totalDocuments: 0,
+                totalPages: 0,
+                currentPage: 1,
+                data: [],
+            });
+            expect(response.status).toBe(200);
+        });
+    });
+
     describe('Limit is not number', () => {
         test('return 400 status code and invalid limit error message', async () => {
             const invalidLimit = 'A12####';

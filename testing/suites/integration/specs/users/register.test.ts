@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker/.';
+import crypto from 'crypto';
 import { testKit } from '@integration/kit/test.kit';
 import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
@@ -102,7 +103,7 @@ describe(`POST ${registrationUrl}`, () => {
             expect(body.user.password).toBeUndefined();
         });
 
-        test('prehash with HMAC-SHA256 of password is hashed and stored in database', async () => {
+        test('password peppered with HMAC-SHA256 is hashed and stored in database', async () => {
             const userData = testKit.userData.user;
             const { body } = await testKit.agent
                 .post(registrationUrl)
@@ -114,7 +115,7 @@ describe(`POST ${registrationUrl}`, () => {
                 .exec()) as IUser;
             expect(passwordHash).toBeDefined();
             const pepper = testKit.configService.PASSWORD_PEPPER;
-            const hmac = testKit.hashingService.computeSHA256HMACpreHash(userData.password, pepper);
+            const hmac = crypto.createHmac('sha256', pepper).update(userData.password).digest();
             const equal = await testKit.hashingService.compare(hmac, passwordHash);
             expect(equal).toBeTruthy();
         });

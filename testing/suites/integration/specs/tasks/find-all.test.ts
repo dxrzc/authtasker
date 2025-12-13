@@ -19,6 +19,22 @@ describe(`GET ${testKit.urls.tasksAPI}?limit=...&page=...`, () => {
         });
     });
 
+    describe('No tasks exist', () => {
+        test('return 200 status code and empty array for data, 0 pages, 0 totalDocuments', async () => {
+            const { sessionToken } = await createUser(UserRole.READONLY);
+            const response = await testKit.agent
+                .get(`${testKit.urls.tasksAPI}?limit=${10}&page=${1}`)
+                .set('Authorization', `Bearer ${sessionToken}`);
+            expect(response.body).toStrictEqual({
+                totalDocuments: 0,
+                totalPages: 0,
+                currentPage: 1,
+                data: [],
+            });
+            expect(response.status).toBe(200);
+        });
+    });
+
     describe('Page beyond available data', () => {
         test('return 200 status code with empty data array when requesting page beyond available tasks', async () => {
             const user = await createUser(UserRole.EDITOR);

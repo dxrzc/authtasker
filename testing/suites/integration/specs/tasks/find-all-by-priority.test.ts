@@ -35,6 +35,26 @@ describe(`GET ${testKit.urls.findAllTasksByPriority}/:priority?limit=...&page=..
         });
     });
 
+    describe('No tasks with matching priority', () => {
+        test('return 200 status code and empty array for data, 0 pages, 0 totalDocuments', async () => {
+            const { sessionToken, id } = await createUser(UserRole.EDITOR);
+            // Create tasks with different priorities
+            await createTasksWithPriority(id, 'low', 2);
+            await createTasksWithPriority(id, 'medium', 2);
+            // Query for high priority which doesn't exist
+            const response = await testKit.agent
+                .get(`${testKit.urls.findAllTasksByPriority}/high?limit=${10}&page=${1}`)
+                .set('Authorization', `Bearer ${sessionToken}`);
+            expect(response.body).toStrictEqual({
+                totalDocuments: 0,
+                totalPages: 0,
+                currentPage: 1,
+                data: [],
+            });
+            expect(response.status).toBe(200);
+        });
+    });
+
     describe('Limit is not number', () => {
         test('return 400 status code and invalid limit error message', async () => {
             const invalidLimit = 'A12####';
