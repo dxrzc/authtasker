@@ -42,6 +42,19 @@ describe(`POST ${registrationUrl}`, () => {
             expect(userInDb?.email).toBe(user.email);
         });
 
+        test('credentialsChangedAt is the current Date', async () => {
+            const before = new Date();
+            const user = testKit.userData.user;
+            const res = await testKit.agent.post(registrationUrl).send(user).expect(status2xx);
+            const after = new Date();
+            const userInDb = await testKit.models.user.findById(res.body.user.id).exec();
+            expect(userInDb).not.toBeNull();
+            expect(userInDb?.credentialsChangedAt.getTime()).toBeGreaterThanOrEqual(
+                before.getTime(),
+            );
+            expect(userInDb?.credentialsChangedAt.getTime()).toBeLessThanOrEqual(after.getTime());
+        });
+
         test('name is transformed into lowercase and spaces are trimmed', async () => {
             const rawName =
                 faker.string.alpha(usersLimits.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
