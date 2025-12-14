@@ -122,10 +122,12 @@ export class UserService {
                 );
             }
             userDocument.email = propertiesUpdated.email;
+            userDocument.credentialsChangedAt = new Date();
         }
         if (propertiesUpdated.password) {
             userDocument.password = await this.hashingService.hash(propertiesUpdated.password);
             this.loggerService.info(`User ${userDocument.id} password updated`);
+            userDocument.credentialsChangedAt = new Date();
         }
         if (propertiesUpdated.name) {
             userDocument.name = propertiesUpdated.name;
@@ -354,6 +356,7 @@ export class UserService {
             throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
         }
         user.password = await this.hashPassword(newPassword);
+        user.credentialsChangedAt = new Date();
         await user.save();
         this.loggerService.info(`User ${user.id} password updated`);
         // logout all

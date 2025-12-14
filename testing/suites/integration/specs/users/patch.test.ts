@@ -163,6 +163,24 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             const blacklisted = await testKit.redisService.get(redisKey);
             expect(blacklisted).not.toBeNull();
         });
+
+        test('update credentialsChangedAt property', async () => {
+            const { sessionToken, id } = await createUser(getRandomRole());
+            const userBefore = await testKit.models.user.findById(id);
+            const credentialsChangedAtBefore = userBefore!.credentialsChangedAt;
+            // wait 1 second to ensure the timestamp will be different
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .send({ email: testKit.userData.email })
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            const userAfter = await testKit.models.user.findById(id);
+            const credentialsChangedAtAfter = userAfter!.credentialsChangedAt;
+            expect(credentialsChangedAtAfter.getTime()).toBeGreaterThan(
+                credentialsChangedAtBefore.getTime(),
+            );
+        });
     });
 
     describe('Password is updated', () => {
@@ -213,6 +231,24 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             const redisKey = makeSessionTokenBlacklistKey(sessionTokenJti);
             const blacklisted = await testKit.redisService.get(redisKey);
             expect(blacklisted).not.toBeNull();
+        });
+
+        test('update credentialsChangedAt property', async () => {
+            const { sessionToken, id } = await createUser(getRandomRole());
+            const userBefore = await testKit.models.user.findById(id);
+            const credentialsChangedAtBefore = userBefore!.credentialsChangedAt;
+            // wait 1 second to ensure the timestamp will be different
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .send({ password: testKit.userData.password })
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            const userAfter = await testKit.models.user.findById(id);
+            const credentialsChangedAtAfter = userAfter!.credentialsChangedAt;
+            expect(credentialsChangedAtAfter.getTime()).toBeGreaterThan(
+                credentialsChangedAtBefore.getTime(),
+            );
         });
     });
 

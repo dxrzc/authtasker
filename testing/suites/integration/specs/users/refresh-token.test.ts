@@ -45,6 +45,35 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
         });
     });
 
+    describe('credentialsChangedAt property value changed after last refresh token creation', () => {
+        test('provide the same token should fail with 401 status code and invalid token error message', async () => {
+            const { refreshToken, id } = await createUser(getRandomRole());
+            // 1s delay to ensure credentialsChangedAt is after token issuance
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await testKit.models.user.findByIdAndUpdate(id, { credentialsChangedAt: new Date() });
+            const { body, statusCode } = await testKit.agent
+                .post(testKit.urls.refreshToken)
+                .send({ refreshToken });
+            expect(body).toStrictEqual({ error: authErrors.INVALID_TOKEN });
+            expect(statusCode).toBe(401);
+        });
+
+        test('delete provided refresh token from redis', async () => {
+            const { refreshToken, id } = await createUser(getRandomRole());
+            const { jti } = testKit.refreshJwt.verify(refreshToken)!;
+            const redisKey = makeRefreshTokenKey(id, jti);
+            await expect(testKit.redisService.get(redisKey)).resolves.not.toBeNull();
+            // 1s delay to ensure credentialsChangedAt is after token issuance
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await testKit.models.user.findByIdAndUpdate(id, { credentialsChangedAt: new Date() });
+            // send token refresh request
+            await testKit.agent.post(testKit.urls.refreshToken).send({ refreshToken });
+            // refresh token should be deleted from redis
+            const inRedis = await testKit.redisService.get(redisKey);
+            expect(inRedis).toBeNull();
+        });
+    });
+
     describe('Refresh token not in redis', () => {
         test('return 401 status code and invalid token error message', async () => {
             const { refreshToken } = await createUser(getRandomRole());
