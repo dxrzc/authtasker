@@ -48,8 +48,8 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
     describe('credentialsChangedAt property value changed after last refresh token creation', () => {
         test('provide the same token should fail with 401 status code and invalid token error message', async () => {
             const { refreshToken, id } = await createUser(getRandomRole());
-            // delay
-            await new Promise((resolve) => setTimeout(resolve, 1100));
+            // 1s delay to ensure credentialsChangedAt is after token issuance
+            await new Promise((resolve) => setTimeout(resolve, 1000));
             await testKit.models.user.findByIdAndUpdate(id, { credentialsChangedAt: new Date() });
             const { body, statusCode } = await testKit.agent
                 .post(testKit.urls.refreshToken)
@@ -63,8 +63,8 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
             const { jti } = testKit.refreshJwt.verify(refreshToken)!;
             const redisKey = makeRefreshTokenKey(id, jti);
             await expect(testKit.redisService.get(redisKey)).resolves.not.toBeNull();
-            // delay
-            await new Promise((resolve) => setTimeout(resolve, 1100));
+            // 1s delay to ensure credentialsChangedAt is after token issuance
+            await new Promise((resolve) => setTimeout(resolve, 1000));
             await testKit.models.user.findByIdAndUpdate(id, { credentialsChangedAt: new Date() });
             // send token refresh request
             await testKit.agent.post(testKit.urls.refreshToken).send({ refreshToken });
