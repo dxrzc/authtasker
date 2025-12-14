@@ -39,6 +39,17 @@ describe(`POST ${testKit.urls.usersAPI}/:id`, () => {
                 const cachedUser = await testKit.redisService.get<{ data: any }>(cacheRedisKey);
                 expect(cachedUser!.data.password).toBeUndefined();
             });
+
+            test('user credentialsChangedAt is not saved in cache', async () => {
+                const { id, sessionToken } = await createUser();
+                const cacheRedisKey = makeUsersCacheKey(id);
+                await testKit.agent
+                    .get(`${testKit.urls.usersAPI}/${id}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .expect(status2xx);
+                const cachedUser = await testKit.redisService.get<{ data: any }>(cacheRedisKey);
+                expect(cachedUser!.data.credentialsChangedAt).toBeUndefined();
+            });
         });
 
         describe('User was in cache', () => {
