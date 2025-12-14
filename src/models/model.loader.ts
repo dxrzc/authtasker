@@ -62,7 +62,7 @@ export class ModelLoader {
 
                 credentialsChangedAt: {
                     type: Date,
-                    default: new Date(),
+                    default: Date.now,
                 },
             },
             {
