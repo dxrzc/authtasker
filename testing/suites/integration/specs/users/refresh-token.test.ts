@@ -45,7 +45,7 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
         });
     });
 
-    describe('credentialsChangedAtMs property value changed after last refresh token creation', () => {
+    describe('credentialsChangedAt property value changed after last refresh token creation', () => {
         test('provide the same token should fail with 401 status code and invalid token error message', async () => {
             const { refreshToken, id } = await createUser(getRandomRole());
             // delay
