@@ -66,11 +66,21 @@ export class RefreshTokenService {
             throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
         }
         // verify token is in database (not revoked)
-        const tokenInRedis = await this.redisService.get(
-            makeRefreshTokenKey(payload.id, payload.jti),
-        );
+        const refreshTokenRedisKey = makeRefreshTokenKey(payload.id, payload.jti);
+        const tokenInRedis = await this.redisService.get(refreshTokenRedisKey);
         if (!tokenInRedis) {
             this.loggerService.error('Refresh token has been revoked');
+            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
+        }
+        if (!payload.iat) {
+            this.loggerService.error('Issued at (iat) not in token');
+            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
+        }
+        // token was issued before last credentials change and was not revoked
+        const credentialsChangedAtUnix = Math.floor(user.credentialsChangedAt.getTime() / 1000);
+        if (payload.iat < credentialsChangedAtUnix) {
+            this.loggerService.error('Token issued before last credential change');
+            await this.redisService.delete(refreshTokenRedisKey);
             throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
         }
         return {
