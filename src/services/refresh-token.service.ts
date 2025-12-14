@@ -79,7 +79,7 @@ export class RefreshTokenService {
         // token was issued before last credentials change and was not revoked
         const credentialsChangedAtUnix = Math.floor(user.credentialsChangedAt.getTime() / 1000);
         if (payload.iat < credentialsChangedAtUnix) {
-            this.loggerService.error('Token issued before last credential change');
+            this.loggerService.error('Token issued before last credentials change');
             await this.redisService.delete(refreshTokenRedisKey);
             throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
         }
