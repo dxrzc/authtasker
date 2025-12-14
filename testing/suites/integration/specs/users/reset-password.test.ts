@@ -125,6 +125,24 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
                 .expect(200);
             expect(res.body).toStrictEqual({ message: authSuccessMessages.PASSWORD_RESET_SUCCESS });
         });
+
+        test('update credentialsChangedAt property', async () => {
+            const { email, id } = await createUser(getRandomRole());
+            const userBefore = await testKit.models.user.findById(id).exec();
+            const oldCredentialsChangedAt = userBefore!.credentialsChangedAt;
+            // 1 second delay to ensure that the timestamp will be different
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            const token = testKit.passwordRecoveryTokenService.generate(email);
+            await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .send({ token, newPassword: testKit.userData.password })
+                .expect(status2xx);
+            const userAfter = await testKit.models.user.findById(id).exec();
+            const newCredentialsChangedAt = userAfter!.credentialsChangedAt;
+            expect(newCredentialsChangedAt.getTime()).toBeGreaterThan(
+                oldCredentialsChangedAt.getTime(),
+            );
+        });
     });
 
     describe('User with email in token not found', () => {
