@@ -84,7 +84,8 @@ export function buildServices(
         makeTasksCacheKey,
         Apis.tasks,
     );
-    let userService: UserService = null as any;
+    // eslint-disable-next-line prefer-const
+    let userService: UserService;
     const tasksService = new TasksService(
         loggerService,
         models.tasksModel,
