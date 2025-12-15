@@ -65,8 +65,8 @@ async function main() {
         listenToConnectionEvents: true,
         redisUri: configService.REDIS_URI,
     });
-    await redisDb.subscribe('__keyevent@0__:expired', invalidateExpiredRefreshToken);
     const redisInstance = await redisDb.connect();
+    await redisDb.subscribe('__keyevent@0__:expired', invalidateExpiredRefreshToken);
     const redisService = new RedisService(redisInstance);
     ShutdownManager.redisDb = redisDb;
 
