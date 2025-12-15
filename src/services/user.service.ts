@@ -309,7 +309,7 @@ export class UserService {
                 await this.tasksService.deleteUserTasksTx(targetUserId, session);
             });
             // Token and cache cleanup. This is safe even if token revocation fails
-            // refresh-token-service only grants access if the user exists.
+            // refresh-token-service rejects and purgues tokens belonging to a non-existing user
             await allSettledAndThrow([
                 this.refreshTokenService.revokeAll(targetUserId),
                 this.cacheService.delete(targetUserId),
@@ -364,7 +364,8 @@ export class UserService {
         user.credentialsChangedAt = new Date();
         await user.save();
         this.loggerService.info(`User ${user.id} password updated`);
-        // logout all
+        // This is safe even if token revocation fails
+        // refresh-token-service rejects and purgues tokens created before the last credentials change
         await this.refreshTokenService.revokeAll(user.id);
         this.loggerService.info(
             `All refresh tokens of user ${user.id} have been revoked due to password reset`,
