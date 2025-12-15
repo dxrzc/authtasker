@@ -187,6 +187,15 @@ export class TasksService {
         }
     }
 
+    /**
+     * Deletes all tasks belonging to the specified user within a mongodb transaction.
+     *
+     * @param userId - The ID of the user whose tasks should be deleted.
+     * @param session - The MongoDB ClientSession to use for transactional support.
+     * @returns The number of tasks deleted.
+     *
+     * For non-transactional deletes, use the regular delete methods.
+     */
     async deleteUserTasksTx(userId: string, session: ClientSession): Promise<number> {
         const { deletedCount } = await this.tasksModel
             .deleteMany({ user: userId }, { session })
