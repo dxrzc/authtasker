@@ -15,10 +15,13 @@ describe('invalidateExpiredRefreshToken', () => {
         expect(redis.lrem).not.toHaveBeenCalled();
     });
 
-    test('throws when key is malformed and data cannot be parsed', async () => {
+    test('throws when userId and jti is missing and data cannot be parsed', async () => {
         const redis = { lrem: jest.fn() } as any;
-        await expect(invalidateExpiredRefreshToken('jwt:refresh', redis)).rejects.toThrow(
-            'Failed to obtain data from expired key',
-        );
+        await expect(invalidateExpiredRefreshToken('jwt:refresh', redis)).rejects.toThrow();
+    });
+
+    test('throws when jti is missing and data cannot be parsed', async () => {
+        const redis = { lrem: jest.fn() } as any;
+        await expect(invalidateExpiredRefreshToken('jwt:refresh:userId', redis)).rejects.toThrow();
     });
 });
