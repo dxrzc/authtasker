@@ -117,6 +117,44 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
+    describe('Task removal fails', () => {
+        test('rolls back user deletion', async () => {
+            const { sessionToken, id, refreshToken } = await createUser(UserRole.READONLY);
+            const refreshJti = testKit.refreshJwt.verify(refreshToken)!.jti;
+            // seed user tasks
+            await testKit.models.task.create({ ...testKit.taskData.task, user: id });
+            await testKit.models.task.create({ ...testKit.taskData.task, user: id });
+            // spy on deleteMany to force an error
+            const deleteManySpy = jest
+                .spyOn(testKit.models.task, 'deleteMany')
+                .mockImplementation(() => {
+                    throw new Error('forced tx failure');
+                });
+            try {
+                const { statusCode, body } = await testKit.agent
+                    .delete(`${testKit.urls.usersAPI}/${id}`)
+                    .set('Authorization', `Bearer ${sessionToken}`);
+                expect(statusCode).toBe(statusCodes.INTERNAL_SERVER_ERROR);
+                expect(body).toStrictEqual({ error: commonErrors.INTERNAL_SERVER_ERROR });
+                // user still in database
+                const userInDb = await testKit.models.user.findById(id);
+                expect(userInDb).not.toBeNull();
+                // tasks still in database
+                const tasksCount = await testKit.models.task.countDocuments({ user: id });
+                expect(tasksCount).toBe(2);
+                // refresh token still in redis
+                const listKey = makeRefreshTokenIndexKey(id);
+                const tokenKey = makeRefreshTokenKey(id, refreshJti);
+                const tokenInIndex = await testKit.redisService.belongsToList(listKey, refreshJti);
+                const tokenInRedis = await testKit.redisService.get(tokenKey);
+                expect(tokenInIndex).toBeTruthy();
+                expect(tokenInRedis).not.toBeNull();
+            } finally {
+                deleteManySpy.mockRestore();
+            }
+        });
+    });
+
     describe('User not found', () => {
         test(`return 404 status code and user not found error message`, async () => {
             const { sessionToken } = await createUser(UserRole.ADMIN);
