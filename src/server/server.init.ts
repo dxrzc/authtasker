@@ -1,4 +1,11 @@
-import express, { ErrorRequestHandler, NextFunction, Request, Response, Router } from 'express';
+import express, {
+    ErrorRequestHandler,
+    NextFunction,
+    Request,
+    RequestHandler,
+    Response,
+    Router,
+} from 'express';
 import helmet from 'helmet';
 import { Server as HttpServer } from 'http';
 import { statusCodes } from 'src/constants/status-codes.constants';
@@ -29,6 +36,7 @@ export class Server {
         });
         this.app.use(helmet());
         this.app.use(this.routes);
+        this.app.use(this.handleNotFound);
         this.app.use(this.createErrorHandlerMiddleware);
     }
 
@@ -62,6 +70,10 @@ export class Server {
             res.status(500).json({ error: commonErrors.INTERNAL_SERVER_ERROR });
         };
     }
+
+    private readonly handleNotFound: RequestHandler = (req, res) => {
+        res.status(statusCodes.NOT_FOUND).json({ error: commonErrors.NOT_FOUND });
+    };
 
     start(): Promise<void> {
         return new Promise<void>((resolve) => {
