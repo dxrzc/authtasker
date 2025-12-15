@@ -13,6 +13,7 @@ import { userInfoInReq } from 'src/functions/express/user-info-in-req';
 import { LoggerService } from 'src/services/logger.service';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
 import { PasswordReauthenticationDto } from 'src/dtos/models/user/password-reauthentication.dto';
+import escapeHtml from 'escape-html';
 
 export class UserController {
     constructor(
@@ -141,17 +142,18 @@ export class UserController {
         });
     };
 
-    public readonly resetPasswordForm = async (req: Request, res: Response): Promise<void> => {
+    public readonly resetPasswordForm = (req: Request, res: Response): void => {
         const { token } = req.query;
         if (!token || typeof token !== 'string')
             throw HttpError.badRequest(authErrors.INVALID_TOKEN);
-
+        // Escape token to prevent injection of HTML/JS into the rendered form (reflected XSS)
+        const safeToken = escapeHtml(token);
         res.send(`
           <html>
             <body>
               <h2>Reset your password</h2>
               <form method="POST" action="/api/users/reset-password">
-                <input type="hidden" name="token" value="${token}" />
+                                <input type="hidden" name="token" value="${safeToken}" />
                 <label>New Password:</label>
                 <input type="password" name="newPassword" required />
                 <button type="submit">Reset Password</button>
@@ -159,6 +161,5 @@ export class UserController {
             </body>
           </html>
         `);
-        return Promise.resolve();
     };
 }
