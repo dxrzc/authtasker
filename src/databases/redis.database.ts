@@ -32,7 +32,11 @@ export class RedisDatabase {
 
     async subscribe(event: string, listener: (key: string, client: Redis) => Promise<void>) {
         this.subscriber.on('message', (channel, expiredKey) => {
-            void listener(expiredKey, this._client);
+            try {
+                void listener(expiredKey, this._client);
+            } catch (err) {
+                SystemLoggerService.error(`Redis subscriber listener failed: ${err as string}`);
+            }
         });
         await this.subscriber.subscribe(event, (err) => {
             if (err) throw new Error(`Failed to subscribe: ${err}`);
@@ -61,6 +65,9 @@ export class RedisDatabase {
     async connect(): Promise<Redis> {
         if (!['reconnecting', 'connecting', 'connect', 'ready'].includes(this._client.status)) {
             await this._client.connect();
+        }
+        if (!['reconnecting', 'connecting', 'connect', 'ready'].includes(this.subscriber.status)) {
+            await this.subscriber.connect();
         }
         return this._client;
     }
