@@ -1,6 +1,6 @@
 import { Apis } from 'src/enums/apis.enum';
 import { UserService } from 'src/services/user.service';
-import { Model, Types } from 'mongoose';
+import { ClientSession, Model, Types } from 'mongoose';
 import { CacheService } from './cache.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
@@ -24,7 +24,7 @@ export class TasksService {
     constructor(
         private readonly loggerService: LoggerService,
         private readonly tasksModel: Model<ITasks>,
-        private readonly userService: UserService,
+        private readonly getUserService: () => UserService, // to avoid circular dependency
         private readonly cacheService: CacheService<TaskDocument>,
     ) {}
 
@@ -43,7 +43,9 @@ export class TasksService {
         targetTaskId: string,
     ): Promise<TaskDocument> {
         const task = (await this.findOne(targetTaskId, { cache: false })) as TaskDocument;
-        const taskOwner = await this.userService.findOne(task.user.toString(), { cache: false });
+        const taskOwner = await this.getUserService().findOne(task.user.toString(), {
+            cache: false,
+        });
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
             role: taskOwner.role,
             id: taskOwner.id,
@@ -110,7 +112,7 @@ export class TasksService {
         page: number,
     ): Promise<IPagination<TaskDocument>> {
         // verifies that user exists or throws
-        await this.userService.findOne(userId, { cache: false });
+        await this.getUserService().findOne(userId, { cache: false });
         const totalDocuments = await this.tasksModel.find({ user: userId }).countDocuments().exec();
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
         const data = await this.cacheService.getPagination(offset, limit, {
@@ -183,5 +185,21 @@ export class TasksService {
                 handleDuplicatedKeyInDb(Apis.tasks, error, this.loggerService);
             throw error;
         }
+    }
+
+    /**
+     * Deletes all tasks belonging to the specified user within a mongodb transaction.
+     *
+     * @param userId - The ID of the user whose tasks should be deleted.
+     * @param session - The MongoDB ClientSession to use for transactional support.
+     * @returns The number of tasks deleted.
+     *
+     * For non-transactional deletes, use the regular delete methods.
+     */
+    async deleteUserTasksTx(userId: string, session: ClientSession): Promise<number> {
+        const { deletedCount } = await this.tasksModel
+            .deleteMany({ user: userId }, { session })
+            .exec();
+        return deletedCount;
     }
 }
