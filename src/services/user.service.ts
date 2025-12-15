@@ -304,16 +304,20 @@ export class UserService {
     async deleteOne(requestUserInfo: UserSessionInfo, targetUserId: string): Promise<void> {
         await this.verifyUserModificationRights(requestUserInfo, targetUserId);
         const session = await mongoose.startSession();
-        await session.withTransaction(async () => {
-            await this.userModel.deleteOne({ _id: targetUserId }, { session }).exec();
-            await this.tasksService.deleteUserTasksTx(targetUserId, session);
-        });
-        await session.endSession();
-        await allSettledAndThrow([
-            this.refreshTokenService.revokeAll(targetUserId),
-            this.cacheService.delete(targetUserId),
-        ]);
-        this.loggerService.info(`User ${targetUserId} deleted`);
+        try {
+            await session.withTransaction(async () => {
+                await this.userModel.deleteOne({ _id: targetUserId }, { session }).exec();
+                await this.tasksService.deleteUserTasksTx(targetUserId, session);
+                // run token/cache cleanup in the transaction scope so failures abort the commit
+                await allSettledAndThrow([
+                    this.refreshTokenService.revokeAll(targetUserId),
+                    this.cacheService.delete(targetUserId),
+                ]);
+            });
+            this.loggerService.info(`User ${targetUserId} deleted`);
+        } finally {
+            await session.endSession();
+        }
     }
 
     async updateOne(
