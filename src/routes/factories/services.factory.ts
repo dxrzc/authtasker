@@ -84,11 +84,17 @@ export function buildServices(
         makeTasksCacheKey,
         Apis.tasks,
     );
-    // Domain services
-    const userService = new UserService(
+    let userService: UserService = null as any;
+    const tasksService = new TasksService(
+        loggerService,
+        models.tasksModel,
+        () => userService,
+        tasksCacheService,
+    );
+    userService = new UserService(
         configService,
         models.userModel,
-        models.tasksModel,
+        tasksService,
         hashingService,
         loggerService,
         emailService,
@@ -98,13 +104,6 @@ export function buildServices(
         usersCacheService,
         passwordRecoveryTokenService,
     );
-    const tasksService = new TasksService(
-        loggerService,
-        models.tasksModel,
-        userService,
-        tasksCacheService,
-    );
-
     return {
         hashingService,
         emailService,
