@@ -108,12 +108,13 @@ export class UserService {
         this.loggerService.info(`Email validation sent to ${email}`);
     }
 
-    private async updateUserDocumentProperties(
+    private async applyUserUpdates(
         userDocument: UserDocument,
         propertiesUpdated: UpdateUserDto,
-    ): Promise<void> {
+    ): Promise<{ credentialsChanged: boolean }> {
+        let credentialsChanged = false;
+        const now = new Date();
         if (propertiesUpdated.email) {
-            this.loggerService.info(`User ${userDocument.id} email updated`);
             if (userDocument.role !== UserRole.ADMIN) {
                 userDocument.emailValidated = false;
                 userDocument.role = UserRole.READONLY;
@@ -122,17 +123,15 @@ export class UserService {
                 );
             }
             userDocument.email = propertiesUpdated.email;
-            userDocument.credentialsChangedAt = new Date();
+            credentialsChanged = true;
         }
         if (propertiesUpdated.password) {
             userDocument.password = await this.hashingService.hash(propertiesUpdated.password);
-            this.loggerService.info(`User ${userDocument.id} password updated`);
-            userDocument.credentialsChangedAt = new Date();
+            credentialsChanged = true;
         }
-        if (propertiesUpdated.name) {
-            userDocument.name = propertiesUpdated.name;
-            this.loggerService.info(`User ${userDocument.id} name updated`);
-        }
+        if (credentialsChanged) userDocument.credentialsChangedAt = now;
+        if (propertiesUpdated.name) userDocument.name = propertiesUpdated.name;
+        return { credentialsChanged };
     }
 
     private computeSHA256PasswordHash(rawPassword: string): Buffer {
@@ -327,24 +326,25 @@ export class UserService {
         propertiesUpdated: UpdateUserDto,
     ): Promise<UserDocument> {
         const userDocument = await this.verifyUserModificationRights(requestUserInfo, targetUserId);
-        await this.updateUserDocumentProperties(userDocument, propertiesUpdated);
-        // revoke all refresh tokens and blacklist session token
-        if (propertiesUpdated.email || propertiesUpdated.password) {
-            await allSettledAndThrow([
-                this.refreshTokenService.revokeAll(targetUserId),
+        const { credentialsChanged } = await this.applyUserUpdates(userDocument, propertiesUpdated);
+        const cleanupTasks: Promise<unknown>[] = [this.cacheService.delete(targetUserId)];
+        if (credentialsChanged) {
+            cleanupTasks.push(this.refreshTokenService.revokeAll(targetUserId));
+            cleanupTasks.push(
                 this.sessionTokenService.blacklist(
                     requestUserInfo.sessionJti,
                     requestUserInfo.sessionTokenExpUnix,
                 ),
-            ]);
-            this.loggerService.info(
-                `All refresh tokens of user ${targetUserId} were revoked due to email/password update`,
             );
         }
         try {
             await userDocument.save();
-            await this.cacheService.delete(targetUserId);
+            await allSettledAndThrow(cleanupTasks);
             this.loggerService.info(`User ${targetUserId} updated`);
+            if (credentialsChanged)
+                this.loggerService.info(
+                    `All tokens of user ${targetUserId} have been revoked due to sensitive data change`,
+                );
             return userDocument;
         } catch (error: any) {
             if (error.code === 11000)
