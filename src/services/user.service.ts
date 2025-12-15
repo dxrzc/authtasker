@@ -308,12 +308,13 @@ export class UserService {
             await session.withTransaction(async () => {
                 await this.userModel.deleteOne({ _id: targetUserId }, { session }).exec();
                 await this.tasksService.deleteUserTasksTx(targetUserId, session);
-                // run token/cache cleanup in the transaction scope so failures abort the commit
-                await allSettledAndThrow([
-                    this.refreshTokenService.revokeAll(targetUserId),
-                    this.cacheService.delete(targetUserId),
-                ]);
             });
+            // Token and cache cleanup. This is safe even if token revocation fails
+            // refresh-token-service only grants access if the user exists.
+            await allSettledAndThrow([
+                this.refreshTokenService.revokeAll(targetUserId),
+                this.cacheService.delete(targetUserId),
+            ]);
             this.loggerService.info(`User ${targetUserId} deleted`);
         } finally {
             await session.endSession();
