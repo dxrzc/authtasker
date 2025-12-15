@@ -1,4 +1,4 @@
-import { Model, Types } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { Apis } from 'src/enums/apis.enum';
 import { CacheService } from './cache.service';
 import { EmailService } from 'src/services/email.service';
@@ -7,7 +7,6 @@ import { RefreshTokenService } from './refresh-token.service';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { SessionTokenService } from './session-token.service';
-import { ITasks } from 'src/interfaces/tasks/task.interface';
 import { HashingService } from 'src/services/hashing.service';
 import { UserResponse } from 'src/types/user/user-response.type';
 import { UserDocument } from 'src/types/user/user-document.type';
@@ -29,12 +28,13 @@ import { allSettledAndThrow } from 'src/functions/js/all-settled-and-throw';
 import { resetYourPasswordTemplate } from 'src/templates/reset-your-password.template';
 import { calculatePagination } from 'src/functions/pagination/calculate-pagination';
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
+import { TasksService } from './tasks.service';
 
 export class UserService {
     constructor(
         private readonly configService: ConfigService,
         private readonly userModel: Model<IUser>,
-        private readonly tasksModel: Model<ITasks>,
+        private readonly tasksService: TasksService,
         private readonly hashingService: HashingService,
         public readonly loggerService: LoggerService,
         private readonly emailService: EmailService,
@@ -303,17 +303,17 @@ export class UserService {
 
     async deleteOne(requestUserInfo: UserSessionInfo, targetUserId: string): Promise<void> {
         await this.verifyUserModificationRights(requestUserInfo, targetUserId);
+        const session = await mongoose.startSession();
+        await session.withTransaction(async () => {
+            await this.userModel.deleteOne({ _id: targetUserId }, { session }).exec();
+            await this.tasksService.deleteUserTasksTx(targetUserId, session);
+        });
+        await session.endSession();
+        this.loggerService.info(`User ${targetUserId} deleted`);
         await allSettledAndThrow([
-            this.userModel.deleteOne({ _id: targetUserId }).exec(),
             this.refreshTokenService.revokeAll(targetUserId),
             this.cacheService.delete(targetUserId),
         ]);
-        this.loggerService.info(`User ${targetUserId} deleted`);
-        // remove all tasks associated
-        const tasksRemoved = await this.tasksModel.deleteMany({ user: targetUserId }).exec();
-        this.loggerService.info(
-            `${tasksRemoved.deletedCount} tasks associated to user ${targetUserId} removed`,
-        );
     }
 
     async updateOne(
