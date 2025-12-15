@@ -9,7 +9,7 @@ import { ShutdownManager } from './server/shutdown';
 import { RedisService } from './services/redis.service';
 import { SystemLoggerService } from './services/system-logger.service';
 import { IAsyncLocalStorageStore } from './interfaces/others/async-local-storage.interface';
-import { removeRefreshTokenFromList } from './functions/token/remove-refresh-token-from-list';
+import { invalidateExpiredRefreshToken } from './functions/token/remove-refresh-token-from-list';
 
 // TODO:
 // process.on('SIGINT', () => {
@@ -65,7 +65,7 @@ async function main() {
         listenToConnectionEvents: true,
         redisUri: configService.REDIS_URI,
     });
-    await redisDb.subscribe('__keyevent@0__:expired', removeRefreshTokenFromList);
+    await redisDb.subscribe('__keyevent@0__:expired', invalidateExpiredRefreshToken);
     const redisInstance = await redisDb.connect();
     const redisService = new RedisService(redisInstance);
     ShutdownManager.redisDb = redisDb;
