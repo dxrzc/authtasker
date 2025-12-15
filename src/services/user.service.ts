@@ -309,11 +309,11 @@ export class UserService {
             await this.tasksService.deleteUserTasksTx(targetUserId, session);
         });
         await session.endSession();
-        this.loggerService.info(`User ${targetUserId} deleted`);
         await allSettledAndThrow([
             this.refreshTokenService.revokeAll(targetUserId),
             this.cacheService.delete(targetUserId),
         ]);
+        this.loggerService.info(`User ${targetUserId} deleted`);
     }
 
     async updateOne(
