@@ -6,8 +6,7 @@ export async function invalidateExpiredRefreshToken(
     redis: Redis,
 ): Promise<void> {
     if (!expiredKey.startsWith('jwt:refresh')) return;
-    const userId = expiredKey.split(':').at(2);
-    const jti = expiredKey.split(':').at(-1);
+    const [, , userId, jti] = expiredKey.split(':');
 
     if (!userId || !jti) throw new Error('Redis suscriber: Failed to obtain data from expired key');
 
