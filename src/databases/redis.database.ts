@@ -11,16 +11,33 @@ export class RedisDatabase {
     private subscriber: Redis;
 
     constructor(private readonly opts: RedisDbOptions) {
+        const commonOpts = {
+            retryStrategy: (times: number) => {
+                // ms
+                const baseDelay = 50;
+                const maxDelay = 2000;
+                // double the delay each time
+                const incrementalDelay = baseDelay * Math.pow(2, times - 1);
+                // never greater than maxDelay
+                const finalDelay = Math.min(incrementalDelay, maxDelay);
+                // jitter
+                return Math.round(finalDelay / 2 + Math.random() * (finalDelay / 2));
+            },
+            // reconnection attempts allowed per queued command
+            maxRetriesPerRequest: 5,
+        } as const;
         this._client = new Redis(this.opts.redisUri, {
             db: 0,
             lazyConnect: true,
-            retryStrategy: (times) => Math.min(times * 50, 2000),
+            ...commonOpts,
         });
         this.subscriber = new Redis(this.opts.redisUri, {
             db: 0,
             lazyConnect: true,
+            // automatically resubscribe after reconnection
+            autoResubscribe: true,
+            ...commonOpts,
         });
-
         if (this.opts.listenToConnectionEvents) {
             this.setupRedisEventListener();
         }
