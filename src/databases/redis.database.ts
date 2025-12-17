@@ -24,7 +24,7 @@ export class RedisDatabase {
                 return Math.round(finalDelay / 2 + Math.random() * (finalDelay / 2));
             },
             // reconnection attempts allowed per queued command
-            maxRetriesPerRequest: 5,
+            maxRetriesPerRequest: 3,
         } as const;
         this._client = new Redis(this.opts.redisUri, {
             db: 0,
