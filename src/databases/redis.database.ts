@@ -67,7 +67,11 @@ export class RedisDatabase {
         });
 
         this._client.on('error', (error) => {
-            SystemLoggerService.error('Redis connection error:', error.message);
+            SystemLoggerService.error('Redis client connection error:', error.message);
+        });
+
+        this.subscriber.on('error', (error) => {
+            SystemLoggerService.error('Redis subscriber connection error:', error.message);
         });
     }
 
