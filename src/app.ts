@@ -11,20 +11,21 @@ import { SystemLoggerService } from './services/system-logger.service';
 import { IAsyncLocalStorageStore } from './interfaces/others/async-local-storage.interface';
 import { invalidateExpiredRefreshToken } from './functions/token/remove-refresh-token-from-list';
 
-// TODO:
-// process.on('SIGINT', () => {
-//     void ShutdownManager.shutdown({
-//         cause: 'SIGINT',
-//         exitCode: 0,
-//     });
-// });
+if (process.env.NODE_ENV === 'production') {
+    process.on('SIGINT', () => {
+        void ShutdownManager.shutdown({
+            cause: 'SIGINT received',
+            exitCode: 0,
+        });
+    });
 
-// process.on('SIGTERM', () => {
-//     void ShutdownManager.shutdown({
-//         cause: 'SIGTERM',
-//         exitCode: 0,
-//     });
-// });
+    process.on('SIGTERM', () => {
+        void ShutdownManager.shutdown({
+            cause: 'SIGTERM received',
+            exitCode: 0,
+        });
+    });
+}
 
 process.on('unhandledRejection', (reason: any) => {
     void ShutdownManager.shutdown({
