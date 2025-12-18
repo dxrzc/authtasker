@@ -15,6 +15,7 @@ import { authErrors } from 'src/messages/auth.error.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
+import hpp from 'hpp';
 
 export class Server {
     private readonly app = express();
@@ -35,6 +36,7 @@ export class Server {
             next();
         });
         this.app.use(helmet());
+        this.app.use(hpp()); // Http Parameter Pollution
         this.app.use(this.routes);
         this.app.use(this.handleNotFound);
         this.app.use(this.createErrorHandlerMiddleware);
