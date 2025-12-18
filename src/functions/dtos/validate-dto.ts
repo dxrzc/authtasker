@@ -1,6 +1,6 @@
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { InvalidInputError } from 'src/errors/invalid-input-error.class';
+import { InvalidInputError, MaliciousInputError } from 'src/errors/invalid-input-error.class';
 import { validationOptionsConfig } from 'src/dtos/config/validation.config';
 import { returnFirstError } from 'src/dtos/helpers/return-first-error.helper';
 import sanitizeHtml from 'sanitize-html';
@@ -17,7 +17,7 @@ export async function validateAndTransformDto<T extends object>(
                 allowedAttributes: {},
             });
             if (sanitized !== data[key]) {
-                throw new InvalidInputError('XSS detected in input');
+                throw new MaliciousInputError(`Malicious content detected in property "${key}".`);
             }
         }
     }
