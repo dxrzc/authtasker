@@ -311,7 +311,7 @@ describe(`GET ${testKit.urls.tasksAPI}`, () => {
         test('returns empty pagination when no tasks match status', async () => {
             const { sessionToken, id } = await createUser(UserRole.EDITOR);
             await createTasksWithStatus(id, 'pending', 2);
-            await createTasksWithStatus(id, 'in progress', 2);
+            await createTasksWithStatus(id, 'in-progress', 2);
             const response = await testKit.agent
                 .get(`${testKit.urls.tasksAPI}?user=${id}&status=completed&limit=10&page=1`)
                 .set('Authorization', `Bearer ${sessionToken}`);
@@ -358,10 +358,10 @@ describe(`GET ${testKit.urls.tasksAPI}`, () => {
 
         test('caches tasks in status-filtered pages', async () => {
             const { sessionToken, id } = await createUser(UserRole.EDITOR);
-            await createTasksWithStatus(id, 'in progress', 7);
+            await createTasksWithStatus(id, 'in-progress', 7);
             const tasksReturned = 3;
             const response = await testKit.agent
-                .get(`${testKit.urls.tasksAPI}?status=in progress&limit=${tasksReturned}&page=2`)
+                .get(`${testKit.urls.tasksAPI}?status=in-progress&limit=${tasksReturned}&page=2`)
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .expect(status2xx);
             const tasksInResponseId = response.body.data.map((t: TaskDocument) => t.id);
