@@ -95,6 +95,8 @@ describe('UpdateTaskDto', () => {
 
     it('should throw MaliciousInputError if name contains malicious content', async () => {
         const data = { name: '<script>alert("XSS")</script>' };
-        await expect(UpdateTaskDto.validateNewAndTransform(data)).rejects.toThrow(MaliciousInputError);
+        await expect(UpdateTaskDto.validateNewAndTransform(data)).rejects.toThrow(
+            MaliciousInputError,
+        );
     });
 });

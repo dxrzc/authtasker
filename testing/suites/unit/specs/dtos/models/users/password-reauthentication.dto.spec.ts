@@ -50,6 +50,8 @@ describe('PasswordReauthenticationDto', () => {
 
     it('should throw MaliciousInputError if password contains malicious content', async () => {
         const data = { password: '<script>alert("XSS")</script>' };
-        await expect(PasswordReauthenticationDto.validate(data)).rejects.toThrow(MaliciousInputError);
+        await expect(PasswordReauthenticationDto.validate(data)).rejects.toThrow(
+            MaliciousInputError,
+        );
     });
 });
