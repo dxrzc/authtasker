@@ -1,7 +1,7 @@
 import { ResetPasswordDto } from 'src/dtos/models/user/reset-password.dto';
 import { usersLimits } from 'src/constants/user.constants';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { InvalidInputError } from 'src/errors/invalid-input-error.class';
+import { InvalidInputError, MaliciousInputError } from 'src/errors/invalid-input-error.class';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { UserDataGenerator } from 'src/generators/user.generator';
 
@@ -45,5 +45,10 @@ describe('ResetPasswordDto', () => {
         await expect(ResetPasswordDto.validate(data)).rejects.toThrow(
             new InvalidInputError(commonErrors.UNEXPECTED_PROPERTY_PROVIDED),
         );
+    });
+
+    it('should throw MaliciousInputError if password contains malicious content', async () => {
+        const data = { password: '<script>alert("XSS")</script>' };
+        await expect(ResetPasswordDto.validate(data)).rejects.toThrow(MaliciousInputError);
     });
 });
