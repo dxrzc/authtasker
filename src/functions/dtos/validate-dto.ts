@@ -7,7 +7,7 @@ import sanitizeHtml from 'sanitize-html';
 
 export async function validateAndTransformDto<T extends object>(
     cls: new () => T,
-    data: object,
+    data: Record<string, unknown>,
 ): Promise<T> {
     // prevent XSS
     for (const key in data) {

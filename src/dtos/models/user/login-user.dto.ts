@@ -14,7 +14,7 @@ export class LoginUserDto {
     @MaxLength(usersLimits.MAX_PASSWORD_LENGTH, { message: authErrors.INVALID_CREDENTIALS })
     password!: string;
 
-    static async validate(data: object): Promise<LoginUserDto> {
+    static async validate(data: Record<string, unknown>): Promise<LoginUserDto> {
         return await validateAndTransformDto(LoginUserDto, data);
     }
 }
