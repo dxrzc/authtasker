@@ -1,6 +1,6 @@
 import { PasswordRecoveryDto } from 'src/dtos/models/user/password-recovery.dto';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { InvalidInputError } from 'src/errors/invalid-input-error.class';
+import { InvalidInputError, MaliciousInputError } from 'src/errors/invalid-input-error.class';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { UserDataGenerator } from 'src/generators/user.generator';
 
@@ -37,5 +37,10 @@ describe('PasswordRecoveryDto', () => {
         await expect(PasswordRecoveryDto.validate(data)).rejects.toThrow(
             new InvalidInputError(commonErrors.UNEXPECTED_PROPERTY_PROVIDED),
         );
+    });
+
+    it('should throw MaliciousInputError if email contains malicious content', async () => {
+        const data = { email: '<script>alert("XSS")</script>' };
+        await expect(PasswordRecoveryDto.validate(data)).rejects.toThrow(MaliciousInputError);
     });
 });

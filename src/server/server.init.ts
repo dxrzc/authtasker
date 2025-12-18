@@ -10,11 +10,12 @@ import helmet from 'helmet';
 import { Server as HttpServer } from 'http';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { HttpError } from 'src/errors/http-error.class';
-import { InvalidInputError } from 'src/errors/invalid-input-error.class';
+import { InvalidInputError, MaliciousInputError } from 'src/errors/invalid-input-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
+import hpp from 'hpp';
 
 export class Server {
     private readonly app = express();
@@ -35,8 +36,10 @@ export class Server {
             next();
         });
         this.app.use(helmet());
+        this.app.use(hpp()); // Http Parameter Pollution
         this.app.use(this.routes);
         this.app.use(this.handleNotFound);
+        // TODO: cors, https
         this.app.use(this.createErrorHandlerMiddleware);
     }
 
@@ -49,6 +52,13 @@ export class Server {
             if (err instanceof HttpError) {
                 // Logs were already made when throwing the error
                 res.status(err.statusCode).json({ error: err.message });
+                return;
+            }
+            if (err instanceof MaliciousInputError) {
+                this.logger.error(err.reason);
+                res.status(statusCodes.BAD_REQUEST).json({
+                    error: commonErrors.INVALID_INPUT,
+                });
                 return;
             }
             if (err instanceof InvalidInputError) {

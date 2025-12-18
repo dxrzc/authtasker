@@ -5,7 +5,7 @@ import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 import { validateAndTransformDto } from 'src/functions/dtos/validate-dto';
 
 export class UpdateTaskDto extends PartialType(CreateTaskDto) {
-    static async validateNewAndTransform(data: object): Promise<UpdateTaskDto> {
+    static async validateNewAndTransform(data: Record<string, unknown>): Promise<UpdateTaskDto> {
         if (Object.keys(data).length === 0)
             throw new InvalidInputError(tasksApiErrors.NO_PROPERTIES_TO_UPDATE);
         return await validateAndTransformDto(UpdateTaskDto, data);
