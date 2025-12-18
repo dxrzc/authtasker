@@ -17,8 +17,7 @@ import { CreateTaskDto } from 'src/dtos/models/tasks/create-task.dto';
 import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
 import { IFindOptions } from 'src/interfaces/others/find-options.interface';
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
-import { TasksStatus } from 'src/types/tasks/task-status.type';
-import { TasksPriority } from 'src/types/tasks/task-priority.type';
+import { TasksFilters } from 'src/types/tasks/task-filters.type';
 
 export class TasksService {
     constructor(
@@ -93,67 +92,26 @@ export class TasksService {
         return taskFound;
     }
 
-    async findAll(limit: number, page: number): Promise<IPagination<TaskDocument>> {
-        // validate limit and page
-        const totalDocuments = await this.tasksModel.countDocuments().exec();
-        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.cacheService.getPagination(offset, limit);
-        return {
-            currentPage: page,
-            totalDocuments,
-            totalPages,
-            data,
-        };
-    }
-
-    async findAllByUser(
-        userId: string,
+    async findAll(
         limit: number,
         page: number,
+        filters: TasksFilters = {},
     ): Promise<IPagination<TaskDocument>> {
-        // verifies that user exists or throws
-        await this.getUserService().findOne(userId, { cache: false });
-        const totalDocuments = await this.tasksModel.find({ user: userId }).countDocuments().exec();
+        const search: Record<string, unknown> = {};
+        if (filters.userId) {
+            // validate user existence
+            await this.getUserService().findOne(filters.userId, { cache: false });
+            search.user = filters.userId;
+        }
+        if (filters.status) search.status = filters.status;
+        if (filters.priority) search.priority = filters.priority;
+        const totalDocuments = await this.tasksModel.countDocuments(search).exec();
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.cacheService.getPagination(offset, limit, {
-            find: { user: userId },
-        });
-        return {
-            currentPage: page,
-            totalDocuments,
-            totalPages,
-            data,
-        };
-    }
-
-    async findAllByStatus(
-        status: TasksStatus,
-        limit: number,
-        page: number,
-    ): Promise<IPagination<TaskDocument>> {
-        const totalDocuments = await this.tasksModel.countDocuments({ status }).exec();
-        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.cacheService.getPagination(offset, limit, {
-            find: { status },
-        });
-        return {
-            currentPage: page,
-            totalDocuments,
-            totalPages,
-            data,
-        };
-    }
-
-    async findAllByPriority(
-        priority: TasksPriority,
-        limit: number,
-        page: number,
-    ): Promise<IPagination<TaskDocument>> {
-        const totalDocuments = await this.tasksModel.countDocuments({ priority }).exec();
-        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.cacheService.getPagination(offset, limit, {
-            find: { priority },
-        });
+        const data = await this.cacheService.getPagination(
+            offset,
+            limit,
+            Object.keys(search).length > 0 ? { find: search } : undefined,
+        );
         return {
             currentPage: page,
             totalDocuments,
