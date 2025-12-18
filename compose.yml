@@ -39,6 +39,8 @@ services:
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
 
   mongo-db:
+    # From localhost mongodb://localhost:27017/?directConnection=true
+    # Ref:https://www.mongodb.com/docs/drivers/go/current/connect/connection-targets/#direct-connection
     image: mongo:7.0.20
     restart: always    
     command: [
