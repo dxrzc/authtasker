@@ -36,33 +36,15 @@ export class TasksRoutes {
         );
 
         router.get(
-            '/:id',
-            this.rolesMiddleware.middleware(UserRole.READONLY),
-            this.tasksController.findOne,
-        );
-
-        router.get(
             '/',
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.tasksController.findAll,
         );
 
         router.get(
-            '/all-by-user/:id',
+            '/:id',
             this.rolesMiddleware.middleware(UserRole.READONLY),
-            this.tasksController.findAllByUser,
-        );
-
-        router.get(
-            '/all-by-status/:status',
-            this.rolesMiddleware.middleware(UserRole.READONLY),
-            this.tasksController.findAllByStatus,
-        );
-
-        router.get(
-            '/all-by-priority/:priority',
-            this.rolesMiddleware.middleware(UserRole.READONLY),
-            this.tasksController.findAllByPriority,
+            this.tasksController.findOne,
         );
 
         router.patch(

@@ -51,9 +51,6 @@ export interface ITestKit {
         forgotPassword: string;
         tasksAPI: string;
         createTask: string;
-        findAllTasksByUser: string;
-        findAllTasksByStatus: string;
-        findAllTasksByPriority: string;
         refreshToken: string;
         health: string;
     };
