@@ -41,6 +41,7 @@ export class TasksController {
             filters.priority = priority;
         }
         if (rawUserId) {
+            // id validation occurs in user-service
             filters.userId = <string>rawUserId;
         }
         const tasksFound = await this.tasksService.findAll(limit, page, filters);

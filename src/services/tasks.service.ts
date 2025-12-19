@@ -99,7 +99,7 @@ export class TasksService {
     ): Promise<IPagination<TaskDocument>> {
         const search: Record<string, unknown> = {};
         if (filters.userId) {
-            // validate user existence
+            // validate user existence and userId
             await this.getUserService().findOne(filters.userId, { cache: false });
             search.user = filters.userId;
         }
