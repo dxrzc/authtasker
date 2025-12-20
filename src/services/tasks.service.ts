@@ -1,6 +1,6 @@
 import { Apis } from 'src/enums/apis.enum';
 import { UserService } from 'src/services/user.service';
-import { Model, Types } from 'mongoose';
+import { ClientSession, Model, Types } from 'mongoose';
 import { CacheService } from './cache.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
@@ -17,14 +17,13 @@ import { CreateTaskDto } from 'src/dtos/models/tasks/create-task.dto';
 import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
 import { IFindOptions } from 'src/interfaces/others/find-options.interface';
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
-import { TasksStatus } from 'src/types/tasks/task-status.type';
-import { TasksPriority } from 'src/types/tasks/task-priority.type';
+import { TasksFilters } from 'src/types/tasks/task-filters.type';
 
 export class TasksService {
     constructor(
         private readonly loggerService: LoggerService,
         private readonly tasksModel: Model<ITasks>,
-        private readonly userService: UserService,
+        private readonly getUserService: () => UserService, // to avoid circular dependency
         private readonly cacheService: CacheService<TaskDocument>,
     ) {}
 
@@ -43,7 +42,9 @@ export class TasksService {
         targetTaskId: string,
     ): Promise<TaskDocument> {
         const task = (await this.findOne(targetTaskId, { cache: false })) as TaskDocument;
-        const taskOwner = await this.userService.findOne(task.user.toString(), { cache: false });
+        const taskOwner = await this.getUserService().findOne(task.user.toString(), {
+            cache: false,
+        });
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
             role: taskOwner.role,
             id: taskOwner.id,
@@ -91,67 +92,26 @@ export class TasksService {
         return taskFound;
     }
 
-    async findAll(limit: number, page: number): Promise<IPagination<TaskDocument>> {
-        // validate limit and page
-        const totalDocuments = await this.tasksModel.countDocuments().exec();
-        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.cacheService.getPagination(offset, limit);
-        return {
-            currentPage: page,
-            totalDocuments,
-            totalPages,
-            data,
-        };
-    }
-
-    async findAllByUser(
-        userId: string,
+    async findAll(
         limit: number,
         page: number,
+        filters: TasksFilters = {},
     ): Promise<IPagination<TaskDocument>> {
-        // verifies that user exists or throws
-        await this.userService.findOne(userId, { cache: false });
-        const totalDocuments = await this.tasksModel.find({ user: userId }).countDocuments().exec();
+        const search: Record<string, unknown> = {};
+        if (filters.userId) {
+            // validate user existence and userId
+            await this.getUserService().findOne(filters.userId, { cache: false });
+            search.user = filters.userId;
+        }
+        if (filters.status) search.status = filters.status;
+        if (filters.priority) search.priority = filters.priority;
+        const totalDocuments = await this.tasksModel.countDocuments(search).exec();
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.cacheService.getPagination(offset, limit, {
-            find: { user: userId },
-        });
-        return {
-            currentPage: page,
-            totalDocuments,
-            totalPages,
-            data,
-        };
-    }
-
-    async findAllByStatus(
-        status: TasksStatus,
-        limit: number,
-        page: number,
-    ): Promise<IPagination<TaskDocument>> {
-        const totalDocuments = await this.tasksModel.countDocuments({ status }).exec();
-        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.cacheService.getPagination(offset, limit, {
-            find: { status },
-        });
-        return {
-            currentPage: page,
-            totalDocuments,
-            totalPages,
-            data,
-        };
-    }
-
-    async findAllByPriority(
-        priority: TasksPriority,
-        limit: number,
-        page: number,
-    ): Promise<IPagination<TaskDocument>> {
-        const totalDocuments = await this.tasksModel.countDocuments({ priority }).exec();
-        const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.cacheService.getPagination(offset, limit, {
-            find: { priority },
-        });
+        const data = await this.cacheService.getPagination(
+            offset,
+            limit,
+            Object.keys(search).length > 0 ? { find: search } : undefined,
+        );
         return {
             currentPage: page,
             totalDocuments,
@@ -183,5 +143,21 @@ export class TasksService {
                 handleDuplicatedKeyInDb(Apis.tasks, error, this.loggerService);
             throw error;
         }
+    }
+
+    /**
+     * Deletes all tasks belonging to the specified user within a mongodb transaction.
+     *
+     * @param userId - The ID of the user whose tasks should be deleted.
+     * @param session - The MongoDB ClientSession to use for transactional support.
+     * @returns The number of tasks deleted.
+     *
+     * For non-transactional deletes, use the regular delete methods.
+     */
+    async deleteUserTasksTx(userId: string, session: ClientSession): Promise<number> {
+        const { deletedCount } = await this.tasksModel
+            .deleteMany({ user: userId }, { session })
+            .exec();
+        return deletedCount;
     }
 }

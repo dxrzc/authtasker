@@ -58,19 +58,31 @@ export class RefreshTokenService {
             this.loggerService.error('User id not in token');
             throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
         }
-        // user does not exist
-        const user = await this.userModel.findById(userId).exec();
-        if (!user) {
-            const errorMsg = 'User in token does not exist';
-            this.loggerService.error(errorMsg);
-            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
-        }
         // verify token is in database (not revoked)
-        const tokenInRedis = await this.redisService.get(
-            makeRefreshTokenKey(payload.id, payload.jti),
-        );
+        const refreshTokenRedisKey = makeRefreshTokenKey(payload.id, payload.jti);
+        const tokenInRedis = await this.redisService.get(refreshTokenRedisKey);
         if (!tokenInRedis) {
             this.loggerService.error('Refresh token has been revoked');
+            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
+        }
+        // user does not exist but token is still in redis
+        const user = await this.userModel.findById(userId).exec();
+        if (!user) {
+            this.loggerService.error('User in token does not exist');
+            await this.redisService.delete(refreshTokenRedisKey);
+            this.loggerService.info('Revoked refresh token of non-existing user');
+            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
+        }
+        if (!payload.iat) {
+            this.loggerService.error('Issued at (iat) not in token');
+            throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
+        }
+        // token was issued before last credentials change and was not revoked
+        const credentialsChangedAtUnix = Math.floor(user.credentialsChangedAt.getTime() / 1000);
+        if (payload.iat < credentialsChangedAtUnix) {
+            this.loggerService.error('Token issued before last credentials change');
+            await this.redisService.delete(refreshTokenRedisKey);
+            this.loggerService.info('Revoked refresh token issued before last credentials change');
             throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
         }
         return {
@@ -113,7 +125,7 @@ export class RefreshTokenService {
         const expSeconds = convertExpTimeToSeconds(expTime as StringValue);
         const { token, jti } = this.generateToken(userId, expTime);
         await this.storeToken(userId, jti, expSeconds);
-        this.loggerService.info(`Refresh token ${jti} generated, expires at ${expTime}`);
+        this.loggerService.info(`Refresh token ${jti} generated`);
         return !options?.meta
             ? token
             : {
@@ -132,9 +144,7 @@ export class RefreshTokenService {
     ): Promise<string | RefreshTokenMetadata> {
         const { jti, expDateUnix, userId } = await this.validateOrThrow(token);
         const newTokenData = await this.replaceRefreshToken(jti, expDateUnix, userId);
-        this.loggerService.info(
-            `New refresh token generated: "${newTokenData.token}" for token rotation expires in ${newTokenData.expSeconds}s`,
-        );
+        this.loggerService.info(`New refresh token generated for token rotation`);
         return !options?.meta ? newTokenData.token : newTokenData;
     }
 

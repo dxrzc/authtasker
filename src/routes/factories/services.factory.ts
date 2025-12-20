@@ -84,11 +84,18 @@ export function buildServices(
         makeTasksCacheKey,
         Apis.tasks,
     );
-    // Domain services
-    const userService = new UserService(
+    // eslint-disable-next-line prefer-const
+    let userService: UserService;
+    const tasksService = new TasksService(
+        loggerService,
+        models.tasksModel,
+        () => userService,
+        tasksCacheService,
+    );
+    userService = new UserService(
         configService,
         models.userModel,
-        models.tasksModel,
+        tasksService,
         hashingService,
         loggerService,
         emailService,
@@ -98,13 +105,6 @@ export function buildServices(
         usersCacheService,
         passwordRecoveryTokenService,
     );
-    const tasksService = new TasksService(
-        loggerService,
-        models.tasksModel,
-        userService,
-        tasksCacheService,
-    );
-
     return {
         hashingService,
         emailService,

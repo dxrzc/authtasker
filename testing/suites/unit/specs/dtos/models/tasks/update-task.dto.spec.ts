@@ -1,7 +1,7 @@
 import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
 import { tasksLimits } from 'src/constants/tasks.constants';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
-import { InvalidInputError } from 'src/errors/invalid-input-error.class';
+import { InvalidInputError, MaliciousInputError } from 'src/errors/invalid-input-error.class';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { TasksDataGenerator } from 'src/generators/tasks.generator';
 
@@ -90,6 +90,13 @@ describe('UpdateTaskDto', () => {
         const data = { name: validData.name, extra: 'property' };
         await expect(UpdateTaskDto.validateNewAndTransform(data)).rejects.toThrow(
             new InvalidInputError(commonErrors.UNEXPECTED_PROPERTY_PROVIDED),
+        );
+    });
+
+    it('should throw MaliciousInputError if name contains malicious content', async () => {
+        const data = { name: '<script>alert("XSS")</script>' };
+        await expect(UpdateTaskDto.validateNewAndTransform(data)).rejects.toThrow(
+            MaliciousInputError,
         );
     });
 });

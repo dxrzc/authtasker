@@ -163,6 +163,24 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             const blacklisted = await testKit.redisService.get(redisKey);
             expect(blacklisted).not.toBeNull();
         });
+
+        test('update credentialsChangedAt property', async () => {
+            const { sessionToken, id } = await createUser(getRandomRole());
+            const userBefore = await testKit.models.user.findById(id);
+            const credentialsChangedAtBefore = userBefore!.credentialsChangedAt;
+            // wait 1 second to ensure the timestamp will be different
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .send({ email: testKit.userData.email })
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            const userAfter = await testKit.models.user.findById(id);
+            const credentialsChangedAtAfter = userAfter!.credentialsChangedAt;
+            expect(credentialsChangedAtAfter.getTime()).toBeGreaterThan(
+                credentialsChangedAtBefore.getTime(),
+            );
+        });
     });
 
     describe('Password is updated', () => {
@@ -213,6 +231,24 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             const redisKey = makeSessionTokenBlacklistKey(sessionTokenJti);
             const blacklisted = await testKit.redisService.get(redisKey);
             expect(blacklisted).not.toBeNull();
+        });
+
+        test('update credentialsChangedAt property', async () => {
+            const { sessionToken, id } = await createUser(getRandomRole());
+            const userBefore = await testKit.models.user.findById(id);
+            const credentialsChangedAtBefore = userBefore!.credentialsChangedAt;
+            // wait 1 second to ensure the timestamp will be different
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .send({ password: testKit.userData.password })
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            const userAfter = await testKit.models.user.findById(id);
+            const credentialsChangedAtAfter = userAfter!.credentialsChangedAt;
+            expect(credentialsChangedAtAfter.getTime()).toBeGreaterThan(
+                credentialsChangedAtBefore.getTime(),
+            );
         });
     });
 
@@ -284,6 +320,32 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
+    describe.each(Object.values(UserRole))('%s attempts to update themselves', (role) => {
+        test('successfully updates user', async () => {
+            const { sessionToken, id } = await createUser(role);
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ name: testKit.userData.name })
+                .expect(status2xx);
+        });
+    });
+
+    describe.each([UserRole.EDITOR, UserRole.READONLY])(
+        'Admin attempts to update a %s',
+        (targetRole) => {
+            test('successfully updates user', async () => {
+                const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
+                const { id: targetUserId } = await createUser(targetRole);
+                await testKit.agent
+                    .patch(`${testKit.urls.usersAPI}/${targetUserId}`)
+                    .set('Authorization', `Bearer ${currentUserSessionToken}`)
+                    .send({ name: testKit.userData.name })
+                    .expect(status2xx);
+            });
+        },
+    );
+
     describe('ADMIN attempts to update another ADMIN', () => {
         test('return 403 status code and forbidden error message', async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
@@ -297,34 +359,10 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('ADMIN attempts to update an EDITOR', () => {
-        test('successfully updates user', async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
-            const { id: targetUserId } = await createUser(UserRole.EDITOR);
-            await testKit.agent
-                .patch(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .send({ name: testKit.userData.name })
-                .expect(status2xx);
-        });
-    });
-
-    describe('ADMIN attempts to update a READONLY', () => {
-        test('successfully updates user', async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
-            const { id: targetUserId } = await createUser(UserRole.READONLY);
-            await testKit.agent
-                .patch(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .send({ name: testKit.userData.name })
-                .expect(status2xx);
-        });
-    });
-
-    describe('EDITOR attempts to update an ADMIN', () => {
+    describe.each(Object.values(UserRole))('EDITOR attempts to update a %s', (targetRole) => {
         test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
-            const { id: targetUserId } = await createUser(UserRole.ADMIN);
+            const { id: targetUserId } = await createUser(targetRole);
             const { statusCode, body } = await testKit.agent
                 .patch(`${testKit.urls.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`)
@@ -334,36 +372,10 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('EDITOR attempts to update another EDITOR', () => {
-        test(`return 403 status code and forbidden error message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
-            const { id: targetUserId } = await createUser(UserRole.EDITOR);
-            const { statusCode, body } = await testKit.agent
-                .patch(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .send({ name: testKit.userData.name });
-            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(403);
-        });
-    });
-
-    describe('EDITOR attempts to update a READONLY', () => {
-        test(`return 403 status code and forbidden error message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
-            const { id: targetUserId } = await createUser(UserRole.READONLY);
-            const { statusCode, body } = await testKit.agent
-                .patch(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .send({ name: testKit.userData.name });
-            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(403);
-        });
-    });
-
-    describe('READONLY attemps to update another READONLY', () => {
+    describe.each(Object.values(UserRole))('READONLY attempts to update a %s', (targetRole) => {
         test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
-            const { id: targetUserId } = await createUser(UserRole.READONLY);
+            const { id: targetUserId } = await createUser(targetRole);
             const { statusCode, body } = await testKit.agent
                 .patch(`${testKit.urls.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`)

@@ -1,4 +1,4 @@
-import { Model, Types } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { Apis } from 'src/enums/apis.enum';
 import { CacheService } from './cache.service';
 import { EmailService } from 'src/services/email.service';
@@ -7,7 +7,6 @@ import { RefreshTokenService } from './refresh-token.service';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { SessionTokenService } from './session-token.service';
-import { ITasks } from 'src/interfaces/tasks/task.interface';
 import { HashingService } from 'src/services/hashing.service';
 import { UserResponse } from 'src/types/user/user-response.type';
 import { UserDocument } from 'src/types/user/user-document.type';
@@ -29,12 +28,13 @@ import { allSettledAndThrow } from 'src/functions/js/all-settled-and-throw';
 import { resetYourPasswordTemplate } from 'src/templates/reset-your-password.template';
 import { calculatePagination } from 'src/functions/pagination/calculate-pagination';
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
+import { TasksService } from './tasks.service';
 
 export class UserService {
     constructor(
         private readonly configService: ConfigService,
         private readonly userModel: Model<IUser>,
-        private readonly tasksModel: Model<ITasks>,
+        private readonly tasksService: TasksService,
         private readonly hashingService: HashingService,
         public readonly loggerService: LoggerService,
         private readonly emailService: EmailService,
@@ -108,12 +108,13 @@ export class UserService {
         this.loggerService.info(`Email validation sent to ${email}`);
     }
 
-    private async updateUserDocumentProperties(
+    private async applyUserUpdates(
         userDocument: UserDocument,
         propertiesUpdated: UpdateUserDto,
-    ): Promise<void> {
+    ): Promise<{ credentialsChanged: boolean }> {
+        let credentialsChanged = false;
+        const now = new Date();
         if (propertiesUpdated.email) {
-            this.loggerService.info(`User ${userDocument.id} email updated`);
             if (userDocument.role !== UserRole.ADMIN) {
                 userDocument.emailValidated = false;
                 userDocument.role = UserRole.READONLY;
@@ -122,18 +123,18 @@ export class UserService {
                 );
             }
             userDocument.email = propertiesUpdated.email;
+            credentialsChanged = true;
         }
         if (propertiesUpdated.password) {
             userDocument.password = await this.hashingService.hash(propertiesUpdated.password);
-            this.loggerService.info(`User ${userDocument.id} password updated`);
+            credentialsChanged = true;
         }
-        if (propertiesUpdated.name) {
-            userDocument.name = propertiesUpdated.name;
-            this.loggerService.info(`User ${userDocument.id} name updated`);
-        }
+        if (credentialsChanged) userDocument.credentialsChangedAt = now;
+        if (propertiesUpdated.name) userDocument.name = propertiesUpdated.name;
+        return { credentialsChanged };
     }
 
-    private computeSHA256PasswordHash(rawPassword: string): string {
+    private computeSHA256PasswordHash(rawPassword: string): Buffer {
         return this.hashingService.computeSHA256HMACpreHash(
             rawPassword,
             this.configService.PASSWORD_PEPPER,
@@ -301,17 +302,22 @@ export class UserService {
 
     async deleteOne(requestUserInfo: UserSessionInfo, targetUserId: string): Promise<void> {
         await this.verifyUserModificationRights(requestUserInfo, targetUserId);
-        await allSettledAndThrow([
-            this.userModel.deleteOne({ _id: targetUserId }).exec(),
-            this.refreshTokenService.revokeAll(targetUserId),
-            this.cacheService.delete(targetUserId),
-        ]);
-        this.loggerService.info(`User ${targetUserId} deleted`);
-        // remove all tasks associated
-        const tasksRemoved = await this.tasksModel.deleteMany({ user: targetUserId }).exec();
-        this.loggerService.info(
-            `${tasksRemoved.deletedCount} tasks associated to user ${targetUserId} removed`,
-        );
+        const session = await mongoose.startSession();
+        try {
+            await session.withTransaction(async () => {
+                await this.userModel.deleteOne({ _id: targetUserId }, { session }).exec();
+                await this.tasksService.deleteUserTasksTx(targetUserId, session);
+            });
+            // Token and cache cleanup. This is safe even if token revocation fails
+            // refresh-token-service rejects and purgues tokens belonging to a non-existing user
+            await allSettledAndThrow([
+                this.refreshTokenService.revokeAll(targetUserId),
+                this.cacheService.delete(targetUserId),
+            ]);
+            this.loggerService.info(`User ${targetUserId} deleted`);
+        } finally {
+            await session.endSession();
+        }
     }
 
     async updateOne(
@@ -320,24 +326,25 @@ export class UserService {
         propertiesUpdated: UpdateUserDto,
     ): Promise<UserDocument> {
         const userDocument = await this.verifyUserModificationRights(requestUserInfo, targetUserId);
-        await this.updateUserDocumentProperties(userDocument, propertiesUpdated);
-        // revoke all refresh tokens and blacklist session token
-        if (propertiesUpdated.email || propertiesUpdated.password) {
-            await allSettledAndThrow([
-                this.refreshTokenService.revokeAll(targetUserId),
+        const { credentialsChanged } = await this.applyUserUpdates(userDocument, propertiesUpdated);
+        const cleanupTasks: Promise<unknown>[] = [this.cacheService.delete(targetUserId)];
+        if (credentialsChanged) {
+            cleanupTasks.push(this.refreshTokenService.revokeAll(targetUserId));
+            cleanupTasks.push(
                 this.sessionTokenService.blacklist(
                     requestUserInfo.sessionJti,
                     requestUserInfo.sessionTokenExpUnix,
                 ),
-            ]);
-            this.loggerService.info(
-                `All refresh tokens of user ${targetUserId} were revoked due to email/password update`,
             );
         }
         try {
             await userDocument.save();
-            await this.cacheService.delete(targetUserId);
+            await allSettledAndThrow(cleanupTasks);
             this.loggerService.info(`User ${targetUserId} updated`);
+            if (credentialsChanged)
+                this.loggerService.info(
+                    `All tokens of user ${targetUserId} have been revoked due to sensitive data change`,
+                );
             return userDocument;
         } catch (error: any) {
             if (error.code === 11000)
@@ -354,9 +361,11 @@ export class UserService {
             throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
         }
         user.password = await this.hashPassword(newPassword);
+        user.credentialsChangedAt = new Date();
         await user.save();
         this.loggerService.info(`User ${user.id} password updated`);
-        // logout all
+        // This is safe even if token revocation fails
+        // refresh-token-service rejects and purgues tokens created before the last credentials change
         await this.refreshTokenService.revokeAll(user.id);
         this.loggerService.info(
             `All refresh tokens of user ${user.id} have been revoked due to password reset`,

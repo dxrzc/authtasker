@@ -21,7 +21,7 @@ export class CreateUserDto {
     @MaxLength(usersLimits.MAX_PASSWORD_LENGTH, { message: usersApiErrors.INVALID_PASSWORD_LENGTH })
     password!: string;
 
-    static async validateAndTransform(data: object): Promise<CreateUserDto> {
+    static async validateAndTransform(data: Record<string, unknown>): Promise<CreateUserDto> {
         return await validateAndTransformDto(CreateUserDto, data);
     }
 }

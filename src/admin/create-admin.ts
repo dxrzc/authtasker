@@ -10,6 +10,8 @@ export const createAdmin = async (
     hashingService: HashingService,
 ) => {
     try {
+        // TODO: Admin creation is incorrect since the password is not hashed correctly with pre-hashing
+        // consider moving this logic to a proper user service
         const alreadyExists = await userModel.findOne({ name: configService.ADMIN_NAME }).exec();
         if (!alreadyExists) {
             const admin = await userModel.create({

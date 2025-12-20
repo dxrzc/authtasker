@@ -256,7 +256,7 @@ components:
           example: Write comprehensive API documentation for all endpoints
         status:
           type: string
-          enum: [pending, in progress, completed, archived]
+          enum: [pending, in-progress, completed, archived]
           description: The task status
           example: pending
         priority:
@@ -281,9 +281,9 @@ components:
           example: Write comprehensive API documentation for all endpoints
         status:
           type: string
-          enum: [pending, in progress, completed, archived]
+          enum: [pending, in-progress, completed, archived]
           description: The task status
-          example: in progress
+          example: in-progress
         priority:
           type: string
           enum: [low, medium, high]
@@ -315,7 +315,7 @@ components:
           example: Write comprehensive API documentation for all endpoints
         status:
           type: string
-          enum: [pending, in progress, completed, archived]
+          enum: [pending, in-progress, completed, archived]
           description: The task status
           example: pending
         priority:
@@ -1490,7 +1490,7 @@ paths:
         **Task properties:**
         - `name` - Will be converted to lowercase and trimmed before saving
         - `description` - Task description (10-120 characters)
-        - `status` - Task status: pending, in progress, completed, or archived
+        - `status` - Task status: pending, in-progress, completed, or archived
         - `priority` - Task priority: low, medium, or high
         
         The task is automatically associated with the authenticated user who creates it.
@@ -1499,7 +1499,7 @@ paths:
         - Task name must be unique across all tasks
         - Name must be between 3-40 characters
         - Description must be between 10-120 characters
-        - Status must be one of: pending, in progress, completed, archived
+        - Status must be one of: pending, in-progress, completed, archived
         - Priority must be one of: low, medium, high
       tags:
         - Tasks
@@ -1755,7 +1755,7 @@ paths:
         - If name is updated, it must be unique across all tasks
         - Name must be between 3-40 characters
         - Description must be between 10-120 characters
-        - Status must be one of: pending, in progress, completed, archived
+        - Status must be one of: pending, in-progress, completed, archived
         - Priority must be one of: low, medium, high
       tags:
         - Tasks
@@ -1939,7 +1939,7 @@ paths:
                   - id: 60d0fe4f5311236168a109cb
                     name: fix authentication bug
                     description: Resolve issue with JWT token validation in middleware
-                    status: in progress
+                    status: in-progress
                     priority: medium
                     user: 60d0fe4f5311236168a109cb
                     createdAt: '2021-06-21T13:00:00.000Z'
@@ -2118,7 +2118,7 @@ paths:
         
         **Status filtering:**
         - Returns only tasks with the specified status
-        - Valid statuses: pending, in progress, completed, archived
+        - Valid statuses: pending, in-progress, completed, archived
         - Status parameter is case-sensitive
         - If an invalid status is provided, returns a 400 error
         
@@ -2144,7 +2144,7 @@ paths:
           name: status
           schema:
             type: string
-            enum: [pending, in progress, completed, archived]
+            enum: [pending, in-progress, completed, archived]
           required: true
           description: The status to filter tasks by
           example: pending
@@ -2177,7 +2177,7 @@ paths:
         '400':
           description: >
             Bad request. This can happen when:
-              - The status parameter is invalid (not one of: pending, in progress, completed, archived)
+              - The status parameter is invalid (not one of: pending, in-progress, completed, archived)
               - The `page` parameter is not a valid positive integer
               - The `limit` parameter is not a valid positive integer
               - The `limit` parameter exceeds 100
