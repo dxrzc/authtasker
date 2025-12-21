@@ -444,15 +444,12 @@ paths:
     post:
       operationId: loginUser
       summary: Login a user
-      description: |
+      description: |        
         Authenticates a user using their email and password.
-        Returns a session token and a refresh token for maintaining the session.
-        
-        **Session management:**
-        - There is a limit on the number of active sessions (refresh tokens) per user
-        - When the maximum number of refresh tokens is reached, the oldest token is automatically evicted
-        - This auto-eviction ensures users can always log in without manual session cleanup
-        - The new session token and refresh token are issued immediately after eviction
+        - **Returns**: A session token with a duration of 10 minutes and a refresh token with a duration of 30 days for maintaining the session.        
+        - **Constraints:**
+          - Max active sessions (refresh tokens granted) are limited up to 3 per user. A new session will evict the oldest one.        
+        - **Rate Limiting:** Limited to 3 per minute.                        
       tags:
         - Users
       requestBody:
@@ -463,13 +460,20 @@ paths:
               $ref: '#/components/schemas/LoginUserRequest'
       responses:
         '200':
-          description: User logged in successfully
+          description: |
+           **User logged in successfully**
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         '401':
-          description: Invalid credentials
+          description: |
+            **Invalid credentials**
+
+            Possible causes:
+             - Email not registered.
+             - Incorrect password.
+             - Invalid email format.
           content:
             application/json:
               schema:
@@ -477,7 +481,8 @@ paths:
               example:
                 error: Invalid credentials
         '429':
-          description: Too many requests
+          description: |
+            **Too many requests**
           content:
             application/json:
               schema:
@@ -485,7 +490,8 @@ paths:
               example:
                 error: Too many requests
         '500':
-          description: Internal server error
+          description: |
+            **Internal server error**
           content:
             application/json:
               schema:
