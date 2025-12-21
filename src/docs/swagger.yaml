@@ -569,18 +569,14 @@ paths:
       operationId: logoutFromAll
       summary: Logout from all sessions
       description: |
-        Logs out the user from all active sessions by revoking all refresh tokens.
-        Requires authentication via Bearer token (minimum role: READONLY).
-        
-        **Authentication requirements:**
-        - User must be authenticated with a valid session token in the Authorization header
-        - User must provide their password in the request body for reauthentication
-        - This double authentication ensures security when performing sensitive operations
-        
-        **Use case:**
-        - Since automatic token eviction is now implemented, users no longer run out of sessions
-        - This endpoint is now protected to ensure only authenticated users can revoke all their sessions
-        - Useful for security purposes when a user suspects their account may be compromised
+        Logs out the user from all active sessions.            
+        User needs to provide their password for reauthentication.
+          - **Constraints:**
+          - **Side Effects:**
+            - Revokes all user refresh tokens.
+            - Blacklists the provided session token.
+          - **Rate Limiting:** Limited to 3 per minute.          
+          - **Additional Notes:** Sessions tokens obtained previously are not blacklisted, they will expire naturally.
       tags:
         - Users
       security:
@@ -602,10 +598,12 @@ paths:
         '204':
           description: All sessions successfully invalidated
         '401':
-          description: >
-            Unauthorized. This can happen when:
-              - Session token is invalid or missing in Authorization header
-              - Password provided in request body is incorrect
+          description: |
+            **Unauthorized** 
+            
+              Possible reasons:
+                - Missing or invalid session token.
+                - Incorrect password.
           content:
             application/json:
               schema:
@@ -613,7 +611,8 @@ paths:
               example:
                 error: Invalid credentials
         '429':
-          description: Too many requests
+          description: | 
+            **Too many requests**
           content:
             application/json:
               schema:
@@ -621,7 +620,8 @@ paths:
               example:
                 error: Too many requests
         '500':
-          description: Internal server error
+          description: |
+            **Internal server error**
           content:
             application/json:
               schema:
