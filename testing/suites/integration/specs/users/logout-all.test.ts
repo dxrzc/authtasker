@@ -10,6 +10,7 @@ import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
+import { makeSessionTokenBlacklistKey } from 'src/functions/token/make-session-token-blacklist-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
@@ -43,6 +44,22 @@ describe(`POST ${testKit.urls.logoutAll}`, () => {
                 .send({ password: unhashedPassword });
             expect(response.body).toStrictEqual({});
             expect(response.statusCode).toBe(204);
+        });
+
+        test('blacklist provided session token', async () => {
+            const { unhashedPassword, sessionToken } = await createUser(getRandomRole());
+            const { jti } = testKit.sessionJwt.verify(sessionToken)!;
+            const blacklistKey = makeSessionTokenBlacklistKey(jti);
+            // not blacklisted yet
+            await expect(testKit.redisService.get(blacklistKey)).resolves.toBeNull();
+            // logout-all
+            await testKit.agent
+                .post(testKit.urls.logoutAll)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ password: unhashedPassword })
+                .expect(status2xx);
+            const blacklisted = await testKit.redisService.get(blacklistKey);
+            expect(blacklisted).not.toBeNull();
         });
 
         test('delete all the refresh tokens from Redis', async () => {
