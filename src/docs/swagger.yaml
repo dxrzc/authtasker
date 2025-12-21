@@ -702,6 +702,215 @@ paths:
               example:
                 error: Internal server error
 
+  /api/users/forgot-password:
+    post:
+      operationId: requestPasswordRecovery
+      summary: Request password recovery
+      description: |
+        Initiates the password recovery process by sending a password reset link to the user's email address.
+          - **Returns**: A success message regardless of whether the email exists.          
+          - **Rate Limiting:** Limited to 3 per minute.          
+          - **Side Effects:**
+            - Server generates a password recovery token (JWT) used in the reset link.
+          - **Additional Notes:**                      
+            - The password reset link contains a token query parameter.
+            - The token has a limited lifetime of 10 minutes.
+            - The token is single-use and blacklisted after successful password reset.
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordRecoveryRequest'
+      responses:
+        '200':
+          description: |
+            **Password recovery email sent successfully**
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                message: If that account exists, you will receive an email.
+        '400':
+          description: |
+            **Bad request**
+
+              Possible reasons:
+              - Email is not provided in the request body.
+              - Invalid email format.
+              - Unexpected property provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                emailNotProvided:
+                  value:
+                    error: Email not provided
+                invalidEmail:
+                  value:
+                    error: Invalid email
+        '429':
+          description: | 
+            **Too many requests**
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: |
+            **Internal server error**
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /api/users/reset-password:
+    get:
+      operationId: resetPasswordForm
+      summary: Display password reset form
+      description: |
+        Displays an HTML form for resetting the user's password.
+        This endpoint is accessed via the password reset link sent to the user's email.                        
+        - **Rate Limiting:** Limited to 3 per minute.        
+      tags:
+        - Users
+      parameters:
+        - in: query
+          name: token
+          schema:
+            type: string
+          required: true
+          description: The password recovery token received via email
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: |
+            **HTML form for password reset**
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML page with a form to reset password
+        '400':
+          description: |
+            **Bad request** 
+              Possible reasons:
+              - Token is not provided in query parameters.
+              - Token format is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: | 
+            **Too many requests**
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: |
+            **Internal server error**
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+    post:
+      operationId: resetPassword
+      summary: Reset user password
+      description: |
+        Resets the user's password using a valid password recovery token.                        
+        - **Returns:** A successful message.
+        - **Constraints:**
+          - **Password:** String between 8-120 characters.
+        - **Side Effects:**
+         - The password recovery token is blacklisted after use. 
+         - All refresh tokens associated with the user are revoked.         
+         - Password is pre-hashed using SHA-256 HMAC with a pepper and the result is hashed using bcrypt. 
+        - **Rate Limiting:** Limited to 3 per minute.        
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: |
+            **Password reset successfully**
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+              example:
+                message: Password has been successfully reset
+        '400':
+          description: |
+            **Bad request** 
+              Possible reasons:
+              - Token is not provided in the request body.
+              - Invalid token format.
+              - New password is not provided in the request body.
+              - New password invalid length.
+              - Unexpected property provided.              
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidToken:
+                  value:
+                    error: Invalid token
+                invalidPasswordLength:
+                  value:
+                    error: Invalid password length
+        '401':
+          description: |
+            **Unauthorized**
+              Possible reasons:
+              - Invalid token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid token
+        '429':
+          description: | 
+            **Too many requests**
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many requests
+        '500':
+          description: |
+            **Internal server error**
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error                
+
   /api/users/me:
     get:
       operationId: getMyProfile
@@ -1283,242 +1492,6 @@ paths:
                     error: Limit is too large
         '401':
           description: Unauthorized (Invalid or missing token)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Invalid token
-        '429':
-          description: Too many requests
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Too many requests
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Internal server error
-
-  /api/users/forgot-password:
-    post:
-      operationId: requestPasswordRecovery
-      summary: Request password recovery
-      description: |
-        Initiates the password recovery process by sending a password reset link to the user's email address.
-        This endpoint does not require authentication.
-        
-        **Security considerations:**
-        - Always returns a success message regardless of whether the email exists (to prevent email enumeration)
-        - If the email exists in the system, a password recovery token is generated and sent via email
-        - If the email doesn't exist, no email is sent but the same success message is returned
-        - The password recovery token has a limited lifetime (configured server-side)
-        - Rate limiting is applied to prevent abuse
-        
-        **Password recovery flow:**
-        1. User requests password recovery by providing their email
-        2. System generates a password recovery token (JWT) with the user's email
-        3. Token is sent to the user's email with a reset link
-        4. User clicks the link which contains the token as a query parameter
-        5. User is presented with a form to enter a new password (GET /api/users/reset-password)
-        6. User submits the form with the token and new password (POST /api/users/reset-password)
-      tags:
-        - Users
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PasswordRecoveryRequest'
-      responses:
-        '200':
-          description: |
-            **Password recovery email sent successfully (or email doesn't exist but returns same message for security).
-            Check your email for the password reset link.**
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-              example:
-                message: If that account exists, you will receive an email.
-        '400':
-          description: >
-            Bad request. This can happen when:
-              - Email is not provided in the request body
-              - Email format is invalid
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                emailNotProvided:
-                  value:
-                    error: Email not provided
-                invalidEmail:
-                  value:
-                    error: Invalid email
-        '429':
-          description: Too many requests
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Too many requests
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Internal server error
-
-  /api/users/reset-password:
-    get:
-      operationId: resetPasswordForm
-      summary: Display password reset form
-      description: |
-        Displays an HTML form for resetting the user's password.
-        This endpoint is accessed via the password reset link sent to the user's email.
-        Does not require authentication as it uses a token-based approach.
-        
-        **Usage:**
-        - This endpoint is typically accessed by clicking the password reset link in the email
-        - The link contains a `token` query parameter generated during the password recovery request
-        - Returns an HTML form where users can enter their new password
-        - The form submits to POST /api/users/reset-password with the token and new password
-        
-        **Token validation:**
-        - The token must be valid and not expired
-        - The token must be signed by this server
-        - The token must not be blacklisted (already used)
-        - The token purpose must be PASSWORD_RECOVERY
-      tags:
-        - Users
-      parameters:
-        - in: query
-          name: token
-          schema:
-            type: string
-          required: true
-          description: The password recovery token received via email
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-      responses:
-        '200':
-          description: |
-            **HTML form for password reset**
-          content:
-            text/html:
-              schema:
-                type: string
-                description: HTML page with a form to reset password
-        '400':
-          description: >
-            Bad request. This can happen when:
-              - Token is not provided in query parameters
-              - Token format is invalid
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Invalid token
-        '429':
-          description: Too many requests
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Too many requests
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Internal server error
-
-    post:
-      operationId: resetPassword
-      summary: Reset user password
-      description: |
-        Resets the user's password using a valid password recovery token.
-        This endpoint does not require authentication as it uses a token-based approach.
-        
-        **Security behaviors:**
-        - The password recovery token is blacklisted after successful use (one-time use only)
-        - All refresh tokens associated with the user are revoked (forces re-login on all devices)
-        - All active sessions are invalidated
-        - The new password is hashed before storing in the database
-        
-        **Token validation:**
-        - The token must be valid and not expired
-        - The token must be signed by this server
-        - The token must not be blacklisted (already used)
-        - The token purpose must be PASSWORD_RECOVERY
-        - The email in the token must match an existing user
-        
-        **Password requirements:**
-        - Minimum length: 8 characters
-        - Maximum length: 20 characters
-        
-        **After successful password reset:**
-        - User must log in again with the new password on all devices
-        - Previous sessions and refresh tokens are no longer valid
-        - The password recovery token cannot be reused
-      tags:
-        - Users
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ResetPasswordRequest'
-      responses:
-        '200':
-          description: |
-            **Password reset successfully**
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-              example:
-                message: Password has been successfully reset
-        '400':
-          description: >
-            Bad request. This can happen when:
-              - Token is not provided in the request body
-              - New password is not provided in the request body
-              - New password is too short (less than 8 characters)
-              - New password is too long (more than 20 characters)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                invalidToken:
-                  value:
-                    error: Invalid token
-                invalidPasswordLength:
-                  value:
-                    error: Invalid password length
-        '401':
-          description: >
-            Unauthorized. This can happen when:
-              - The token is invalid or expired
-              - The token was not signed by this server
-              - The token purpose is not PASSWORD_RECOVERY
-              - The token has already been used (blacklisted)
-              - The user associated with the email in the token doesn't exist
           content:
             application/json:
               schema:
