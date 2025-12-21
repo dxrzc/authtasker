@@ -504,8 +504,9 @@ paths:
       operationId: logoutUser
       summary: Logout a user
       description: |
-        Logs out the user by invalidating the provided refresh token and the current session token.
-        Requires authentication via Bearer token.
+        Logs out the user by invalidating the provided refresh token and blacklisting the associated session token.
+          - **Rate Limiting:** Limited to 3 per minute.          
+          - **Additional Notes:** Sessions tokens obtained previously are not blacklisted. They will expire naturally.
       tags:
         - Users
       security:
@@ -520,15 +521,21 @@ paths:
         '204':
           description: Logout successful
         '400':
-          description: Refresh token not provided
+          description: | 
+            **Refresh token not provided**
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
-                error: Refresh token was not in body
+                error: Refresh token expected in body
         '401':
-          description: Unauthorized (Invalid or missing token)
+          description: | 
+            **Unauthorized**
+
+            Possible causes:
+             - Invalid refresh token
+             - Missing or invalid session token
           content:
             application/json:
               schema:
@@ -536,7 +543,8 @@ paths:
               example:
                 error: Invalid token
         '429':
-          description: Too many requests
+          description: |
+            **Too many requests**
           content:
             application/json:
               schema:
@@ -544,7 +552,8 @@ paths:
               example:
                 error: Too many requests
         '500':
-          description: Internal server error
+          description: | 
+            **Internal server error**
           content:
             application/json:
               schema:
