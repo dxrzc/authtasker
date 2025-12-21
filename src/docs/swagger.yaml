@@ -368,7 +368,7 @@ paths:
       summary: Register a new user
       description: |
         Creates a new user **readonly** account
-        - **Returns**: The created user along with session and refresh tokens.
+        - **Returns**: The created user along with a session token with a duration of 10 minutes and a refresh token with a duration of 30 days for maintaining the session.        
         - **Constraints**:
           - **Email:** Must be unique and valid email format.
           - **Name:** Must be a unique username between 5-15 characters.
