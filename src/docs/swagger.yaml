@@ -633,10 +633,13 @@ paths:
       operationId: refreshToken
       summary: Refresh session token
       description: |
-        Generates a new session token and refresh token using a valid refresh token.
-        This endpoint implements token rotation: the old refresh token is invalidated and a new one is issued.
-        The new refresh token maintains the same expiration time as the original token.
-        Does not require authentication via Bearer token, only a valid refresh token in the request body.
+        Generates a new session token with a duration of 10 minutes and refresh token using a valid refresh token.
+        This endpoint implements token rotation: the old refresh token is invalidated and a new one is issued.        
+          - **Returns**: A session token and a new refresh token.       
+          - **Side Effects**:
+            - Old refresh token is invalidated.             
+          - **Rate Limiting:** Limited to 3 per minute.          
+          - **Additional Notes:** The new refresh token maintains the same expiration time as the original token.        
       tags:
         - Users
       requestBody:
