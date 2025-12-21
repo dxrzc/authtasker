@@ -504,9 +504,12 @@ paths:
       operationId: logoutUser
       summary: Logout a user
       description: |
-        Logs out the user by invalidating the provided refresh token and blacklisting the associated session token.
-          - **Rate Limiting:** Limited to 3 per minute.          
-          - **Additional Notes:** Sessions tokens obtained previously are not blacklisted. They will expire naturally.
+        Logs out the user.
+          - **Rate Limiting:** Limited to 3 per minute.   
+          - *Side Effects:**       
+            - Revokes the provided refresh token.
+            - Blacklists the provided session token.
+          - **Additional Notes:** Sessions tokens obtained previously are not blacklisted, they will expire naturally.
       tags:
         - Users
       security:
