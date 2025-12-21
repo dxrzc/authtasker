@@ -522,7 +522,8 @@ paths:
               $ref: '#/components/schemas/LogoutRequest'
       responses:
         '204':
-          description: Logout successful
+          description: |
+            **Logout successful**
         '400':
           description: | 
             **Refresh token not provided**
@@ -595,7 +596,8 @@ paths:
                   example: password123
       responses:
         '204':
-          description: All sessions successfully invalidated
+          description: |
+            **All sessions successfully invalidated**
         '401':
           description: |
             **Unauthorized** 
@@ -650,13 +652,15 @@ paths:
               $ref: '#/components/schemas/RefreshTokenRequest'
       responses:
         '200':
-          description: Tokens refreshed successfully
+          description: |
+            **Tokens refreshed successfully**
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RefreshTokenResponse'
         '400':
-          description: Refresh token not provided in request body
+          description: |
+            **Refresh token not provided in request body**
           content:
             application/json:
               schema:
@@ -706,7 +710,8 @@ paths:
         - bearerAuth: []
       responses:
         '200':
-          description: User profile retrieved successfully
+          description: |
+            **User profile retrieved successfully**
           content:
             application/json:
               schema:
@@ -752,7 +757,8 @@ paths:
         - bearerAuth: []
       responses:
         '204':
-          description: Email validation link sent successfully
+          description: |
+            **Email validation link sent successfully**
         '401':
           description: Unauthorized (Invalid or missing token)
           content:
@@ -826,7 +832,8 @@ paths:
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
       responses:
         '200':
-          description: Email validated successfully
+          description: |
+            **Email validated successfully**
           content:
             application/json:
               schema:
@@ -906,7 +913,8 @@ paths:
           description: The unique identifier of the user
       responses:
         '200':
-          description: User details
+          description: |
+            **User details**
           content:
             application/json:
               schema:
@@ -978,7 +986,8 @@ paths:
           description: The unique identifier of the user to delete
       responses:
         '204':
-          description: User deleted successfully
+          description: |
+            **User deleted successfully**
         '401':
           description: Unauthorized (Invalid or missing token)
           content:
@@ -1077,7 +1086,8 @@ paths:
               $ref: '#/components/schemas/UpdateUserRequest'
       responses:
         '200':
-          description: User updated successfully
+          description: |
+            **User updated successfully**
           content:
             application/json:
               schema:
@@ -1215,7 +1225,8 @@ paths:
           example: 10
       responses:
         '200':
-          description: Paginated list of users retrieved successfully
+          description: |
+            **Paginated list of users retrieved successfully**
           content:
             application/json:
               schema:
@@ -1317,9 +1328,9 @@ paths:
               $ref: '#/components/schemas/PasswordRecoveryRequest'
       responses:
         '200':
-          description: >
-            Password recovery email sent successfully (or email doesn't exist but returns same message for security).
-            Check your email for the password reset link.
+          description: |
+            **Password recovery email sent successfully (or email doesn't exist but returns same message for security).
+            Check your email for the password reset link.**
           content:
             application/json:
               schema:
@@ -1391,7 +1402,8 @@ paths:
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
       responses:
         '200':
-          description: HTML form for password reset
+          description: |
+            **HTML form for password reset**
           content:
             text/html:
               schema:
@@ -1463,7 +1475,8 @@ paths:
               $ref: '#/components/schemas/ResetPasswordRequest'
       responses:
         '200':
-          description: Password reset successfully
+          description: |
+            **Password reset successfully**
           content:
             application/json:
               schema:
@@ -1553,7 +1566,8 @@ paths:
               $ref: '#/components/schemas/CreateTaskRequest'
       responses:
         '201':
-          description: Task created successfully
+          description: |
+            **Task created successfully**
           content:
             application/json:
               schema:
@@ -1650,7 +1664,8 @@ paths:
           example: 60d0fe4f5311236168a109ca
       responses:
         '200':
-          description: Task details retrieved successfully
+          description: |
+            **Task details retrieved successfully**
           content:
             application/json:
               schema:
@@ -1721,7 +1736,8 @@ paths:
           example: 60d0fe4f5311236168a109ca
       responses:
         '204':
-          description: Task deleted successfully
+          description: |
+            **Task deleted successfully**
         '401':
           description: Unauthorized (Invalid or missing token)
           content:
@@ -1817,7 +1833,8 @@ paths:
               $ref: '#/components/schemas/UpdateTaskRequest'
       responses:
         '200':
-          description: Task updated successfully
+          description: |
+            **Task updated successfully**
           content:
             application/json:
               schema:
@@ -1958,7 +1975,8 @@ paths:
           example: 10
       responses:
         '200':
-          description: Paginated list of tasks retrieved successfully
+          description: |
+            **Paginated list of tasks retrieved successfully**
           content:
             application/json:
               schema:
@@ -2089,7 +2107,8 @@ paths:
           example: 10
       responses:
         '200':
-          description: Paginated list of user's tasks retrieved successfully
+          description: |
+            **Paginated list of user's tasks retrieved successfully**
           content:
             application/json:
               schema:
@@ -2209,7 +2228,8 @@ paths:
           example: 10
       responses:
         '200':
-          description: Paginated list of tasks with specified status retrieved successfully
+          description: |
+            **Paginated list of tasks with specified status retrieved successfully**
           content:
             application/json:
               schema:
@@ -2322,7 +2342,8 @@ paths:
           example: 10
       responses:
         '200':
-          description: Paginated list of tasks with specified priority retrieved successfully
+          description: |
+            **Paginated list of tasks with specified priority retrieved successfully**
           content:
             application/json:
               schema:
