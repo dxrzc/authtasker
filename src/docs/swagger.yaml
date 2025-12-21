@@ -660,7 +660,10 @@ paths:
                 $ref: '#/components/schemas/RefreshTokenResponse'
         '400':
           description: |
-            **Refresh token not provided in request body**
+            **Bad Request**
+
+            Possible reasons:
+              - Refresh token not provided in request body                          
           content:
             application/json:
               schema:
