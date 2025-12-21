@@ -668,7 +668,12 @@ paths:
               example:
                 error: Refresh token expected in body
         '401':
-          description: Unauthorized (Invalid or missing token)
+          description: |
+            **Unauthorized** 
+            
+              Possible reasons:
+                - Invalid refresh token.
+                - Missing or invalid session token.                
           content:
             application/json:
               schema:
@@ -676,7 +681,8 @@ paths:
               example:
                 error: Invalid token
         '429':
-          description: Too many requests
+          description: |
+            **Too many requests**
           content:
             application/json:
               schema:
@@ -684,7 +690,8 @@ paths:
               example:
                 error: Too many requests
         '500':
-          description: Internal server error
+          description: |
+            **Internal server error**
           content:
             application/json:
               schema:
