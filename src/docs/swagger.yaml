@@ -367,8 +367,17 @@ paths:
       operationId: registerUser
       summary: Register a new user
       description: |
-        Creates a new user account. Changes the name to lowercase before storing.
-        Returns the created user along with session and refresh tokens.
+        Creates a new user **readonly** account
+        - **Returns**: The created user along with session and refresh tokens.
+        - **Constraints**:
+          - **Email:** Must be unique and valid email format.
+          - **Name:** Must be a unique username between 5-15 characters.
+          - **Password:** String between 8-120 characters.
+        - **Side Effects**:
+          - Converts username to lowercase and trims leading and trailing spaces.
+          - Password is pre-hashed using SHA-256 HMAC with a pepper and the result is hashed using bcrypt.        
+        - **Rate Limiting**: Limited to 3 requests per minute.        
+        - **Additional Notes**: In order to upgrade the role to **editor** you need to request and complete email validation.        
       tags:
         - Users
       requestBody:
@@ -379,13 +388,20 @@ paths:
               $ref: '#/components/schemas/CreateUserRequest'
       responses:
         '201':
-          description: User created successfully
+          description: |
+           **User created successfully**             
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         '400':
-          description: Invalid input
+          description: |
+            **Invalid input**
+
+            Possible reasons:
+               - Invalid password length.
+               - Invalid email format.
+               - Invalid name length.
           content:
             application/json:
               schema:
@@ -393,18 +409,21 @@ paths:
               example:
                 error: Invalid input
         '409':
-          description: >
-            Conflict. This can happen when:
-              - The email is already registered
-              - The name is already taken
+          description: |
+            **Conflict**             
+            
+            Possible reasons:
+              - The email is already registered.
+              - The username is already taken.            
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
-                error: Email already exists
+                error: User already exists
         '429':
-          description: Too many requests
+          description: |
+            **Too many requests**
           content:
             application/json:
               schema:
@@ -412,7 +431,8 @@ paths:
               example:
                 error: Too many requests
         '500':
-          description: Internal server error
+          description: |
+            **Internal server error**
           content:
             application/json:
               schema:
