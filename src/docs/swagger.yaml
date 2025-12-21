@@ -571,7 +571,6 @@ paths:
       description: |
         Logs out the user from all active sessions.            
         User needs to provide their password for reauthentication.
-          - **Constraints:**
           - **Side Effects:**
             - Revokes all user refresh tokens.
             - Blacklists the provided session token.
