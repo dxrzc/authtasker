@@ -41,7 +41,6 @@ export class RateLimiterMiddleware {
 
     private buildKey(req: Request): string {
         const endpoint = `${req.method}:${req.baseUrl}${req.path}`;
-        const userId = (req as Request & { id?: string }).id ?? req.ip ?? 'anonymous';
-        return `${userId}:${endpoint}`;
+        return `${req.ip}:${endpoint}`;
     }
 }
