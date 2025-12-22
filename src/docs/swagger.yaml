@@ -559,10 +559,19 @@ paths:
           description: | 
             **Unauthorized**
 
-            Possible causes:
-              - Invalid or expired refresh token.
-              - Missing or invalid session token in Authorization header.
+            Possible causes (session token):
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
+
+            Possible causes (refresh token):
+              - Refresh token is expired or not signed by this server.
+              - User ID is missing in the refresh token payload.
+              - Refresh token has been revoked (not found in Redis).
+              - User associated with the refresh token no longer exists.
+              - Refresh token was issued before user's last credentials change.
           content:
             application/json:
               schema:
@@ -628,9 +637,14 @@ paths:
           description: |
             **Unauthorized** 
             
-            Possible causes:              
-              - Missing or invalid session token in Authorization header.
+            Possible causes (session token):
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
+
+            Possible causes (password):
               - Incorrect password provided.
           content:
             application/json:
@@ -705,9 +719,11 @@ paths:
             **Unauthorized** 
             
             Possible causes:
-              - Invalid or expired refresh token.
-              - Refresh token has been revoked.
-              - Refresh token was created before user's last credential change.                
+              - Refresh token is expired or not signed by this server.
+              - User ID is missing in the refresh token payload.
+              - Refresh token has been revoked (not found in Redis).
+              - User associated with the refresh token no longer exists.
+              - Refresh token was issued before user's last credentials change.
           content:
             application/json:
               schema:
@@ -929,9 +945,10 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - Token is invalid or expired.
+              - Password recovery token is expired or not signed by this server.
+              - Email is missing in the password recovery token payload.
+              - Token purpose is not PASSWORD_RECOVERY.
               - Token has already been used (blacklisted).
-              - User associated with the token no longer exists.
           content:
             application/json:
               schema:
@@ -986,9 +1003,11 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
           content:
             application/json:
               schema:
@@ -1042,9 +1061,11 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
           content:
             application/json:
               schema:
@@ -1141,11 +1162,10 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - The token is invalid or expired.
-              - The token was not signed by this server.
-              - The token purpose is not EMAIL_VALIDATION.
-              - The token has already been used (blacklisted).
-              - The user associated with the email in the token doesn't exist.
+              - Email validation token is expired or not signed by this server.
+              - Email is missing in the email validation token payload.
+              - Token purpose is not EMAIL_VALIDATION.
+              - Token has already been used (blacklisted).
           content:
             application/json:
               schema:
@@ -1219,9 +1239,11 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
           content:
             application/json:
               schema:
@@ -1299,9 +1321,11 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
           content:
             application/json:
               schema:
@@ -1425,9 +1449,11 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
           content:
             application/json:
               schema:
@@ -1593,9 +1619,11 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
           content:
             application/json:
               schema:
@@ -1693,9 +1721,11 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
           content:
             application/json:
               schema:
@@ -1782,9 +1812,11 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
           content:
             application/json:
               schema:
@@ -1862,9 +1894,11 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
           content:
             application/json:
               schema:
@@ -2000,9 +2034,11 @@ paths:
             **Unauthorized**
 
             Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
           content:
             application/json:
               schema:
@@ -2070,13 +2106,18 @@ paths:
   /api/tasks:
     get:
       operationId: findAllTasks
-      summary: Get all tasks with pagination
+      summary: Get all tasks with pagination and optional filters
       description: |
-        Retrieves a paginated list of all tasks in the system.
+        Retrieves a paginated list of tasks with optional filtering capabilities.
+        Filters can be combined in any way: use all filters together, any subset of them, or none at all.
+
         - **Returns**: A paginated response containing task data, total documents, total pages, and current page.
         - **Constraints:**
           - Page must be a positive integer (minimum: 1).
           - Limit must be a positive integer (minimum: 1, maximum: 100).
+          - If `status` filter is provided, it must be one of: pending, in-progress, completed, archived.
+          - If `priority` filter is provided, it must be one of: low, medium, high.
+          - If `user` filter is provided, it must be a valid MongoDB ObjectId of an existing user.
         - **Caching:** Individual task records are cached for 10 seconds. After TTL expiration, data is revalidated against the database `updatedAt` field.
         - **Rate Limiting:** Limited to 100 requests per 5 minutes per IP.
         - **Additional Notes:**
@@ -2085,6 +2126,8 @@ paths:
           - Results are sorted by creation date (oldest first), then by ID.
           - All authenticated users can view all tasks (no filtering by ownership).
           - If requested page exceeds total pages, an empty data array is returned.
+          - Filters are applied with AND logic when multiple are provided.
+          - Without any filters, returns all tasks in the system.
       tags:
         - Tasks
       security:
@@ -2109,6 +2152,29 @@ paths:
           required: false
           description: Number of tasks per page (max 100)
           example: 10
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, in-progress, completed, archived]
+          required: false
+          description: Filter tasks by status
+          example: pending
+        - in: query
+          name: priority
+          schema:
+            type: string
+            enum: [low, medium, high]
+          required: false
+          description: Filter tasks by priority level
+          example: high
+        - in: query
+          name: user
+          schema:
+            type: string
+          required: false
+          description: Filter tasks by owner user ID (MongoDB ObjectId)
+          example: 60d0fe4f5311236168a109ca
       responses:
         '200':
           description: |
@@ -2117,27 +2183,60 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TasksPaginationResponse'
-              example:
-                totalDocuments: 42
-                totalPages: 5
-                currentPage: 1
-                data:
-                  - id: 60d0fe4f5311236168a109ca
-                    name: complete project documentation
-                    description: Write comprehensive API documentation for all endpoints
-                    status: pending
-                    priority: high
-                    user: 60d0fe4f5311236168a109ca
-                    createdAt: '2021-06-21T12:00:00.000Z'
-                    updatedAt: '2021-06-21T12:00:00.000Z'
-                  - id: 60d0fe4f5311236168a109cb
-                    name: fix authentication bug
-                    description: Resolve issue with JWT token validation in middleware
-                    status: in-progress
-                    priority: medium
-                    user: 60d0fe4f5311236168a109cb
-                    createdAt: '2021-06-21T13:00:00.000Z'
-                    updatedAt: '2021-06-21T13:00:00.000Z'
+              examples:
+                noFilters:
+                  summary: All tasks (no filters)
+                  value:
+                    totalDocuments: 42
+                    totalPages: 5
+                    currentPage: 1
+                    data:
+                      - id: 60d0fe4f5311236168a109ca
+                        name: complete project documentation
+                        description: Write comprehensive API documentation for all endpoints
+                        status: pending
+                        priority: high
+                        user: 60d0fe4f5311236168a109ca
+                        createdAt: '2021-06-21T12:00:00.000Z'
+                        updatedAt: '2021-06-21T12:00:00.000Z'
+                      - id: 60d0fe4f5311236168a109cb
+                        name: fix authentication bug
+                        description: Resolve issue with JWT token validation in middleware
+                        status: in-progress
+                        priority: medium
+                        user: 60d0fe4f5311236168a109cb
+                        createdAt: '2021-06-21T13:00:00.000Z'
+                        updatedAt: '2021-06-21T13:00:00.000Z'
+                withStatusFilter:
+                  summary: Tasks filtered by status
+                  value:
+                    totalDocuments: 15
+                    totalPages: 2
+                    currentPage: 1
+                    data:
+                      - id: 60d0fe4f5311236168a109ca
+                        name: complete project documentation
+                        description: Write comprehensive API documentation for all endpoints
+                        status: pending
+                        priority: high
+                        user: 60d0fe4f5311236168a109ca
+                        createdAt: '2021-06-21T12:00:00.000Z'
+                        updatedAt: '2021-06-21T12:00:00.000Z'
+                withMultipleFilters:
+                  summary: Tasks filtered by status and priority
+                  value:
+                    totalDocuments: 5
+                    totalPages: 1
+                    currentPage: 1
+                    data:
+                      - id: 60d0fe4f5311236168a109ca
+                        name: complete project documentation
+                        description: Write comprehensive API documentation for all endpoints
+                        status: pending
+                        priority: high
+                        user: 60d0fe4f5311236168a109ca
+                        createdAt: '2021-06-21T12:00:00.000Z'
+                        updatedAt: '2021-06-21T12:00:00.000Z'
         '400':
           description: |
             **Bad request**
@@ -2147,6 +2246,8 @@ paths:
               - The `limit` parameter is not a valid positive integer.
               - The `limit` parameter exceeds 100.
               - The `page` or `limit` parameter is less than or equal to 0.
+              - The `status` filter is not one of: pending, in-progress, completed, archived.
+              - The `priority` filter is not one of: low, medium, high.
           content:
             application/json:
               schema:
@@ -2161,128 +2262,22 @@ paths:
                 limitTooLarge:
                   value:
                     error: Limit is too large
+                invalidStatus:
+                  value:
+                    error: Invalid task status
+                invalidPriority:
+                  value:
+                    error: Invalid task priority
         '401':
           description: |
             **Unauthorized**
 
             Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
+              - Session token is expired or not signed by this server.
+              - Session token purpose is not SESSION.
               - Session token is blacklisted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Invalid token
-        '429':
-          description: |
-            **Too many requests**
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Too many requests
-        '500':
-          description: |
-            **Internal server error**
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Internal server error
-
-  /api/tasks/all-by-user/{id}:
-    get:
-      operationId: findAllTasksByUser
-      summary: Get all tasks for a specific user with pagination
-      description: |
-        Retrieves a paginated list of all tasks owned by a specific user.
-        - **Returns**: A paginated response containing task data, total documents, total pages, and current page.
-        - **Constraints:**
-          - Page must be a positive integer (minimum: 1).
-          - Limit must be a positive integer (minimum: 1, maximum: 100).
-          - The user must exist in the database.
-        - **Caching:** Individual task records are cached for 10 seconds. After TTL expiration, data is revalidated against the database `updatedAt` field.
-        - **Rate Limiting:** Limited to 100 requests per 5 minutes per IP.
-        - **Additional Notes:**
-          - Requires authentication via Bearer token (minimum role: READONLY).
-          - Default pagination: page=1, limit=5.
-          - Results are sorted by creation date (oldest first), then by ID.
-          - Any authenticated user can view tasks owned by any user (no privacy restrictions).
-          - If requested page exceeds total pages, an empty data array is returned.
-      tags:
-        - Tasks
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: The user ID to filter tasks by (MongoDB ObjectId)
-          example: 60d0fe4f5311236168a109ca
-        - in: query
-          name: page
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-          required: false
-          description: Page number to retrieve (starts at 1)
-          example: 1
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 5
-          required: false
-          description: Number of tasks per page (max 100)
-          example: 10
-      responses:
-        '200':
-          description: |
-            **Paginated list of user's tasks retrieved successfully**
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TasksPaginationResponse'
-        '400':
-          description: |
-            **Bad request**
-
-            Possible causes:
-              - The `page` parameter is not a valid positive integer.
-              - The `limit` parameter is not a valid positive integer.
-              - The `limit` parameter exceeds 100.
-              - The `page` or `limit` parameter is less than or equal to 0.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                invalidPage:
-                  value:
-                    error: Invalid page
-                invalidLimit:
-                  value:
-                    error: Invalid limit
-                limitTooLarge:
-                  value:
-                    error: Limit is too large
-        '401':
-          description: |
-            **Unauthorized**
-
-            Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
-              - Session token is blacklisted.
+              - User ID is missing in the session token payload.
+              - User associated with the session token no longer exists.
           content:
             application/json:
               schema:
@@ -2294,252 +2289,14 @@ paths:
             **Not Found**
 
             Possible causes:
-              - The provided user ID is not a valid MongoDB ObjectId.
-              - No user exists with the provided ID.
+              - The `user` filter contains an invalid MongoDB ObjectId.
+              - No user exists with the ID provided in the `user` filter.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 error: User not found
-        '429':
-          description: |
-            **Too many requests**
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Too many requests
-        '500':
-          description: |
-            **Internal server error**
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Internal server error
-
-  /api/tasks/all-by-status/{status}:
-    get:
-      operationId: findAllTasksByStatus
-      summary: Get all tasks by status with pagination
-      description: |
-        Retrieves a paginated list of all tasks with a specific status.
-        - **Returns**: A paginated response containing task data, total documents, total pages, and current page.
-        - **Constraints:**
-          - Status must be one of: pending, in-progress, completed, archived (case-sensitive).
-          - Page must be a positive integer (minimum: 1).
-          - Limit must be a positive integer (minimum: 1, maximum: 100).
-        - **Caching:** Individual task records are cached for 10 seconds. After TTL expiration, data is revalidated against the database `updatedAt` field.
-        - **Rate Limiting:** Limited to 100 requests per 5 minutes per IP.
-        - **Additional Notes:**
-          - Requires authentication via Bearer token (minimum role: READONLY).
-          - Default pagination: page=1, limit=5.
-          - Results are sorted by creation date (oldest first), then by ID.
-          - All authenticated users can view all tasks (no filtering by ownership).
-          - If requested page exceeds total pages, an empty data array is returned.
-      tags:
-        - Tasks
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: status
-          schema:
-            type: string
-            enum: [pending, in-progress, completed, archived]
-          required: true
-          description: The status to filter tasks by
-          example: pending
-        - in: query
-          name: page
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-          required: false
-          description: Page number to retrieve (starts at 1)
-          example: 1
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 5
-          required: false
-          description: Number of tasks per page (max 100)
-          example: 10
-      responses:
-        '200':
-          description: |
-            **Paginated list of tasks with specified status retrieved successfully**
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TasksPaginationResponse'
-        '400':
-          description: |
-            **Bad request**
-
-            Possible causes:
-              - The status parameter is invalid (not one of: pending, in-progress, completed, archived).
-              - The `page` parameter is not a valid positive integer.
-              - The `limit` parameter is not a valid positive integer.
-              - The `limit` parameter exceeds 100.
-              - The `page` or `limit` parameter is less than or equal to 0.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                invalidStatus:
-                  value:
-                    error: Invalid task status
-                invalidPage:
-                  value:
-                    error: Invalid page
-                invalidLimit:
-                  value:
-                    error: Invalid limit
-                limitTooLarge:
-                  value:
-                    error: Limit is too large
-        '401':
-          description: |
-            **Unauthorized**
-
-            Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
-              - Session token is blacklisted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Invalid token
-        '429':
-          description: |
-            **Too many requests**
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Too many requests
-        '500':
-          description: |
-            **Internal server error**
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Internal server error
-
-  /api/tasks/all-by-priority/{priority}:
-    get:
-      operationId: findAllTasksByPriority
-      summary: Get all tasks by priority with pagination
-      description: |
-        Retrieves a paginated list of all tasks with a specific priority.
-        - **Returns**: A paginated response containing task data, total documents, total pages, and current page.
-        - **Constraints:**
-          - Priority must be one of: low, medium, high (case-sensitive).
-          - Page must be a positive integer (minimum: 1).
-          - Limit must be a positive integer (minimum: 1, maximum: 100).
-        - **Caching:** Individual task records are cached for 10 seconds. After TTL expiration, data is revalidated against the database `updatedAt` field.
-        - **Rate Limiting:** Limited to 100 requests per 5 minutes per IP.
-        - **Additional Notes:**
-          - Requires authentication via Bearer token (minimum role: READONLY).
-          - Default pagination: page=1, limit=5.
-          - Results are sorted by creation date (oldest first), then by ID.
-          - All authenticated users can view all tasks (no filtering by ownership).
-          - If requested page exceeds total pages, an empty data array is returned.
-      tags:
-        - Tasks
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: priority
-          schema:
-            type: string
-            enum: [low, medium, high]
-          required: true
-          description: The priority to filter tasks by
-          example: high
-        - in: query
-          name: page
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-          required: false
-          description: Page number to retrieve (starts at 1)
-          example: 1
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 5
-          required: false
-          description: Number of tasks per page (max 100)
-          example: 10
-      responses:
-        '200':
-          description: |
-            **Paginated list of tasks with specified priority retrieved successfully**
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TasksPaginationResponse'
-        '400':
-          description: |
-            **Bad request**
-
-            Possible causes:
-              - The priority parameter is invalid (not one of: low, medium, high).
-              - The `page` parameter is not a valid positive integer.
-              - The `limit` parameter is not a valid positive integer.
-              - The `limit` parameter exceeds 100.
-              - The `page` or `limit` parameter is less than or equal to 0.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                invalidPriority:
-                  value:
-                    error: Invalid task priority
-                invalidPage:
-                  value:
-                    error: Invalid page
-                invalidLimit:
-                  value:
-                    error: Invalid limit
-                limitTooLarge:
-                  value:
-                    error: Limit is too large
-        '401':
-          description: |
-            **Unauthorized**
-
-            Possible causes:
-              - Missing or invalid session token in Authorization header.
-              - Session token is expired.
-              - Session token is blacklisted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Invalid token
         '429':
           description: |
             **Too many requests**
