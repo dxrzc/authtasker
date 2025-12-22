@@ -40,7 +40,8 @@ export class RateLimiterMiddleware {
     }
 
     private buildKey(req: Request): string {
-        const endpoint = `${req.method}:${req.baseUrl}${req.path}`;
-        return `${req.ip}:${endpoint}`;
+        const fullRequestPath = `${req.method}:${req.baseUrl}${req.route.path}`;
+        const key = `${req.ip}:${fullRequestPath}`;
+        return key;
     }
 }
