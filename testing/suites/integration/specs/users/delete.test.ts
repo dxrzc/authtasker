@@ -232,10 +232,11 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
             const ip = faker.internet.ip();
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             for (let i = 0; i < rateLimiting[RateLimiter.relaxed].max; i++) {
-                const tempUser = await createUser(UserRole.READONLY);
+                const { sessionToken } = await createUser(UserRole.READONLY);
+                // id path parameter is different in every request
                 await testKit.agent
-                    .delete(`${testKit.urls.usersAPI}/${tempUser.id}`)
-                    .set('Authorization', `Bearer ${tempUser.sessionToken}`)
+                    .delete(`${testKit.urls.usersAPI}/${new Types.ObjectId().toString()}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
                     .set('X-Forwarded-For', ip);
             }
             const response = await testKit.agent
