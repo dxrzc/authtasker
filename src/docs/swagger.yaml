@@ -981,7 +981,10 @@ paths:
       description: |
         Retrieves the profile information of the currently authenticated user.
         - **Returns**: The authenticated user's profile data.
-        - **Caching:** User data is cached for 10 seconds. After TTL expiration, data is revalidated against the database `updatedAt` field before serving stale content or fetching fresh data.
+        - **Caching:** User data is cached for 10 seconds.
+          - After the TTL expires, the cache entry is revalidated by comparing its `updatedAt` value with the corresponding value in the database.
+          - If `updatedAt` has not changed, the cached response is served.
+          - If `updatedAt` has changed, fresh data is fetched from the database, returned to the client, and the cache entry is updated.
         - **Rate Limiting:** Limited to 100 requests per 5 minutes per IP.
         - **Additional Notes:**
           - Requires authentication via Bearer token (minimum role: READONLY).
@@ -1210,7 +1213,10 @@ paths:
       description: |
         Retrieves detailed information about a specific user by their unique ID.
         - **Returns**: The user's profile data.
-        - **Caching:** User data is cached for 10 seconds. After TTL expiration, data is revalidated against the database `updatedAt` field before serving stale content or fetching fresh data.
+        - **Caching:** User data is cached for 10 seconds.
+          - After the TTL expires, the cache entry is revalidated by comparing its `updatedAt` value with the corresponding value in the database.
+          - If `updatedAt` has not changed, the cached response is served.
+          - If `updatedAt` has changed, fresh data is fetched from the database, returned to the client, and the cache entry is updated.
         - **Rate Limiting:** Limited to 100 requests per 5 minutes per IP.
         - **Additional Notes:**
           - Requires authentication via Bearer token (minimum role: READONLY).
@@ -1533,7 +1539,10 @@ paths:
         - **Constraints:**
           - Page must be a positive integer (minimum: 1).
           - Limit must be a positive integer (minimum: 1, maximum: 100).
-        - **Caching:** Individual user records are cached for 10 seconds. After TTL expiration, data is revalidated against the database `updatedAt` field.
+        - **Caching:** Individual user records are cached for 10 seconds.
+          - After the TTL expires, the cache entry is revalidated by comparing its `updatedAt` value with the corresponding value in the database.
+          - If `updatedAt` has not changed, the cached response is served.
+          - If `updatedAt` has changed, fresh data is fetched from the database, returned to the client, and the cache entry is updated.
         - **Rate Limiting:** Limited to 100 requests per 5 minutes per IP.
         - **Additional Notes:**
           - Requires authentication via Bearer token (minimum role: READONLY).
@@ -1782,7 +1791,10 @@ paths:
       description: |
         Retrieves detailed information about a specific task by its unique ID.
         - **Returns**: The task object.
-        - **Caching:** Task data is cached for 10 seconds. After TTL expiration, data is revalidated against the database `updatedAt` field before serving stale content or fetching fresh data.
+        - **Caching:** Task data is cached for 10 seconds.
+          - After the TTL expires, the cache entry is revalidated by comparing its `updatedAt` value with the corresponding value in the database.
+          - If `updatedAt` has not changed, the cached response is served.
+          - If `updatedAt` has changed, fresh data is fetched from the database, returned to the client, and the cache entry is updated.
         - **Rate Limiting:** Limited to 100 requests per 5 minutes per IP.
         - **Additional Notes:**
           - Requires authentication via Bearer token (minimum role: READONLY).
@@ -2118,7 +2130,10 @@ paths:
           - If `status` filter is provided, it must be one of: pending, in-progress, completed, archived.
           - If `priority` filter is provided, it must be one of: low, medium, high.
           - If `user` filter is provided, it must be a valid MongoDB ObjectId of an existing user.
-        - **Caching:** Individual task records are cached for 10 seconds. After TTL expiration, data is revalidated against the database `updatedAt` field.
+        - **Caching:** Individual task records are cached for 10 seconds.
+          - After the TTL expires, the cache entry is revalidated by comparing its `updatedAt` value with the corresponding value in the database.
+          - If `updatedAt` has not changed, the cached response is served.
+          - If `updatedAt` has changed, fresh data is fetched from the database, returned to the client, and the cache entry is updated.
         - **Rate Limiting:** Limited to 100 requests per 5 minutes per IP.
         - **Additional Notes:**
           - Requires authentication via Bearer token (minimum role: READONLY).
