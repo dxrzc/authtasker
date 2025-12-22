@@ -31,7 +31,9 @@ beforeAll(async () => {
         testKit.loggerServiceMock = mock<LoggerService>();
 
         // MongoDB (in-memory).
-        mongoMemoryServer = await MongoMemoryReplSet.create(); // 1 node replica set by default
+        mongoMemoryServer = await MongoMemoryReplSet.create({
+            instanceOpts: [{ port: 27017 + Math.floor(Math.random() * 1000) }],
+        }); // 1 node replica set by default
         const mongoUri = mongoMemoryServer.getUri();
         mongoDatabase = new MongoDatabase(testKit.loggerServiceMock, {
             listenModelEvents: false,
