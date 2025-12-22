@@ -264,7 +264,10 @@ export class UserService {
     async logoutAll(password: string, user: UserSessionInfo): Promise<void> {
         const userData = await this.findOneByIdOrThrow(user.id);
         await this.passwordsMatchOrThrow(userData.password, password);
-        await this.refreshTokenService.revokeAll(userData.id);
+        await allSettledAndThrow([
+            this.refreshTokenService.revokeAll(userData.id),
+            this.sessionTokenService.blacklist(user.sessionJti, user.sessionTokenExpUnix),
+        ]);
         this.loggerService.info(`All refresh tokens of user ${userData.id} have been revoked`);
     }
 
