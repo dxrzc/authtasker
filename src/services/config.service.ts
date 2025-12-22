@@ -86,11 +86,6 @@ export class ConfigService {
 
     public readonly CACHE_HARD_TTL_SECONDS = env.get('CACHE_HARD_TTL_SECONDS').required().asInt();
 
-    public readonly PAGINATION_CACHE_TTLS_SECONDS = env
-        .get('PAGINATION_CACHE_TTLS_SECONDS')
-        .required()
-        .asIntPositive();
-
     get isProduction(): boolean {
         return this.NODE_ENV === 'production';
     }
