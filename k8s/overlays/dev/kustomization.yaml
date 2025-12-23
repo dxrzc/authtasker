@@ -3,11 +3,3 @@ namespace: authtasker-dev
 resources:
   - namespace.yaml
   - ../../base/redis
-
-configMapGenerator:
-  - name: redis-config
-    files:
-      - redis.conf
-
-generatorOptions:
-  disableNameSuffixHash: true
