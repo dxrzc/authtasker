@@ -36,7 +36,7 @@ services:
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:    
       - redis:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./k8s/overlays/dev/redis.conf:/usr/local/etc/redis/redis.conf
 
   mongo-db:
     # From localhost mongodb://localhost:27017/?directConnection=true
