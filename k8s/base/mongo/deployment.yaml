@@ -11,24 +11,24 @@ spec:
     metadata:
       labels:
         app: mongo-deploy
-  spec:
-    containers:
-      - name: mongo
-        image: mongo:7
-        ports:
-          - containerPort: 27017
-            name: mongo-port
-        volumeMounts:
-          - name: mongo-persistent-storage
-            mountPath: /data/db
-        resources:
-          requests:
-            cpu: 50m
-            memory: 128Mi
-          limits:
-            cpu: 300m
-            memory: 256Mi                               
-    volumes:
-      - name: mongo-persistent-storage
-        persistentVolumeClaim:
-          claimName: mongo-pv-claim
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7
+          ports:
+            - containerPort: 27017
+              name: mongo-port
+          volumeMounts:
+            - name: mongo-persistent-storage
+              mountPath: /data/db
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi                               
+      volumes:
+        - name: mongo-persistent-storage
+          persistentVolumeClaim:
+            claimName: mongo-pv-claim
