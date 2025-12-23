@@ -3,3 +3,4 @@ namespace: authtasker-dev
 resources:
   - namespace.yaml
   - ../../base/redis
+  - ../../base/mongo
