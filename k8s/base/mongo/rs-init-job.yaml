@@ -1,0 +1,28 @@
+# Initializes MongoDB Replica Set
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongo-rs-init
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init
+          image: mongo:7
+          command:
+            - bash
+            - -c
+            - |
+              set -e              
+              echo "Waiting for MongoDB to be ready..."              
+              sleep 10
+              mongosh "mongodb://mongo-svc:27017/admin" --quiet <<'EOF'
+              try {
+                rs.status()  
+                print("Replica set already initialized") 
+              } catch (e) {                
+                rs.initiate()
+                print("Replica set initialized")
+              }
+              EOF
