@@ -80,7 +80,8 @@ async function main() {
         redisDb.client,
     );
     await appRoutes.createInitialAdminUser();
-    const server = new Server(configService.PORT, appRoutes.routes, loggerService);
+    const appRouter = await appRoutes.routes();
+    const server = new Server(configService.PORT, appRouter, loggerService);
     await server.start();
     ShutdownManager.server = server;
 }

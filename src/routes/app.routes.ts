@@ -2,7 +2,6 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { Router } from 'express';
 import { HealthController } from 'src/controllers/health.controller';
 import { IAsyncLocalStorageStore } from 'src/interfaces/others/async-local-storage.interface';
-import { SeedRoutes } from 'src/routes/seed.routes';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { RedisService } from 'src/services/redis.service';
@@ -82,7 +81,9 @@ export class AppRoutes {
         return tasksRoutes.routes;
     }
 
-    private buildSeedRoutes(): Router {
+    private async buildSeedRoutes(): Promise<Router> {
+        // Avoids faker dependency required in production
+        const { SeedRoutes } = await import('src/routes/seed.routes');
         const seedRoutes = new SeedRoutes(
             this.configService,
             this.models.userModel,
@@ -102,7 +103,7 @@ export class AppRoutes {
         await createAdmin(this.models.userModel, this.configService, this.services.hashingService);
     }
 
-    get routes(): Router {
+    async routes(): Promise<Router> {
         const router = Router();
 
         if (this.swaggerDocument) {
@@ -113,7 +114,7 @@ export class AppRoutes {
         router.use('/system', this.buildHealthRoutes());
         router.use('/api/users', this.buildUserRoutes());
         router.use('/api/tasks', this.buildTasksRoutes());
-        if (this.configService.isDevelopment) router.use('/seed', this.buildSeedRoutes());
+        if (this.configService.isDevelopment) router.use('/seed', await this.buildSeedRoutes());
         return router;
     }
 }
