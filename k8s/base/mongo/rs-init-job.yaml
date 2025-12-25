@@ -15,14 +15,12 @@ spec:
             - -c
             - |
               set -e              
-              echo "Waiting for MongoDB to be ready..."              
-              sleep 10
+              echo "Waiting for mongodb to be ready..."              
+              sleep 10              
               mongosh "mongodb://mongo-svc:27017/admin" --quiet <<'EOF'
-              try {
-                rs.status()  
-                print("Replica set already initialized") 
-              } catch (e) {                
-                rs.initiate()
-                print("Replica set initialized")
+              try { 
+                rs.status() 
+              } catch (err) { 
+                rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo-svc:27017'}]}) 
               }
               EOF
