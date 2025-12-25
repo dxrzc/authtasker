@@ -2,6 +2,8 @@ namespace: authtasker-dev
 
 resources:
   - namespace.yaml
+  - secrets.yaml
+  - configmap.yaml
   - ../../base/redis
   - ../../base/mongo
   - ../../base/backend
