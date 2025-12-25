@@ -24,12 +24,17 @@ export class ConfigService {
     private loadSecretObject() {
         const secretsPath = '/var/run/secrets/app';
         const entries = fs.readdirSync(secretsPath, { withFileTypes: true });
-        const files = entries.filter((e) => e.isFile()).map((e) => e.name);
-        const result = {};
-        files.map((name) => {
-            const content = fs.readFileSync(path.join(secretsPath, name), 'utf8');
+        // secret files are symbolic links
+        const files = entries
+            .filter((entry) => entry.isSymbolicLink() && !entry.name.startsWith('.'))
+            .map((entry) => entry.name);
+        const result: Record<string, string> = {};
+        for (const name of files) {
+            // resolve symlinks
+            const filePath = fs.realpathSync(path.join(secretsPath, name));
+            const content = fs.readFileSync(filePath, 'utf8');
             result[name] = content;
-        });
+        }
         return result;
     }
 
