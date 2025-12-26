@@ -16,7 +16,7 @@ services:
       - ./logs:/usr/src/app/logs
       - ./tsconfig.json:/usr/src/app/tsconfig.json
     environment:      
-      MONGO_URI: mongodb://mongo-db:27017
+      MONGO_URI: mongodb://mongo-db:27017/authtasker-dev
       REDIS_URI: redis://redis-db:6379
       MAIL_SERVICE_HOST: mailpit
       MAIL_SERVICE_PORT: 1025
