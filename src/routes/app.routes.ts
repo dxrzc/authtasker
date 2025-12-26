@@ -52,7 +52,12 @@ export class AppRoutes {
 
     private loadSwaggerDocument(): void {
         try {
-            const swaggerPath = join(process.cwd(), 'src', 'docs', 'swagger.yaml');
+            let swaggerPath: string;
+            if (this.configService.isProduction) {
+                swaggerPath = join(process.cwd(), 'dist', 'docs', 'swagger.yaml');
+            } else {
+                swaggerPath = join(process.cwd(), 'src', 'docs', 'swagger.yaml');
+            }
             const file = readFileSync(swaggerPath, 'utf8');
             this.swaggerDocument = YAML.parse(file);
         } catch (err) {
