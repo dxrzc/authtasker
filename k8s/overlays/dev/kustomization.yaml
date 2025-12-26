@@ -6,6 +6,7 @@ resources:
   - configmap.yaml
   - ../../base/redis
   - ../../base/mongo
+  - ../../base/mailpit
   - ../../base/backend
 
 patches:

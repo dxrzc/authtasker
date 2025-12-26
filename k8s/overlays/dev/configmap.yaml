@@ -9,9 +9,9 @@ data:
   JWT_EMAIL_VALIDATION_EXP_TIME: "10m"
   JWT_REFRESH_EXP_TIME: "30d"
   MAX_REFRESH_TOKENS_PER_USER: "3"
-  MAIL_SERVICE_HOST: "testHost" #TODO: add mailpit
-  MAIL_SERVICE_PORT: "5490" #TODO: add mailpit
-  MAIL_SERVICE_USER: "testUser" #TODO: add mailpit
+  MAIL_SERVICE_HOST: "mailpit-svc"
+  MAIL_SERVICE_PORT: "1025"
+  MAIL_SERVICE_USER: "anyuser"
   WEB_URL: "http://localhost:3000"
   HTTP_LOGS: "true"
   ADMIN_NAME: "authtaskerAdmin"

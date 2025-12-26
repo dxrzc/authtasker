@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailpit-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mailpit-deploy
+  template:
+    metadata:
+      labels:
+        app: mailpit-deploy
+    spec:
+      containers:
+        - name: mailpit
+          image: axllent/mailpit:latest
+          ports:
+            - containerPort: 1025
+              name: smtp-port
+            - containerPort: 8025
+              name: web-port
+          env:
+            - name: MP_MAX_MESSAGES
+              value: "500"
+            - name: MP_SMTP_AUTH_ACCEPT_ANY
+              value: "true"
+            - name: MP_SMTP_AUTH_ALLOW_INSECURE
+              value: "true"
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
