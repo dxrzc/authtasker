@@ -29,8 +29,9 @@ export class MongoDatabase {
     }
 
     async disconnect(): Promise<void> {
-        if (mongoose.connection.readyState === mongoose.ConnectionStates.connected)
-            await mongoose.disconnect();
+        if (mongoose.connection.readyState === mongoose.ConnectionStates.connected) {
+            await mongoose.connection.close();
+        }
     }
 
     private setupMongooseEventListeners(): void {

@@ -130,6 +130,27 @@ describe(`POST ${testKit.urls.login}`, () => {
             expect(res.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
             expect(res.statusCode).toBe(401);
         });
+
+        test('validation catches invalid email even if user exists in database with that email', async () => {
+            // Create a user directly in DB with an invalid email format (bypassing DTO validation)
+            const invalidEmail = 'nonemailcom';
+            const password = 'ValidPass123!';
+            const hashedPassword = await testKit.hashingService.hash(password);
+            await testKit.models.user.create({
+                email: invalidEmail,
+                password: hashedPassword,
+                name: faker.person.fullName(),
+                role: getRandomRole(),
+                emailValidated: false,
+            });
+            // Try to login with the invalid email - should fail at validation level
+            const res = await testKit.agent.post(testKit.urls.login).send({
+                email: invalidEmail,
+                password: password,
+            });
+            expect(res.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
+            expect(res.statusCode).toBe(401);
+        });
     });
 
     describe('User exceeds the max refresh tokens per user', () => {

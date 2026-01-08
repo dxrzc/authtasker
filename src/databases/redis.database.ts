@@ -92,5 +92,8 @@ export class RedisDatabase {
         if (this.subscriber.status === 'ready') {
             await this.subscriber.quit();
         }
+        // Force disconnect for ioredis-mock or any remaining connections
+        this._client.disconnect();
+        this.subscriber.disconnect();
     }
 }

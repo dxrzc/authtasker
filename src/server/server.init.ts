@@ -10,7 +10,11 @@ import helmet from 'helmet';
 import { Server as HttpServer } from 'http';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { HttpError } from 'src/errors/http-error.class';
-import { InvalidInputError, MaliciousInputError } from 'src/errors/invalid-input-error.class';
+import {
+    InvalidCredentialsError,
+    InvalidInputError,
+    MaliciousInputError,
+} from 'src/errors/invalid-input-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
@@ -39,7 +43,6 @@ export class Server {
         this.app.use(hpp()); // Http Parameter Pollution
         this.app.use(this.routes);
         this.app.use(this.handleNotFound);
-        // TODO: cors, https
         this.app.use(this.createErrorHandlerMiddleware);
     }
 
@@ -61,17 +64,17 @@ export class Server {
                 });
                 return;
             }
+            if (err instanceof InvalidCredentialsError) {
+                // log actual error and throw generic
+                this.logger.error(`Validation error: ${err.actualError}`);
+                res.status(statusCodes.UNAUTHORIZED).json({
+                    error: authErrors.INVALID_CREDENTIALS,
+                });
+                return;
+            }
             if (err instanceof InvalidInputError) {
-                const errorMessage = err.message;
-                this.logger.error(`Validation error: ${errorMessage}`);
-                if (errorMessage === authErrors.INVALID_CREDENTIALS) {
-                    // Special case for invalid credentials to avoid leaking info
-                    res.status(statusCodes.UNAUTHORIZED).json({
-                        error: authErrors.INVALID_CREDENTIALS,
-                    });
-                } else {
-                    res.status(statusCodes.BAD_REQUEST).json({ error: errorMessage });
-                }
+                this.logger.error(`Validation error: ${err.message}`);
+                res.status(statusCodes.BAD_REQUEST).json({ error: err.message });
                 return;
             }
             // Internal Server Error
