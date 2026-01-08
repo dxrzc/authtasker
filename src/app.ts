@@ -79,8 +79,11 @@ async function main() {
         redisService,
         redisDb.client,
     );
-    await appRoutes.createInitialAdminUser();
-    const server = new Server(configService.PORT, appRoutes.routes, loggerService);
+    const server = new Server(
+        configService.PORT,
+        await appRoutes.configureApiRoutes(),
+        loggerService,
+    );
     await server.start();
     ShutdownManager.server = server;
 }
