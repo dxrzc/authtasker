@@ -29,6 +29,7 @@ import { resetYourPasswordTemplate } from 'src/templates/reset-your-password.tem
 import { calculatePagination } from 'src/functions/pagination/calculate-pagination';
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
 import { TasksService } from './tasks.service';
+import { SystemLoggerService } from './system-logger.service';
 
 export class UserService {
     constructor(
@@ -44,6 +45,25 @@ export class UserService {
         private readonly cacheService: CacheService<UserDocument>,
         private readonly passwordRecoveryTokenService: PasswordRecoveryTokenService,
     ) {}
+
+    async createAdministratorIfNotExists(): Promise<void> {
+        const alreadyExists = await this.userModel
+            .findOne({ name: this.configService.ADMIN_NAME })
+            .exec();
+        if (!alreadyExists) {
+            const admin = await this.userModel.create({
+                name: this.configService.ADMIN_NAME,
+                email: this.configService.ADMIN_EMAIL,
+                password: await this.hashPassword(this.configService.ADMIN_PASSWORD),
+                role: UserRole.ADMIN,
+                emailValidated: true,
+            });
+            const adminId = admin._id.toString();
+            SystemLoggerService.info(`Admin ${adminId} created successfully`);
+        } else {
+            SystemLoggerService.info(`Admin user creation omitted, already exists`);
+        }
+    }
 
     private isValidMongoIdOrThrow(id: string): void {
         const validMongoId = Types.ObjectId.isValid(id);

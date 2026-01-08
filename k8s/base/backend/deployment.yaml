@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:  
+  name: authtasker-deploy
+  labels:
+    app: authtasker-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: authtasker-deploy
+  template: 
+    metadata:
+      labels:
+        app: authtasker-deploy 
+    spec:
+      containers:
+      - name: authtasker
+        image: authtasker:prod
+        ports:
+        - containerPort: 3000
+          name: authtasker-port
+        volumeMounts:
+          - name: secrets
+            mountPath: /var/run/secrets/app
+            readOnly: true
+        envFrom:
+          - configMapRef:
+              name: backend-configs
+        resources:
+          requests:
+            cpu: "100m" 
+            memory: "286Mi"
+          limits: 
+            cpu: "500m"
+            memory: "572Mi"                
+      volumes:
+        - name: secrets
+          secret:
+            secretName: backend-secrets   

@@ -8,7 +8,7 @@ import { UserDataGenerator } from 'src/generators/user.generator';
 import { ModelLoader } from 'src/models/model.loader';
 import { ConfigService } from 'src/services/config.service';
 
-beforeAll(() => {
+beforeAll(async () => {
     const configSvc = new ConfigService();
     testKit.configService = configSvc;
     const appRoutes = new AppRoutes(
@@ -20,7 +20,7 @@ beforeAll(() => {
     );
     const server = new Server(
         testKit.configService.PORT,
-        appRoutes.routes,
+        await appRoutes.configureApiRoutes(),
         testKit.loggerServiceMock,
     );
     testKit.taskData = new TasksDataGenerator();

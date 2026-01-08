@@ -1,0 +1,12 @@
+resources:
+  - deployment.yaml
+  - service.yaml
+  - pvc.yaml
+
+configMapGenerator:
+  - name: redis-config
+    files:
+      - redis.conf
+
+generatorOptions:
+  disableNameSuffixHash: true
