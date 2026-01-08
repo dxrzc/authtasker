@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deploy  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-deploy
+  template:
+    metadata:
+      labels:
+        app: redis-deploy
+    spec:
+      containers:
+        - name: redis
+          image: redis:7
+          ports:
+            - containerPort: 6379
+              name: redis-port
+          volumeMounts:
+            - name: redis-persistent-storage
+              mountPath: /data            
+            - name: redis-config
+              mountPath: /usr/local/etc/redis/redis.conf
+              subPath: redis.conf                  
+          resources:
+            requests:
+              cpu: 50m 
+              memory: 64Mi 
+            limits:
+              cpu: 200m 
+              memory: 256Mi 
+      volumes:
+        - name: redis-persistent-storage
+          persistentVolumeClaim:
+            claimName: redis-pv-claim              
+        - name: redis-config
+          configMap:
+            name: redis-config

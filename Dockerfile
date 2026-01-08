@@ -31,6 +31,7 @@ CMD ["sh", "-c", "npx tsc-watch --onSuccess \"node -r source-map-support/registe
 FROM base AS production
 COPY --from=prod-deps /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
+COPY src/docs/swagger.yaml ./dist/docs/swagger.yaml
 RUN mkdir logs && chown -R node:node logs
 USER node
 ENV NODE_ENV=production

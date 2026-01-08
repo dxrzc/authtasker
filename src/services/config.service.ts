@@ -1,4 +1,6 @@
 import * as env from 'env-var';
+import path from 'path';
+import fs from 'fs';
 
 export class ConfigService {
     public readonly NODE_ENV = env
@@ -6,17 +8,71 @@ export class ConfigService {
         .required()
         .asEnum(['development', 'e2e', 'integration', 'production']);
 
-    public readonly MONGO_URI = env.get('MONGO_URI').required().asString();
+    // secrets
+    public readonly JWT_EMAIL_VALIDATION_PRIVATE_KEY: string;
+    public readonly JWT_PASSWORD_RECOVERY_PRIVATE_KEY: string;
+    public readonly JWT_SESSION_PRIVATE_KEY: string;
+    public readonly JWT_REFRESH_PRIVATE_KEY: string;
+    public readonly BCRYPT_SALT_ROUNDS: number;
+    public readonly PASSWORD_PEPPER: string;
+    public readonly MONGO_URI: string;
+    public readonly REDIS_URI: string;
 
-    public readonly REDIS_URI = env.get('REDIS_URI').required().asString();
+    /**
+     * @returns A mapping of secret names to their content read from the file system
+     */
+    private loadSecretObject() {
+        const secretsPath = '/var/run/secrets/app';
+        const entries = fs.readdirSync(secretsPath, { withFileTypes: true });
+        // secret files are symbolic links
+        const files = entries
+            .filter((entry) => entry.isSymbolicLink() && !entry.name.startsWith('.'))
+            .map((entry) => entry.name);
+        const result: Record<string, string> = {};
+        for (const name of files) {
+            // resolve symlinks
+            const filePath = fs.realpathSync(path.join(secretsPath, name));
+            const content = fs.readFileSync(filePath, 'utf8');
+            result[name] = content;
+        }
+        return result;
+    }
+
+    constructor() {
+        // Read from file secrets in production, from env otherwise
+        let secretsMapper: typeof env;
+        if (this.NODE_ENV === 'production')
+            secretsMapper = env.from(this.loadSecretObject()) as unknown as typeof env;
+        else secretsMapper = env;
+
+        // secrets
+        this.MONGO_URI = secretsMapper.get('MONGO_URI').required().asString();
+        this.REDIS_URI = secretsMapper.get('REDIS_URI').required().asString();
+        this.BCRYPT_SALT_ROUNDS = secretsMapper.get('BCRYPT_SALT_ROUNDS').required().asInt();
+        this.PASSWORD_PEPPER = secretsMapper.get('PASSWORD_PEPPER').required().asString();
+        this.JWT_SESSION_PRIVATE_KEY = secretsMapper
+            .get('JWT_SESSION_PRIVATE_KEY')
+            .required()
+            .asString();
+        this.JWT_EMAIL_VALIDATION_PRIVATE_KEY = secretsMapper
+            .get('JWT_EMAIL_VALIDATION_PRIVATE_KEY')
+            .required()
+            .asString();
+        this.JWT_PASSWORD_RECOVERY_PRIVATE_KEY = secretsMapper
+            .get('JWT_PASSWORD_RECOVERY_PRIVATE_KEY')
+            .required()
+            .asString();
+        this.JWT_REFRESH_PRIVATE_KEY = secretsMapper
+            .get('JWT_REFRESH_PRIVATE_KEY')
+            .required()
+            .asString();
+        this.MAIL_SERVICE_PASS = secretsMapper.get('MAIL_SERVICE_PASS').required().asString();
+        this.ADMIN_PASSWORD = secretsMapper.get('ADMIN_PASSWORD').required().asString();
+    }
 
     public readonly PORT = env.get('PORT').required().asPortNumber();
 
-    public readonly BCRYPT_SALT_ROUNDS = env.get('BCRYPT_SALT_ROUNDS').required().asInt();
-
     public readonly JWT_SESSION_EXP_TIME = env.get('JWT_SESSION_EXP_TIME').required().asString();
-
-    public readonly PASSWORD_PEPPER = env.get('PASSWORD_PEPPER').required().asString();
 
     public readonly JWT_PASSWORD_RECOVERY_EXP_TIME = env
         .get('JWT_PASSWORD_RECOVERY_EXP_TIME')
@@ -29,27 +85,6 @@ export class ConfigService {
         .asString();
 
     public readonly JWT_REFRESH_EXP_TIME = env.get('JWT_REFRESH_EXP_TIME').required().asString();
-
-    public readonly JWT_SESSION_PRIVATE_KEY = env
-        .get('JWT_SESSION_PRIVATE_KEY')
-        .required()
-        .asString();
-
-    public readonly JWT_EMAIL_VALIDATION_PRIVATE_KEY = env
-        .get('JWT_EMAIL_VALIDATION_PRIVATE_KEY')
-        .required()
-        .asString();
-
-    public readonly JWT_PASSWORD_RECOVERY_PRIVATE_KEY = env
-        .get('JWT_PASSWORD_RECOVERY_PRIVATE_KEY')
-        .required()
-        .asString();
-
-    public readonly JWT_REFRESH_PRIVATE_KEY = env
-        .get('JWT_REFRESH_PRIVATE_KEY')
-        .required()
-        .asString();
-
     public readonly MAX_REFRESH_TOKENS_PER_USER = env
         .get('MAX_REFRESH_TOKENS_PER_USER')
         .required()
@@ -61,7 +96,7 @@ export class ConfigService {
 
     public readonly MAIL_SERVICE_USER = env.get('MAIL_SERVICE_USER').required().asString();
 
-    public readonly MAIL_SERVICE_PASS = env.get('MAIL_SERVICE_PASS').required().asString();
+    public readonly MAIL_SERVICE_PASS: string;
 
     // web url is appended with a default "/" when read
     public readonly WEB_URL = env.get('WEB_URL').required().asUrlString();
@@ -72,7 +107,7 @@ export class ConfigService {
 
     public readonly ADMIN_EMAIL = env.get('ADMIN_EMAIL').required().asEmailString();
 
-    public readonly ADMIN_PASSWORD = env.get('ADMIN_PASSWORD').required().asString();
+    public readonly ADMIN_PASSWORD: string;
 
     public readonly USERS_API_CACHE_TTL_SECONDS = env
         .get('USERS_API_CACHE_TTL_SECONDS')
