@@ -20,8 +20,8 @@ let mongoDatabase: MongoDatabase;
 let redisDatabase: RedisDatabase;
 
 async function cleanup() {
-    await mongoMemoryServer.stop();
     await Promise.all([redisDatabase.disconnect(), mongoDatabase.disconnect()]);
+    await mongoMemoryServer.stop({ doCleanup: true, force: true });
 }
 
 beforeAll(async () => {

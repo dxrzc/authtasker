@@ -11,7 +11,6 @@ import { buildServices } from './factories/services.factory';
 import { HealthRoutes } from './health.routes';
 import { TasksRoutes } from './tasks.routes';
 import { UserRoutes } from './user.routes';
-import { createAdmin } from 'src/admin/create-admin';
 import { Redis } from 'ioredis';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yaml';
@@ -105,16 +104,16 @@ export class AppRoutes {
     }
 
     async createInitialAdminUser(): Promise<void> {
-        await createAdmin(this.models.userModel, this.configService, this.services.hashingService);
+        await this.services.userService.createAdministratorIfNotExists();
     }
 
-    async routes(): Promise<Router> {
+    async configureApiRoutes(): Promise<Router> {
+        await this.createInitialAdminUser();
         const router = Router();
 
         if (this.swaggerDocument) {
             router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(this.swaggerDocument));
         }
-
         router.use(this.middlewares.requestContextMiddleware.middleware());
         router.use('/system', this.buildHealthRoutes());
         router.use('/api/users', this.buildUserRoutes());

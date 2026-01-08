@@ -1,8 +1,11 @@
 import { LoginUserDto } from 'src/dtos/models/user/login-user.dto';
 import { usersLimits } from 'src/constants/user.constants';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { authErrors } from 'src/messages/auth.error.messages';
-import { InvalidInputError, MaliciousInputError } from 'src/errors/invalid-input-error.class';
+import {
+    InvalidCredentialsError,
+    InvalidInputError,
+    MaliciousInputError,
+} from 'src/errors/invalid-input-error.class';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { UserDataGenerator } from 'src/generators/user.generator';
 
@@ -32,10 +35,12 @@ describe('LoginUserDto', () => {
         );
     });
 
-    it('should throw if email is invalid', async () => {
+    it('should throw InvalidCredentialsError when email is invalid and expose actual error', async () => {
         const data = { ...validData, email: 'invalid-email' };
-        await expect(LoginUserDto.validate(data)).rejects.toThrow(
-            new InvalidInputError(authErrors.INVALID_CREDENTIALS),
+        await expect(LoginUserDto.validate(data)).rejects.toThrow(InvalidCredentialsError);
+        await expect(LoginUserDto.validate(data)).rejects.toHaveProperty(
+            'actualError',
+            usersApiErrors.INVALID_EMAIL,
         );
     });
 
@@ -46,17 +51,21 @@ describe('LoginUserDto', () => {
         );
     });
 
-    it('should throw if password is too short', async () => {
+    it('should throw InvalidCredentialsError when password is too short and expose actual error', async () => {
         const data = { ...validData, password: 'a'.repeat(usersLimits.MIN_PASSWORD_LENGTH - 1) };
-        await expect(LoginUserDto.validate(data)).rejects.toThrow(
-            new InvalidInputError(authErrors.INVALID_CREDENTIALS),
+        await expect(LoginUserDto.validate(data)).rejects.toThrow(InvalidCredentialsError);
+        await expect(LoginUserDto.validate(data)).rejects.toHaveProperty(
+            'actualError',
+            usersApiErrors.INVALID_PASSWORD_LENGTH,
         );
     });
 
-    it('should throw if password is too long', async () => {
+    it('should throw InvalidCredentialsError when password is too long and expose actual error', async () => {
         const data = { ...validData, password: 'a'.repeat(usersLimits.MAX_PASSWORD_LENGTH + 1) };
-        await expect(LoginUserDto.validate(data)).rejects.toThrow(
-            new InvalidInputError(authErrors.INVALID_CREDENTIALS),
+        await expect(LoginUserDto.validate(data)).rejects.toThrow(InvalidCredentialsError);
+        await expect(LoginUserDto.validate(data)).rejects.toHaveProperty(
+            'actualError',
+            usersApiErrors.INVALID_PASSWORD_LENGTH,
         );
     });
 

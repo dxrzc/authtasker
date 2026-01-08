@@ -14,6 +14,7 @@ import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { Types } from 'mongoose';
+import { SystemLoggerService } from 'src/services/system-logger.service';
 
 describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     describe('Session token not provided', () => {
@@ -130,6 +131,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
                 .mockImplementation(() => {
                     throw new Error('forced tx failure');
                 });
+            jest.spyOn(SystemLoggerService, 'error').mockImplementationOnce(() => {});
             try {
                 const { statusCode, body } = await testKit.agent
                     .delete(`${testKit.urls.usersAPI}/${id}`)
