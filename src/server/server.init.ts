@@ -39,7 +39,6 @@ export class Server {
         this.app.use(hpp()); // Http Parameter Pollution
         this.app.use(this.routes);
         this.app.use(this.handleNotFound);
-        // TODO: cors, https
         this.app.use(this.createErrorHandlerMiddleware);
     }
 
