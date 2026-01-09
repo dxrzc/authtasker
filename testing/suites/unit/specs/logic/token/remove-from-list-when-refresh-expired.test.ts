@@ -1,16 +1,27 @@
-import Redis from 'ioredis';
-import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
+import { invalidateExpiredRefreshToken } from 'src/functions/token/remove-refresh-token-from-list';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
-import { removeFromListWhenRefreshTokenExpires } from 'src/functions/token/remove-from-list-when-refresh-token-expires';
 
-describe('removeFromSetWhenRefreshTokenExpires', () => {
-    test('logic works with current refresh-token-key', async () => {
-        const userId = 'test-id';
-        const jti = 'test-jti';
-        // the splitting of userId and jti should success inside the function
-        const expiredKey = makeRefreshTokenKey(userId, jti);
-        const redis = { lrem: jest.fn() };
-        await removeFromListWhenRefreshTokenExpires(expiredKey, redis as unknown as Redis);
-        expect(redis.lrem).toHaveBeenCalledWith(makeRefreshTokenIndexKey(userId), 0, jti);
+describe('invalidateExpiredRefreshToken', () => {
+    test('removes jti from refresh index when key expires', async () => {
+        const redis = { lrem: jest.fn().mockResolvedValue(1) } as any;
+        const key = 'jwt:refresh:user123:token456';
+        await invalidateExpiredRefreshToken(key, redis);
+        expect(redis.lrem).toHaveBeenCalledWith(makeRefreshTokenIndexKey('user123'), 0, 'token456');
+    });
+
+    test('ignores non-refresh keys', async () => {
+        const redis = { lrem: jest.fn() } as any;
+        await invalidateExpiredRefreshToken('some-other-key', redis);
+        expect(redis.lrem).not.toHaveBeenCalled();
+    });
+
+    test('throws when userId and jti is missing and data cannot be parsed', async () => {
+        const redis = { lrem: jest.fn() } as any;
+        await expect(invalidateExpiredRefreshToken('jwt:refresh', redis)).rejects.toThrow();
+    });
+
+    test('throws when jti is missing and data cannot be parsed', async () => {
+        const redis = { lrem: jest.fn() } as any;
+        await expect(invalidateExpiredRefreshToken('jwt:refresh:userId', redis)).rejects.toThrow();
     });
 });

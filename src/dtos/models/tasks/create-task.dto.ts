@@ -31,7 +31,7 @@ export class CreateTaskDto {
     @IsIn(tasksPriority, { message: tasksApiErrors.INVALID_PRIORITY })
     priority!: TasksPriority;
 
-    static async validateAndTransform(data: object): Promise<CreateTaskDto> {
+    static async validateAndTransform(data: Record<string, unknown>): Promise<CreateTaskDto> {
         return await validateAndTransformDto(CreateTaskDto, data);
     }
 }

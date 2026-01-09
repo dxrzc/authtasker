@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker/.';
+import crypto from 'crypto';
 import { testKit } from '@integration/kit/test.kit';
 import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
@@ -9,6 +10,7 @@ import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
+import { IUser } from 'src/interfaces/user/user.interface';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 
@@ -38,6 +40,19 @@ describe(`POST ${registrationUrl}`, () => {
             const userInDb = await testKit.models.user.findOne({ email: user.email }).exec();
             expect(userInDb).not.toBeNull();
             expect(userInDb?.email).toBe(user.email);
+        });
+
+        test('credentialsChangedAt is the current Date', async () => {
+            const before = new Date();
+            const user = testKit.userData.user;
+            const res = await testKit.agent.post(registrationUrl).send(user).expect(status2xx);
+            const after = new Date();
+            const userInDb = await testKit.models.user.findById(res.body.user.id).exec();
+            expect(userInDb).not.toBeNull();
+            expect(userInDb?.credentialsChangedAt.getTime()).toBeGreaterThanOrEqual(
+                before.getTime(),
+            );
+            expect(userInDb?.credentialsChangedAt.getTime()).toBeLessThanOrEqual(after.getTime());
         });
 
         test('name is transformed into lowercase and spaces are trimmed', async () => {
@@ -101,21 +116,21 @@ describe(`POST ${registrationUrl}`, () => {
             expect(body.user.password).toBeUndefined();
         });
 
-        test('password is hashed in database', async () => {
+        test('password peppered with HMAC-SHA256 is hashed and stored in database', async () => {
             const userData = testKit.userData.user;
             const { body } = await testKit.agent
                 .post(registrationUrl)
                 .send(userData)
                 .expect(status2xx);
-            const userInDb = await testKit.models.user.findById(body.user.id).exec();
-            expect(userInDb).not.toBeNull();
-            expect(userInDb?.password).toBeDefined();
-            expect(userInDb?.password).not.toBe(userData.password);
-            const isPasswordCorrectlyHashed = await testKit.hashingService.compare(
-                userData.password,
-                userInDb!.password,
-            );
-            expect(isPasswordCorrectlyHashed).toBe(true);
+            const { password: passwordHash } = (await testKit.models.user
+                .findById(body.user.id)
+                .select('password')
+                .exec()) as IUser;
+            expect(passwordHash).toBeDefined();
+            const pepper = testKit.configService.PASSWORD_PEPPER;
+            const hmac = crypto.createHmac('sha256', pepper).update(userData.password).digest();
+            const equal = await testKit.hashingService.compare(hmac, passwordHash);
+            expect(equal).toBeTruthy();
         });
 
         test('return 201 status code, user data and tokens', async () => {

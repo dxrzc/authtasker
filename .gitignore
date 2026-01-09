@@ -10,7 +10,5 @@ docker-volumes/*
 !docker-volumes/.gitkeep
 
 # env files
-envs/.env.prod
-envs/.env.dev
-envs/.env.int
-envs/.env.e2e
+.env.*
+!.env.defaults

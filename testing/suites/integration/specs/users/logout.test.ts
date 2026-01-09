@@ -69,7 +69,7 @@ describe(`POST ${testKit.urls.logout}`, () => {
             expect(inRedis).toBeNull();
         });
 
-        test('old refresh token is deleted from refresh tokens index in Redis', async () => {
+        test('refresh token is deleted from refresh tokens index in Redis', async () => {
             const { refreshToken, id, sessionToken } = await createUser(getRandomRole());
             await testKit.agent
                 .post(testKit.urls.logout)

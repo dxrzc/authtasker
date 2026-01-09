@@ -8,7 +8,7 @@ import { paginationErrors } from 'src/messages/pagination.error.messages';
 import { UserDocument } from 'src/types/user/user-document.type';
 
 describe(`GET ${testKit.urls.usersAPI}?limit=...&page=...`, () => {
-    describe('Session cookie not provided', () => {
+    describe('Session token not provided', () => {
         test('return 401 status code and invalid token error message', async () => {
             const response = await testKit.agent.get(
                 `${testKit.urls.usersAPI}?limit=${1}&page=${1}`,

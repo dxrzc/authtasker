@@ -59,6 +59,11 @@ export class ModelLoader {
                     type: Boolean,
                     default: false,
                 },
+
+                credentialsChangedAt: {
+                    type: Date,
+                    default: Date.now,
+                },
             },
             {
                 timestamps: true,
@@ -68,6 +73,7 @@ export class ModelLoader {
                     transform: function (doc, ret) {
                         delete ret._id;
                         delete ret.password;
+                        delete ret.credentialsChangedAt;
                         return ret;
                     },
                 },

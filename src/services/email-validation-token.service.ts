@@ -27,7 +27,7 @@ export class EmailValidationTokenService {
             purpose: tokenPurposes.EMAIL_VALIDATION,
             email: userEmail,
         });
-        this.loggerService.info(`Email validation token ${jti} generated, expires at ${expTime}`);
+        this.loggerService.info(`Email validation token ${jti} generated`);
 
         if (options?.meta) {
             return { token, jti };

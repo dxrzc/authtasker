@@ -16,7 +16,7 @@ services:
       - ./logs:/usr/src/app/logs
       - ./tsconfig.json:/usr/src/app/tsconfig.json
     environment:      
-      MONGO_URI: mongodb://mongo-db:27017
+      MONGO_URI: mongodb://mongo-db:27017/authtasker-dev
       REDIS_URI: redis://redis-db:6379
       MAIL_SERVICE_HOST: mailpit
       MAIL_SERVICE_PORT: 1025
@@ -36,11 +36,25 @@ services:
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:    
       - redis:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./k8s/base/redis/redis.conf:/usr/local/etc/redis/redis.conf
 
   mongo-db:
+    # From localhost mongodb://localhost:27017/?directConnection=true
+    # Ref:https://www.mongodb.com/docs/drivers/go/current/connect/connection-targets/#direct-connection
     image: mongo:7.0.20
     restart: always    
+    command: [
+      "--replSet", "rs0", # replica set name
+      "--bind_ip_all" # bind to all IP addresses
+    ]
+    healthcheck:
+      # pipe js script to mongosh to initialize replicate set
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo-db:27017'}]}) }" | mongosh --port 27017 --quiet
+      interval: 5s
+      timeout: 30s
+      start_period: 0s
+      start_interval: 1s
+      retries: 30      
     volumes:
       - mongo:/data/db
     ports:

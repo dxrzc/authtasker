@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: authtasker-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: authtasker-deploy
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3000
+      targetPort: authtasker-port

@@ -35,6 +35,8 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     needs: run-linter
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -46,12 +48,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run unit tests
-        run: npm run test:unit -- --maxWorkers=100%                            
+        run: npm run test:unit -- --maxWorkers=100% --coverage=false                            
 
   run-integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
     needs: run-linter
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -63,4 +67,4 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run integration tests
-        run: npm run test:integration -- --maxWorkers=100%          
+        run: npm run test:integration -- --maxWorkers=100% --coverage=false          

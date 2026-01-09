@@ -4,6 +4,7 @@ import { testKit } from '@integration/kit/test.kit';
 import { UserRole } from 'src/enums/user-role.enum';
 import { status2xx } from '@integration/utils/status-2xx.util';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
+import { commonErrors } from 'src/messages/common.error.messages';
 
 describe(`POST ${testKit.urls.createTask}`, () => {
     describe('Session token not provided', () => {
@@ -78,6 +79,28 @@ describe(`POST ${testKit.urls.createTask}`, () => {
         });
     });
 
+    describe('User role is EDITOR', () => {
+        test('user can create task successfully', async () => {
+            const { sessionToken } = await createUser(UserRole.EDITOR);
+            await testKit.agent
+                .post(testKit.urls.createTask)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send(testKit.taskData.task)
+                .expect(status2xx);
+        });
+    });
+
+    describe('User role is ADMIN', () => {
+        test('user can create task successfully', async () => {
+            const { sessionToken } = await createUser(UserRole.ADMIN);
+            await testKit.agent
+                .post(testKit.urls.createTask)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send(testKit.taskData.task)
+                .expect(status2xx);
+        });
+    });
+
     describe('Task name already exists', () => {
         test('return 409 conflict and task already exists error message', async () => {
             const { sessionToken: userSess1 } = await createUser(UserRole.EDITOR);
@@ -125,6 +148,22 @@ describe(`POST ${testKit.urls.createTask}`, () => {
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .send(task);
             expect(response.body).toStrictEqual({ error: tasksApiErrors.INVALID_NAME_LENGTH });
+            expect(response.status).toBe(400);
+        });
+    });
+
+    describe('XSS send in task description', () => {
+        test('return 400 status code and invalid input error message', async () => {
+            const { sessionToken } = await createUser(UserRole.EDITOR);
+            const task = {
+                ...testKit.taskData.task,
+                description: '<script>alert("XSS")</script>Normal description text.',
+            };
+            const response = await testKit.agent
+                .post(testKit.urls.createTask)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send(task);
+            expect(response.body).toStrictEqual({ error: commonErrors.INVALID_INPUT });
             expect(response.status).toBe(400);
         });
     });

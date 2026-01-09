@@ -7,6 +7,7 @@ import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
 import { TaskStatusDto } from 'src/dtos/models/tasks/task-status.dto';
 import { TaskPriorityDto } from 'src/dtos/models/tasks/task-priority.dto';
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
+import { TasksFilters } from 'src/types/tasks/task-filters.type';
 
 export class TasksController {
     constructor(private readonly tasksService: TasksService) {}
@@ -27,31 +28,23 @@ export class TasksController {
     public readonly findAll = async (req: Request, res: Response) => {
         const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
         const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
-        const tasksFound = await this.tasksService.findAll(limit, page);
-        res.status(statusCodes.OK).json(tasksFound);
-    };
-
-    public readonly findAllByUser = async (req: Request, res: Response) => {
-        const userId = req.params.id;
-        const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
-        const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
-        const tasksFound = await this.tasksService.findAllByUser(userId, limit, page);
-        res.status(statusCodes.OK).json(tasksFound);
-    };
-
-    public readonly findAllByStatus = async (req: Request, res: Response) => {
-        const { status } = await TaskStatusDto.validate({ status: req.params.status });
-        const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
-        const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
-        const tasksFound = await this.tasksService.findAllByStatus(status, limit, page);
-        res.status(statusCodes.OK).json(tasksFound);
-    };
-
-    public readonly findAllByPriority = async (req: Request, res: Response) => {
-        const { priority } = await TaskPriorityDto.validate({ priority: req.params.priority });
-        const limit = req.query.limit ? +req.query.limit : paginationSettings.DEFAULT_LIMIT;
-        const page = req.query.page ? +req.query.page : paginationSettings.DEFAULT_PAGE;
-        const tasksFound = await this.tasksService.findAllByPriority(priority, limit, page);
+        const rawStatus = req.query.status;
+        const rawPriority = req.query.priority;
+        const rawUserId = req.query.user;
+        const filters: TasksFilters = {};
+        if (rawStatus) {
+            const { status } = await TaskStatusDto.validate({ status: rawStatus });
+            filters.status = status;
+        }
+        if (rawPriority) {
+            const { priority } = await TaskPriorityDto.validate({ priority: rawPriority });
+            filters.priority = priority;
+        }
+        if (rawUserId) {
+            // id validation occurs in user-service
+            filters.userId = <string>rawUserId;
+        }
+        const tasksFound = await this.tasksService.findAll(limit, page, filters);
         res.status(statusCodes.OK).json(tasksFound);
     };
 

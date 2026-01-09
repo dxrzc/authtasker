@@ -6,4 +6,12 @@
         "dist",
         "**/*test.ts"
     ],
+    "compilerOptions": {
+        "plugins": [
+            {
+                "transform": "typescript-transform-paths",
+                "useRootDirs": true
+            }
+        ]
+    }
 }

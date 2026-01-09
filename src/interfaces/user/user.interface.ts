@@ -10,4 +10,5 @@ export interface IUser {
     updatedAt: Date;
     role: UserRole;
     emailValidated: boolean;
+    credentialsChangedAt: Date;
 }

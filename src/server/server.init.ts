@@ -1,13 +1,25 @@
-import express, { ErrorRequestHandler, NextFunction, Request, Response, Router } from 'express';
+import express, {
+    ErrorRequestHandler,
+    NextFunction,
+    Request,
+    RequestHandler,
+    Response,
+    Router,
+} from 'express';
 import helmet from 'helmet';
 import { Server as HttpServer } from 'http';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { HttpError } from 'src/errors/http-error.class';
-import { InvalidInputError } from 'src/errors/invalid-input-error.class';
+import {
+    InvalidCredentialsError,
+    InvalidInputError,
+    MaliciousInputError,
+} from 'src/errors/invalid-input-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
+import hpp from 'hpp';
 
 export class Server {
     private readonly app = express();
@@ -28,7 +40,9 @@ export class Server {
             next();
         });
         this.app.use(helmet());
+        this.app.use(hpp()); // Http Parameter Pollution
         this.app.use(this.routes);
+        this.app.use(this.handleNotFound);
         this.app.use(this.createErrorHandlerMiddleware);
     }
 
@@ -43,17 +57,24 @@ export class Server {
                 res.status(err.statusCode).json({ error: err.message });
                 return;
             }
+            if (err instanceof MaliciousInputError) {
+                this.logger.error(err.reason);
+                res.status(statusCodes.BAD_REQUEST).json({
+                    error: commonErrors.INVALID_INPUT,
+                });
+                return;
+            }
+            if (err instanceof InvalidCredentialsError) {
+                // log actual error and throw generic
+                this.logger.error(`Validation error: ${err.actualError}`);
+                res.status(statusCodes.UNAUTHORIZED).json({
+                    error: authErrors.INVALID_CREDENTIALS,
+                });
+                return;
+            }
             if (err instanceof InvalidInputError) {
-                const errorMessage = err.message;
-                this.logger.error(`Validation error: ${errorMessage}`);
-                if (errorMessage === authErrors.INVALID_CREDENTIALS) {
-                    // Special case for invalid credentials to avoid leaking info
-                    res.status(statusCodes.UNAUTHORIZED).json({
-                        error: authErrors.INVALID_CREDENTIALS,
-                    });
-                } else {
-                    res.status(statusCodes.BAD_REQUEST).json({ error: errorMessage });
-                }
+                this.logger.error(`Validation error: ${err.message}`);
+                res.status(statusCodes.BAD_REQUEST).json({ error: err.message });
                 return;
             }
             // Internal Server Error
@@ -62,6 +83,10 @@ export class Server {
             res.status(500).json({ error: commonErrors.INTERNAL_SERVER_ERROR });
         };
     }
+
+    private readonly handleNotFound: RequestHandler = (req, res) => {
+        res.status(statusCodes.NOT_FOUND).json({ error: commonErrors.NOT_FOUND });
+    };
 
     start(): Promise<void> {
         return new Promise<void>((resolve) => {

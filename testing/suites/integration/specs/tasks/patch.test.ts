@@ -4,7 +4,6 @@ import { TasksStatus } from 'src/types/tasks/task-status.type';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { UserRole } from 'src/enums/user-role.enum';
 import { testKit } from '@integration/kit/test.kit';
-import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
 import { Types } from 'mongoose';
 
 describe(`PATCH ${testKit.urls.tasksAPI}/:id`, () => {
@@ -124,8 +123,21 @@ describe(`PATCH ${testKit.urls.tasksAPI}/:id`, () => {
         });
     });
 
-    describe('User is READONLY', () => {
-        test('can not update their own tasks (403)', async () => {
+    describe.each([UserRole.ADMIN, UserRole.EDITOR])('%s can update their own tasks', (role) => {
+        test('successfully updates task', async () => {
+            const { sessionToken, id } = await createUser(role);
+            const task = testKit.taskData.task;
+            const { id: taskId } = await testKit.models.task.create({ ...task, user: id });
+            await testKit.agent
+                .patch(`${testKit.urls.tasksAPI}/${taskId}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ description: 'Updated description' })
+                .expect(200);
+        });
+    });
+
+    describe('READONLY attempts to update their own task', () => {
+        test('return 403 status code and forbidden error message', async () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             const task = testKit.taskData.task;
             const { id: taskId } = await testKit.models.task.create({ ...task, user: id });
@@ -136,65 +148,75 @@ describe(`PATCH ${testKit.urls.tasksAPI}/:id`, () => {
             expect(response.body).toStrictEqual({ error: authErrors.FORBIDDEN });
             expect(response.status).toBe(403);
         });
-
-        test('can not update other users tasks (403)', async () => {
-            const { sessionToken: userSess1 } = await createUser(UserRole.READONLY);
-            // create a task for another user with a random role
-            const { id: user2Id } = await createUser(getRandomRole());
-            const { id: taskId } = await testKit.models.task.create({
-                ...testKit.taskData.task,
-                user: user2Id,
-            });
-            const response = await testKit.agent
-                .patch(`${testKit.urls.tasksAPI}/${taskId}`)
-                .set('Authorization', `Bearer ${userSess1}`)
-                .send({ description: 'Updated description' });
-            expect(response.body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(response.status).toBe(403);
-        });
     });
 
-    describe('User is EDITOR', () => {
-        test('can update their own tasks', async () => {
-            const { sessionToken, id } = await createUser(UserRole.EDITOR);
-            const task = testKit.taskData.task;
-            const { id: taskId } = await testKit.models.task.create({ ...task, user: id });
+    describe.each(Object.values(UserRole))('EDITOR attempts to update a %s task', (targetRole) => {
+        test('return 403 status code and forbidden error message', async () => {
+            const { sessionToken } = await createUser(UserRole.EDITOR);
+            const { id: targetUserId } = await createUser(targetRole);
+            const { id: taskId } = await testKit.models.task.create({
+                ...testKit.taskData.task,
+                user: targetUserId,
+            });
             const response = await testKit.agent
                 .patch(`${testKit.urls.tasksAPI}/${taskId}`)
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .send({ description: 'Updated description' });
-            expect(response.status).toBe(200);
-        });
-
-        test('can not update other users tasks (403)', async () => {
-            const { sessionToken: userSess1 } = await createUser(UserRole.EDITOR);
-            // create a task for another user with a random role
-            const { id: user2Id } = await createUser(getRandomRole());
-            const { id: taskId } = await testKit.models.task.create({
-                ...testKit.taskData.task,
-                user: user2Id,
-            });
-            const response = await testKit.agent
-                .patch(`${testKit.urls.tasksAPI}/${taskId}`)
-                .set('Authorization', `Bearer ${userSess1}`)
-                .send({ description: 'Updated description' });
             expect(response.body).toStrictEqual({ error: authErrors.FORBIDDEN });
             expect(response.status).toBe(403);
         });
     });
 
-    describe('User is ADMIN', () => {
-        test('can not update another ADMIN user task (403)', async () => {
-            const { sessionToken: adminSess1 } = await createUser(UserRole.ADMIN);
-            // create a task for another admin user
-            const { id: admin2Id } = await createUser(UserRole.ADMIN);
+    describe.each(Object.values(UserRole))(
+        'READONLY attempts to update a %s task',
+        (targetRole) => {
+            test('return 403 status code and forbidden error message', async () => {
+                const { sessionToken } = await createUser(UserRole.READONLY);
+                const { id: targetUserId } = await createUser(targetRole);
+                const { id: taskId } = await testKit.models.task.create({
+                    ...testKit.taskData.task,
+                    user: targetUserId,
+                });
+                const response = await testKit.agent
+                    .patch(`${testKit.urls.tasksAPI}/${taskId}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .send({ description: 'Updated description' });
+                expect(response.body).toStrictEqual({ error: authErrors.FORBIDDEN });
+                expect(response.status).toBe(403);
+            });
+        },
+    );
+
+    describe.each([UserRole.EDITOR, UserRole.READONLY])(
+        'ADMIN attempts to update a %s task',
+        (targetRole) => {
+            test('successfully updates task', async () => {
+                const { sessionToken } = await createUser(UserRole.ADMIN);
+                const { id: targetUserId } = await createUser(targetRole);
+                const { id: taskId } = await testKit.models.task.create({
+                    ...testKit.taskData.task,
+                    user: targetUserId,
+                });
+                await testKit.agent
+                    .patch(`${testKit.urls.tasksAPI}/${taskId}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .send({ description: 'Updated description' })
+                    .expect(200);
+            });
+        },
+    );
+
+    describe('ADMIN attempts to update another ADMIN task', () => {
+        test('return 403 status code and forbidden error message', async () => {
+            const { sessionToken } = await createUser(UserRole.ADMIN);
+            const { id: targetUserId } = await createUser(UserRole.ADMIN);
             const { id: taskId } = await testKit.models.task.create({
                 ...testKit.taskData.task,
-                user: admin2Id,
+                user: targetUserId,
             });
             const response = await testKit.agent
                 .patch(`${testKit.urls.tasksAPI}/${taskId}`)
-                .set('Authorization', `Bearer ${adminSess1}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
                 .send({ description: 'Updated description' });
             expect(response.body).toStrictEqual({ error: authErrors.FORBIDDEN });
             expect(response.status).toBe(403);

@@ -21,52 +21,38 @@ export class TasksRoutes {
 
     get routes(): Router {
         const router = Router();
-        router.use(this.rateLimiter.middleware(RateLimiter.relaxed));
 
         router.post(
             '/create',
+            this.rateLimiter.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.EDITOR),
             this.tasksController.create,
         );
 
         router.delete(
             '/:id',
+            this.rateLimiter.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.EDITOR),
             this.tasksController.deleteOne,
         );
 
         router.get(
-            '/:id',
-            this.rolesMiddleware.middleware(UserRole.READONLY),
-            this.tasksController.findOne,
-        );
-
-        router.get(
             '/',
+            this.rateLimiter.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.tasksController.findAll,
         );
 
         router.get(
-            '/all-by-user/:id',
+            '/:id',
+            this.rateLimiter.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
-            this.tasksController.findAllByUser,
-        );
-
-        router.get(
-            '/all-by-status/:status',
-            this.rolesMiddleware.middleware(UserRole.READONLY),
-            this.tasksController.findAllByStatus,
-        );
-
-        router.get(
-            '/all-by-priority/:priority',
-            this.rolesMiddleware.middleware(UserRole.READONLY),
-            this.tasksController.findAllByPriority,
+            this.tasksController.findOne,
         );
 
         router.patch(
             '/:id',
+            this.rateLimiter.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.EDITOR),
             this.tasksController.updateOne,
         );

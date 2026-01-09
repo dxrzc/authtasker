@@ -2,7 +2,6 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { Router } from 'express';
 import { HealthController } from 'src/controllers/health.controller';
 import { IAsyncLocalStorageStore } from 'src/interfaces/others/async-local-storage.interface';
-import { SeedRoutes } from 'src/routes/seed.routes';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { RedisService } from 'src/services/redis.service';
@@ -12,7 +11,6 @@ import { buildServices } from './factories/services.factory';
 import { HealthRoutes } from './health.routes';
 import { TasksRoutes } from './tasks.routes';
 import { UserRoutes } from './user.routes';
-import { createAdmin } from 'src/admin/create-admin';
 import { Redis } from 'ioredis';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yaml';
@@ -53,7 +51,12 @@ export class AppRoutes {
 
     private loadSwaggerDocument(): void {
         try {
-            const swaggerPath = join(process.cwd(), 'src', 'docs', 'swagger.yaml');
+            let swaggerPath: string;
+            if (this.configService.isProduction) {
+                swaggerPath = join(process.cwd(), 'dist', 'docs', 'swagger.yaml');
+            } else {
+                swaggerPath = join(process.cwd(), 'src', 'docs', 'swagger.yaml');
+            }
             const file = readFileSync(swaggerPath, 'utf8');
             this.swaggerDocument = YAML.parse(file);
         } catch (err) {
@@ -82,7 +85,9 @@ export class AppRoutes {
         return tasksRoutes.routes;
     }
 
-    private buildSeedRoutes(): Router {
+    private async buildSeedRoutes(): Promise<Router> {
+        // Avoids faker dependency required in production
+        const { SeedRoutes } = await import('src/routes/seed.routes');
         const seedRoutes = new SeedRoutes(
             this.configService,
             this.models.userModel,
@@ -99,21 +104,21 @@ export class AppRoutes {
     }
 
     async createInitialAdminUser(): Promise<void> {
-        await createAdmin(this.models.userModel, this.configService, this.services.hashingService);
+        await this.services.userService.createAdministratorIfNotExists();
     }
 
-    get routes(): Router {
+    async configureApiRoutes(): Promise<Router> {
+        await this.createInitialAdminUser();
         const router = Router();
 
         if (this.swaggerDocument) {
             router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(this.swaggerDocument));
         }
-
         router.use(this.middlewares.requestContextMiddleware.middleware());
         router.use('/system', this.buildHealthRoutes());
         router.use('/api/users', this.buildUserRoutes());
         router.use('/api/tasks', this.buildTasksRoutes());
-        if (this.configService.isDevelopment) router.use('/seed', this.buildSeedRoutes());
+        if (this.configService.isDevelopment) router.use('/seed', await this.buildSeedRoutes());
         return router;
     }
 }

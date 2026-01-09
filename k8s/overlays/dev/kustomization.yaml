@@ -1,0 +1,16 @@
+namespace: authtasker-dev
+
+resources:
+  - namespace.yaml
+  - secrets.yaml
+  - configmap.yaml
+  - ../../base/redis
+  - ../../base/mongo
+  - ../../base/mailpit
+  - ../../base/backend
+
+patches:
+  - target:
+      kind: Deployment
+      name: authtasker-deploy
+    path: patches/backend-resources.yaml  

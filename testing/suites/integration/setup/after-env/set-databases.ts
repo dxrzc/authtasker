@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker/.';
 import { testKit } from '@integration/kit/test.kit';
 import { mock } from 'jest-mock-extended';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import * as nodemailer from 'nodemailer';
 import { NodemailerMock } from 'nodemailer-mock';
 import { MongoDatabase } from 'src/databases/mongo.database';
@@ -15,13 +15,13 @@ beforeEach(() => {
     nodemailerMock.reset(); // reset mock before each test
 });
 
-let mongoMemoryServer: MongoMemoryServer;
+let mongoMemoryServer: MongoMemoryReplSet;
 let mongoDatabase: MongoDatabase;
 let redisDatabase: RedisDatabase;
 
 async function cleanup() {
-    await mongoMemoryServer.stop();
     await Promise.all([redisDatabase.disconnect(), mongoDatabase.disconnect()]);
+    await mongoMemoryServer.stop({ doCleanup: true, force: true });
 }
 
 beforeAll(async () => {
@@ -31,7 +31,9 @@ beforeAll(async () => {
         testKit.loggerServiceMock = mock<LoggerService>();
 
         // MongoDB (in-memory).
-        mongoMemoryServer = await MongoMemoryServer.create();
+        mongoMemoryServer = await MongoMemoryReplSet.create({
+            instanceOpts: [{ port: 27017 + Math.floor(Math.random() * 1000) }],
+        }); // 1 node replica set by default
         const mongoUri = mongoMemoryServer.getUri();
         mongoDatabase = new MongoDatabase(testKit.loggerServiceMock, {
             listenModelEvents: false,

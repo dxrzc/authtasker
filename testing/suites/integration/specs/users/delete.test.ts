@@ -14,6 +14,7 @@ import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { Types } from 'mongoose';
+import { SystemLoggerService } from 'src/services/system-logger.service';
 
 describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     describe('Session token not provided', () => {
@@ -117,6 +118,45 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
+    describe('Task removal fails', () => {
+        test('rolls back user deletion', async () => {
+            const { sessionToken, id, refreshToken } = await createUser(UserRole.READONLY);
+            const refreshJti = testKit.refreshJwt.verify(refreshToken)!.jti;
+            // seed user tasks
+            await testKit.models.task.create({ ...testKit.taskData.task, user: id });
+            await testKit.models.task.create({ ...testKit.taskData.task, user: id });
+            // spy on deleteMany to force an error
+            const deleteManySpy = jest
+                .spyOn(testKit.models.task, 'deleteMany')
+                .mockImplementation(() => {
+                    throw new Error('forced tx failure');
+                });
+            jest.spyOn(SystemLoggerService, 'error').mockImplementationOnce(() => {});
+            try {
+                const { statusCode, body } = await testKit.agent
+                    .delete(`${testKit.urls.usersAPI}/${id}`)
+                    .set('Authorization', `Bearer ${sessionToken}`);
+                expect(statusCode).toBe(statusCodes.INTERNAL_SERVER_ERROR);
+                expect(body).toStrictEqual({ error: commonErrors.INTERNAL_SERVER_ERROR });
+                // user still in database
+                const userInDb = await testKit.models.user.findById(id);
+                expect(userInDb).not.toBeNull();
+                // tasks still in database
+                const tasksCount = await testKit.models.task.countDocuments({ user: id });
+                expect(tasksCount).toBe(2);
+                // refresh token still in redis
+                const listKey = makeRefreshTokenIndexKey(id);
+                const tokenKey = makeRefreshTokenKey(id, refreshJti);
+                const tokenInIndex = await testKit.redisService.belongsToList(listKey, refreshJti);
+                const tokenInRedis = await testKit.redisService.get(tokenKey);
+                expect(tokenInIndex).toBeTruthy();
+                expect(tokenInRedis).not.toBeNull();
+            } finally {
+                deleteManySpy.mockRestore();
+            }
+        });
+    });
+
     describe('User not found', () => {
         test(`return 404 status code and user not found error message`, async () => {
             const { sessionToken } = await createUser(UserRole.ADMIN);
@@ -128,6 +168,30 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
             expect(statusCode).toBe(statusCodes.NOT_FOUND);
         });
     });
+
+    describe.each(Object.values(UserRole))('%s attempts to delete themselves', (role) => {
+        test('successfully deletes user', async () => {
+            const { sessionToken, id } = await createUser(role);
+            await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(statusCodes.NO_CONTENT);
+        });
+    });
+
+    describe.each([UserRole.EDITOR, UserRole.READONLY])(
+        'Admin attempts to delete a %s',
+        (targetRole) => {
+            test('successfully deletes user', async () => {
+                const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
+                const { id: targetUserId } = await createUser(targetRole);
+                await testKit.agent
+                    .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
+                    .set('Authorization', `Bearer ${currentUserSessionToken}`)
+                    .expect(statusCodes.NO_CONTENT);
+            });
+        },
+    );
 
     describe('ADMIN attempts to delete another ADMIN', () => {
         test(`return 403 status code and forbidden error message`, async () => {
@@ -141,32 +205,10 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('ADMIN attempts to delete an EDITOR', () => {
-        test('successfully deletes user', async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
-            const { id: targetUserId } = await createUser(UserRole.EDITOR);
-            await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .expect(status2xx);
-        });
-    });
-
-    describe('ADMIN attempts to delete a READONLY', () => {
-        test('successfully deletes user', async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.ADMIN);
-            const { id: targetUserId } = await createUser(UserRole.READONLY);
-            await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`)
-                .expect(status2xx);
-        });
-    });
-
-    describe('EDITOR attempts to delete an ADMIN', () => {
+    describe.each(Object.values(UserRole))('EDITOR attempts to delete a %s', (targetRole) => {
         test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
-            const { id: targetUserId } = await createUser(UserRole.ADMIN);
+            const { id: targetUserId } = await createUser(targetRole);
             const { statusCode, body } = await testKit.agent
                 .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`);
@@ -175,34 +217,10 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('EDITOR attempts to delete another EDITOR', () => {
-        test(`return 403 status code and forbidden error message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
-            const { id: targetUserId } = await createUser(UserRole.EDITOR);
-            const { statusCode, body } = await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`);
-            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(403);
-        });
-    });
-
-    describe('EDITOR attempts to delete a READONLY', () => {
-        test(`return 403 status code and forbidden error message`, async () => {
-            const { sessionToken: currentUserSessionToken } = await createUser(UserRole.EDITOR);
-            const { id: targetUserId } = await createUser(UserRole.READONLY);
-            const { statusCode, body } = await testKit.agent
-                .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
-                .set('Authorization', `Bearer ${currentUserSessionToken}`);
-            expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
-            expect(statusCode).toBe(403);
-        });
-    });
-
-    describe('READONLY attempts to delete another READONLY', () => {
+    describe.each(Object.values(UserRole))('READONLY attempts to delete a %s', (targetRole) => {
         test(`return 403 status code and forbidden error message`, async () => {
             const { sessionToken: currentUserSessionToken } = await createUser(UserRole.READONLY);
-            const { id: targetUserId } = await createUser(UserRole.READONLY);
+            const { id: targetUserId } = await createUser(targetRole);
             const { statusCode, body } = await testKit.agent
                 .delete(`${testKit.urls.usersAPI}/${targetUserId}`)
                 .set('Authorization', `Bearer ${currentUserSessionToken}`);
@@ -216,10 +234,11 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
             const ip = faker.internet.ip();
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             for (let i = 0; i < rateLimiting[RateLimiter.relaxed].max; i++) {
-                const tempUser = await createUser(UserRole.READONLY);
+                const { sessionToken } = await createUser(UserRole.READONLY);
+                // id path parameter is different in every request
                 await testKit.agent
-                    .delete(`${testKit.urls.usersAPI}/${tempUser.id}`)
-                    .set('Authorization', `Bearer ${tempUser.sessionToken}`)
+                    .delete(`${testKit.urls.usersAPI}/${new Types.ObjectId().toString()}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
                     .set('X-Forwarded-For', ip);
             }
             const response = await testKit.agent
