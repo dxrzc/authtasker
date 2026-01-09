@@ -161,7 +161,7 @@ export class UserService {
         );
     }
 
-    // Hashes to SHA-256 first in order to allow passwords longer than bcrypt limit.
+    // Pre-hash with SHA-256 HMAC (adds the pepper and normalizes to 32 bytes) before bcrypt.
     private async hashPassword(rawPassword: string): Promise<string> {
         const sha256Password = this.computeSHA256PasswordHash(rawPassword);
         const hash = await this.hashingService.hash(sha256Password);
