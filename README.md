@@ -1,93 +1,81 @@
 # Authtasker
-Backend application designed to manage user authentication, authorization and task management. Built with NodeJS, Typescript and Express.  
+Backend API for user authentication and task management with session-based auth, role authorization and caching.
 
-## 🚀 Features
-### 🔒 Authentication/Authorization
-- **Bearer token authentication** with short-lived session tokens and long-lived refresh tokens.
-- **Refresh token limiting**: restrict users to a max number of active sessions
-- **Session token blacklisting** using Redis
-- **Role-based access** (`readonly`, `editor`, `admin`)
-- **Email validation for role upgrade** (`readonly`->`editor`)
-- **Secure password hashing**
-- **Forgot-password flow**: send password recovery emails with time-limited reset tokens
+## Overview
+Authtasker is a backend service that allows users to authenticate securely and manage tasks with priorities and statuses.
+This project focuses on authentication flows, authorization, and backend fundamentals, rather than UI or frontend concerns.
 
-### ⚡ Caching
-- **Revalidation caching**: on-demand data re-check with Redis + DB fallback
-- **Pagination caching** using Redis with hard TTL
+## Tech Stack
+- Node.js
+- Express
+- MongoDB
+- Redis
+- Docker
+- Kubernetes (local deployment)
 
-### 🐳 Docker
-- **Dockerized** environment for development
-- **Dockerfile** image for production and development
+## Core Features
+- User authentication with short-lived session tokens and refresh tokens.
+- Session management with refresh token limits.
+- Role-based authorization (readonly, editor, admin).
+- Email-based flows (verification and password recovery).
+- Task management with status and priority.
+- Redis caching and rate limiting.
+- Secure password handling and input validation.
+- Logging and error handling.
 
-### 🔑 Secrets
-- **Sensitive secrets** (JWT keys, DB URIs, credentials) are securely loaded via Docker secrets
+## API Documentation
+The full API documentation is available via Swagger at the `/api-docs` endpoint when running the application locally.
 
-### 🧪 Testing
-- **Unit, integration** and **e2e** tests
+##  Architecture & Design.
+- Session-based authentication was chosen to simplify token invalidation and improve security.
+- Refresh tokens are used to allow long-lived sessions without exposing access tokens.
+- Role-based authorization controls access to protected resources.
+- Redis is used for caching and rate limiting.
+- Docker is used to ensure consistent environments.
+- Kubernetes is included only for local experimentation.
 
-### 🛡 Security
-- **Administrator user creation** when the server is started
-- **Input sanitization and validation** using `class-validator`
-- **API rate limiting** to prevent abuse
-
-### 📊 Monitoring & Maintenance
-- **Health endpoint** (restricted to `admin` users)
-- **Logging and monitoring** of HTTP requests and system events
-
-## 📜 Scripts
-
-| Command            | Description                                      |
-|--------------------|--------------------------------------------------|
-| `npm run dev`      | Starts the development server with Docker Compose using `.env.dev` |
-| `npm run test:unit`| Runs unit tests using Jest                       |
-| `npm run test:int` | Runs integration tests with environment setup    |
-| `npm run build`    | Builds the project using `tsc` with `tsconfig.build.json` |
-| `npm start`        | Runs the built app in production using `dotenvx` and `.env.prod` |
-
-## 📂 Logs
-
-### 🛠️ System Logs
-- Logs are saved in the filesystem
-- Three levels: `info`, `error`, `warn`
-
-<p align="center">
-  <img width="1054" height="336" alt="System logs screenshot" src="https://github.com/user-attachments/assets/97accb96-d124-485b-8bbf-92c5856d9e30" />
-</p>
-
----
-
-### 🌐 HTTP Logs
-- Logs are saved in the filesystem
-- `debug` messages are **disabled in production mode**
-- `debug` messages are **not saved** in the filesystem
-- Four levels: `info`, `error`, `debug`, `warn`
-- Set the `HTTP_LOGS` environment variable to `false` to disable logs on console
-
-<p align="center">
-  <img width="1565" height="204" alt="HTTP logs screenshot" src="https://github.com/user-attachments/assets/c5e4ffd7-0469-46c7-8d43-3d00f024172e" />
-</p>
-
----
-
-### ✅ Request Completed
-When a request is completed, it's registered in the filesystem as follows:
-
-
-```javascript
-{
-  message: 'Request completed',
-  ip: '::ffff:192.168.65.1',
-  method: 'POST',
-  requestId: '40d86af4-dfd3-4b7b-8476-c8a74d48ec54',
-  responseTime: 80.415644,
-  statusCode: 200,
-  url: '/api/users/login',
-  level: 'info',
-  timestamp: '2025-07-20T17:39:54.272Z'
-}
+## How to run locally
+```bash
+git clone https://github.com/dxrzc/authtasker.git
+cd authtasker
+npm run dev
 ```
+> [!NOTE]
+> Docker must be running locally, as the project relies on Docker Compose.
 
-## Api documentation
-https://authtaskerdocs.apidog.io
+## Testing
+The project includes:
+- Unit tests.
+- Integration tests.
 
+Tests are executed automatically in the CI pipeline.
 
+## Local Kubernetes Deployment (Optional)
+
+This project includes a basic Kubernetes setup intended for **local experimentation**.
+It is **not required** to run the application.
+
+### Requirements
+- Docker
+- kubectl
+- minikube
+
+### Steps
+
+```bash
+minikube start --nodes 2
+minikube addons enable storage-provisioner-rancher
+
+docker build --target production -t authtasker:prod .
+minikube image load authtasker:prod
+
+kubectl apply -k k8s/overlays/dev
+kubectl port-forward service/authtasker-svc 3001:3000
+```
+The API will be available at: `http://localhost:3001`.
+
+## What I’d improve next
+
+- Add end-to-end (e2e) tests to cover critical user flows.
+- Implement CI pipelines to build and publish Docker images automatically.
+- Enhance the local Kubernetes setup for a closer-to-production experience.
