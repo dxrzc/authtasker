@@ -1,3 +1,3 @@
 export interface IFindOptions {
-    cache: boolean;
+    readonly cache: boolean;
 }

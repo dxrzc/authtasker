@@ -1,6 +1,6 @@
 export interface IPagination<T> {
-    totalDocuments: number;
-    totalPages: number;
-    currentPage: number;
-    data: T[];
+    readonly totalDocuments: number;
+    readonly totalPages: number;
+    readonly currentPage: number;
+    readonly data: readonly T[];
 }
