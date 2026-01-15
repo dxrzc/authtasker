@@ -8,7 +8,7 @@ export class LoginUserDto {
     @IsEmail(undefined, {
         message: JSON.stringify({ credentialsError: usersApiErrors.INVALID_EMAIL }),
     })
-    email!: string;
+    readonly email!: string;
 
     @IsDefined({ message: usersApiErrors.PASSWORD_NOT_PROVIDED })
     @MinLength(usersLimits.MIN_PASSWORD_LENGTH, {
@@ -17,7 +17,7 @@ export class LoginUserDto {
     @MaxLength(usersLimits.MAX_PASSWORD_LENGTH, {
         message: JSON.stringify({ credentialsError: usersApiErrors.INVALID_PASSWORD_LENGTH }),
     })
-    password!: string;
+    readonly password!: string;
 
     static async validate(data: Record<string, unknown>): Promise<LoginUserDto> {
         return await validateAndTransformDto(LoginUserDto, data);

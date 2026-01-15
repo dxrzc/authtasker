@@ -10,16 +10,16 @@ export class CreateUserDto {
     @MinLength(usersLimits.MIN_NAME_LENGTH, { message: usersApiErrors.INVALID_NAME_LENGTH })
     @MaxLength(usersLimits.MAX_NAME_LENGTH, { message: usersApiErrors.INVALID_NAME_LENGTH })
     @Transform(toLowerCaseAndTrim)
-    name!: string;
+    readonly name!: string;
 
     @IsDefined({ message: usersApiErrors.EMAIL_NOT_PROVIDED })
     @IsEmail(undefined, { message: usersApiErrors.INVALID_EMAIL })
-    email!: string;
+    readonly email!: string;
 
     @IsDefined({ message: usersApiErrors.PASSWORD_NOT_PROVIDED })
     @MinLength(usersLimits.MIN_PASSWORD_LENGTH, { message: usersApiErrors.INVALID_PASSWORD_LENGTH })
     @MaxLength(usersLimits.MAX_PASSWORD_LENGTH, { message: usersApiErrors.INVALID_PASSWORD_LENGTH })
-    password!: string;
+    readonly password!: string;
 
     static async validateAndTransform(data: Record<string, unknown>): Promise<CreateUserDto> {
         return await validateAndTransformDto(CreateUserDto, data);

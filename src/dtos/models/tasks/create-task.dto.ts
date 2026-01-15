@@ -12,7 +12,7 @@ export class CreateTaskDto {
     @MinLength(tasksLimits.MIN_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
     @MaxLength(tasksLimits.MAX_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
     @Transform(toLowerCaseAndTrim)
-    name!: string;
+    readonly name!: string;
 
     @IsDefined({ message: tasksApiErrors.DESCRIPTION_NOT_PROVIDED })
     @MinLength(tasksLimits.MIN_DESCRIPTION_LENGTH, {
@@ -21,15 +21,15 @@ export class CreateTaskDto {
     @MaxLength(tasksLimits.MAX_DESCRIPTION_LENGTH, {
         message: tasksApiErrors.INVALID_DESCRIPTION_LENGTH,
     })
-    description!: string;
+    readonly description!: string;
 
     @IsDefined({ message: tasksApiErrors.STATUS_NOT_PROVIDED })
     @IsIn(tasksStatus, { message: tasksApiErrors.INVALID_STATUS })
-    status!: TasksStatus;
+    readonly status!: TasksStatus;
 
     @IsDefined({ message: tasksApiErrors.PRIORITY_NOT_PROVIDED })
     @IsIn(tasksPriority, { message: tasksApiErrors.INVALID_PRIORITY })
-    priority!: TasksPriority;
+    readonly priority!: TasksPriority;
 
     static async validateAndTransform(data: Record<string, unknown>): Promise<CreateTaskDto> {
         return await validateAndTransformDto(CreateTaskDto, data);
