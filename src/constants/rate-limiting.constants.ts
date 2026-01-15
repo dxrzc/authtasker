@@ -9,4 +9,4 @@ export const rateLimiting = {
         max: 100,
         windowMs: 5 * 60 * 1000, // 5 minutes
     },
-};
+} as const;
