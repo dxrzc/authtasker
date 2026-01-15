@@ -222,9 +222,12 @@ export class UserService {
     async create(user: CreateUserDto) {
         try {
             // hashing password
-            user.password = await this.hashPassword(user.password);
+            const passwordHash = await this.hashPassword(user.password);
             // db
-            const created = await this.userModel.create(user);
+            const created = await this.userModel.create({
+                ...user,
+                password: passwordHash,
+            });
             const userId = created.id;
             this.loggerService.info(`User ${userId} created`);
             // tokens
