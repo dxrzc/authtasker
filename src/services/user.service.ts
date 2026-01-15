@@ -8,7 +8,6 @@ import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { SessionTokenService } from './session-token.service';
 import { HashingService } from 'src/services/hashing.service';
-import { UserResponse } from 'src/types/user/user-response.type';
 import { UserDocument } from 'src/types/user/user-document.type';
 import { HttpError } from 'src/errors/http-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
@@ -306,7 +305,7 @@ export class UserService {
         };
     }
 
-    async findOne(id: string, options: IFindOptions): Promise<UserDocument | UserResponse> {
+    async findOne(id: string, options: IFindOptions): Promise<UserDocument> {
         if (options.cache) {
             return await this.findOneByIdOrThrowCacheEnabled(id);
         }
