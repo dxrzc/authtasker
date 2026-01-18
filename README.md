@@ -29,6 +29,7 @@ The full API documentation is available via Swagger at the `/api-docs` endpoint 
 ##  Architecture & Design.
 - A session-based authentication model with short-lived access tokens and refresh tokens is used to enable secure and controllable sessions.
 - Authentication logic is kept explicit at the application level to simplify session invalidation and authorization.
+- The API is designed in an API-first manner, with explicit actor/target separation and authorization checks applied at the service layer.
 - Role-based authorization controls access to protected resources.
 - Redis is used for caching and rate limiting.
 - Docker is used to ensure consistent environments.
