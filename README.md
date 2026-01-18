@@ -27,8 +27,8 @@ This project focuses on authentication flows, authorization, and backend fundame
 The full API documentation is available via Swagger at the `/api-docs` endpoint when running the application locally.
 
 ##  Architecture & Design.
-- Session-based authentication was chosen to simplify token invalidation and improve security.
-- Refresh tokens are used to allow long-lived sessions without exposing access tokens.
+- A session-based authentication model with short-lived access tokens and refresh tokens is used to enable secure and controllable sessions.
+- Authentication logic is kept explicit at the application level to simplify session invalidation and authorization.
 - Role-based authorization controls access to protected resources.
 - Redis is used for caching and rate limiting.
 - Docker is used to ensure consistent environments.
@@ -78,4 +78,3 @@ The API will be available at: `http://localhost:3001`.
 
 - Add end-to-end (e2e) tests to cover critical user flows.
 - Implement CI pipelines to build and publish Docker images automatically.
-- Enhance the local Kubernetes setup for a closer-to-production experience.
