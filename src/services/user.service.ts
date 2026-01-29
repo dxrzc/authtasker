@@ -130,8 +130,9 @@ export class UserService {
     private async applyUserUpdates(
         userDocument: UserDocument,
         propertiesUpdated: UpdateUserDto,
-    ): Promise<{ credentialsChanged: boolean }> {
+    ): Promise<{ credentialsChanged: boolean; deleteFromCache: boolean }> {
         let credentialsChanged = false;
+        let deleteFromCache = false;
         const now = new Date();
         if (propertiesUpdated.email) {
             if (userDocument.role !== UserRole.ADMIN) {
@@ -143,14 +144,18 @@ export class UserService {
             }
             userDocument.email = propertiesUpdated.email;
             credentialsChanged = true;
+            deleteFromCache = true;
         }
         if (propertiesUpdated.password) {
             userDocument.password = await this.hashingService.hash(propertiesUpdated.password);
             credentialsChanged = true;
         }
         if (credentialsChanged) userDocument.credentialsChangedAt = now;
-        if (propertiesUpdated.name) userDocument.name = propertiesUpdated.name;
-        return { credentialsChanged };
+        if (propertiesUpdated.name) {
+            userDocument.name = propertiesUpdated.name;
+            deleteFromCache = true;
+        }
+        return { credentialsChanged, deleteFromCache };
     }
 
     private computeSHA256PasswordHash(rawPassword: string): Buffer {
@@ -375,10 +380,16 @@ export class UserService {
         propertiesUpdated: UpdateUserDto,
     ): Promise<UserDocument> {
         const userDocument = await this.verifyUserModificationRights(requestUserInfo, targetUserId);
-        const { credentialsChanged } = await this.applyUserUpdates(userDocument, propertiesUpdated);
-        const cleanupTasks: Promise<unknown>[] = [this.tryToDeleteUserFromCache(targetUserId)];
+        const { credentialsChanged, deleteFromCache } = await this.applyUserUpdates(
+            userDocument,
+            propertiesUpdated,
+        );
+        const cleanupTasks: Promise<unknown>[] = [];
         if (credentialsChanged) {
             cleanupTasks.push(this.tryToRevokeAllSessions(targetUserId));
+        }
+        if (deleteFromCache) {
+            cleanupTasks.push(this.tryToDeleteUserFromCache(targetUserId));
         }
         try {
             await userDocument.save();
