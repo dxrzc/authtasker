@@ -78,6 +78,31 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             );
             expect(isPasswordCorrectlyHashed).toBe(true);
         });
+
+        test('user is deleted from cache', async () => {
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            // cache the user
+            await testKit.agent
+                .get(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(statusCodes.OK);
+            const cacheKey = makeUsersCacheKey(id);
+            const cachedUserBefore = await testKit.redisService.get(cacheKey);
+            expect(cachedUserBefore).not.toBeNull();
+            // update user
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({
+                    name: testKit.userData.name,
+                    email: testKit.userData.email,
+                    password: testKit.userData.password,
+                })
+                .expect(statusCodes.OK);
+            // verify user is removed from cache
+            const cachedUserAfter = await testKit.redisService.get(cacheKey);
+            expect(cachedUserAfter).toBeNull();
+        });
     });
 
     describe('Name is updated', () => {
