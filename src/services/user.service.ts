@@ -334,6 +334,7 @@ export class UserService {
     private async tryToRevokeAllSessions(userId: string) {
         try {
             await this.refreshTokenService.revokeAll(userId);
+            this.loggerService.info(`All sessions of user ${userId} has been revokated`);
         } catch (error) {
             this.loggerService.error('Error trying to revoke all the sessions');
             SystemLoggerService.error(error);
@@ -343,6 +344,7 @@ export class UserService {
     private async tryToDeleteUserFromCache(userId: string) {
         try {
             await this.cacheService.delete(userId);
+            this.loggerService.info(`User ${userId} has been deleted from cache`);
         } catch (error) {
             this.loggerService.error('Error trying to delete user from cache');
             SystemLoggerService.error(error);
