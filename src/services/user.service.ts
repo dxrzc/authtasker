@@ -403,12 +403,7 @@ export class UserService {
         user.credentialsChangedAt = new Date();
         await user.save();
         this.loggerService.info(`User ${user.id} password updated`);
-        // This is safe even if token revocation fails
-        // refresh-token-service rejects and purgues tokens created before the last credentials change
-        await this.refreshTokenService.revokeAll(user.id);
-        this.loggerService.info(
-            `All refresh tokens of user ${user.id} have been revoked due to password reset`,
-        );
+        await this.tryToRevokeAllSessions(user.id);
     }
 
     async requestPasswordRecovery(email: string): Promise<void> {

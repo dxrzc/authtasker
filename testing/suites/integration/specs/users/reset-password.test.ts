@@ -18,6 +18,8 @@ import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key'
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makePasswordRecoveryTokenBlacklistKey } from 'src/functions/token/make-password-recovery-token-blacklist-key';
 import { stringValueToSeconds } from '@integration/utils/string-value-to-seconds.util';
+import { disableSystemErrorLogsForThisTest } from '@integration/utils/disable-system-error-logs';
+import { RefreshTokenService } from 'src/services/refresh-token.service';
 
 describe(`POST ${testKit.urls.resetPassword}`, () => {
     describe('Successful password resetting', () => {
@@ -254,6 +256,24 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             });
             expect(res.body).toStrictEqual({ error: usersApiErrors.INVALID_PASSWORD_LENGTH });
             expect(res.status).toBe(400);
+        });
+    });
+
+    describe('Session revocation fails', () => {
+        test('request is successful', async () => {
+            disableSystemErrorLogsForThisTest();
+            const refreshTokenSvcRevokeAllMock = jest
+                .spyOn(RefreshTokenService.prototype, 'revokeAll')
+                .mockRejectedValue(new Error());
+            const { email } = await createUser(getRandomRole());
+            await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .send({
+                    newPassword: testKit.userData.password,
+                    token: testKit.passwordRecoveryTokenService.generate(email),
+                })
+                .expect(status2xx);
+            expect(refreshTokenSvcRevokeAllMock).toHaveBeenCalledTimes(1);
         });
     });
 
