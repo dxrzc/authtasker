@@ -328,15 +328,15 @@ export class UserService {
     /**
      * Sessions revocation is treated as best-effort since
      * the RefreshTokenService verifies the user existence and
-     * "credentialsChangedAt" property. Ensuring the token is not
+     * "credentialsChangedAt" property, ensuring the token is not
      * orphan or created before a credentials change
      */
     private async tryToRevokeAllSessions(userId: string) {
         try {
             await this.refreshTokenService.revokeAll(userId);
-            this.loggerService.info(`All sessions of user ${userId} has been revokated`);
+            this.loggerService.info(`Successfully revoked all refresh tokens for user ${userId}`);
         } catch (error) {
-            this.loggerService.error('Error trying to revoke all the sessions');
+            this.loggerService.error(`Failed to revoke refresh tokens for user ${userId}`);
             SystemLoggerService.error(error);
         }
     }
@@ -344,9 +344,9 @@ export class UserService {
     private async tryToDeleteUserFromCache(userId: string) {
         try {
             await this.cacheService.delete(userId);
-            this.loggerService.info(`User ${userId} has been deleted from cache`);
+            this.loggerService.info(`Successfully deleted user ${userId} from cache `);
         } catch (error) {
-            this.loggerService.error('Error trying to delete user from cache');
+            this.loggerService.error(`Failed to delete user ${userId} from cache`);
             SystemLoggerService.error(error);
         }
     }
