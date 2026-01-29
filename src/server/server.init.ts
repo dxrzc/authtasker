@@ -20,7 +20,6 @@ import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 import hpp from 'hpp';
-import { error } from 'console';
 
 export class Server {
     private readonly app = express();
@@ -95,7 +94,7 @@ export class Server {
             }
             // unknown error
             this.logger.error('Internal server error');
-            SystemLoggerService.error(error);
+            SystemLoggerService.error(err);
             res.status(500).json({ error: commonErrors.INTERNAL_SERVER_ERROR });
         };
     }
