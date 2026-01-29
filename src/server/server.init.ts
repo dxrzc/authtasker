@@ -47,7 +47,7 @@ export class Server {
     }
 
     private get createErrorHandlerMiddleware(): ErrorRequestHandler {
-        return (err: Error, req: Request, res: Response, next: NextFunction) => {
+        return (err: unknown, req: Request, res: Response, next: NextFunction) => {
             if (res.headersSent) {
                 // Response was already sent to client
                 return next(err);
@@ -77,9 +77,24 @@ export class Server {
                 res.status(statusCodes.BAD_REQUEST).json({ error: err.message });
                 return;
             }
-            // Internal Server Error
-            this.logger.error(err.message);
-            SystemLoggerService.error(err.message, err.stack);
+            if (err instanceof AggregateError) {
+                err.errors.forEach((e) => {
+                    if (e instanceof Error) SystemLoggerService.error(e.message, e.stack);
+                    else SystemLoggerService.error(String(e));
+                });
+                this.logger.error('Internal server error');
+                res.status(500).json({ error: commonErrors.INTERNAL_SERVER_ERROR });
+                return;
+            }
+            if (err instanceof Error) {
+                this.logger.error('Internal server error');
+                SystemLoggerService.error(err.message, err.stack);
+                res.status(500).json({ error: commonErrors.INTERNAL_SERVER_ERROR });
+                return;
+            }
+            // unknown error
+            this.logger.error('Internal server error');
+            SystemLoggerService.error(err);
             res.status(500).json({ error: commonErrors.INTERNAL_SERVER_ERROR });
         };
     }
