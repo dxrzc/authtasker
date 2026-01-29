@@ -27,6 +27,8 @@ const config: Config = {
         '^ioredis$': 'ioredis-mock',
         '^nodemailer$': `${integrationSuitePath}/mocks/nodemailer.mock.ts`,
     },
+
+    restoreMocks: true,
 };
 
 export default config;
