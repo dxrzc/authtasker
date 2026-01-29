@@ -359,8 +359,6 @@ export class UserService {
                 await this.userModel.deleteOne({ _id: targetUserId }, { session }).exec();
                 await this.tasksService.deleteUserTasksTx(targetUserId, session);
             });
-            // Token and cache cleanup. This is safe even if token revocation fails
-            // refresh-token-service rejects and purgues tokens belonging to a non-existing user
             await allSettledAndThrow([
                 this.tryToRevokeAllSessions(targetUserId),
                 this.tryToDeleteUserFromCache(targetUserId),
