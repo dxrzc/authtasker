@@ -15,6 +15,8 @@ import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { Types } from 'mongoose';
 import { disableSystemErrorLogsForThisTest } from '@integration/utils/disable-system-error-logs';
+import { RefreshTokenService } from 'src/services/refresh-token.service';
+import { CacheService } from 'src/services/cache.service';
 
 describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     describe('Session token not provided', () => {
@@ -151,6 +153,36 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
             expect(deleteManySpy).toHaveBeenCalledTimes(1);
             expect(tokenInIndex).toBeTruthy();
             expect(tokenInRedis).not.toBeNull();
+        });
+    });
+
+    describe('Sessions revocation fails', () => {
+        test('request is successful', async () => {
+            disableSystemErrorLogsForThisTest();
+            const refreshTokenSvcRevokeAllMock = jest
+                .spyOn(RefreshTokenService.prototype, 'revokeAll')
+                .mockRejectedValue(new Error());
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            expect(refreshTokenSvcRevokeAllMock).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('Cache update fails', () => {
+        test('request is successful', async () => {
+            disableSystemErrorLogsForThisTest();
+            const cacheSvcDeleteMock = jest
+                .spyOn(CacheService.prototype, 'delete')
+                .mockRejectedValue(new Error());
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            expect(cacheSvcDeleteMock).toHaveBeenCalledTimes(1);
         });
     });
 
