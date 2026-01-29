@@ -376,24 +376,14 @@ export class UserService {
     ): Promise<UserDocument> {
         const userDocument = await this.verifyUserModificationRights(requestUserInfo, targetUserId);
         const { credentialsChanged } = await this.applyUserUpdates(userDocument, propertiesUpdated);
-        const cleanupTasks: Promise<unknown>[] = [this.cacheService.delete(targetUserId)];
+        const cleanupTasks: Promise<unknown>[] = [this.tryToDeleteUserFromCache(targetUserId)];
         if (credentialsChanged) {
-            cleanupTasks.push(this.refreshTokenService.revokeAll(targetUserId));
-            cleanupTasks.push(
-                this.sessionTokenService.blacklist(
-                    requestUserInfo.sessionJti,
-                    requestUserInfo.sessionTokenExpUnix,
-                ),
-            );
+            cleanupTasks.push(this.tryToRevokeAllSessions(targetUserId));
         }
         try {
             await userDocument.save();
             await allSettledAndThrow(cleanupTasks);
             this.loggerService.info(`User ${targetUserId} updated`);
-            if (credentialsChanged)
-                this.loggerService.info(
-                    `All tokens of user ${targetUserId} have been revoked due to sensitive data change`,
-                );
             return userDocument;
         } catch (error: any) {
             if (error.code === 11000)
