@@ -325,6 +325,30 @@ export class UserService {
         };
     }
 
+    /**
+     * Sessions revocation is treated as best-effort since
+     * the RefreshTokenService verifies the user existence and
+     * "credentialsChangedAt" property. Ensuring the token is not
+     * orphan or created before a credentials change
+     */
+    private async tryToRevokeAllSessions(userId: string) {
+        try {
+            await this.refreshTokenService.revokeAll(userId);
+        } catch (error) {
+            this.loggerService.error('Error trying to revoke all the sessions');
+            SystemLoggerService.error(error);
+        }
+    }
+
+    private async tryToDeleteUserFromCache(userId: string) {
+        try {
+            await this.cacheService.delete(userId);
+        } catch (error) {
+            this.loggerService.error('Error trying to delete user from cache');
+            SystemLoggerService.error(error);
+        }
+    }
+
     async deleteOne(requestUserInfo: UserSessionInfo, targetUserId: string): Promise<void> {
         await this.verifyUserModificationRights(requestUserInfo, targetUserId);
         const session = await mongoose.startSession();
@@ -336,8 +360,8 @@ export class UserService {
             // Token and cache cleanup. This is safe even if token revocation fails
             // refresh-token-service rejects and purgues tokens belonging to a non-existing user
             await allSettledAndThrow([
-                this.refreshTokenService.revokeAll(targetUserId),
-                this.cacheService.delete(targetUserId),
+                this.tryToRevokeAllSessions(targetUserId),
+                this.tryToDeleteUserFromCache(targetUserId),
             ]);
             this.loggerService.info(`User ${targetUserId} deleted`);
         } finally {
