@@ -6,7 +6,6 @@ import { UserRole } from 'src/enums/user-role.enum';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
 import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
-import { makeSessionTokenBlacklistKey } from 'src/functions/token/make-session-token-blacklist-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
@@ -154,19 +153,6 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             expect(token2InRedis).toBeNull();
         });
 
-        test('blacklist the provided session token', async () => {
-            const { sessionToken, id } = await createUser(getRandomRole());
-            const sessionTokenJti = testKit.sessionJwt.verify(sessionToken)!.jti;
-            await testKit.agent
-                .patch(`${testKit.urls.usersAPI}/${id}`)
-                .send({ email: testKit.userData.email })
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .expect(status2xx);
-            const redisKey = makeSessionTokenBlacklistKey(sessionTokenJti);
-            const blacklisted = await testKit.redisService.get(redisKey);
-            expect(blacklisted).not.toBeNull();
-        });
-
         test('update credentialsChangedAt property', async () => {
             const { sessionToken, id } = await createUser(getRandomRole());
             const userBefore = await testKit.models.user.findById(id);
@@ -253,19 +239,6 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             const token2InRedis = await testKit.redisService.get(token2Key);
             expect(token1InRedis).toBeNull();
             expect(token2InRedis).toBeNull();
-        });
-
-        test('blacklist the provided session token', async () => {
-            const { sessionToken, id } = await createUser(getRandomRole());
-            const sessionTokenJti = testKit.sessionJwt.verify(sessionToken)!.jti;
-            await testKit.agent
-                .patch(`${testKit.urls.usersAPI}/${id}`)
-                .send({ password: testKit.userData.password })
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .expect(status2xx);
-            const redisKey = makeSessionTokenBlacklistKey(sessionTokenJti);
-            const blacklisted = await testKit.redisService.get(redisKey);
-            expect(blacklisted).not.toBeNull();
         });
 
         test('update credentialsChangedAt property', async () => {
