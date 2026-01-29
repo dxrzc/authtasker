@@ -359,11 +359,11 @@ export class UserService {
                 await this.userModel.deleteOne({ _id: targetUserId }, { session }).exec();
                 await this.tasksService.deleteUserTasksTx(targetUserId, session);
             });
+            this.loggerService.info(`User ${targetUserId} deleted`);
             await allSettledAndThrow([
                 this.tryToRevokeAllSessions(targetUserId),
                 this.tryToDeleteUserFromCache(targetUserId),
             ]);
-            this.loggerService.info(`User ${targetUserId} deleted`);
         } finally {
             await session.endSession();
         }
@@ -382,8 +382,8 @@ export class UserService {
         }
         try {
             await userDocument.save();
-            await allSettledAndThrow(cleanupTasks);
             this.loggerService.info(`User ${targetUserId} updated`);
+            await allSettledAndThrow(cleanupTasks);
             return userDocument;
         } catch (error: any) {
             if (error.code === 11000)
