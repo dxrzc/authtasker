@@ -1,30 +1,13 @@
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import {
-    InvalidCredentialsError,
-    InvalidInputError,
-    MaliciousInputError,
-} from 'src/errors/invalid-input-error.class';
+import { InvalidCredentialsError, InvalidInputError } from 'src/errors/invalid-input-error.class';
 import { validationOptionsConfig } from 'src/dtos/config/validation.config';
 import { returnFirstError } from 'src/dtos/helpers/return-first-error.helper';
-import sanitizeHtml from 'sanitize-html';
 
 export async function validateAndTransformDto<T extends object>(
     cls: new () => T,
     data: Record<string, unknown>,
 ): Promise<T> {
-    // prevent XSS
-    for (const key in data) {
-        if (typeof data[key] === 'string') {
-            const sanitized = sanitizeHtml(data[key], {
-                allowedTags: [],
-                allowedAttributes: {},
-            });
-            if (sanitized !== data[key]) {
-                throw new MaliciousInputError(`Malicious content detected in property "${key}".`);
-            }
-        }
-    }
     const instance = plainToInstance(cls, data);
     const errors = await validate(instance, validationOptionsConfig);
     if (errors.length > 0) {
