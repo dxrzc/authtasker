@@ -4,7 +4,7 @@ import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
 import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
 import { statusCodes } from 'src/constants/status-codes.constants';
-import { usersLimits } from 'src/constants/user.constants';
+import { userConstraints } from 'src/constraints/user.constraints';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
@@ -133,7 +133,7 @@ describe(`POST ${testKit.urls.logoutAll}`, () => {
                 .post(testKit.urls.logoutAll)
                 .set('Authorization', `Bearer ${sessionToken}`)
                 .send({
-                    password: faker.string.alpha(usersLimits.MAX_PASSWORD_LENGTH + 1),
+                    password: faker.string.alpha(userConstraints.MAX_PASSWORD_LENGTH + 1),
                 });
             expect(response.body).toStrictEqual({ error: authErrors.INVALID_CREDENTIALS });
             expect(response.statusCode).toBe(401);

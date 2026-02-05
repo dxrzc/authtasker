@@ -12,7 +12,7 @@ import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
-import { usersLimits } from 'src/constants/user.constants';
+import { userConstraints } from 'src/constraints/user.constraints';
 import { disableSystemErrorLogsForThisTest } from '@integration/utils/disable-system-error-logs';
 import { CacheService } from 'src/services/cache.service';
 import { RefreshTokenService } from 'src/services/refresh-token.service';
@@ -109,7 +109,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         test('name is transformed to lowercase and trimmed in db', async () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             const rawName =
-                faker.string.alpha(usersLimits.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
+                faker.string.alpha(userConstraints.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
             const expectedName = rawName.toLowerCase().trim();
             await testKit.agent
                 .patch(`${testKit.urls.usersAPI}/${id}`)

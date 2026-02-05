@@ -1,5 +1,5 @@
 import { LoginUserDto } from 'src/dtos/models/user/login-user.dto';
-import { usersLimits } from 'src/constants/user.constants';
+import { userConstraints } from 'src/constraints/user.constraints';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { InvalidCredentialsError, InvalidInputError } from 'src/errors/invalid-input-error.class';
 import { commonErrors } from 'src/messages/common.error.messages';
@@ -48,7 +48,7 @@ describe('LoginUserDto', () => {
     });
 
     it('should throw InvalidCredentialsError when password is too short and expose actual error', async () => {
-        const data = { ...validData, password: 'a'.repeat(usersLimits.MIN_PASSWORD_LENGTH - 1) };
+        const data = { ...validData, password: 'a'.repeat(userConstraints.MIN_PASSWORD_LENGTH - 1) };
         await expect(LoginUserDto.validate(data)).rejects.toThrow(InvalidCredentialsError);
         await expect(LoginUserDto.validate(data)).rejects.toHaveProperty(
             'actualError',
@@ -57,7 +57,7 @@ describe('LoginUserDto', () => {
     });
 
     it('should throw InvalidCredentialsError when password is too long and expose actual error', async () => {
-        const data = { ...validData, password: 'a'.repeat(usersLimits.MAX_PASSWORD_LENGTH + 1) };
+        const data = { ...validData, password: 'a'.repeat(userConstraints.MAX_PASSWORD_LENGTH + 1) };
         await expect(LoginUserDto.validate(data)).rejects.toThrow(InvalidCredentialsError);
         await expect(LoginUserDto.validate(data)).rejects.toHaveProperty(
             'actualError',

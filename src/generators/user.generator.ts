@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { usersLimits } from 'src/constants/user.constants';
+import { userConstraints } from 'src/constraints/user.constraints';
 
 export class UserDataGenerator {
     constructor() {}
@@ -7,7 +7,7 @@ export class UserDataGenerator {
     private generateRandomName() {
         const randomSufix = faker.number.int({ max: 100 });
         const suffixLength = randomSufix.toString().length;
-        const maxBaseLength = usersLimits.MAX_NAME_LENGTH - suffixLength;
+        const maxBaseLength = userConstraints.MAX_NAME_LENGTH - suffixLength;
         // Choose randomly between username and first name
         const random = Math.round(Math.random());
         let baseName = random === 0 ? faker.internet.username() : faker.person.firstName();
@@ -17,8 +17,8 @@ export class UserDataGenerator {
         }
         const fullName = baseName.concat(randomSufix.toString());
         // Ensure minimum length is met
-        if (fullName.length < usersLimits.MIN_NAME_LENGTH) {
-            const paddingNeeded = usersLimits.MIN_NAME_LENGTH - fullName.length;
+        if (fullName.length < userConstraints.MIN_NAME_LENGTH) {
+            const paddingNeeded = userConstraints.MIN_NAME_LENGTH - fullName.length;
             return fullName + 'x'.repeat(paddingNeeded);
         }
         return fullName;
@@ -35,7 +35,7 @@ export class UserDataGenerator {
 
     get password() {
         return faker.internet.password({
-            length: usersLimits.MAX_PASSWORD_LENGTH,
+            length: userConstraints.MAX_PASSWORD_LENGTH,
         });
     }
 
