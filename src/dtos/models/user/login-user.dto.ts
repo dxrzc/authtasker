@@ -1,7 +1,7 @@
-import { parseAndValidateOrThrow } from 'src/dtos/helpers/validate-and-transform';
 import { usersLimits } from 'src/constants/user.constants';
 import { IsDefined, IsEmail, MaxLength, MinLength } from 'class-validator';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
+import { parseAndValidateOrThrow } from 'src/dtos/helpers/parse-and-validate-or-throw.helper';
 
 export class LoginUserDto {
     @IsDefined({ message: usersApiErrors.EMAIL_NOT_PROVIDED })

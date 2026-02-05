@@ -5,7 +5,7 @@ import { toLowerCaseAndTrim } from 'src/dtos/helpers/to-lowercase.helper';
 import { IsDefined, IsIn, MaxLength, MinLength } from 'class-validator';
 import { tasksPriority, TasksPriority } from 'src/types/tasks/task-priority.type';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
-import { parseAndValidateOrThrow } from 'src/dtos/helpers/validate-and-transform';
+import { parseAndValidateOrThrow } from 'src/dtos/helpers/parse-and-validate-or-throw.helper';
 
 export class CreateTaskDto {
     @IsDefined({ message: tasksApiErrors.NAME_NOT_PROVIDED })

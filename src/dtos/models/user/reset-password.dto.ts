@@ -1,6 +1,6 @@
 import { PickType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
-import { parseAndValidateOrThrow } from 'src/dtos/helpers/validate-and-transform';
+import { parseAndValidateOrThrow } from 'src/dtos/helpers/parse-and-validate-or-throw.helper';
 
 export class ResetPasswordDto extends PickType(CreateUserDto, ['password'] as const) {
     static async validate(data: Record<string, unknown>): Promise<ResetPasswordDto> {

@@ -3,7 +3,7 @@ import { usersLimits } from 'src/constants/user.constants';
 import { toLowerCaseAndTrim } from 'src/dtos/helpers/to-lowercase.helper';
 import { IsDefined, IsEmail, MaxLength, MinLength } from 'class-validator';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { parseAndValidateOrThrow } from 'src/dtos/helpers/validate-and-transform';
+import { parseAndValidateOrThrow } from 'src/dtos/helpers/parse-and-validate-or-throw.helper';
 
 export class CreateUserDto {
     @IsDefined({ message: usersApiErrors.NAME_NOT_PROVIDED })
