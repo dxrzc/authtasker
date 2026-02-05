@@ -4,7 +4,6 @@ import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
 import { stringValueToSeconds } from '@integration/utils/string-value-to-seconds.util';
 import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
-import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
@@ -13,6 +12,7 @@ import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key'
 import { makeSessionTokenBlacklistKey } from 'src/functions/token/make-session-token-blacklist-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
+import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
 
 describe(`POST ${testKit.urls.logout}`, () => {
     describe('Session token not provided', () => {
@@ -97,7 +97,7 @@ describe(`POST ${testKit.urls.logout}`, () => {
         test(`return 429 status code and too many requests error message`, async () => {
             const ip = faker.internet.ip();
             const { sessionToken } = await createUser(getRandomRole());
-            for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
+            for (let i = 0; i < rateLimitingSettings[RateLimiter.critical].max; i++) {
                 await testKit.agent
                     .post(testKit.urls.logout)
                     .set('Authorization', `Bearer ${sessionToken}`)

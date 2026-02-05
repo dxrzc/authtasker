@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { UserService } from 'src/services/user.service';
 import { statusCodes } from 'src/constants/status-codes.constants';
-import { paginationSettings } from 'src/constants/pagination.constants';
+import { paginationSettings } from 'src/settings/pagination.settings';
 import { LoginUserDto } from 'src/dtos/models/user/login-user.dto';
 import { CreateUserDto } from 'src/dtos/models/user/create-user.dto';
 import { UpdateUserDto } from 'src/dtos/models/user/update-user.dto';

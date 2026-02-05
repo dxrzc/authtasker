@@ -1,6 +1,6 @@
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 
-export const rateLimiting = {
+export const rateLimitingSettings = {
     [RateLimiter.critical]: {
         max: 3,
         windowMs: 1 * 60 * 1000, // 1 minute

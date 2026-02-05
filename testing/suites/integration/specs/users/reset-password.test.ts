@@ -11,7 +11,6 @@ import { authErrors } from 'src/messages/auth.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { usersLimits } from 'src/constants/user.constants';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
-import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
@@ -20,6 +19,7 @@ import { makePasswordRecoveryTokenBlacklistKey } from 'src/functions/token/make-
 import { stringValueToSeconds } from '@integration/utils/string-value-to-seconds.util';
 import { disableSystemErrorLogsForThisTest } from '@integration/utils/disable-system-error-logs';
 import { RefreshTokenService } from 'src/services/refresh-token.service';
+import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
 
 describe(`POST ${testKit.urls.resetPassword}`, () => {
     describe('Successful password resetting', () => {
@@ -282,7 +282,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             const ip = faker.internet.ip();
             const { email } = await createUser(getRandomRole());
             const token = testKit.passwordRecoveryTokenService.generate(email);
-            for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
+            for (let i = 0; i < rateLimitingSettings[RateLimiter.critical].max; i++) {
                 await testKit.agent
                     .post(testKit.urls.resetPassword)
                     .set('X-Forwarded-For', ip)

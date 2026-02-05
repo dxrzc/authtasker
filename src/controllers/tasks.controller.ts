@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { TasksService } from 'src/services/tasks.service';
 import { statusCodes } from 'src/constants/status-codes.constants';
-import { paginationSettings } from 'src/constants/pagination.constants';
+import { paginationSettings } from 'src/settings/pagination.settings';
 import { CreateTaskDto } from 'src/dtos/models/tasks/create-task.dto';
 import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
 import { TaskStatusDto } from 'src/dtos/models/tasks/task-status.dto';

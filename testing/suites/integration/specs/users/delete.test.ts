@@ -9,7 +9,6 @@ import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
-import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
@@ -17,6 +16,7 @@ import { Types } from 'mongoose';
 import { disableSystemErrorLogsForThisTest } from '@integration/utils/disable-system-error-logs';
 import { RefreshTokenService } from 'src/services/refresh-token.service';
 import { CacheService } from 'src/services/cache.service';
+import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
 
 describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     describe('Session token not provided', () => {
@@ -262,7 +262,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             const { sessionToken, id } = await createUser(UserRole.READONLY);
-            for (let i = 0; i < rateLimiting[RateLimiter.relaxed].max; i++) {
+            for (let i = 0; i < rateLimitingSettings[RateLimiter.relaxed].max; i++) {
                 const { sessionToken } = await createUser(UserRole.READONLY);
                 // id path parameter is different in every request
                 await testKit.agent
