@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { tasksLimits } from 'src/constants/tasks.constants';
+import { taskConstraints } from 'src/constraints/task.constraints';
 import { TasksStatus, tasksStatus } from 'src/types/tasks/task-status.type';
 import { toLowerCaseAndTrim } from 'src/dtos/helpers/to-lowercase.helper';
 import { IsDefined, IsIn, MaxLength, MinLength } from 'class-validator';
@@ -9,16 +9,16 @@ import { parseAndValidateOrThrow } from 'src/dtos/helpers/parse-and-validate-or-
 
 export class CreateTaskDto {
     @IsDefined({ message: tasksApiErrors.NAME_NOT_PROVIDED })
-    @MinLength(tasksLimits.MIN_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
-    @MaxLength(tasksLimits.MAX_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
+    @MinLength(taskConstraints.MIN_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
+    @MaxLength(taskConstraints.MAX_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
     @Transform(toLowerCaseAndTrim)
     readonly name!: string;
 
     @IsDefined({ message: tasksApiErrors.DESCRIPTION_NOT_PROVIDED })
-    @MinLength(tasksLimits.MIN_DESCRIPTION_LENGTH, {
+    @MinLength(taskConstraints.MIN_DESCRIPTION_LENGTH, {
         message: tasksApiErrors.INVALID_DESCRIPTION_LENGTH,
     })
-    @MaxLength(tasksLimits.MAX_DESCRIPTION_LENGTH, {
+    @MaxLength(taskConstraints.MAX_DESCRIPTION_LENGTH, {
         message: tasksApiErrors.INVALID_DESCRIPTION_LENGTH,
     })
     readonly description!: string;
