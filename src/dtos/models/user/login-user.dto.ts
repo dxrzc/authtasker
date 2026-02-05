@@ -1,4 +1,4 @@
-import { validateAndTransformDto } from 'src/functions/dtos/validate-dto';
+import { parseAndValidateOrThrow } from 'src/dtos/helpers/validate-and-transform';
 import { usersLimits } from 'src/constants/user.constants';
 import { IsDefined, IsEmail, MaxLength, MinLength } from 'class-validator';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
@@ -20,6 +20,6 @@ export class LoginUserDto {
     readonly password!: string;
 
     static async validate(data: Record<string, unknown>): Promise<LoginUserDto> {
-        return await validateAndTransformDto(LoginUserDto, data);
+        return await parseAndValidateOrThrow(LoginUserDto, data);
     }
 }

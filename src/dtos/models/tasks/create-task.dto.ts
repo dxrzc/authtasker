@@ -5,7 +5,7 @@ import { toLowerCaseAndTrim } from 'src/dtos/helpers/to-lowercase.helper';
 import { IsDefined, IsIn, MaxLength, MinLength } from 'class-validator';
 import { tasksPriority, TasksPriority } from 'src/types/tasks/task-priority.type';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
-import { validateAndTransformDto } from 'src/functions/dtos/validate-dto';
+import { parseAndValidateOrThrow } from 'src/dtos/helpers/validate-and-transform';
 
 export class CreateTaskDto {
     @IsDefined({ message: tasksApiErrors.NAME_NOT_PROVIDED })
@@ -32,6 +32,6 @@ export class CreateTaskDto {
     readonly priority!: TasksPriority;
 
     static async validateAndTransform(data: Record<string, unknown>): Promise<CreateTaskDto> {
-        return await validateAndTransformDto(CreateTaskDto, data);
+        return await parseAndValidateOrThrow(CreateTaskDto, data);
     }
 }

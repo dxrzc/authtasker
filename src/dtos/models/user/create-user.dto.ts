@@ -3,7 +3,7 @@ import { usersLimits } from 'src/constants/user.constants';
 import { toLowerCaseAndTrim } from 'src/dtos/helpers/to-lowercase.helper';
 import { IsDefined, IsEmail, MaxLength, MinLength } from 'class-validator';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { validateAndTransformDto } from 'src/functions/dtos/validate-dto';
+import { parseAndValidateOrThrow } from 'src/dtos/helpers/validate-and-transform';
 
 export class CreateUserDto {
     @IsDefined({ message: usersApiErrors.NAME_NOT_PROVIDED })
@@ -22,6 +22,6 @@ export class CreateUserDto {
     readonly password!: string;
 
     static async validateAndTransform(data: Record<string, unknown>): Promise<CreateUserDto> {
-        return await validateAndTransformDto(CreateUserDto, data);
+        return await parseAndValidateOrThrow(CreateUserDto, data);
     }
 }
