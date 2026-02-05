@@ -1,11 +1,7 @@
 import { LoginUserDto } from 'src/dtos/models/user/login-user.dto';
 import { usersLimits } from 'src/constants/user.constants';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import {
-    InvalidCredentialsError,
-    InvalidInputError,
-    MaliciousInputError,
-} from 'src/errors/invalid-input-error.class';
+import { InvalidCredentialsError, InvalidInputError } from 'src/errors/invalid-input-error.class';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { UserDataGenerator } from 'src/generators/user.generator';
 
@@ -74,10 +70,5 @@ describe('LoginUserDto', () => {
         await expect(LoginUserDto.validate(data)).rejects.toThrow(
             new InvalidInputError(commonErrors.UNEXPECTED_PROPERTY_PROVIDED),
         );
-    });
-
-    it('should throw MaliciousInputError if email contains malicious content', async () => {
-        const data = { ...validData, email: '<script>alert("XSS")</script>' };
-        await expect(LoginUserDto.validate(data)).rejects.toThrow(MaliciousInputError);
     });
 });

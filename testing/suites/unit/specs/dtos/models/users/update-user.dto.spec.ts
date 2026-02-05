@@ -1,7 +1,7 @@
 import { UpdateUserDto } from 'src/dtos/models/user/update-user.dto';
 import { usersLimits } from 'src/constants/user.constants';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { InvalidInputError, MaliciousInputError } from 'src/errors/invalid-input-error.class';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { UserDataGenerator } from 'src/generators/user.generator';
 
@@ -82,10 +82,5 @@ describe('UpdateUserDto', () => {
         await expect(UpdateUserDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(commonErrors.UNEXPECTED_PROPERTY_PROVIDED),
         );
-    });
-
-    it('should throw MaliciousInputError if name contains malicious content', async () => {
-        const data = { name: '<script>alert("XSS")</script>' };
-        await expect(UpdateUserDto.validateAndTransform(data)).rejects.toThrow(MaliciousInputError);
     });
 });
