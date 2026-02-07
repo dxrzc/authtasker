@@ -2,7 +2,8 @@
 Backend API for user authentication and task management with session-based auth, role authorization and caching.
 
 ## Overview
-Authtasker is a backend service that allows users to authenticate securely and manage tasks with priorities and statuses.
+Authtasker is a backend service that allows users to authenticate securely and collaborate in a shared task environment, where tasks can be created, viewed, and filtered by attributes such as priority, status, and owner.
+
 This project focuses on authentication flows, authorization, and backend fundamentals, rather than UI or frontend concerns.
 
 ## Tech Stack
