@@ -33,30 +33,36 @@ export class CacheService<Data extends { id: string }> {
     }
 
     async get(id: string): Promise<Data | null> {
-        const resourceInCache = await this.redisService.get<DataInCache<Data>>(
-            this.cacheKeyMaker(id),
-        );
-        // first time
-        if (!resourceInCache) {
-            this.loggerService.info(`No data in cache for ${this.apiName} with id ${id}`);
+        try {
+            const resourceInCache = await this.redisService.get<DataInCache<Data>>(
+                this.cacheKeyMaker(id),
+            );
+            // first time
+            if (!resourceInCache) {
+                this.loggerService.info(`No data in cache for ${this.apiName} with id ${id}`);
+                return null;
+            }
+            const resourceExpired = isDataInCacheExpired(resourceInCache.cachedAtUnix, this.ttls);
+            // hit
+            if (!resourceExpired) {
+                this.loggerService.info(`Cache hit for ${this.apiName} with id ${id}`);
+                return resourceInCache.data;
+            }
+            const expiredButFresh = await this.revalidate(id, resourceInCache.cachedAtUnix);
+            // revalidate-hit
+            if (expiredButFresh) {
+                this.loggerService.info(`Cache revalidate-hit for ${this.apiName} with id ${id}`);
+                await this.cache(resourceInCache.data);
+                return resourceInCache.data;
+            }
+            // revalidate-miss
+            this.loggerService.info(`Cache revalidate-miss for ${this.apiName} with id ${id}`);
+            return null;
+        } catch (error) {
+            this.loggerService.warn('Failed to get data from cache');
+            SystemLoggerService.error(String(error));
             return null;
         }
-        const resourceExpired = isDataInCacheExpired(resourceInCache.cachedAtUnix, this.ttls);
-        // hit
-        if (!resourceExpired) {
-            this.loggerService.info(`Cache hit for ${this.apiName} with id ${id}`);
-            return resourceInCache.data;
-        }
-        const expiredButFresh = await this.revalidate(id, resourceInCache.cachedAtUnix);
-        // revalidate-hit
-        if (expiredButFresh) {
-            this.loggerService.info(`Cache revalidate-hit for ${this.apiName} with id ${id}`);
-            await this.cache(resourceInCache.data);
-            return resourceInCache.data;
-        }
-        // revalidate-miss
-        this.loggerService.info(`Cache revalidate-miss for ${this.apiName} with id ${id}`);
-        return null;
     }
 
     /**
