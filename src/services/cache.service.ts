@@ -186,7 +186,12 @@ export class CacheService<Data extends { id: string }> {
     }
 
     async delete(id: string): Promise<void> {
-        const cacheKey = this.cacheKeyMaker(id);
-        await this.redisService.delete(cacheKey);
+        try {
+            const cacheKey = this.cacheKeyMaker(id);
+            await this.redisService.delete(cacheKey);
+        } catch (error) {
+            this.loggerService.warn('Failed to delete data from cache');
+            SystemLoggerService.error(String(error));
+        }
     }
 }
