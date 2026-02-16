@@ -5,7 +5,6 @@ import { CacheService } from './cache.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
 import { calculatePagination } from 'src/functions/pagination/calculate-pagination';
-import { TaskResponse } from 'src/types/tasks/task-response.type';
 import { TaskDocument } from 'src/types/tasks/task-document.type';
 import { HttpError } from 'src/errors/http-error.class';
 import { UserIdentity } from 'src/interfaces/user/user-identity.interface';
@@ -41,7 +40,7 @@ export class TasksService {
         requestUserInfo: UserIdentity,
         targetTaskId: string,
     ): Promise<TaskDocument> {
-        const task = (await this.findOne(targetTaskId, { cache: false })) as TaskDocument;
+        const task = await this.findOne(targetTaskId, { cache: false });
         const taskOwner = await this.getUserService().findOne(task.user.toString(), {
             cache: false,
         });
@@ -68,7 +67,7 @@ export class TasksService {
         }
     }
 
-    async findOne(id: string, options: IFindOptions): Promise<TaskDocument | TaskResponse> {
+    async findOne(id: string, options: IFindOptions): Promise<TaskDocument> {
         // validate id
         const validMongoId = Types.ObjectId.isValid(id);
         if (!validMongoId) {

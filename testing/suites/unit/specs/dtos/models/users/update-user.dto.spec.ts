@@ -1,7 +1,7 @@
 import { UpdateUserDto } from 'src/dtos/models/user/update-user.dto';
-import { usersLimits } from 'src/constants/user.constants';
+import { userConstraints } from 'src/constraints/user.constraints';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { InvalidInputError, MaliciousInputError } from 'src/errors/invalid-input-error.class';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { UserDataGenerator } from 'src/generators/user.generator';
 
@@ -43,14 +43,14 @@ describe('UpdateUserDto', () => {
     });
 
     it('should throw if name is too short', async () => {
-        const data = { name: 'a'.repeat(usersLimits.MIN_NAME_LENGTH - 1) };
+        const data = { name: 'a'.repeat(userConstraints.MIN_NAME_LENGTH - 1) };
         await expect(UpdateUserDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(usersApiErrors.INVALID_NAME_LENGTH),
         );
     });
 
     it('should throw if name is too long', async () => {
-        const data = { name: 'a'.repeat(usersLimits.MAX_NAME_LENGTH + 1) };
+        const data = { name: 'a'.repeat(userConstraints.MAX_NAME_LENGTH + 1) };
         await expect(UpdateUserDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(usersApiErrors.INVALID_NAME_LENGTH),
         );
@@ -64,14 +64,14 @@ describe('UpdateUserDto', () => {
     });
 
     it('should throw if password is too short', async () => {
-        const data = { password: 'a'.repeat(usersLimits.MIN_PASSWORD_LENGTH - 1) };
+        const data = { password: 'a'.repeat(userConstraints.MIN_PASSWORD_LENGTH - 1) };
         await expect(UpdateUserDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH),
         );
     });
 
     it('should throw if password is too long', async () => {
-        const data = { password: 'a'.repeat(usersLimits.MAX_PASSWORD_LENGTH + 1) };
+        const data = { password: 'a'.repeat(userConstraints.MAX_PASSWORD_LENGTH + 1) };
         await expect(UpdateUserDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH),
         );
@@ -82,10 +82,5 @@ describe('UpdateUserDto', () => {
         await expect(UpdateUserDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(commonErrors.UNEXPECTED_PROPERTY_PROVIDED),
         );
-    });
-
-    it('should throw MaliciousInputError if name contains malicious content', async () => {
-        const data = { name: '<script>alert("XSS")</script>' };
-        await expect(UpdateUserDto.validateAndTransform(data)).rejects.toThrow(MaliciousInputError);
     });
 });

@@ -6,15 +6,17 @@ import { UserRole } from 'src/enums/user-role.enum';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
 import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
-import { makeSessionTokenBlacklistKey } from 'src/functions/token/make-session-token-blacklist-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
-import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
-import { usersLimits } from 'src/constants/user.constants';
+import { userConstraints } from 'src/constraints/user.constraints';
+import { disableSystemErrorLogsForThisTest } from '@integration/utils/disable-system-error-logs';
+import { CacheService } from 'src/services/cache.service';
+import { RefreshTokenService } from 'src/services/refresh-token.service';
+import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
 
 describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     describe('Session token not provided', () => {
@@ -28,7 +30,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
-    describe('Successful update', () => {
+    describe('Several properties are updated', () => {
         test('return status 200 and the updated user data in db', async () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             const { body, statusCode } = await testKit.agent
@@ -50,21 +52,6 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
                 updatedAt: user!.updatedAt.toISOString(),
                 id: user!.id,
             });
-        });
-
-        test('name is transformed to lowercase and trimmed in db', async () => {
-            const { sessionToken, id } = await createUser(UserRole.READONLY);
-            const rawName =
-                faker.string.alpha(usersLimits.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
-            const expectedName = rawName.toLowerCase().trim();
-            await testKit.agent
-                .patch(`${testKit.urls.usersAPI}/${id}`)
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .send({ name: rawName })
-                .expect(status2xx);
-            const userInDb = await testKit.models.user.findById(id).exec();
-            expect(userInDb).not.toBeNull();
-            expect(userInDb?.name).toBe(expectedName);
         });
 
         test('reflect updated data in db', async () => {
@@ -92,7 +79,49 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             expect(isPasswordCorrectlyHashed).toBe(true);
         });
 
-        test('remove user from cache', async () => {
+        test('user is deleted from cache', async () => {
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            // cache the user
+            await testKit.agent
+                .get(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(statusCodes.OK);
+            const cacheKey = makeUsersCacheKey(id);
+            const cachedUserBefore = await testKit.redisService.get(cacheKey);
+            expect(cachedUserBefore).not.toBeNull();
+            // update user
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({
+                    name: testKit.userData.name,
+                    email: testKit.userData.email,
+                    password: testKit.userData.password,
+                })
+                .expect(statusCodes.OK);
+            // verify user is removed from cache
+            const cachedUserAfter = await testKit.redisService.get(cacheKey);
+            expect(cachedUserAfter).toBeNull();
+        });
+    });
+
+    describe('Name is updated', () => {
+        test('name is transformed to lowercase and trimmed in db', async () => {
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            const rawName =
+                faker.string.alpha(userConstraints.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
+            const expectedName = rawName.toLowerCase().trim();
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ name: rawName })
+                .expect(status2xx);
+            const userInDb = await testKit.models.user.findById(id).exec();
+            expect(userInDb).not.toBeNull();
+            expect(userInDb?.name).toBe(expectedName);
+        });
+
+        test('user is deleted from cache', async () => {
             const { sessionToken, id } = await createUser(UserRole.READONLY);
             // cache the user
             await testKit.agent
@@ -151,19 +180,6 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             expect(token2InRedis).toBeNull();
         });
 
-        test('blacklist the provided session token', async () => {
-            const { sessionToken, id } = await createUser(getRandomRole());
-            const sessionTokenJti = testKit.sessionJwt.verify(sessionToken)!.jti;
-            await testKit.agent
-                .patch(`${testKit.urls.usersAPI}/${id}`)
-                .send({ email: testKit.userData.email })
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .expect(status2xx);
-            const redisKey = makeSessionTokenBlacklistKey(sessionTokenJti);
-            const blacklisted = await testKit.redisService.get(redisKey);
-            expect(blacklisted).not.toBeNull();
-        });
-
         test('update credentialsChangedAt property', async () => {
             const { sessionToken, id } = await createUser(getRandomRole());
             const userBefore = await testKit.models.user.findById(id);
@@ -180,6 +196,59 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             expect(credentialsChangedAtAfter.getTime()).toBeGreaterThan(
                 credentialsChangedAtBefore.getTime(),
             );
+        });
+
+        test('user is deleted from cache', async () => {
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            // cache the user
+            await testKit.agent
+                .get(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(statusCodes.OK);
+            const cacheKey = makeUsersCacheKey(id);
+            const cachedUserBefore = await testKit.redisService.get(cacheKey);
+            expect(cachedUserBefore).not.toBeNull();
+            // update user
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ email: testKit.userData.email })
+                .expect(statusCodes.OK);
+            // verify user is removed from cache
+            const cachedUserAfter = await testKit.redisService.get(cacheKey);
+            expect(cachedUserAfter).toBeNull();
+        });
+
+        describe('Cache update fails', () => {
+            test('request is successful', async () => {
+                disableSystemErrorLogsForThisTest();
+                const cacheSvcDeleteMock = jest
+                    .spyOn(CacheService.prototype, 'delete')
+                    .mockRejectedValue(new Error());
+                const { sessionToken, id } = await createUser(UserRole.READONLY);
+                await testKit.agent
+                    .patch(`${testKit.urls.usersAPI}/${id}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .send({ email: testKit.userData.email })
+                    .expect(status2xx);
+                expect(cacheSvcDeleteMock).toHaveBeenCalledTimes(1);
+            });
+        });
+
+        describe('Sessions revocation fails', () => {
+            test('request is successful', async () => {
+                disableSystemErrorLogsForThisTest();
+                const refreshTokenSvcRevokeAllMock = jest
+                    .spyOn(RefreshTokenService.prototype, 'revokeAll')
+                    .mockRejectedValue(new Error());
+                const { sessionToken, id } = await createUser(UserRole.READONLY);
+                await testKit.agent
+                    .patch(`${testKit.urls.usersAPI}/${id}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .send({ email: testKit.userData.email })
+                    .expect(status2xx);
+                expect(refreshTokenSvcRevokeAllMock).toHaveBeenCalledTimes(1);
+            });
         });
     });
 
@@ -220,19 +289,6 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             expect(token2InRedis).toBeNull();
         });
 
-        test('blacklist the provided session token', async () => {
-            const { sessionToken, id } = await createUser(getRandomRole());
-            const sessionTokenJti = testKit.sessionJwt.verify(sessionToken)!.jti;
-            await testKit.agent
-                .patch(`${testKit.urls.usersAPI}/${id}`)
-                .send({ password: testKit.userData.password })
-                .set('Authorization', `Bearer ${sessionToken}`)
-                .expect(status2xx);
-            const redisKey = makeSessionTokenBlacklistKey(sessionTokenJti);
-            const blacklisted = await testKit.redisService.get(redisKey);
-            expect(blacklisted).not.toBeNull();
-        });
-
         test('update credentialsChangedAt property', async () => {
             const { sessionToken, id } = await createUser(getRandomRole());
             const userBefore = await testKit.models.user.findById(id);
@@ -249,6 +305,43 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
             expect(credentialsChangedAtAfter.getTime()).toBeGreaterThan(
                 credentialsChangedAtBefore.getTime(),
             );
+        });
+
+        test('user is NOT deleted from cache', async () => {
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            // cache the user
+            await testKit.agent
+                .get(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(statusCodes.OK);
+            const cacheKey = makeUsersCacheKey(id);
+            const cachedUserBefore = await testKit.redisService.get(cacheKey);
+            expect(cachedUserBefore).not.toBeNull();
+            // update user
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ password: testKit.userData.password })
+                .expect(statusCodes.OK);
+            // verify if user was deleted from cache
+            const cachedUserAfter = await testKit.redisService.get(cacheKey);
+            expect(cachedUserAfter).not.toBeNull();
+        });
+
+        describe('Sessions revocation fails', () => {
+            test('request is successful', async () => {
+                disableSystemErrorLogsForThisTest();
+                const refreshTokenSvcRevokeAllMock = jest
+                    .spyOn(RefreshTokenService.prototype, 'revokeAll')
+                    .mockRejectedValue(new Error());
+                const { sessionToken, id } = await createUser(UserRole.READONLY);
+                await testKit.agent
+                    .patch(`${testKit.urls.usersAPI}/${id}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .send({ password: testKit.userData.password })
+                    .expect(status2xx);
+                expect(refreshTokenSvcRevokeAllMock).toHaveBeenCalledTimes(1);
+            });
         });
     });
 
@@ -389,7 +482,7 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
         test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             const { sessionToken, id } = await createUser(UserRole.READONLY);
-            for (let i = 0; i < rateLimiting[RateLimiter.relaxed].max; i++) {
+            for (let i = 0; i < rateLimitingSettings[RateLimiter.relaxed].max; i++) {
                 await testKit.agent
                     .patch(`${testKit.urls.usersAPI}/${id}`)
                     .set('Authorization', `Bearer ${sessionToken}`)

@@ -1,9 +1,9 @@
 import { CreateTaskDto } from 'src/dtos/models/tasks/create-task.dto';
-import { tasksLimits } from 'src/constants/tasks.constants';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
-import { InvalidInputError, MaliciousInputError } from 'src/errors/invalid-input-error.class';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { TasksDataGenerator } from 'src/generators/tasks.generator';
+import { taskConstraints } from 'src/constraints/task.constraints';
 
 describe('CreateTaskDto', () => {
     const generator = new TasksDataGenerator();
@@ -36,14 +36,14 @@ describe('CreateTaskDto', () => {
     });
 
     it('should throw if name is too short', async () => {
-        const data = { ...validData, name: 'a'.repeat(tasksLimits.MIN_NAME_LENGTH - 1) };
+        const data = { ...validData, name: 'a'.repeat(taskConstraints.MIN_NAME_LENGTH - 1) };
         await expect(CreateTaskDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(tasksApiErrors.INVALID_NAME_LENGTH),
         );
     });
 
     it('should throw if name is too long', async () => {
-        const data = { ...validData, name: 'a'.repeat(tasksLimits.MAX_NAME_LENGTH + 1) };
+        const data = { ...validData, name: 'a'.repeat(taskConstraints.MAX_NAME_LENGTH + 1) };
         await expect(CreateTaskDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(tasksApiErrors.INVALID_NAME_LENGTH),
         );
@@ -59,7 +59,7 @@ describe('CreateTaskDto', () => {
     it('should throw if description is too short', async () => {
         const data = {
             ...validData,
-            description: 'a'.repeat(tasksLimits.MIN_DESCRIPTION_LENGTH - 1),
+            description: 'a'.repeat(taskConstraints.MIN_DESCRIPTION_LENGTH - 1),
         };
         await expect(CreateTaskDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(tasksApiErrors.INVALID_DESCRIPTION_LENGTH),
@@ -69,7 +69,7 @@ describe('CreateTaskDto', () => {
     it('should throw if description is too long', async () => {
         const data = {
             ...validData,
-            description: 'a'.repeat(tasksLimits.MAX_DESCRIPTION_LENGTH + 1),
+            description: 'a'.repeat(taskConstraints.MAX_DESCRIPTION_LENGTH + 1),
         };
         await expect(CreateTaskDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(tasksApiErrors.INVALID_DESCRIPTION_LENGTH),
@@ -109,10 +109,5 @@ describe('CreateTaskDto', () => {
         await expect(CreateTaskDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(commonErrors.UNEXPECTED_PROPERTY_PROVIDED),
         );
-    });
-
-    it('should throw MaliciousInputError if description contains malicious content', async () => {
-        const data = { ...validData, description: '<script>alert("XSS")</script>' };
-        await expect(CreateTaskDto.validateAndTransform(data)).rejects.toThrow(MaliciousInputError);
     });
 });

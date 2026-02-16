@@ -1,5 +1,5 @@
 export interface IShutdownParams {
-    cause: string;
-    exitCode: number;
-    stack?: string;
+    readonly cause: string;
+    readonly exitCode: number;
+    readonly stack?: string;
 }

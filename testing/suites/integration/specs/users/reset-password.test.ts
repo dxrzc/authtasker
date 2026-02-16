@@ -9,15 +9,17 @@ import { tokenPurposes } from 'src/constants/token-purposes.constants';
 import { status2xx } from '@integration/utils/status-2xx.util';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
-import { usersLimits } from 'src/constants/user.constants';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
-import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
 import { makePasswordRecoveryTokenBlacklistKey } from 'src/functions/token/make-password-recovery-token-blacklist-key';
 import { stringValueToSeconds } from '@integration/utils/string-value-to-seconds.util';
+import { disableSystemErrorLogsForThisTest } from '@integration/utils/disable-system-error-logs';
+import { RefreshTokenService } from 'src/services/refresh-token.service';
+import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
+import { userConstraints } from 'src/constraints/user.constraints';
 
 describe(`POST ${testKit.urls.resetPassword}`, () => {
     describe('Successful password resetting', () => {
@@ -234,7 +236,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 token,
                 newPassword: faker.internet.password({
-                    length: usersLimits.MAX_PASSWORD_LENGTH + 1,
+                    length: userConstraints.MAX_PASSWORD_LENGTH + 1,
                 }),
             });
             expect(res.body).toStrictEqual({ error: usersApiErrors.INVALID_PASSWORD_LENGTH });
@@ -249,11 +251,29 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             const res = await testKit.agent.post(testKit.urls.resetPassword).send({
                 token,
                 newPassword: faker.internet.password({
-                    length: usersLimits.MIN_PASSWORD_LENGTH - 1,
+                    length: userConstraints.MIN_PASSWORD_LENGTH - 1,
                 }),
             });
             expect(res.body).toStrictEqual({ error: usersApiErrors.INVALID_PASSWORD_LENGTH });
             expect(res.status).toBe(400);
+        });
+    });
+
+    describe('Session revocation fails', () => {
+        test('request is successful', async () => {
+            disableSystemErrorLogsForThisTest();
+            const refreshTokenSvcRevokeAllMock = jest
+                .spyOn(RefreshTokenService.prototype, 'revokeAll')
+                .mockRejectedValue(new Error());
+            const { email } = await createUser(getRandomRole());
+            await testKit.agent
+                .post(testKit.urls.resetPassword)
+                .send({
+                    newPassword: testKit.userData.password,
+                    token: testKit.passwordRecoveryTokenService.generate(email),
+                })
+                .expect(status2xx);
+            expect(refreshTokenSvcRevokeAllMock).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -262,7 +282,7 @@ describe(`POST ${testKit.urls.resetPassword}`, () => {
             const ip = faker.internet.ip();
             const { email } = await createUser(getRandomRole());
             const token = testKit.passwordRecoveryTokenService.generate(email);
-            for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
+            for (let i = 0; i < rateLimitingSettings[RateLimiter.critical].max; i++) {
                 await testKit.agent
                     .post(testKit.urls.resetPassword)
                     .set('X-Forwarded-For', ip)

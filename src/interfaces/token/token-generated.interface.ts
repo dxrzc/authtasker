@@ -1,5 +1,5 @@
 export interface ITokenGenerated {
-    token: string;
-    jti: string;
-    expUnix: number;
+    readonly token: string;
+    readonly jti: string;
+    readonly expUnix: number;
 }

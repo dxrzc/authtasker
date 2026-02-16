@@ -8,7 +8,6 @@ import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { SessionTokenService } from './session-token.service';
 import { HashingService } from 'src/services/hashing.service';
-import { UserResponse } from 'src/types/user/user-response.type';
 import { UserDocument } from 'src/types/user/user-document.type';
 import { HttpError } from 'src/errors/http-error.class';
 import { authErrors } from 'src/messages/auth.error.messages';
@@ -131,8 +130,9 @@ export class UserService {
     private async applyUserUpdates(
         userDocument: UserDocument,
         propertiesUpdated: UpdateUserDto,
-    ): Promise<{ credentialsChanged: boolean }> {
+    ): Promise<{ credentialsChanged: boolean; deleteFromCache: boolean }> {
         let credentialsChanged = false;
+        let deleteFromCache = false;
         const now = new Date();
         if (propertiesUpdated.email) {
             if (userDocument.role !== UserRole.ADMIN) {
@@ -144,14 +144,18 @@ export class UserService {
             }
             userDocument.email = propertiesUpdated.email;
             credentialsChanged = true;
+            deleteFromCache = true;
         }
         if (propertiesUpdated.password) {
             userDocument.password = await this.hashingService.hash(propertiesUpdated.password);
             credentialsChanged = true;
         }
         if (credentialsChanged) userDocument.credentialsChangedAt = now;
-        if (propertiesUpdated.name) userDocument.name = propertiesUpdated.name;
-        return { credentialsChanged };
+        if (propertiesUpdated.name) {
+            userDocument.name = propertiesUpdated.name;
+            deleteFromCache = true;
+        }
+        return { credentialsChanged, deleteFromCache };
     }
 
     private computeSHA256PasswordHash(rawPassword: string): Buffer {
@@ -222,9 +226,12 @@ export class UserService {
     async create(user: CreateUserDto) {
         try {
             // hashing password
-            user.password = await this.hashPassword(user.password);
+            const passwordHash = await this.hashPassword(user.password);
             // db
-            const created = await this.userModel.create(user);
+            const created = await this.userModel.create({
+                ...user,
+                password: passwordHash,
+            });
             const userId = created.id;
             this.loggerService.info(`User ${userId} created`);
             // tokens
@@ -303,7 +310,7 @@ export class UserService {
         };
     }
 
-    async findOne(id: string, options: IFindOptions): Promise<UserDocument | UserResponse> {
+    async findOne(id: string, options: IFindOptions): Promise<UserDocument> {
         if (options.cache) {
             return await this.findOneByIdOrThrowCacheEnabled(id);
         }
@@ -323,6 +330,32 @@ export class UserService {
         };
     }
 
+    /**
+     * Sessions revocation is treated as best-effort since
+     * the RefreshTokenService verifies the user existence and
+     * "credentialsChangedAt" property, ensuring the token is not
+     * orphan or created before a credentials change
+     */
+    private async tryToRevokeAllSessions(userId: string) {
+        try {
+            await this.refreshTokenService.revokeAll(userId);
+            this.loggerService.info(`Successfully revoked all refresh tokens for user ${userId}`);
+        } catch (error) {
+            this.loggerService.error(`Failed to revoke refresh tokens for user ${userId}`);
+            SystemLoggerService.error(error);
+        }
+    }
+
+    private async tryToDeleteUserFromCache(userId: string) {
+        try {
+            await this.cacheService.delete(userId);
+            this.loggerService.info(`Successfully deleted user ${userId} from cache `);
+        } catch (error) {
+            this.loggerService.error(`Failed to delete user ${userId} from cache`);
+            SystemLoggerService.error(error);
+        }
+    }
+
     async deleteOne(requestUserInfo: UserSessionInfo, targetUserId: string): Promise<void> {
         await this.verifyUserModificationRights(requestUserInfo, targetUserId);
         const session = await mongoose.startSession();
@@ -331,13 +364,11 @@ export class UserService {
                 await this.userModel.deleteOne({ _id: targetUserId }, { session }).exec();
                 await this.tasksService.deleteUserTasksTx(targetUserId, session);
             });
-            // Token and cache cleanup. This is safe even if token revocation fails
-            // refresh-token-service rejects and purgues tokens belonging to a non-existing user
-            await allSettledAndThrow([
-                this.refreshTokenService.revokeAll(targetUserId),
-                this.cacheService.delete(targetUserId),
-            ]);
             this.loggerService.info(`User ${targetUserId} deleted`);
+            await allSettledAndThrow([
+                this.tryToRevokeAllSessions(targetUserId),
+                this.tryToDeleteUserFromCache(targetUserId),
+            ]);
         } finally {
             await session.endSession();
         }
@@ -349,25 +380,21 @@ export class UserService {
         propertiesUpdated: UpdateUserDto,
     ): Promise<UserDocument> {
         const userDocument = await this.verifyUserModificationRights(requestUserInfo, targetUserId);
-        const { credentialsChanged } = await this.applyUserUpdates(userDocument, propertiesUpdated);
-        const cleanupTasks: Promise<unknown>[] = [this.cacheService.delete(targetUserId)];
+        const { credentialsChanged, deleteFromCache } = await this.applyUserUpdates(
+            userDocument,
+            propertiesUpdated,
+        );
+        const cleanupTasks: Promise<unknown>[] = [];
         if (credentialsChanged) {
-            cleanupTasks.push(this.refreshTokenService.revokeAll(targetUserId));
-            cleanupTasks.push(
-                this.sessionTokenService.blacklist(
-                    requestUserInfo.sessionJti,
-                    requestUserInfo.sessionTokenExpUnix,
-                ),
-            );
+            cleanupTasks.push(this.tryToRevokeAllSessions(targetUserId));
+        }
+        if (deleteFromCache) {
+            cleanupTasks.push(this.tryToDeleteUserFromCache(targetUserId));
         }
         try {
             await userDocument.save();
-            await allSettledAndThrow(cleanupTasks);
             this.loggerService.info(`User ${targetUserId} updated`);
-            if (credentialsChanged)
-                this.loggerService.info(
-                    `All tokens of user ${targetUserId} have been revoked due to sensitive data change`,
-                );
+            await allSettledAndThrow(cleanupTasks);
             return userDocument;
         } catch (error: any) {
             if (error.code === 11000)
@@ -387,12 +414,7 @@ export class UserService {
         user.credentialsChangedAt = new Date();
         await user.save();
         this.loggerService.info(`User ${user.id} password updated`);
-        // This is safe even if token revocation fails
-        // refresh-token-service rejects and purgues tokens created before the last credentials change
-        await this.refreshTokenService.revokeAll(user.id);
-        this.loggerService.info(
-            `All refresh tokens of user ${user.id} have been revoked due to password reset`,
-        );
+        await this.tryToRevokeAllSessions(user.id);
     }
 
     async requestPasswordRecovery(email: string): Promise<void> {

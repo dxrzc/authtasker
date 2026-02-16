@@ -1,6 +1,6 @@
 export interface ITransporter {
-    host: string;
-    port: number;
-    user: string;
-    pass: string;
+    readonly host: string;
+    readonly port: number;
+    readonly user: string;
+    readonly pass: string;
 }

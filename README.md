@@ -2,7 +2,8 @@
 Backend API for user authentication and task management with session-based auth, role authorization and caching.
 
 ## Overview
-Authtasker is a backend service that allows users to authenticate securely and manage tasks with priorities and statuses.
+Authtasker is a backend service that allows users to authenticate securely and collaborate in a shared task environment, where tasks can be created, viewed, and filtered by attributes such as priority, status, and owner.
+
 This project focuses on authentication flows, authorization, and backend fundamentals, rather than UI or frontend concerns.
 
 ## Tech Stack
@@ -27,8 +28,9 @@ This project focuses on authentication flows, authorization, and backend fundame
 The full API documentation is available via Swagger at the `/api-docs` endpoint when running the application locally.
 
 ##  Architecture & Design.
-- Session-based authentication was chosen to simplify token invalidation and improve security.
-- Refresh tokens are used to allow long-lived sessions without exposing access tokens.
+- A session-based authentication model with short-lived access tokens and refresh tokens is used to enable secure and controllable sessions.
+- Authentication logic is kept explicit at the application level to simplify session invalidation and authorization.
+- The API is designed in an API-first manner, with explicit actor/target separation and authorization checks applied at the service layer.
 - Role-based authorization controls access to protected resources.
 - Redis is used for caching and rate limiting.
 - Docker is used to ensure consistent environments.
@@ -78,4 +80,3 @@ The API will be available at: `http://localhost:3001`.
 
 - Add end-to-end (e2e) tests to cover critical user flows.
 - Implement CI pipelines to build and publish Docker images automatically.
-- Enhance the local Kubernetes setup for a closer-to-production experience.

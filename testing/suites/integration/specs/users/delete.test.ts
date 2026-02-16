@@ -9,12 +9,14 @@ import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
-import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { Types } from 'mongoose';
-import { SystemLoggerService } from 'src/services/system-logger.service';
+import { disableSystemErrorLogsForThisTest } from '@integration/utils/disable-system-error-logs';
+import { RefreshTokenService } from 'src/services/refresh-token.service';
+import { CacheService } from 'src/services/cache.service';
+import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
 
 describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
     describe('Session token not provided', () => {
@@ -131,29 +133,56 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
                 .mockImplementation(() => {
                     throw new Error('forced tx failure');
                 });
-            jest.spyOn(SystemLoggerService, 'error').mockImplementationOnce(() => {});
-            try {
-                const { statusCode, body } = await testKit.agent
-                    .delete(`${testKit.urls.usersAPI}/${id}`)
-                    .set('Authorization', `Bearer ${sessionToken}`);
-                expect(statusCode).toBe(statusCodes.INTERNAL_SERVER_ERROR);
-                expect(body).toStrictEqual({ error: commonErrors.INTERNAL_SERVER_ERROR });
-                // user still in database
-                const userInDb = await testKit.models.user.findById(id);
-                expect(userInDb).not.toBeNull();
-                // tasks still in database
-                const tasksCount = await testKit.models.task.countDocuments({ user: id });
-                expect(tasksCount).toBe(2);
-                // refresh token still in redis
-                const listKey = makeRefreshTokenIndexKey(id);
-                const tokenKey = makeRefreshTokenKey(id, refreshJti);
-                const tokenInIndex = await testKit.redisService.belongsToList(listKey, refreshJti);
-                const tokenInRedis = await testKit.redisService.get(tokenKey);
-                expect(tokenInIndex).toBeTruthy();
-                expect(tokenInRedis).not.toBeNull();
-            } finally {
-                deleteManySpy.mockRestore();
-            }
+            disableSystemErrorLogsForThisTest();
+            const { statusCode, body } = await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`);
+            expect(statusCode).toBe(statusCodes.INTERNAL_SERVER_ERROR);
+            expect(body).toStrictEqual({ error: commonErrors.INTERNAL_SERVER_ERROR });
+            // user still in database
+            const userInDb = await testKit.models.user.findById(id);
+            expect(userInDb).not.toBeNull();
+            // tasks still in database
+            const tasksCount = await testKit.models.task.countDocuments({ user: id });
+            expect(tasksCount).toBe(2);
+            // refresh token still in redis
+            const listKey = makeRefreshTokenIndexKey(id);
+            const tokenKey = makeRefreshTokenKey(id, refreshJti);
+            const tokenInIndex = await testKit.redisService.belongsToList(listKey, refreshJti);
+            const tokenInRedis = await testKit.redisService.get(tokenKey);
+            expect(deleteManySpy).toHaveBeenCalledTimes(1);
+            expect(tokenInIndex).toBeTruthy();
+            expect(tokenInRedis).not.toBeNull();
+        });
+    });
+
+    describe('Sessions revocation fails', () => {
+        test('request is successful', async () => {
+            disableSystemErrorLogsForThisTest();
+            const refreshTokenSvcRevokeAllMock = jest
+                .spyOn(RefreshTokenService.prototype, 'revokeAll')
+                .mockRejectedValue(new Error());
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            expect(refreshTokenSvcRevokeAllMock).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('Cache update fails', () => {
+        test('request is successful', async () => {
+            disableSystemErrorLogsForThisTest();
+            const cacheSvcDeleteMock = jest
+                .spyOn(CacheService.prototype, 'delete')
+                .mockRejectedValue(new Error());
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            expect(cacheSvcDeleteMock).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -233,7 +262,7 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             const { sessionToken, id } = await createUser(UserRole.READONLY);
-            for (let i = 0; i < rateLimiting[RateLimiter.relaxed].max; i++) {
+            for (let i = 0; i < rateLimitingSettings[RateLimiter.relaxed].max; i++) {
                 const { sessionToken } = await createUser(UserRole.READONLY);
                 // id path parameter is different in every request
                 await testKit.agent

@@ -2,7 +2,7 @@ import rateLimit from 'express-rate-limit';
 import type { Request } from 'express';
 import Redis from 'ioredis';
 import { RedisStore, type RedisReply } from 'rate-limit-redis';
-import { rateLimiting } from 'src/constants/rate-limiting.constants';
+import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { ConfigService } from 'src/services/config.service';
@@ -16,7 +16,7 @@ export class RateLimiterMiddleware {
     ) {}
 
     middleware(type: RateLimiter) {
-        const settings = rateLimiting[type];
+        const settings = rateLimitingSettings[type];
 
         return rateLimit({
             keyGenerator: (req: Request) => this.buildKey(req),

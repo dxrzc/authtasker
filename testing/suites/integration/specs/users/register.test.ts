@@ -3,9 +3,8 @@ import crypto from 'crypto';
 import { testKit } from '@integration/kit/test.kit';
 import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
-import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { statusCodes } from 'src/constants/status-codes.constants';
-import { usersLimits } from 'src/constants/user.constants';
+import { userConstraints } from 'src/constraints/user.constraints';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
@@ -13,6 +12,7 @@ import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key'
 import { IUser } from 'src/interfaces/user/user.interface';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
+import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
 
 const registrationUrl = testKit.urls.register;
 
@@ -57,7 +57,7 @@ describe(`POST ${registrationUrl}`, () => {
 
         test('name is transformed into lowercase and spaces are trimmed', async () => {
             const rawName =
-                faker.string.alpha(usersLimits.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
+                faker.string.alpha(userConstraints.MIN_NAME_LENGTH + 2).toUpperCase() + '  ';
             const expectedName = rawName.toLowerCase().trim();
             const res = await testKit.agent.post(registrationUrl).send({
                 password: testKit.userData.password,
@@ -199,7 +199,7 @@ describe(`POST ${registrationUrl}`, () => {
     describe('Too many requests', () => {
         test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
-            for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
+            for (let i = 0; i < rateLimitingSettings[RateLimiter.critical].max; i++) {
                 await testKit.agent.post(registrationUrl).send({}).set('X-Forwarded-For', ip);
             }
             const response = await testKit.agent

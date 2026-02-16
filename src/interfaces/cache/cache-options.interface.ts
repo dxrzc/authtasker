@@ -1,3 +1,3 @@
 export interface ICacheOptions {
-    noStore: boolean;
+    readonly noStore: boolean;
 }
