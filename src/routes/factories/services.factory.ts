@@ -1,3 +1,4 @@
+import Redis from 'ioredis';
 import { Apis } from 'src/enums/apis.enum';
 import { makeTasksCacheKey } from 'src/functions/cache/make-tasks-cache-key';
 import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
@@ -23,6 +24,7 @@ export function buildServices(
     configService: ConfigService,
     loggerService: LoggerService,
     redisService: RedisService,
+    redisClient: Redis,
     models: Models,
 ) {
     // Utils
@@ -69,7 +71,7 @@ export function buildServices(
     const usersCacheService = new CacheService<UserDocument>(
         models.userModel,
         loggerService,
-        redisService,
+        redisClient,
         configService.USERS_API_CACHE_TTL_SECONDS,
         configService.CACHE_HARD_TTL_SECONDS,
         makeUsersCacheKey,
@@ -78,7 +80,7 @@ export function buildServices(
     const tasksCacheService = new CacheService<TaskDocument>(
         models.tasksModel,
         loggerService,
-        redisService,
+        redisClient,
         configService.TASKS_API_CACHE_TTL_SECONDS,
         configService.CACHE_HARD_TTL_SECONDS,
         makeTasksCacheKey,

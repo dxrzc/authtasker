@@ -36,6 +36,7 @@ export class AppRoutes {
             this.configService,
             this.loggerService,
             this.redisService,
+            this.redisClient,
             this.models,
         );
         this.middlewares = buildMiddlewares(
