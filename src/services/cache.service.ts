@@ -4,17 +4,25 @@ import { LoggerService } from './logger.service';
 import { isDataInCacheExpired } from 'src/functions/cache/is-data-expired-in-cache';
 import { DataInCache } from 'src/interfaces/cache/data-in-cache.interface';
 import { Apis } from 'src/enums/apis.enum';
+import { SystemLoggerService } from './system-logger.service';
+import Redis from 'ioredis';
 
 export class CacheService<Data extends { id: string }> {
+    private readonly redisService: RedisService;
+
     constructor(
         private readonly model: Model<any>,
         private readonly loggerService: LoggerService,
-        private readonly redisService: RedisService,
+        private readonly redisClient: Redis,
         private readonly ttls: number,
         private readonly hardTtls: number,
         private readonly cacheKeyMaker: (id: string) => string,
         private readonly apiName: Apis,
-    ) {}
+    ) {
+        // this new instance is necessary for tests related to cache failures
+        // (this way mocking this instance does not affect the other ones)
+        this.redisService = new RedisService(redisClient);
+    }
 
     private async revalidate(id: string, cachedAtUnix: number): Promise<boolean> {
         const query = await this.model.findById(id).select('updatedAt').exec();
