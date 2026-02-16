@@ -172,12 +172,17 @@ export class CacheService<Data extends { id: string }> {
     }
 
     async cache(data: Data): Promise<void> {
-        const resourceID = data.id;
-        const dataInDB: DataInCache<Data> = {
-            cachedAtUnix: Math.floor(Date.now() / 1000),
-            data: data,
-        };
-        await this.redisService.set(this.cacheKeyMaker(resourceID), dataInDB, this.hardTtls);
+        try {
+            const resourceID = data.id;
+            const dataInDB: DataInCache<Data> = {
+                cachedAtUnix: Math.floor(Date.now() / 1000),
+                data: data,
+            };
+            await this.redisService.set(this.cacheKeyMaker(resourceID), dataInDB, this.hardTtls);
+        } catch (error) {
+            this.loggerService.warn('Failed to save data in cache');
+            SystemLoggerService.error(String(error));
+        }
     }
 
     async delete(id: string): Promise<void> {
