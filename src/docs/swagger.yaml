@@ -7,10 +7,12 @@ info:
     email: diegorodriguezc.dev@gmail.com
 
 servers:
+  - url: /
+    # Tells the browser to keep using that same port. 
+    # For example 3001:3000 sends requests to 3001
+    description: Current Environment (Auto-detect)
   - url: https://api.myapp.com
     description: Production
-  - url: http://localhost:3000
-    description: Local development
 
 components:
   securitySchemes:
