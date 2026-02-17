@@ -72,7 +72,7 @@ docker build --target production -t authtasker:prod .
 minikube image load authtasker:prod
 
 kubectl apply -k k8s/overlays/dev
-kubectl port-forward service/authtasker-svc 3001:3000
+kubectl port-forward service/authtasker-svc 3001:3000 --namespace authtasker-dev
 ```
 The API will be available at: `http://localhost:3001`.
 
