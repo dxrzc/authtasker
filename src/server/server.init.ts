@@ -20,13 +20,14 @@ import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 import hpp from 'hpp';
+import { ConfigService } from 'src/services/config.service';
 
 export class Server {
     private readonly app = express();
     private server: HttpServer | undefined;
 
     constructor(
-        private readonly port: number,
+        private readonly configService: ConfigService,
         private readonly routes: Router,
         private readonly logger: LoggerService,
     ) {
@@ -104,9 +105,11 @@ export class Server {
     };
 
     start(): Promise<void> {
+        const port = this.configService.PORT;
+        const host = this.configService.HOST;
         return new Promise<void>((resolve) => {
-            this.server = this.app.listen(this.port, () => {
-                SystemLoggerService.info(`Server listening on port ${this.port}`);
+            this.server = this.app.listen(port, host, () => {
+                SystemLoggerService.info(`Server listening on port ${host}:${port}`);
                 resolve();
             });
         });
