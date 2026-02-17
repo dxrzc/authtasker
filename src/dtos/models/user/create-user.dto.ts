@@ -17,8 +17,12 @@ export class CreateUserDto {
     readonly email!: string;
 
     @IsDefined({ message: usersApiErrors.PASSWORD_NOT_PROVIDED })
-    @MinLength(userConstraints.MIN_PASSWORD_LENGTH, { message: usersApiErrors.INVALID_PASSWORD_LENGTH })
-    @MaxLength(userConstraints.MAX_PASSWORD_LENGTH, { message: usersApiErrors.INVALID_PASSWORD_LENGTH })
+    @MinLength(userConstraints.MIN_PASSWORD_LENGTH, {
+        message: usersApiErrors.INVALID_PASSWORD_LENGTH,
+    })
+    @MaxLength(userConstraints.MAX_PASSWORD_LENGTH, {
+        message: usersApiErrors.INVALID_PASSWORD_LENGTH,
+    })
     readonly password!: string;
 
     static async validateAndTransform(data: Record<string, unknown>): Promise<CreateUserDto> {
