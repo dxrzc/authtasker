@@ -70,14 +70,20 @@ describe('CreateUserDto', () => {
     });
 
     it('should throw if password is too short', async () => {
-        const data = { ...validData, password: 'a'.repeat(userConstraints.MIN_PASSWORD_LENGTH - 1) };
+        const data = {
+            ...validData,
+            password: 'a'.repeat(userConstraints.MIN_PASSWORD_LENGTH - 1),
+        };
         await expect(CreateUserDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH),
         );
     });
 
     it('should throw if password is too long', async () => {
-        const data = { ...validData, password: 'a'.repeat(userConstraints.MAX_PASSWORD_LENGTH + 1) };
+        const data = {
+            ...validData,
+            password: 'a'.repeat(userConstraints.MAX_PASSWORD_LENGTH + 1),
+        };
         await expect(CreateUserDto.validateAndTransform(data)).rejects.toThrow(
             new InvalidInputError(usersApiErrors.INVALID_PASSWORD_LENGTH),
         );

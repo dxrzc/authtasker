@@ -48,7 +48,10 @@ describe('LoginUserDto', () => {
     });
 
     it('should throw InvalidCredentialsError when password is too short and expose actual error', async () => {
-        const data = { ...validData, password: 'a'.repeat(userConstraints.MIN_PASSWORD_LENGTH - 1) };
+        const data = {
+            ...validData,
+            password: 'a'.repeat(userConstraints.MIN_PASSWORD_LENGTH - 1),
+        };
         await expect(LoginUserDto.validate(data)).rejects.toThrow(InvalidCredentialsError);
         await expect(LoginUserDto.validate(data)).rejects.toHaveProperty(
             'actualError',
@@ -57,7 +60,10 @@ describe('LoginUserDto', () => {
     });
 
     it('should throw InvalidCredentialsError when password is too long and expose actual error', async () => {
-        const data = { ...validData, password: 'a'.repeat(userConstraints.MAX_PASSWORD_LENGTH + 1) };
+        const data = {
+            ...validData,
+            password: 'a'.repeat(userConstraints.MAX_PASSWORD_LENGTH + 1),
+        };
         await expect(LoginUserDto.validate(data)).rejects.toThrow(InvalidCredentialsError);
         await expect(LoginUserDto.validate(data)).rejects.toHaveProperty(
             'actualError',
