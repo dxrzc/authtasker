@@ -24,7 +24,11 @@ export class CacheService<Data extends { id: string }> {
         this.redisService = new RedisService(redisClient);
     }
 
-    private async revalidate(id: string, cachedAtUnix: number): Promise<boolean> {
+    async getMultiple(cacheKeys: string[]): Promise<(DataInCache<Data> | null)[]> {
+        return await this.redisService.mget<DataInCache<Data>>(cacheKeys);
+    }
+
+    async revalidate(id: string, cachedAtUnix: number): Promise<boolean> {
         const query = await this.model.findById(id).select('updatedAt').exec();
         // resource not found
         if (!query) return false;
@@ -63,118 +67,6 @@ export class CacheService<Data extends { id: string }> {
             SystemLoggerService.error(String(error));
             return null;
         }
-    }
-
-    /**
-     * @returns the IDs for a specific page based on offset and limit
-     */
-    private async getPageIds(
-        offset: number,
-        limit: number,
-        options?: { find: Record<string, any> },
-    ): Promise<string[]> {
-        const base = options?.find ? this.model.find(options?.find) : this.model.find();
-        const idsInData = await base
-            .skip(offset)
-            .limit(limit)
-            .sort({ createdAt: 1, _id: 1 })
-            .select('id')
-            .exec();
-        const ids = idsInData.map((d) => d._id.toString() as string);
-        return ids;
-    }
-
-    /**
-     * @returns results array with a null for missing IDs and an array of missing IDs
-     */
-    private async checkCacheAndCollectMissingIds(
-        paginationIds: string[],
-    ): Promise<{ results: Array<Data | null>; missingIds: string[] }> {
-        const cacheKeys = paginationIds.map((id) => this.cacheKeyMaker(id));
-        const cachedResults = await this.redisService.mget<DataInCache<Data>>(cacheKeys);
-        const results: (Data | null)[] = [];
-        const missingIds: string[] = [];
-        // Check cache and collect missing ids
-        for (let i = 0; i < paginationIds.length; i++) {
-            const resourceInCache = cachedResults[i];
-            if (resourceInCache) {
-                const resourceExpired = isDataInCacheExpired(
-                    resourceInCache.cachedAtUnix,
-                    this.ttls,
-                );
-                if (!resourceExpired) {
-                    results[i] = resourceInCache.data;
-                    this.loggerService.info(
-                        `Cache hit for ${this.apiName} with id ${paginationIds[i]}`,
-                    );
-                } else {
-                    // revalidation logic
-                    const expiredButFresh = await this.revalidate(
-                        paginationIds[i],
-                        resourceInCache.cachedAtUnix,
-                    );
-                    if (expiredButFresh) {
-                        await this.cache(resourceInCache.data);
-                        results[i] = resourceInCache.data;
-                        this.loggerService.info(
-                            `Cache revalidate-hit for ${this.apiName} with id ${paginationIds[i]}`,
-                        );
-                    } else {
-                        missingIds.push(paginationIds[i]);
-                        this.loggerService.info(
-                            `Cache revalidate-miss for ${this.apiName} with id ${paginationIds[i]}`,
-                        );
-                    }
-                }
-            } else {
-                missingIds.push(paginationIds[i]);
-                this.loggerService.info(
-                    `No data in cache for ${this.apiName} with id ${paginationIds[i]}`,
-                );
-            }
-        }
-        return { results, missingIds };
-    }
-
-    /**
-     * @returns a map of missing IDs to their corresponding Data fetched from the database
-     */
-    async fetchMissingIdsFromDb(missingIds: string[]): Promise<Map<string, Data>> {
-        const missingDocs = await this.model.find({ _id: { $in: missingIds } }).exec();
-        // Map for quick lookup
-        const missingDocsMap = new Map<string, Data>();
-        for (const doc of missingDocs) {
-            missingDocsMap.set(doc._id.toString(), doc);
-            await this.cache(doc);
-        }
-        return missingDocsMap;
-    }
-
-    async getPagination(
-        offset: number,
-        limit: number,
-        options?: {
-            find: Record<string, any>;
-        },
-    ): Promise<Data[]> {
-        const ids = await this.getPageIds(offset, limit, options);
-        if (ids.length === 0) {
-            return [];
-        }
-        const { results, missingIds } = await this.checkCacheAndCollectMissingIds(ids);
-        // Batch fetch missing items from DB
-        if (missingIds.length > 0) {
-            const missingDocsMap = await this.fetchMissingIdsFromDb(missingIds);
-            // fill in results in correct order
-            for (let i = 0; i < ids.length; i++) {
-                if (!results[i]) {
-                    const doc = missingDocsMap.get(ids[i]);
-                    results[i] = doc || null;
-                }
-            }
-        }
-        // in case some ids not found in DB
-        return results.filter((item) => item !== null);
     }
 
     async cache(data: Data): Promise<void> {
