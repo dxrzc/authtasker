@@ -99,7 +99,7 @@ export class PaginationService<Data extends { id: string }> {
         return { results, missingIds };
     }
 
-    async getPagination(
+    async get(
         offset: number,
         limit: number,
         options?: {
