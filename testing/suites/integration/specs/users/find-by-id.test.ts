@@ -57,18 +57,17 @@ describe(`POST ${testKit.urls.usersAPI}/:id`, () => {
         describe('User was in cache', () => {
             test('return user in cache', async () => {
                 const { id, sessionToken } = await createUser();
-                const redisCacheKey = makeUsersCacheKey(id);
-                // triggers cache save
-                await testKit.agent
-                    .get(`${testKit.urls.usersAPI}/${id}`)
-                    .set('Authorization', `Bearer ${sessionToken}`)
-                    .expect(status2xx);
+                // fake the data in cache using id and a new name
+                const newName = testKit.userData.name;
+                await testKit.usersCacheService.cache({
+                    id,
+                    name: newName,
+                } as any);
                 const response = await testKit.agent
                     .get(`${testKit.urls.usersAPI}/${id}`)
                     .set('Authorization', `Bearer ${sessionToken}`)
                     .expect(status2xx);
-                const cachedUser = await testKit.redisService.get<{ data: any }>(redisCacheKey);
-                expect(response.body).toStrictEqual(cachedUser!.data);
+                expect(response.body).toStrictEqual({ id, name: newName });
             });
         });
 
