@@ -29,7 +29,8 @@ export class CacheService<Data extends { id: string }> {
         return resourceExpiresAtUnix < currentTimeUnix;
     }
 
-    async getMultiple(cacheKeys: string[]): Promise<(DataInCache<Data> | null)[]> {
+    async getMultiple(ids: string[]): Promise<(DataInCache<Data> | null)[]> {
+        const cacheKeys = ids.map((id) => this.cacheKeyMaker(id));
         return await this.redisService.mget<DataInCache<Data>>(cacheKeys);
     }
 
