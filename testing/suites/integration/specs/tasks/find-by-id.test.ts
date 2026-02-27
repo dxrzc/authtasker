@@ -92,9 +92,9 @@ describe(`GET ${testKit.urls.tasksAPI}/:id`, () => {
                 // change task name in cache
                 const modifiedName = 'test task name';
                 await testKit.tasksCacheService.cache({
-                    ...(task as unknown as ITasks),
+                    ...task,
                     name: modifiedName,
-                });
+                } as any);
                 // task returned should contain modified name
                 const response = await testKit.agent
                     .get(`${testKit.urls.tasksAPI}/${task.id}`)
