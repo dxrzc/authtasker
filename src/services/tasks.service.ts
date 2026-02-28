@@ -82,10 +82,10 @@ export class TasksService {
             }
             return taskInDb;
         }
-        // check if user is cached
+        // check if task is cached
         const taskInCache = await this.cacheService.get(id);
         if (taskInCache) return taskInCache;
-        // user is not in cache
+        // task is not in cache
         const taskFound = await this.findTaskInDb(id);
         await this.cacheService.cache(taskFound);
         return taskFound;
