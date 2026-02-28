@@ -5,6 +5,7 @@ import { DataInCache } from 'src/interfaces/cache/data-in-cache.interface';
 import { Apis } from 'src/enums/apis.enum';
 import { SystemLoggerService } from './system-logger.service';
 import Redis from 'ioredis';
+import { isDataInCacheExpired } from 'src/functions/cache/is-data-expired-in-cache';
 
 export class CacheService<Data extends { id: string }> {
     private readonly redisService: RedisService;
@@ -21,12 +22,6 @@ export class CacheService<Data extends { id: string }> {
         // this new instance is necessary for tests related to cache failures
         // (this way mocking this instance does not affect the other ones)
         this.redisService = new RedisService(redisClient);
-    }
-
-    isDataInCacheExpired(cachedAtUnix: number) {
-        const resourceExpiresAtUnix = cachedAtUnix + this.ttls;
-        const currentTimeUnix = Math.floor(Date.now() / 1000);
-        return resourceExpiresAtUnix < currentTimeUnix;
     }
 
     async getMultiple(ids: string[]): Promise<(DataInCache<Data> | null)[]> {
@@ -52,7 +47,7 @@ export class CacheService<Data extends { id: string }> {
                 this.loggerService.info(`No data in cache for ${this.apiName} with id ${id}`);
                 return null;
             }
-            const resourceExpired = this.isDataInCacheExpired(resourceInCache.cachedAtUnix);
+            const resourceExpired = isDataInCacheExpired(resourceInCache.cachedAtUnix, this.ttls);
             // hit
             if (!resourceExpired) {
                 this.loggerService.info(`Cache hit for ${this.apiName} with id ${id}`);
