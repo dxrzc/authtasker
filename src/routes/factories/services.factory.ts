@@ -10,6 +10,7 @@ import { HashingService } from 'src/services/hashing.service';
 import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
 import { JwtService } from 'src/services/jwt.service';
 import { LoggerService } from 'src/services/logger.service';
+import { PaginationService } from 'src/services/pagination.service';
 import { PasswordRecoveryTokenService } from 'src/services/password-recovery-token.service';
 import { RedisService } from 'src/services/redis.service';
 import { RefreshTokenService } from 'src/services/refresh-token.service';
@@ -86,6 +87,21 @@ export function buildServices(
         makeTasksCacheKey,
         Apis.tasks,
     );
+
+    const usersPaginationService = new PaginationService<UserDocument>(
+        usersCacheService,
+        models.userModel,
+        loggerService,
+        Apis.users,
+    );
+
+    const tasksPaginationService = new PaginationService<TaskDocument>(
+        tasksCacheService,
+        models.tasksModel,
+        loggerService,
+        Apis.tasks,
+    );
+
     // eslint-disable-next-line prefer-const
     let userService: UserService;
     const tasksService = new TasksService(
@@ -93,6 +109,7 @@ export function buildServices(
         models.tasksModel,
         () => userService,
         tasksCacheService,
+        tasksPaginationService,
     );
     userService = new UserService(
         configService,
@@ -106,6 +123,7 @@ export function buildServices(
         emailValidationTokenService,
         usersCacheService,
         passwordRecoveryTokenService,
+        usersPaginationService,
     );
     return {
         hashingService,
