@@ -1,16 +1,13 @@
 import { Model } from 'mongoose';
 import { CacheService } from './cache.service';
 import { LoggerService } from './logger.service';
-import { isDataInCacheExpired } from 'src/functions/cache/is-data-expired-in-cache';
 import { Apis } from 'src/enums/apis.enum';
 
 export class PaginationService<Data extends { id: string }> {
     constructor(
         private readonly cacheService: CacheService<Data>,
         private readonly model: Model<any>,
-        private readonly cacheKeyMaker: (id: string) => string,
         private readonly loggerService: LoggerService,
-        private readonly ttls: number,
         private readonly apiName: Apis,
     ) {}
 
@@ -53,17 +50,15 @@ export class PaginationService<Data extends { id: string }> {
     private async checkCacheAndCollectMissingIds(
         paginationIds: string[],
     ): Promise<{ results: Array<Data | null>; missingIds: string[] }> {
-        const cacheKeys = paginationIds.map((id) => this.cacheKeyMaker(id));
-        const cachedResults = await this.cacheService.getMultiple(cacheKeys);
+        const cachedResults = await this.cacheService.getMultiple(paginationIds);
         const results: (Data | null)[] = [];
         const missingIds: string[] = [];
         // Check cache and collect missing ids
         for (let i = 0; i < paginationIds.length; i++) {
             const resourceInCache = cachedResults[i];
             if (resourceInCache) {
-                const resourceExpired = isDataInCacheExpired(
+                const resourceExpired = this.cacheService.isDataInCacheExpired(
                     resourceInCache.cachedAtUnix,
-                    this.ttls,
                 );
                 if (!resourceExpired) {
                     results[i] = resourceInCache.data;
