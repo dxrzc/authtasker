@@ -29,6 +29,7 @@ import { calculatePagination } from 'src/functions/pagination/calculate-paginati
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
 import { TasksService } from './tasks.service';
 import { SystemLoggerService } from './system-logger.service';
+import { PaginationService } from './pagination.service';
 
 export class UserService {
     constructor(
@@ -43,6 +44,7 @@ export class UserService {
         private readonly emailValidationTokenService: EmailValidationTokenService,
         private readonly cacheService: CacheService<UserDocument>,
         private readonly passwordRecoveryTokenService: PasswordRecoveryTokenService,
+        private readonly paginationService: PaginationService<UserDocument>,
     ) {}
 
     async createAdministratorIfNotExists(): Promise<void> {
@@ -321,7 +323,7 @@ export class UserService {
         // validate limit and page
         const totalDocuments = await this.userModel.countDocuments().exec();
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.cacheService.getPagination(offset, limit);
+        const data = await this.paginationService.get(offset, limit);
         return {
             currentPage: page,
             totalDocuments,
