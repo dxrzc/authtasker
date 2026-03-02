@@ -115,7 +115,7 @@ describe(`GET ${testKit.urls.tasksAPI}/:id`, () => {
                 const { sessionToken, id: userId } = await createUser(UserRole.READONLY);
                 const { id: taskId } = await createTask(userId);
                 const redisGetMock = jest
-                    .spyOn(testKit.usersCacheService['redisService'], 'get')
+                    .spyOn(testKit.tasksCacheService['redisService'], 'get')
                     .mockRejectedValue(new Error());
                 await testKit.agent
                     .get(`${testKit.urls.tasksAPI}/${taskId}`)
