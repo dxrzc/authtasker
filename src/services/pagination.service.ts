@@ -57,7 +57,7 @@ export class PaginationService<Data extends { id: string }> {
         for (let i = 0; i < paginationIds.length; i++) {
             const resourceInCache = cachedResults[i];
             if (resourceInCache) {
-                const resourceExpired = this.cacheService.isDataInCacheExpired(
+                const resourceExpired = this.cacheService.isDataExpired(
                     resourceInCache.cachedAtUnix,
                 );
                 if (!resourceExpired) {
