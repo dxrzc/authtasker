@@ -1,9 +1,11 @@
 import { testKit } from '@integration/kit/test.kit';
 import { createTask } from '@integration/utils/create-task.util';
 import { createUser } from '@integration/utils/create-user.util';
+import { disableSystemErrorLogsForThisTest } from '@integration/utils/disable-system-error-logs';
 import { status2xx } from '@integration/utils/status-2xx.util';
 import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
 import { Types } from 'mongoose';
+import { UserRole } from 'src/enums/user-role.enum';
 import { makeTasksCacheKey } from 'src/functions/cache/make-tasks-cache-key';
 import { DataInCache } from 'src/interfaces/cache/data-in-cache.interface';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
@@ -92,9 +94,9 @@ describe(`GET ${testKit.urls.tasksAPI}/:id`, () => {
                 // change task name in cache
                 const modifiedName = 'test task name';
                 await testKit.tasksCacheService.cache({
-                    ...(task as unknown as ITasks),
+                    ...task,
                     name: modifiedName,
-                });
+                } as any);
                 // task returned should contain modified name
                 const response = await testKit.agent
                     .get(`${testKit.urls.tasksAPI}/${task.id}`)
@@ -104,6 +106,22 @@ describe(`GET ${testKit.urls.tasksAPI}/:id`, () => {
                     ...task,
                     name: modifiedName,
                 });
+            });
+        });
+
+        describe('Cache fails', () => {
+            test('request is successful', async () => {
+                disableSystemErrorLogsForThisTest();
+                const { sessionToken, id: userId } = await createUser(UserRole.READONLY);
+                const { id: taskId } = await createTask(userId);
+                const redisGetMock = jest
+                    .spyOn(testKit.tasksCacheService['redisService'], 'get')
+                    .mockRejectedValue(new Error());
+                await testKit.agent
+                    .get(`${testKit.urls.tasksAPI}/${taskId}`)
+                    .set('Authorization', `Bearer ${sessionToken}`)
+                    .expect(status2xx);
+                expect(redisGetMock).toHaveBeenCalledTimes(1);
             });
         });
     });

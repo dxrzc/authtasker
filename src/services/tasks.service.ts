@@ -17,6 +17,7 @@ import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
 import { IFindOptions } from 'src/interfaces/others/find-options.interface';
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
 import { TasksFilters } from 'src/types/tasks/task-filters.type';
+import { PaginationService } from './pagination.service';
 
 export class TasksService {
     constructor(
@@ -24,6 +25,7 @@ export class TasksService {
         private readonly tasksModel: Model<ITasks>,
         private readonly getUserService: () => UserService, // to avoid circular dependency
         private readonly cacheService: CacheService<TaskDocument>,
+        private readonly paginationService: PaginationService<TaskDocument>,
     ) {}
 
     private async findTaskInDb(id: string): Promise<TaskDocument> {
@@ -82,10 +84,10 @@ export class TasksService {
             }
             return taskInDb;
         }
-        // check if user is cached
+        // check if task is cached
         const taskInCache = await this.cacheService.get(id);
         if (taskInCache) return taskInCache;
-        // user is not in cache
+        // task is not in cache
         const taskFound = await this.findTaskInDb(id);
         await this.cacheService.cache(taskFound);
         return taskFound;
@@ -106,7 +108,7 @@ export class TasksService {
         if (filters.priority) search.priority = filters.priority;
         const totalDocuments = await this.tasksModel.countDocuments(search).exec();
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.cacheService.getPagination(
+        const data = await this.paginationService.get(
             offset,
             limit,
             Object.keys(search).length > 0 ? { find: search } : undefined,

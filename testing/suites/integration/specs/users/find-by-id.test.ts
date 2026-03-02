@@ -1,7 +1,9 @@
 import { testKit } from '@integration/kit/test.kit';
 import { createUser } from '@integration/utils/create-user.util';
+import { disableSystemErrorLogsForThisTest } from '@integration/utils/disable-system-error-logs';
 import { status2xx } from '@integration/utils/status-2xx.util';
 import { Types } from 'mongoose';
+import { UserRole } from 'src/enums/user-role.enum';
 import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
@@ -55,18 +57,17 @@ describe(`POST ${testKit.urls.usersAPI}/:id`, () => {
         describe('User was in cache', () => {
             test('return user in cache', async () => {
                 const { id, sessionToken } = await createUser();
-                const redisCacheKey = makeUsersCacheKey(id);
-                // triggers cache save
-                await testKit.agent
-                    .get(`${testKit.urls.usersAPI}/${id}`)
-                    .set('Authorization', `Bearer ${sessionToken}`)
-                    .expect(status2xx);
+                // fake the data in cache using id and a new name
+                const newName = testKit.userData.name;
+                await testKit.usersCacheService.cache({
+                    id,
+                    name: newName,
+                } as any);
                 const response = await testKit.agent
                     .get(`${testKit.urls.usersAPI}/${id}`)
                     .set('Authorization', `Bearer ${sessionToken}`)
                     .expect(status2xx);
-                const cachedUser = await testKit.redisService.get<{ data: any }>(redisCacheKey);
-                expect(response.body).toStrictEqual(cachedUser!.data);
+                expect(response.body).toStrictEqual({ id, name: newName });
             });
         });
 
@@ -116,6 +117,21 @@ describe(`POST ${testKit.urls.usersAPI}/:id`, () => {
                 .set('Authorization', `Bearer ${sessionToken}`);
             expect(response.body).toStrictEqual({ error: usersApiErrors.NOT_FOUND });
             expect(response.statusCode).toBe(404);
+        });
+    });
+
+    describe('Cache fails', () => {
+        test('request is successful', async () => {
+            disableSystemErrorLogsForThisTest();
+            const { sessionToken, id } = await createUser(UserRole.READONLY);
+            const redisGetMock = jest
+                .spyOn(testKit.usersCacheService['redisService'], 'get')
+                .mockRejectedValue(new Error());
+            await testKit.agent
+                .get(`${testKit.urls.usersAPI}/${id}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .expect(status2xx);
+            expect(redisGetMock).toHaveBeenCalledTimes(1);
         });
     });
 });

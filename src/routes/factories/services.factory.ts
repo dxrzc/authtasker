@@ -1,3 +1,4 @@
+import Redis from 'ioredis';
 import { Apis } from 'src/enums/apis.enum';
 import { makeTasksCacheKey } from 'src/functions/cache/make-tasks-cache-key';
 import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
@@ -9,6 +10,7 @@ import { HashingService } from 'src/services/hashing.service';
 import { JwtBlackListService } from 'src/services/jwt-blacklist.service';
 import { JwtService } from 'src/services/jwt.service';
 import { LoggerService } from 'src/services/logger.service';
+import { PaginationService } from 'src/services/pagination.service';
 import { PasswordRecoveryTokenService } from 'src/services/password-recovery-token.service';
 import { RedisService } from 'src/services/redis.service';
 import { RefreshTokenService } from 'src/services/refresh-token.service';
@@ -23,6 +25,7 @@ export function buildServices(
     configService: ConfigService,
     loggerService: LoggerService,
     redisService: RedisService,
+    redisClient: Redis,
     models: Models,
 ) {
     // Utils
@@ -69,7 +72,7 @@ export function buildServices(
     const usersCacheService = new CacheService<UserDocument>(
         models.userModel,
         loggerService,
-        redisService,
+        redisClient,
         configService.USERS_API_CACHE_TTL_SECONDS,
         configService.CACHE_HARD_TTL_SECONDS,
         makeUsersCacheKey,
@@ -78,12 +81,27 @@ export function buildServices(
     const tasksCacheService = new CacheService<TaskDocument>(
         models.tasksModel,
         loggerService,
-        redisService,
+        redisClient,
         configService.TASKS_API_CACHE_TTL_SECONDS,
         configService.CACHE_HARD_TTL_SECONDS,
         makeTasksCacheKey,
         Apis.tasks,
     );
+
+    const usersPaginationService = new PaginationService<UserDocument>(
+        usersCacheService,
+        models.userModel,
+        loggerService,
+        Apis.users,
+    );
+
+    const tasksPaginationService = new PaginationService<TaskDocument>(
+        tasksCacheService,
+        models.tasksModel,
+        loggerService,
+        Apis.tasks,
+    );
+
     // eslint-disable-next-line prefer-const
     let userService: UserService;
     const tasksService = new TasksService(
@@ -91,6 +109,7 @@ export function buildServices(
         models.tasksModel,
         () => userService,
         tasksCacheService,
+        tasksPaginationService,
     );
     userService = new UserService(
         configService,
@@ -104,6 +123,7 @@ export function buildServices(
         emailValidationTokenService,
         usersCacheService,
         passwordRecoveryTokenService,
+        usersPaginationService,
     );
     return {
         hashingService,
