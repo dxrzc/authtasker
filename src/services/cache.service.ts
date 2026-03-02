@@ -24,6 +24,10 @@ export class CacheService<Data extends { id: string }> {
         this.redisService = new RedisService(redisClient);
     }
 
+    isDataExpired(cachedAtUnix: number) {
+        return isDataInCacheExpired(cachedAtUnix, this.ttls);
+    }
+
     async getMultiple(ids: string[]): Promise<(DataInCache<Data> | null)[]> {
         const cacheKeys = ids.map((id) => this.cacheKeyMaker(id));
         return await this.redisService.mget<DataInCache<Data>>(cacheKeys);
