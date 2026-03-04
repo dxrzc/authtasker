@@ -6,8 +6,9 @@ import { IsDefined, IsIn, MaxLength, MinLength } from 'class-validator';
 import { tasksPriority, TasksPriority } from 'src/types/tasks/task-priority.type';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
 import { parseAndValidateOrThrow } from 'src/dtos/helpers/parse-and-validate-or-throw.helper';
+import { TaskCreationParams } from 'src/types/tasks/task-creation.params';
 
-export class CreateTaskDto {
+export class CreateTaskDto implements TaskCreationParams {
     @IsDefined({ message: tasksApiErrors.NAME_NOT_PROVIDED })
     @MinLength(taskConstraints.MIN_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
     @MaxLength(taskConstraints.MAX_NAME_LENGTH, { message: tasksApiErrors.INVALID_NAME_LENGTH })
