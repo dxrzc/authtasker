@@ -5,11 +5,11 @@ import * as nodemailer from 'nodemailer';
 import { NodemailerMock } from 'nodemailer-mock';
 import { UserRole } from 'src/enums/user-role.enum';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
-import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { authErrors } from 'src/messages/auth.error.messages';
+import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
 
 const { mock } = nodemailer as unknown as NodemailerMock;
 
@@ -66,7 +66,7 @@ describe(`POST ${testKit.urls.requestEmailValidation}`, () => {
         test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
             const { sessionToken } = await createUser(UserRole.READONLY);
-            for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
+            for (let i = 0; i < rateLimitingSettings[RateLimiter.critical].max; i++) {
                 await testKit.agent
                     .post(testKit.urls.requestEmailValidation)
                     .set('Authorization', `Bearer ${sessionToken}`)

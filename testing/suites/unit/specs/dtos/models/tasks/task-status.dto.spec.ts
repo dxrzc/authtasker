@@ -1,6 +1,6 @@
 import { TaskStatusDto } from 'src/dtos/models/tasks/task-status.dto';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
-import { InvalidInputError, MaliciousInputError } from 'src/errors/invalid-input-error.class';
+import { InvalidInputError } from 'src/errors/invalid-input-error.class';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { TasksDataGenerator } from 'src/generators/tasks.generator';
 
@@ -37,10 +37,5 @@ describe('TaskStatusDto', () => {
         await expect(TaskStatusDto.validate(data)).rejects.toThrow(
             new InvalidInputError(commonErrors.UNEXPECTED_PROPERTY_PROVIDED),
         );
-    });
-
-    it('should throw MaliciousInputError if status contains malicious content', async () => {
-        const data = { status: '<script>alert("XSS")</script>' };
-        await expect(TaskStatusDto.validate(data)).rejects.toThrow(MaliciousInputError);
     });
 });

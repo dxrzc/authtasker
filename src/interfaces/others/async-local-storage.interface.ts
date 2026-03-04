@@ -1,4 +1,4 @@
 export interface IAsyncLocalStorageStore {
-    requestId: string;
-    method: string;
+    readonly requestId: string;
+    readonly method: string;
 }

@@ -19,7 +19,7 @@ beforeAll(async () => {
         testKit.redisService['redis'],
     );
     const server = new Server(
-        testKit.configService.PORT,
+        testKit.configService,
         await appRoutes.configureApiRoutes(),
         testKit.loggerServiceMock,
     );

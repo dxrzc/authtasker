@@ -1,4 +1,4 @@
 export interface DataInCache<T> {
-    data: T;
-    cachedAtUnix: number;
+    readonly data: T;
+    readonly cachedAtUnix: number;
 }

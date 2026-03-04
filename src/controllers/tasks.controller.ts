@@ -1,13 +1,12 @@
 import { Request, Response } from 'express';
 import { TasksService } from 'src/services/tasks.service';
 import { statusCodes } from 'src/constants/status-codes.constants';
-import { paginationSettings } from 'src/constants/pagination.constants';
+import { paginationSettings } from 'src/settings/pagination.settings';
 import { CreateTaskDto } from 'src/dtos/models/tasks/create-task.dto';
 import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
 import { TaskStatusDto } from 'src/dtos/models/tasks/task-status.dto';
 import { TaskPriorityDto } from 'src/dtos/models/tasks/task-priority.dto';
 import { userInfoInReq } from 'src/functions/express/user-info-in-req';
-import { TasksFilters } from 'src/types/tasks/task-filters.type';
 
 export class TasksController {
     constructor(private readonly tasksService: TasksService) {}
@@ -31,20 +30,18 @@ export class TasksController {
         const rawStatus = req.query.status;
         const rawPriority = req.query.priority;
         const rawUserId = req.query.user;
-        const filters: TasksFilters = {};
-        if (rawStatus) {
-            const { status } = await TaskStatusDto.validate({ status: rawStatus });
-            filters.status = status;
-        }
-        if (rawPriority) {
-            const { priority } = await TaskPriorityDto.validate({ priority: rawPriority });
-            filters.priority = priority;
-        }
-        if (rawUserId) {
-            // id validation occurs in user-service
-            filters.userId = <string>rawUserId;
-        }
-        const tasksFound = await this.tasksService.findAll(limit, page, filters);
+        const userId = rawUserId ? <string>rawUserId : undefined;
+        const status = rawStatus
+            ? (await TaskStatusDto.validate({ status: rawStatus })).status
+            : undefined;
+        const priority = rawPriority
+            ? (await TaskPriorityDto.validate({ priority: rawPriority })).priority
+            : undefined;
+        const tasksFound = await this.tasksService.findAll(limit, page, {
+            status,
+            priority,
+            userId,
+        });
         res.status(statusCodes.OK).json(tasksFound);
     };
 

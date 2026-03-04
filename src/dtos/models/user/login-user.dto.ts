@@ -1,25 +1,25 @@
-import { validateAndTransformDto } from 'src/functions/dtos/validate-dto';
-import { usersLimits } from 'src/constants/user.constants';
+import { userConstraints } from 'src/constraints/user.constraints';
 import { IsDefined, IsEmail, MaxLength, MinLength } from 'class-validator';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
+import { parseAndValidateOrThrow } from 'src/dtos/helpers/parse-and-validate-or-throw.helper';
 
 export class LoginUserDto {
     @IsDefined({ message: usersApiErrors.EMAIL_NOT_PROVIDED })
     @IsEmail(undefined, {
         message: JSON.stringify({ credentialsError: usersApiErrors.INVALID_EMAIL }),
     })
-    email!: string;
+    readonly email!: string;
 
     @IsDefined({ message: usersApiErrors.PASSWORD_NOT_PROVIDED })
-    @MinLength(usersLimits.MIN_PASSWORD_LENGTH, {
+    @MinLength(userConstraints.MIN_PASSWORD_LENGTH, {
         message: JSON.stringify({ credentialsError: usersApiErrors.INVALID_PASSWORD_LENGTH }),
     })
-    @MaxLength(usersLimits.MAX_PASSWORD_LENGTH, {
+    @MaxLength(userConstraints.MAX_PASSWORD_LENGTH, {
         message: JSON.stringify({ credentialsError: usersApiErrors.INVALID_PASSWORD_LENGTH }),
     })
-    password!: string;
+    readonly password!: string;
 
     static async validate(data: Record<string, unknown>): Promise<LoginUserDto> {
-        return await validateAndTransformDto(LoginUserDto, data);
+        return await parseAndValidateOrThrow(LoginUserDto, data);
     }
 }

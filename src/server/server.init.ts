@@ -20,13 +20,14 @@ import { commonErrors } from 'src/messages/common.error.messages';
 import { LoggerService } from 'src/services/logger.service';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 import hpp from 'hpp';
+import { ConfigService } from 'src/services/config.service';
 
 export class Server {
     private readonly app = express();
     private server: HttpServer | undefined;
 
     constructor(
-        private readonly port: number,
+        private readonly configService: ConfigService,
         private readonly routes: Router,
         private readonly logger: LoggerService,
     ) {
@@ -47,7 +48,7 @@ export class Server {
     }
 
     private get createErrorHandlerMiddleware(): ErrorRequestHandler {
-        return (err: Error, req: Request, res: Response, next: NextFunction) => {
+        return (err: unknown, req: Request, res: Response, next: NextFunction) => {
             if (res.headersSent) {
                 // Response was already sent to client
                 return next(err);
@@ -77,9 +78,24 @@ export class Server {
                 res.status(statusCodes.BAD_REQUEST).json({ error: err.message });
                 return;
             }
-            // Internal Server Error
-            this.logger.error(err.message);
-            SystemLoggerService.error(err.message, err.stack);
+            if (err instanceof AggregateError) {
+                err.errors.forEach((e) => {
+                    if (e instanceof Error) SystemLoggerService.error(e.message, e.stack);
+                    else SystemLoggerService.error(String(e));
+                });
+                this.logger.error('Internal server error');
+                res.status(500).json({ error: commonErrors.INTERNAL_SERVER_ERROR });
+                return;
+            }
+            if (err instanceof Error) {
+                this.logger.error('Internal server error');
+                SystemLoggerService.error(err.message, err.stack);
+                res.status(500).json({ error: commonErrors.INTERNAL_SERVER_ERROR });
+                return;
+            }
+            // unknown error
+            this.logger.error('Internal server error');
+            SystemLoggerService.error(err);
             res.status(500).json({ error: commonErrors.INTERNAL_SERVER_ERROR });
         };
     }
@@ -89,9 +105,11 @@ export class Server {
     };
 
     start(): Promise<void> {
+        const port = this.configService.PORT;
+        const host = this.configService.HOST;
         return new Promise<void>((resolve) => {
-            this.server = this.app.listen(this.port, () => {
-                SystemLoggerService.info(`Server listening on port ${this.port}`);
+            this.server = this.app.listen(port, host, () => {
+                SystemLoggerService.info(`Server listening on port ${host}:${port}`);
                 resolve();
             });
         });

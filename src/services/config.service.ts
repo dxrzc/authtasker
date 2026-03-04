@@ -71,6 +71,7 @@ export class ConfigService {
     }
 
     public readonly PORT = env.get('PORT').required().asPortNumber();
+    public readonly HOST = env.get('HOST').required().asString();
 
     public readonly JWT_SESSION_EXP_TIME = env.get('JWT_SESSION_EXP_TIME').required().asString();
 

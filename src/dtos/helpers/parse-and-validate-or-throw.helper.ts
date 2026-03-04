@@ -4,7 +4,7 @@ import { InvalidCredentialsError, InvalidInputError } from 'src/errors/invalid-i
 import { validationOptionsConfig } from 'src/dtos/config/validation.config';
 import { returnFirstError } from 'src/dtos/helpers/return-first-error.helper';
 
-export async function validateAndTransformDto<T extends object>(
+export async function parseAndValidateOrThrow<T extends object>(
     cls: new () => T,
     data: Record<string, unknown>,
 ): Promise<T> {

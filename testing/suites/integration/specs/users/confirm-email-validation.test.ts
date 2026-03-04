@@ -3,7 +3,6 @@ import { testKit } from '@integration/kit/test.kit';
 import { createUser } from '@integration/utils/create-user.util';
 import { status2xx } from '@integration/utils/status-2xx.util';
 import { stringValueToSeconds } from '@integration/utils/string-value-to-seconds.util';
-import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { tokenPurposes } from 'src/constants/token-purposes.constants';
 import { JwtTypes } from 'src/enums/jwt-types.enum';
@@ -15,6 +14,7 @@ import { authErrors } from 'src/messages/auth.error.messages';
 import { authSuccessMessages } from 'src/messages/auth.success.messages';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { JwtService } from 'src/services/jwt.service';
+import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
 
 describe(`POST ${testKit.urls.confirmEmailValidation}`, () => {
     describe('Succesful email validation', () => {
@@ -175,7 +175,7 @@ describe(`POST ${testKit.urls.confirmEmailValidation}`, () => {
     describe('Too many requests', () => {
         test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
-            for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
+            for (let i = 0; i < rateLimitingSettings[RateLimiter.critical].max; i++) {
                 await testKit.agent
                     .get(`${testKit.urls.confirmEmailValidation}?token=badToke1n`)
                     .set('X-Forwarded-For', ip);

@@ -4,12 +4,12 @@ import { status2xx } from '@integration/utils/status-2xx.util';
 import { getRandomRole } from '@test/tools/utilities/get-random-role.util';
 import { authErrors } from 'src/messages/auth.error.messages';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
-import { rateLimiting } from 'src/constants/rate-limiting.constants';
 import { commonErrors } from 'src/messages/common.error.messages';
 import { faker } from '@faker-js/faker';
 import { statusCodes } from 'src/constants/status-codes.constants';
 import { makeRefreshTokenKey } from 'src/functions/token/make-refresh-token-key';
 import { makeRefreshTokenIndexKey } from 'src/functions/token/make-refresh-token-index-key';
+import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
 
 describe(`POST ${testKit.urls.refreshToken}`, () => {
     describe('Refresh token is not provided in body', () => {
@@ -192,7 +192,7 @@ describe(`POST ${testKit.urls.refreshToken}`, () => {
     describe('Too many requests', () => {
         test('return 429 status code and too many requests error message', async () => {
             const ip = faker.internet.ip();
-            for (let i = 0; i < rateLimiting[RateLimiter.critical].max; i++) {
+            for (let i = 0; i < rateLimitingSettings[RateLimiter.critical].max; i++) {
                 await testKit.agent
                     .post(testKit.urls.refreshToken)
                     .set('X-Forwarded-For', ip)

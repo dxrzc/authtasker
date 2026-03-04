@@ -3,6 +3,6 @@ import { ITasks } from 'src/interfaces/tasks/task.interface';
 import { IUser } from 'src/interfaces/user/user.interface';
 
 export type Models = {
-    userModel: Model<IUser>;
-    tasksModel: Model<ITasks>;
+    readonly userModel: Model<IUser>;
+    readonly tasksModel: Model<ITasks>;
 };

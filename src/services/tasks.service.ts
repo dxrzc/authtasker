@@ -5,7 +5,6 @@ import { CacheService } from './cache.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
 import { calculatePagination } from 'src/functions/pagination/calculate-pagination';
-import { TaskResponse } from 'src/types/tasks/task-response.type';
 import { TaskDocument } from 'src/types/tasks/task-document.type';
 import { HttpError } from 'src/errors/http-error.class';
 import { UserIdentity } from 'src/interfaces/user/user-identity.interface';
@@ -18,6 +17,7 @@ import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
 import { IFindOptions } from 'src/interfaces/others/find-options.interface';
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
 import { TasksFilters } from 'src/types/tasks/task-filters.type';
+import { PaginationService } from './pagination.service';
 
 export class TasksService {
     constructor(
@@ -25,6 +25,7 @@ export class TasksService {
         private readonly tasksModel: Model<ITasks>,
         private readonly getUserService: () => UserService, // to avoid circular dependency
         private readonly cacheService: CacheService<TaskDocument>,
+        private readonly paginationService: PaginationService<TaskDocument>,
     ) {}
 
     private async findTaskInDb(id: string): Promise<TaskDocument> {
@@ -41,7 +42,7 @@ export class TasksService {
         requestUserInfo: UserIdentity,
         targetTaskId: string,
     ): Promise<TaskDocument> {
-        const task = (await this.findOne(targetTaskId, { cache: false })) as TaskDocument;
+        const task = await this.findOne(targetTaskId, { cache: false });
         const taskOwner = await this.getUserService().findOne(task.user.toString(), {
             cache: false,
         });
@@ -68,7 +69,7 @@ export class TasksService {
         }
     }
 
-    async findOne(id: string, options: IFindOptions): Promise<TaskDocument | TaskResponse> {
+    async findOne(id: string, options: IFindOptions): Promise<TaskDocument> {
         // validate id
         const validMongoId = Types.ObjectId.isValid(id);
         if (!validMongoId) {
@@ -83,10 +84,10 @@ export class TasksService {
             }
             return taskInDb;
         }
-        // check if user is cached
+        // check if task is cached
         const taskInCache = await this.cacheService.get(id);
         if (taskInCache) return taskInCache;
-        // user is not in cache
+        // task is not in cache
         const taskFound = await this.findTaskInDb(id);
         await this.cacheService.cache(taskFound);
         return taskFound;
@@ -107,7 +108,7 @@ export class TasksService {
         if (filters.priority) search.priority = filters.priority;
         const totalDocuments = await this.tasksModel.countDocuments(search).exec();
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.cacheService.getPagination(
+        const data = await this.paginationService.get(
             offset,
             limit,
             Object.keys(search).length > 0 ? { find: search } : undefined,
