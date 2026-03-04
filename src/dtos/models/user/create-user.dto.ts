@@ -4,8 +4,9 @@ import { toLowerCaseAndTrim } from 'src/dtos/helpers/to-lowercase.helper';
 import { IsDefined, IsEmail, MaxLength, MinLength } from 'class-validator';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { parseAndValidateOrThrow } from 'src/dtos/helpers/parse-and-validate-or-throw.helper';
+import { UserCreationParams } from 'src/types/user/user-creation-params.type';
 
-export class CreateUserDto {
+export class CreateUserDto implements UserCreationParams {
     @IsDefined({ message: usersApiErrors.NAME_NOT_PROVIDED })
     @MinLength(userConstraints.MIN_NAME_LENGTH, { message: usersApiErrors.INVALID_NAME_LENGTH })
     @MaxLength(userConstraints.MAX_NAME_LENGTH, { message: usersApiErrors.INVALID_NAME_LENGTH })
