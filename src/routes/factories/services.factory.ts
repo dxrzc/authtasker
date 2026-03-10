@@ -2,6 +2,8 @@ import Redis from 'ioredis';
 import { Apis } from 'src/enums/apis.enum';
 import { makeTasksCacheKey } from 'src/functions/cache/make-tasks-cache-key';
 import { makeUsersCacheKey } from 'src/functions/cache/make-users-cache-key';
+import { TaskRepository } from 'src/repositories/task.repository';
+import { UserRepository } from 'src/repositories/user.repository';
 import { CacheService } from 'src/services/cache.service';
 import { ConfigService } from 'src/services/config.service';
 import { EmailValidationTokenService } from 'src/services/email-validation-token.service';
@@ -102,18 +104,21 @@ export function buildServices(
         Apis.tasks,
     );
 
+    const userRepository = new UserRepository(models.userModel);
+    const taskRepository = new TaskRepository(models.tasksModel);
+
     // eslint-disable-next-line prefer-const
     let userService: UserService;
     const tasksService = new TasksService(
         loggerService,
-        models.tasksModel,
+        taskRepository,
         () => userService,
         tasksCacheService,
         tasksPaginationService,
     );
     userService = new UserService(
         configService,
-        models.userModel,
+        userRepository,
         tasksService,
         hashingService,
         loggerService,
