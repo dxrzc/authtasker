@@ -17,9 +17,9 @@ export class PaginationService<Data extends { id: string }> {
     private async getPageIds(
         offset: number,
         limit: number,
-        options?: { find: Record<string, any> },
+        findOptions?: Record<string, unknown>,
     ): Promise<string[]> {
-        const base = options?.find ? this.model.find(options?.find) : this.model.find();
+        const base = findOptions ? this.model.find(findOptions) : this.model.find();
         const idsInData = await base
             .skip(offset)
             .limit(limit)
@@ -97,11 +97,9 @@ export class PaginationService<Data extends { id: string }> {
     async get(
         offset: number,
         limit: number,
-        options?: {
-            find: Record<string, any>;
-        },
+        findOptions?: Record<string, unknown>,
     ): Promise<Data[]> {
-        const ids = await this.getPageIds(offset, limit, options);
+        const ids = await this.getPageIds(offset, limit, findOptions);
         if (ids.length === 0) {
             return [];
         }
