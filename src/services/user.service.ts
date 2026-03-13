@@ -317,6 +317,11 @@ export class UserService {
         return await this.findOneByIdOrThrow(id);
     }
 
+    async exists(id: string): Promise<boolean> {
+        this.isValidMongoIdOrThrow(id);
+        return await this.userRepo.exists(id);
+    }
+
     async findAll(limit: number, page: number): Promise<IPagination<UserDocument>> {
         // validate limit and page
         const totalDocuments = await this.userRepo.countDocuments();
