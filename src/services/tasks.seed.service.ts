@@ -3,8 +3,9 @@ import { IUser } from 'src/interfaces/user/user.interface';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { ITasks } from 'src/interfaces/tasks/task.interface';
-import { TaskRequest } from 'src/types/tasks/task-request.type';
+
 import { TasksDataGenerator } from 'src/generators/tasks.generator';
+import { TaskCreationParams } from 'src/types/tasks/task-creation.params';
 
 export class TasksSeedService {
     constructor(
@@ -15,7 +16,7 @@ export class TasksSeedService {
         private readonly loggerService: LoggerService,
     ) {}
 
-    private generateRandomTask(): TaskRequest {
+    private generateRandomTask(): TaskCreationParams {
         return {
             name: this.dataGenerator.name,
             description: this.dataGenerator.description,
@@ -24,8 +25,8 @@ export class TasksSeedService {
         };
     }
 
-    private generateBunchOfTasks(n: number): TaskRequest[] {
-        const tasks = new Array<TaskRequest>();
+    private generateBunchOfTasks(n: number): TaskCreationParams[] {
+        const tasks = new Array<TaskCreationParams>();
         for (let i = 0; i < n; i++) {
             tasks.push(this.generateRandomTask());
         }

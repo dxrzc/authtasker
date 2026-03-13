@@ -4,7 +4,7 @@ import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { HashingService } from 'src/services/hashing.service';
 import { UserDataGenerator } from '../generators/user.generator';
-import { UserRequest } from 'src/types/user/user-request.type';
+import { UserCreationParams } from 'src/types/user/user-creation-params.type';
 
 export class UserSeedService {
     constructor(
@@ -15,7 +15,7 @@ export class UserSeedService {
         private readonly loggerService: LoggerService,
     ) {}
 
-    private async generateRandomUser(): Promise<UserRequest> {
+    private async generateRandomUser(): Promise<UserCreationParams> {
         return {
             name: this.dataGenerator.name,
             email: this.dataGenerator.email,
@@ -29,8 +29,8 @@ export class UserSeedService {
         return roles[n];
     }
 
-    private async generateBunchOfUsers(n: number): Promise<UserRequest[]> {
-        const users = new Array<UserRequest>();
+    private async generateBunchOfUsers(n: number): Promise<UserCreationParams[]> {
+        const users = new Array<UserCreationParams>();
         for (let i = 0; i < n; i++) {
             users.push(await this.generateRandomUser());
         }

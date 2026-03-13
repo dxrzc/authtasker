@@ -1,8 +1,3 @@
-import { TasksPriority } from './task-priority.type';
-import { TasksStatus } from './task-status.type';
+import { TaskDocument } from './task-document.type';
 
-export type TasksFilters = Readonly<{
-    readonly userId?: string;
-    readonly status?: TasksStatus;
-    readonly priority?: TasksPriority;
-}>;
+export type TasksFilters = Partial<Readonly<Pick<TaskDocument, 'user' | 'status' | 'priority'>>>;

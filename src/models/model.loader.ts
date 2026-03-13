@@ -98,7 +98,7 @@ export class ModelLoader {
     }
 
     private loadTaskModel() {
-        const tasksSchema = new Schema<ITasks>(
+        const tasksSchema = new Schema<{ [prop in keyof ITasks]: any }>(
             {
                 name: {
                     type: String,
