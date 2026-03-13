@@ -20,13 +20,17 @@ import { TaskRepository } from 'src/repositories/task.repository';
 import { TasksFilters } from 'src/types/tasks/task-filters.type';
 
 export class TasksService {
+    private readonly userService: UserService;
+
     constructor(
         private readonly loggerService: LoggerService,
         private readonly taskRepo: TaskRepository,
         private readonly getUserService: () => UserService, // to avoid circular dependency
         private readonly cacheService: CacheService<TaskDocument>,
         private readonly paginationService: PaginationService<TaskDocument>,
-    ) {}
+    ) {
+        this.userService = getUserService();
+    }
 
     private async findTaskInDb(id: string): Promise<TaskDocument> {
         const taskFound = await this.taskRepo.findById(id);
@@ -43,7 +47,7 @@ export class TasksService {
         targetTaskId: string,
     ): Promise<TaskDocument> {
         const task = await this.findOne(targetTaskId, { cache: false });
-        const taskOwner = await this.getUserService().findOne(task.user.toString(), {
+        const taskOwner = await this.userService.findOne(task.user.toString(), {
             cache: false,
         });
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
@@ -100,7 +104,7 @@ export class TasksService {
     ): Promise<IPagination<TaskDocument>> {
         if (filters?.user) {
             // validate user existence and userId
-            await this.getUserService().findOne(filters.user.toString(), { cache: false });
+            await this.userService.findOne(filters.user.toString(), { cache: false });
         }
         const totalDocuments = await this.taskRepo.countDocuments(filters);
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
