@@ -15,9 +15,9 @@ import { CreateTaskDto } from 'src/dtos/models/tasks/create-task.dto';
 import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
 import { IFindOptions } from 'src/interfaces/others/find-options.interface';
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
-import { TasksFilters } from 'src/types/tasks/task-filters.type';
 import { PaginationService } from './pagination.service';
 import { TaskRepository } from 'src/repositories/task.repository';
+import { TasksFilters } from 'src/types/tasks/task-filters.type';
 
 export class TasksService {
     constructor(
@@ -96,19 +96,15 @@ export class TasksService {
     async findAll(
         limit: number,
         page: number,
-        filters: TasksFilters = {},
+        filters?: TasksFilters,
     ): Promise<IPagination<TaskDocument>> {
-        if (filters.userId) {
+        if (filters?.user) {
             // validate user existence and userId
-            await this.getUserService().findOne(filters.userId, { cache: false });
+            await this.getUserService().findOne(filters.user.toString(), { cache: false });
         }
         const totalDocuments = await this.taskRepo.countDocuments(filters);
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.paginationService.get(
-            offset,
-            limit,
-            Object.keys(filters).length > 0 ? { find: filters } : undefined,
-        );
+        const data = await this.paginationService.get(offset, limit, filters);
         return {
             currentPage: page,
             totalDocuments,
