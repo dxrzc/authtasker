@@ -20,16 +20,16 @@ import { TaskRepository } from 'src/repositories/task.repository';
 import { TasksFilters } from 'src/types/tasks/task-filters.type';
 
 export class TasksService {
-    private readonly userService: UserService;
-
     constructor(
         private readonly loggerService: LoggerService,
         private readonly taskRepo: TaskRepository,
         private readonly getUserService: () => UserService, // to avoid circular dependency
         private readonly cacheService: CacheService<TaskDocument>,
         private readonly paginationService: PaginationService<TaskDocument>,
-    ) {
-        this.userService = getUserService();
+    ) {}
+
+    private get userService(): UserService {
+        return this.getUserService();
     }
 
     private async findTaskInDb(id: string): Promise<TaskDocument> {
@@ -102,10 +102,7 @@ export class TasksService {
         page: number,
         filters?: TasksFilters,
     ): Promise<IPagination<TaskDocument>> {
-        if (filters?.user) {
-            // validate user existence and userId
-            await this.userService.findOne(filters.user.toString(), { cache: false });
-        }
+        if (filters?.user) await this.userService.exists(filters.user);
         const totalDocuments = await this.taskRepo.countDocuments(filters);
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
         const data = await this.paginationService.get(offset, limit, filters);
