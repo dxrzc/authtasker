@@ -102,7 +102,7 @@ export class TasksService {
         page: number,
         filters?: TasksFilters,
     ): Promise<IPagination<TaskDocument>> {
-        if (filters?.user) await this.userService.exists(filters.user);
+        if (filters?.user) await this.userService.existsOrThrow(filters.user);
         const totalDocuments = await this.taskRepo.countDocuments(filters);
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
         const data = await this.paginationService.get(offset, limit, filters);
