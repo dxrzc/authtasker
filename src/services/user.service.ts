@@ -317,9 +317,13 @@ export class UserService {
         return await this.findOneByIdOrThrow(id);
     }
 
-    async exists(id: string): Promise<boolean> {
+    async existsOrThrow(id: string): Promise<void> {
         this.isValidMongoIdOrThrow(id);
-        return await this.userRepo.exists(id);
+        const exists = await this.userRepo.exists(id);
+        if (!exists) {
+            this.loggerService.error(`User ${id} not found`);
+            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
+        }
     }
 
     async findAll(limit: number, page: number): Promise<IPagination<UserDocument>> {
