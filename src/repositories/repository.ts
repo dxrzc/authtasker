@@ -16,7 +16,7 @@ export class Repository<T> {
     }
 
     async exists(id: string): Promise<boolean> {
-        const doc = await this.model.exists({ id }).exec();
+        const doc = await this.model.exists({ _id: id }).exec();
         return !!doc;
     }
 }
