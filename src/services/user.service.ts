@@ -1,8 +1,7 @@
-import mongoose, { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { Apis } from 'src/enums/apis.enum';
 import { CacheService } from './cache.service';
 import { EmailService } from 'src/services/email.service';
-import { IUser } from 'src/interfaces/user/user.interface';
 import { RefreshTokenService } from './refresh-token.service';
 import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
@@ -30,11 +29,12 @@ import { IPagination } from 'src/interfaces/pagination/pagination.interface';
 import { TasksService } from './tasks.service';
 import { SystemLoggerService } from './system-logger.service';
 import { PaginationService } from './pagination.service';
+import { UserRepository } from 'src/repositories/user.repository';
 
 export class UserService {
     constructor(
         private readonly configService: ConfigService,
-        private readonly userModel: Model<IUser>,
+        private readonly userRepo: UserRepository,
         private readonly tasksService: TasksService,
         private readonly hashingService: HashingService,
         public readonly loggerService: LoggerService,
@@ -48,16 +48,13 @@ export class UserService {
     ) {}
 
     async createAdministratorIfNotExists(): Promise<void> {
-        const alreadyExists = await this.userModel
-            .findOne({ name: this.configService.ADMIN_NAME })
-            .exec();
+        const alreadyExists = await this.userRepo.findByName(this.configService.ADMIN_NAME);
+        const hashedPassword = await this.hashPassword(this.configService.ADMIN_PASSWORD);
         if (!alreadyExists) {
-            const admin = await this.userModel.create({
-                name: this.configService.ADMIN_NAME,
+            const admin = await this.userRepo.createAdmin({
                 email: this.configService.ADMIN_EMAIL,
-                password: await this.hashPassword(this.configService.ADMIN_PASSWORD),
-                role: UserRole.ADMIN,
-                emailValidated: true,
+                name: this.configService.ADMIN_NAME,
+                password: hashedPassword,
             });
             const adminId = admin._id.toString();
             SystemLoggerService.info(`Admin ${adminId} created successfully`);
@@ -76,7 +73,7 @@ export class UserService {
 
     private async findOneByIdOrThrow(id: string): Promise<UserDocument> {
         this.isValidMongoIdOrThrow(id);
-        const userInDb = await this.userModel.findById(id).exec();
+        const userInDb = await this.userRepo.findById(id);
         if (!userInDb) {
             this.loggerService.error(`User ${id} not found`);
             throw HttpError.notFound(usersApiErrors.NOT_FOUND);
@@ -84,7 +81,7 @@ export class UserService {
         return userInDb;
     }
 
-    private async findOneByIdOrThrowCacheEnabled(id: string): Promise<UserDocument> {
+    private async findOneByIdCachedOrThrow(id: string): Promise<UserDocument> {
         this.isValidMongoIdOrThrow(id);
         // check user in cache
         const userInCache = await this.cacheService.get(id);
@@ -208,7 +205,7 @@ export class UserService {
     async confirmEmailValidation(token: string): Promise<void> {
         // consume token and get email
         const emailInToken = await this.emailValidationTokenService.consume(token);
-        const user = await this.userModel.findOne({ email: emailInToken }).exec();
+        const user = await this.userRepo.findByEmail(emailInToken);
         if (!user) {
             this.loggerService.error(`User with email ${emailInToken} not found`);
             throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
@@ -230,10 +227,7 @@ export class UserService {
             // hashing password
             const passwordHash = await this.hashPassword(user.password);
             // db
-            const created = await this.userModel.create({
-                ...user,
-                password: passwordHash,
-            });
+            const created = await this.userRepo.create({ ...user, password: passwordHash });
             const userId = created.id;
             this.loggerService.info(`User ${userId} created`);
             // tokens
@@ -253,7 +247,7 @@ export class UserService {
 
     async login(loginCredentials: LoginUserDto) {
         // user existence
-        const userDb = await this.userModel.findOne({ email: loginCredentials.email }).exec();
+        const userDb = await this.userRepo.findByEmail(loginCredentials.email);
         if (!userDb) {
             this.loggerService.error(`User ${loginCredentials.email} not found`);
             throw HttpError.unAuthorized(authErrors.INVALID_CREDENTIALS);
@@ -312,16 +306,29 @@ export class UserService {
         };
     }
 
+    /**
+     * @param id User id
+     * @throws Not found if id is not valid
+     * @param options find options
+     * @returns user found
+     */
     async findOne(id: string, options: IFindOptions): Promise<UserDocument> {
-        if (options.cache) {
-            return await this.findOneByIdOrThrowCacheEnabled(id);
-        }
+        if (options.cache) return await this.findOneByIdCachedOrThrow(id);
         return await this.findOneByIdOrThrow(id);
+    }
+
+    async existsOrThrow(id: string): Promise<void> {
+        this.isValidMongoIdOrThrow(id);
+        const exists = await this.userRepo.exists(id);
+        if (!exists) {
+            this.loggerService.error(`User ${id} not found`);
+            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
+        }
     }
 
     async findAll(limit: number, page: number): Promise<IPagination<UserDocument>> {
         // validate limit and page
-        const totalDocuments = await this.userModel.countDocuments().exec();
+        const totalDocuments = await this.userRepo.countDocuments();
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
         const data = await this.paginationService.get(offset, limit);
         return {
@@ -360,10 +367,10 @@ export class UserService {
 
     async deleteOne(requestUserInfo: UserSessionInfo, targetUserId: string): Promise<void> {
         await this.verifyUserModificationRights(requestUserInfo, targetUserId);
-        const session = await mongoose.startSession();
+        const session = await this.userRepo.startTransaction();
         try {
             await session.withTransaction(async () => {
-                await this.userModel.deleteOne({ _id: targetUserId }, { session }).exec();
+                await this.userRepo.deleteOneTx(targetUserId, session);
                 await this.tasksService.deleteUserTasksTx(targetUserId, session);
             });
             this.loggerService.info(`User ${targetUserId} deleted`);
@@ -407,7 +414,7 @@ export class UserService {
 
     async resetPassword(newPassword: string, token: string): Promise<void> {
         const emailInToken = await this.passwordRecoveryTokenService.consume(token);
-        const user = await this.userModel.findOne({ email: emailInToken }).exec();
+        const user = await this.userRepo.findByEmail(emailInToken);
         if (!user) {
             this.loggerService.error(`User ${emailInToken} not found`);
             throw HttpError.unAuthorized(authErrors.INVALID_TOKEN);
@@ -420,7 +427,7 @@ export class UserService {
     }
 
     async requestPasswordRecovery(email: string): Promise<void> {
-        const userInDb = await this.userModel.findOne({ email }).exec();
+        const userInDb = await this.userRepo.findByEmail(email);
         if (!userInDb) {
             this.loggerService.info(
                 `User with email "${email}" not found, skipping password recovery`,

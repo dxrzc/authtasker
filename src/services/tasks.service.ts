@@ -1,9 +1,8 @@
 import { Apis } from 'src/enums/apis.enum';
 import { UserService } from 'src/services/user.service';
-import { ClientSession, Model, Types } from 'mongoose';
+import { ClientSession, Types } from 'mongoose';
 import { CacheService } from './cache.service';
 import { LoggerService } from 'src/services/logger.service';
-import { ITasks } from 'src/interfaces/tasks/task.interface';
 import { calculatePagination } from 'src/functions/pagination/calculate-pagination';
 import { TaskDocument } from 'src/types/tasks/task-document.type';
 import { HttpError } from 'src/errors/http-error.class';
@@ -16,20 +15,25 @@ import { CreateTaskDto } from 'src/dtos/models/tasks/create-task.dto';
 import { UpdateTaskDto } from 'src/dtos/models/tasks/update-task.dto';
 import { IFindOptions } from 'src/interfaces/others/find-options.interface';
 import { IPagination } from 'src/interfaces/pagination/pagination.interface';
-import { TasksFilters } from 'src/types/tasks/task-filters.type';
 import { PaginationService } from './pagination.service';
+import { TaskRepository } from 'src/repositories/task.repository';
+import { TasksFilters } from 'src/types/tasks/task-filters.type';
 
 export class TasksService {
     constructor(
         private readonly loggerService: LoggerService,
-        private readonly tasksModel: Model<ITasks>,
+        private readonly taskRepo: TaskRepository,
         private readonly getUserService: () => UserService, // to avoid circular dependency
         private readonly cacheService: CacheService<TaskDocument>,
         private readonly paginationService: PaginationService<TaskDocument>,
     ) {}
 
+    private get userService(): UserService {
+        return this.getUserService();
+    }
+
     private async findTaskInDb(id: string): Promise<TaskDocument> {
-        const taskFound = await this.tasksModel.findById(id).exec();
+        const taskFound = await this.taskRepo.findById(id);
         // id is not valid / task not found
         if (!taskFound) {
             this.loggerService.error(`Task with id ${id} not found`);
@@ -43,7 +47,7 @@ export class TasksService {
         targetTaskId: string,
     ): Promise<TaskDocument> {
         const task = await this.findOne(targetTaskId, { cache: false });
-        const taskOwner = await this.getUserService().findOne(task.user.toString(), {
+        const taskOwner = await this.userService.findOne(task.user.toString(), {
             cache: false,
         });
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
@@ -59,7 +63,7 @@ export class TasksService {
 
     async create(task: CreateTaskDto, user: string): Promise<TaskDocument> {
         try {
-            const taskCreated = await this.tasksModel.create({ ...task, user });
+            const taskCreated = await this.taskRepo.create({ ...task, user });
             this.loggerService.info(`Task ${taskCreated.id} created`);
             return taskCreated;
         } catch (error: any) {
@@ -77,7 +81,7 @@ export class TasksService {
             throw HttpError.notFound(tasksApiErrors.NOT_FOUND);
         }
         if (!options.cache) {
-            const taskInDb = await this.tasksModel.findById(id).exec();
+            const taskInDb = await this.taskRepo.findById(id);
             if (!taskInDb) {
                 this.loggerService.error(`Task ${id} not found`);
                 throw HttpError.notFound(tasksApiErrors.NOT_FOUND);
@@ -96,23 +100,12 @@ export class TasksService {
     async findAll(
         limit: number,
         page: number,
-        filters: TasksFilters = {},
+        filters?: TasksFilters,
     ): Promise<IPagination<TaskDocument>> {
-        const search: Record<string, unknown> = {};
-        if (filters.userId) {
-            // validate user existence and userId
-            await this.getUserService().findOne(filters.userId, { cache: false });
-            search.user = filters.userId;
-        }
-        if (filters.status) search.status = filters.status;
-        if (filters.priority) search.priority = filters.priority;
-        const totalDocuments = await this.tasksModel.countDocuments(search).exec();
+        if (filters?.user) await this.userService.existsOrThrow(filters.user);
+        const totalDocuments = await this.taskRepo.countDocuments(filters);
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
-        const data = await this.paginationService.get(
-            offset,
-            limit,
-            Object.keys(search).length > 0 ? { find: search } : undefined,
-        );
+        const data = await this.paginationService.get(offset, limit, filters);
         return {
             currentPage: page,
             totalDocuments,
@@ -146,19 +139,7 @@ export class TasksService {
         }
     }
 
-    /**
-     * Deletes all tasks belonging to the specified user within a mongodb transaction.
-     *
-     * @param userId - The ID of the user whose tasks should be deleted.
-     * @param session - The MongoDB ClientSession to use for transactional support.
-     * @returns The number of tasks deleted.
-     *
-     * For non-transactional deletes, use the regular delete methods.
-     */
     async deleteUserTasksTx(userId: string, session: ClientSession): Promise<number> {
-        const { deletedCount } = await this.tasksModel
-            .deleteMany({ user: userId }, { session })
-            .exec();
-        return deletedCount;
+        return await this.taskRepo.deleteUserTasksWithTx(userId, session);
     }
 }
