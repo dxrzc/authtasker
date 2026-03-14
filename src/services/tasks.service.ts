@@ -28,6 +28,10 @@ export class TasksService {
         private readonly paginationService: PaginationService<TaskDocument>,
     ) {}
 
+    private get userService(): UserService {
+        return this.getUserService();
+    }
+
     private async findTaskInDb(id: string): Promise<TaskDocument> {
         const taskFound = await this.taskRepo.findById(id);
         // id is not valid / task not found
@@ -43,7 +47,7 @@ export class TasksService {
         targetTaskId: string,
     ): Promise<TaskDocument> {
         const task = await this.findOne(targetTaskId, { cache: false });
-        const taskOwner = await this.getUserService().findOne(task.user.toString(), {
+        const taskOwner = await this.userService.findOne(task.user.toString(), {
             cache: false,
         });
         const isCurrentUserAuthorized = modificationAccessControl(requestUserInfo, {
@@ -98,10 +102,7 @@ export class TasksService {
         page: number,
         filters?: TasksFilters,
     ): Promise<IPagination<TaskDocument>> {
-        if (filters?.user) {
-            // validate user existence and userId
-            await this.getUserService().findOne(filters.user.toString(), { cache: false });
-        }
+        if (filters?.user) await this.userService.existsOrThrow(filters.user);
         const totalDocuments = await this.taskRepo.countDocuments(filters);
         const { offset, totalPages } = calculatePagination(limit, page, totalDocuments);
         const data = await this.paginationService.get(offset, limit, filters);

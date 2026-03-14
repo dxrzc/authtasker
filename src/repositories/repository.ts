@@ -14,4 +14,9 @@ export class Repository<T> {
     async countDocuments(filter?: Partial<T>): Promise<number> {
         return await this.model.countDocuments(filter).exec();
     }
+
+    async exists(id: string): Promise<boolean> {
+        const doc = await this.model.exists({ _id: id }).exec();
+        return !!doc;
+    }
 }

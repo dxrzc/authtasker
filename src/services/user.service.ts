@@ -81,7 +81,7 @@ export class UserService {
         return userInDb;
     }
 
-    private async findOneByIdOrThrowCacheEnabled(id: string): Promise<UserDocument> {
+    private async findOneByIdCachedOrThrow(id: string): Promise<UserDocument> {
         this.isValidMongoIdOrThrow(id);
         // check user in cache
         const userInCache = await this.cacheService.get(id);
@@ -306,11 +306,24 @@ export class UserService {
         };
     }
 
+    /**
+     * @param id User id
+     * @throws Not found if id is not valid
+     * @param options find options
+     * @returns user found
+     */
     async findOne(id: string, options: IFindOptions): Promise<UserDocument> {
-        if (options.cache) {
-            return await this.findOneByIdOrThrowCacheEnabled(id);
-        }
+        if (options.cache) return await this.findOneByIdCachedOrThrow(id);
         return await this.findOneByIdOrThrow(id);
+    }
+
+    async existsOrThrow(id: string): Promise<void> {
+        this.isValidMongoIdOrThrow(id);
+        const exists = await this.userRepo.exists(id);
+        if (!exists) {
+            this.loggerService.error(`User ${id} not found`);
+            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
+        }
     }
 
     async findAll(limit: number, page: number): Promise<IPagination<UserDocument>> {
