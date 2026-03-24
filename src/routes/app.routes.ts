@@ -82,6 +82,7 @@ export class AppRoutes {
         const tasksRoutes = new TasksRoutes(
             this.middlewares.rateLimiterMiddleware,
             this.middlewares.rolesMiddleware,
+            this.middlewares.validateIdMiddleware,
             this.services.tasksService,
         );
         return tasksRoutes.routes;

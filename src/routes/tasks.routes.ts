@@ -2,8 +2,10 @@ import { Router } from 'express';
 import { TasksController } from 'src/controllers/tasks.controller';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { UserRole } from 'src/enums/user-role.enum';
+import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
 import { RateLimiterMiddleware } from 'src/middlewares/rate-limiter.middleware';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
+import { ValidateIdMiddleware } from 'src/middlewares/validate-id.middleware';
 import { SystemLoggerService } from 'src/services/system-logger.service';
 import { TasksService } from 'src/services/tasks.service';
 
@@ -13,6 +15,7 @@ export class TasksRoutes {
     constructor(
         private readonly rateLimiter: RateLimiterMiddleware,
         private readonly rolesMiddleware: RolesMiddleware,
+        private readonly validateIdMiddleware: ValidateIdMiddleware,
         private readonly tasksService: TasksService,
     ) {
         this.tasksController = new TasksController(this.tasksService);
@@ -21,6 +24,7 @@ export class TasksRoutes {
 
     get routes(): Router {
         const router = Router();
+        const validateIdMiddleware = this.validateIdMiddleware.middleware(tasksApiErrors.NOT_FOUND);
 
         router.post(
             '/create',
@@ -33,6 +37,7 @@ export class TasksRoutes {
             '/:id',
             this.rateLimiter.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.EDITOR),
+            validateIdMiddleware,
             this.tasksController.deleteOne,
         );
 
@@ -47,6 +52,7 @@ export class TasksRoutes {
             '/:id',
             this.rateLimiter.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
+            validateIdMiddleware,
             this.tasksController.findOne,
         );
 
@@ -54,6 +60,7 @@ export class TasksRoutes {
             '/:id',
             this.rateLimiter.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.EDITOR),
+            validateIdMiddleware,
             this.tasksController.updateOne,
         );
 
