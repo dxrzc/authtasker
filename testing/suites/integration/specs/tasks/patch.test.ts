@@ -31,6 +31,16 @@ describe(`PATCH ${testKit.urls.tasksAPI}/:id`, () => {
     });
 
     describe('Invalid mongo id', () => {
+        test('not touch db for malformed ids', async () => {
+            const { sessionToken } = await createUser(UserRole.ADMIN);
+            const dbSpy = jest.spyOn(testKit.taskRepo, 'findById').mockImplementation();
+            await testKit.agent
+                .patch(`${testKit.urls.tasksAPI}/invalid-id`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send(testKit.taskData.task);
+            expect(dbSpy).not.toHaveBeenCalled();
+        });
+
         test('return 404 status code and task not found error message', async () => {
             const { sessionToken } = await createUser(UserRole.EDITOR);
             const invalidId = '12345invalididddddddddddddddddddddddddd';
