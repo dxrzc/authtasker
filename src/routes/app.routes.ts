@@ -72,6 +72,7 @@ export class AppRoutes {
         const userRoutes = new UserRoutes(
             this.middlewares.rateLimiterMiddleware,
             this.middlewares.rolesMiddleware,
+            this.middlewares.validateIdMiddleware,
             this.services.userService,
         );
         return userRoutes.routes;
