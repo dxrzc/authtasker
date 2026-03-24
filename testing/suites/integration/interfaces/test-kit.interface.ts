@@ -16,8 +16,12 @@ import { SessionTokenService } from 'src/services/session-token.service';
 import { CacheService } from 'src/services/cache.service';
 import { UserDocument } from 'src/types/user/user-document.type';
 import { TaskDocument } from 'src/types/tasks/task-document.type';
+import { UserRepository } from 'src/repositories/user.repository';
+import { TaskRepository } from 'src/repositories/task.repository';
 
 export interface ITestKit {
+    userRepo: UserRepository;
+    taskRepo: TaskRepository;
     configService: ConfigService;
     redisService: RedisService;
     models: ModelLoader;
