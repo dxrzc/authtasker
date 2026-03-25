@@ -176,13 +176,24 @@ describe(`GET ${testKit.urls.tasksAPI}`, () => {
             expect(response.status).toBe(404);
         });
 
-        test('rejects invalid mongo id', async () => {
-            const { sessionToken } = await createUser(getRandomRole());
-            const response = await testKit.agent
-                .get(`${testKit.urls.tasksAPI}?user=123&limit=1&page=1`)
-                .set('Authorization', `Bearer ${sessionToken}`);
-            expect(response.body).toStrictEqual({ error: usersApiErrors.NOT_FOUND });
-            expect(response.status).toBe(404);
+        describe('Invalid mongo id', () => {
+            test('return 404 status code and not found error message', async () => {
+                const { sessionToken } = await createUser(getRandomRole());
+                const response = await testKit.agent
+                    .get(`${testKit.urls.tasksAPI}?user=123&limit=1&page=1`)
+                    .set('Authorization', `Bearer ${sessionToken}`);
+                expect(response.body).toStrictEqual({ error: usersApiErrors.NOT_FOUND });
+                expect(response.status).toBe(404);
+            });
+
+            test('not touch db for malformed ids', async () => {
+                const dbSpy = jest.spyOn(testKit.userRepo, 'findById').mockImplementation();
+                const { sessionToken } = await createUser(getRandomRole());
+                await testKit.agent
+                    .get(`${testKit.urls.tasksAPI}?user=123&limit=1&page=1`)
+                    .set('Authorization', `Bearer ${sessionToken}`);
+                expect(dbSpy).not.toHaveBeenCalled();
+            });
         });
 
         test('returns empty pagination when user has no tasks', async () => {
