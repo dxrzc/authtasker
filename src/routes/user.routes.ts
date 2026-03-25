@@ -8,6 +8,7 @@ import { UserRole } from 'src/enums/user-role.enum';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { ValidateIdMiddleware } from 'src/middlewares/validate-id.middleware';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
+import { RequestLocation } from 'src/enums/request-location.enum';
 
 export class UserRoutes {
     private readonly userController: UserController;
@@ -24,7 +25,11 @@ export class UserRoutes {
 
     get routes(): Router {
         const router = Router();
-        const validateIdMiddleware = this.validateIdMiddleware.middleware(usersApiErrors.NOT_FOUND);
+        const verifyUserIdFromParamsMiddleware = this.validateIdMiddleware.middleware({
+            requestLocation: RequestLocation.params,
+            errorMessage: usersApiErrors.NOT_FOUND,
+            propertyName: 'id',
+        });
 
         router.get(
             '/reset-password',
@@ -88,7 +93,7 @@ export class UserRoutes {
             '/:id',
             this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
-            validateIdMiddleware,
+            verifyUserIdFromParamsMiddleware,
             this.userController.deleteOne,
         );
 
@@ -96,7 +101,7 @@ export class UserRoutes {
             '/:id',
             this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
-            validateIdMiddleware,
+            verifyUserIdFromParamsMiddleware,
             this.userController.updateOne,
         );
 
@@ -104,7 +109,7 @@ export class UserRoutes {
             '/:id',
             this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
-            validateIdMiddleware,
+            verifyUserIdFromParamsMiddleware,
             this.userController.findOne,
         );
 
