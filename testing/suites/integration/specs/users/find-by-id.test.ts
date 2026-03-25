@@ -110,6 +110,15 @@ describe(`POST ${testKit.urls.usersAPI}/:id`, () => {
     });
 
     describe('Id is not valid', () => {
+        test('not touch db for malformed ids', async () => {
+            const { sessionToken } = await createUser();
+            const dbSpy = jest.spyOn(testKit.userRepo, 'findById').mockImplementation();
+            await testKit.agent
+                .get(`${testKit.urls.usersAPI}/invalid-id`)
+                .set('Authorization', `Bearer ${sessionToken}`);
+            expect(dbSpy).not.toHaveBeenCalled();
+        });
+
         test('return 404 status and user not found error message', async () => {
             const { sessionToken } = await createUser();
             const response = await testKit.agent

@@ -7,6 +7,7 @@ import { ConfigService } from 'src/services/config.service';
 import { LoggerService } from 'src/services/logger.service';
 import { buildServices } from './services.factory';
 import Redis from 'ioredis';
+import { ValidateIdMiddleware } from 'src/middlewares/validate-id.middleware';
 
 export function buildMiddlewares(
     configService: ConfigService,
@@ -22,5 +23,11 @@ export function buildMiddlewares(
     );
     const rolesMiddleware = new RolesMiddleware(services.sessionTokenService, loggerService);
     const requestContextMiddleware = new RequestContextMiddleware(asyncLocalStorage, loggerService);
-    return { rateLimiterMiddleware, rolesMiddleware, requestContextMiddleware };
+    const validateIdMiddleware = new ValidateIdMiddleware(loggerService);
+    return {
+        rateLimiterMiddleware,
+        rolesMiddleware,
+        requestContextMiddleware,
+        validateIdMiddleware,
+    };
 }
