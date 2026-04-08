@@ -5,6 +5,7 @@ import { RequestLocation } from 'src/enums/request-location.enum';
 import { UserRole } from 'src/enums/user-role.enum';
 import { tasksApiErrors } from 'src/messages/tasks-api.error.messages';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
+import { AuthMiddleware } from 'src/middlewares/auth.middleware';
 import { RateLimiterMiddleware } from 'src/middlewares/rate-limiter.middleware';
 import { RolesMiddleware } from 'src/middlewares/roles.middleware';
 import { ValidateIdMiddleware } from 'src/middlewares/validate-id.middleware';
@@ -15,6 +16,7 @@ export class TasksRoutes {
     private readonly tasksController: TasksController;
 
     constructor(
+        private readonly authMiddleware: AuthMiddleware,
         private readonly rateLimiter: RateLimiterMiddleware,
         private readonly rolesMiddleware: RolesMiddleware,
         private readonly validateIdMiddleware: ValidateIdMiddleware,
@@ -35,6 +37,7 @@ export class TasksRoutes {
         router.post(
             '/create',
             this.rateLimiter.middleware(RateLimiter.relaxed),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.EDITOR),
             this.tasksController.create,
         );
@@ -42,6 +45,7 @@ export class TasksRoutes {
         router.delete(
             '/:id',
             this.rateLimiter.middleware(RateLimiter.relaxed),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.EDITOR),
             verifyTaskIdFromParamsMiddleware,
             this.tasksController.deleteOne,
@@ -50,6 +54,7 @@ export class TasksRoutes {
         router.get(
             '/',
             this.rateLimiter.middleware(RateLimiter.relaxed),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.validateIdMiddleware.middleware({
                 requestLocation: RequestLocation.query,
@@ -63,6 +68,7 @@ export class TasksRoutes {
         router.get(
             '/:id',
             this.rateLimiter.middleware(RateLimiter.relaxed),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             verifyTaskIdFromParamsMiddleware,
             this.tasksController.findOne,
@@ -71,6 +77,7 @@ export class TasksRoutes {
         router.patch(
             '/:id',
             this.rateLimiter.middleware(RateLimiter.relaxed),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.EDITOR),
             verifyTaskIdFromParamsMiddleware,
             this.tasksController.updateOne,
