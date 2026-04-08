@@ -33,6 +33,15 @@ describe(`GET ${testKit.urls.tasksAPI}/:id`, () => {
     });
 
     describe('Invalid uuid', () => {
+        test('not touch db for malformed ids', async () => {
+            const { sessionToken } = await createUser(getRandomRole());
+            const dbSpy = jest.spyOn(testKit.taskRepo, 'findById').mockImplementation();
+            await testKit.agent
+                .get(`${testKit.urls.tasksAPI}/invalid-uuid`)
+                .set('Authorization', `Bearer ${sessionToken}`);
+            expect(dbSpy).not.toHaveBeenCalled();
+        });
+
         test('return 404 status code and task not found error message', async () => {
             const { sessionToken } = await createUser(getRandomRole());
             const response = await testKit.agent

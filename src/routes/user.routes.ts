@@ -6,6 +6,9 @@ import { SystemLoggerService } from 'src/services/system-logger.service';
 import { RateLimiterMiddleware } from 'src/middlewares/rate-limiter.middleware';
 import { UserRole } from 'src/enums/user-role.enum';
 import { RateLimiter } from 'src/enums/rate-limiter.enum';
+import { ValidateIdMiddleware } from 'src/middlewares/validate-id.middleware';
+import { usersApiErrors } from 'src/messages/users-api.error.messages';
+import { RequestLocation } from 'src/enums/request-location.enum';
 
 export class UserRoutes {
     private readonly userController: UserController;
@@ -13,6 +16,7 @@ export class UserRoutes {
     constructor(
         private readonly apiLimiterMiddleware: RateLimiterMiddleware,
         private readonly rolesMiddleware: RolesMiddleware,
+        private readonly validateIdMiddleware: ValidateIdMiddleware,
         private readonly userService: UserService,
     ) {
         this.userController = new UserController(this.userService, userService.loggerService);
@@ -21,6 +25,11 @@ export class UserRoutes {
 
     get routes(): Router {
         const router = Router();
+        const verifyUserIdFromParamsMiddleware = this.validateIdMiddleware.middleware({
+            requestLocation: RequestLocation.params,
+            errorMessage: usersApiErrors.NOT_FOUND,
+            propertyName: 'id',
+        });
 
         router.get(
             '/reset-password',
@@ -84,6 +93,7 @@ export class UserRoutes {
             '/:id',
             this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
+            verifyUserIdFromParamsMiddleware,
             this.userController.deleteOne,
         );
 
@@ -91,6 +101,7 @@ export class UserRoutes {
             '/:id',
             this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
+            verifyUserIdFromParamsMiddleware,
             this.userController.updateOne,
         );
 
@@ -98,6 +109,7 @@ export class UserRoutes {
             '/:id',
             this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
             this.rolesMiddleware.middleware(UserRole.READONLY),
+            verifyUserIdFromParamsMiddleware,
             this.userController.findOne,
         );
 

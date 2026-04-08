@@ -197,6 +197,26 @@ describe(`DELETE ${testKit.urls.usersAPI}/:id`, () => {
         });
     });
 
+    describe('Invalid id', () => {
+        test('not touch db for malformed ids', async () => {
+            const { sessionToken } = await createUser(UserRole.ADMIN);
+            const dbSpy = jest.spyOn(testKit.userRepo, 'findById').mockImplementation();
+            await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/invalid-id`)
+                .set('Authorization', `Bearer ${sessionToken}`);
+            expect(dbSpy).not.toHaveBeenCalled();
+        });
+
+        test('return 404 status code and user not found error message', async () => {
+            const { sessionToken } = await createUser(UserRole.ADMIN);
+            const { statusCode, body } = await testKit.agent
+                .delete(`${testKit.urls.usersAPI}/invalid-id`)
+                .set('Authorization', `Bearer ${sessionToken}`);
+            expect(body).toStrictEqual({ error: usersApiErrors.NOT_FOUND });
+            expect(statusCode).toBe(statusCodes.NOT_FOUND);
+        });
+    });
+
     describe.each(Object.values(UserRole))('%s attempts to delete themselves', (role) => {
         test('successfully deletes user', async () => {
             const { sessionToken, id } = await createUser(role);

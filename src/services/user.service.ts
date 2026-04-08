@@ -1,4 +1,3 @@
-import { Types } from 'mongoose';
 import { Apis } from 'src/enums/apis.enum';
 import { CacheService } from './cache.service';
 import { EmailService } from 'src/services/email.service';
@@ -63,16 +62,7 @@ export class UserService {
         }
     }
 
-    private isValidMongoIdOrThrow(id: string): void {
-        const validMongoId = Types.ObjectId.isValid(id);
-        if (!validMongoId) {
-            this.loggerService.error(`Invalid mongo id`);
-            throw HttpError.notFound(usersApiErrors.NOT_FOUND);
-        }
-    }
-
     private async findOneByIdOrThrow(id: string): Promise<UserDocument> {
-        this.isValidMongoIdOrThrow(id);
         const userInDb = await this.userRepo.findById(id);
         if (!userInDb) {
             this.loggerService.error(`User ${id} not found`);
@@ -82,7 +72,6 @@ export class UserService {
     }
 
     private async findOneByIdCachedOrThrow(id: string): Promise<UserDocument> {
-        this.isValidMongoIdOrThrow(id);
         // check user in cache
         const userInCache = await this.cacheService.get(id);
         if (userInCache) {
@@ -318,7 +307,6 @@ export class UserService {
     }
 
     async existsOrThrow(id: string): Promise<void> {
-        this.isValidMongoIdOrThrow(id);
         const exists = await this.userRepo.exists(id);
         if (!exists) {
             this.loggerService.error(`User ${id} not found`);

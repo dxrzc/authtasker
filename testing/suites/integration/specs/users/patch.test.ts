@@ -16,6 +16,7 @@ import { userConstraints } from 'src/constraints/user.constraints';
 import { disableSystemErrorLogsForThisTest } from '@integration/utils/disable-system-error-logs';
 import { RefreshTokenService } from 'src/services/refresh-token.service';
 import { rateLimitingSettings } from 'src/settings/rate-limiting.settings';
+import { Types } from 'mongoose';
 
 describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
     describe('Session token not provided', () => {
@@ -474,6 +475,41 @@ describe(`PATCH ${testKit.urls.usersAPI}/:id`, () => {
                 .send({ name: testKit.userData.name });
             expect(body).toStrictEqual({ error: authErrors.FORBIDDEN });
             expect(statusCode).toBe(403);
+        });
+    });
+
+    describe('User not found', () => {
+        test('return 404 status code and user not found error message', async () => {
+            const { sessionToken } = await createUser(UserRole.ADMIN);
+            const nonExistentId = new Types.ObjectId().toString();
+            const { body, statusCode } = await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/${nonExistentId}`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ name: testKit.userData.name });
+            expect(body).toStrictEqual({ error: usersApiErrors.NOT_FOUND });
+            expect(statusCode).toBe(statusCodes.NOT_FOUND);
+        });
+    });
+
+    describe('Id is not valid', () => {
+        test('not touch db for malformed ids', async () => {
+            const { sessionToken } = await createUser();
+            const dbSpy = jest.spyOn(testKit.userRepo, 'findById').mockImplementation();
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/invalid-id`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ name: testKit.userData.name });
+            expect(dbSpy).not.toHaveBeenCalled();
+        });
+
+        test('return 404 status code and user not found error message', async () => {
+            const { sessionToken } = await createUser(UserRole.ADMIN);
+            const dbSpy = jest.spyOn(testKit.userRepo, 'findById').mockImplementation();
+            await testKit.agent
+                .patch(`${testKit.urls.usersAPI}/invalid-id`)
+                .set('Authorization', `Bearer ${sessionToken}`)
+                .send({ name: testKit.userData.name });
+            expect(dbSpy).not.toHaveBeenCalled();
         });
     });
 

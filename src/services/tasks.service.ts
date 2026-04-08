@@ -1,6 +1,6 @@
 import { Apis } from 'src/enums/apis.enum';
 import { UserService } from 'src/services/user.service';
-import { ClientSession, Types } from 'mongoose';
+import { ClientSession } from 'mongoose';
 import { CacheService } from './cache.service';
 import { LoggerService } from 'src/services/logger.service';
 import { calculatePagination } from 'src/functions/pagination/calculate-pagination';
@@ -74,12 +74,6 @@ export class TasksService {
     }
 
     async findOne(id: string, options: IFindOptions): Promise<TaskDocument> {
-        // validate id
-        const validMongoId = Types.ObjectId.isValid(id);
-        if (!validMongoId) {
-            this.loggerService.error(`Invalid mongo id`);
-            throw HttpError.notFound(tasksApiErrors.NOT_FOUND);
-        }
         if (!options.cache) {
             const taskInDb = await this.taskRepo.findById(id);
             if (!taskInDb) {
