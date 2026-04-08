@@ -9,11 +9,13 @@ import { RateLimiter } from 'src/enums/rate-limiter.enum';
 import { ValidateIdMiddleware } from 'src/middlewares/validate-id.middleware';
 import { usersApiErrors } from 'src/messages/users-api.error.messages';
 import { RequestLocation } from 'src/enums/request-location.enum';
+import { AuthMiddleware } from 'src/middlewares/auth.middleware';
 
 export class UserRoutes {
     private readonly userController: UserController;
 
     constructor(
+        private readonly authMiddleware: AuthMiddleware,
         private readonly apiLimiterMiddleware: RateLimiterMiddleware,
         private readonly rolesMiddleware: RolesMiddleware,
         private readonly validateIdMiddleware: ValidateIdMiddleware,
@@ -40,6 +42,7 @@ export class UserRoutes {
         router.get(
             '/me',
             this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.me,
         );
@@ -59,6 +62,7 @@ export class UserRoutes {
         router.post(
             '/logout-all',
             this.apiLimiterMiddleware.middleware(RateLimiter.critical),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.logoutAll,
         );
@@ -72,6 +76,7 @@ export class UserRoutes {
         router.post(
             '/request-email-validation',
             this.apiLimiterMiddleware.middleware(RateLimiter.critical),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.requestEmailValidation,
         );
@@ -79,6 +84,7 @@ export class UserRoutes {
         router.post(
             '/logout',
             this.apiLimiterMiddleware.middleware(RateLimiter.critical),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.logout,
         );
@@ -92,6 +98,7 @@ export class UserRoutes {
         router.delete(
             '/:id',
             this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             verifyUserIdFromParamsMiddleware,
             this.userController.deleteOne,
@@ -100,6 +107,7 @@ export class UserRoutes {
         router.patch(
             '/:id',
             this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             verifyUserIdFromParamsMiddleware,
             this.userController.updateOne,
@@ -108,6 +116,7 @@ export class UserRoutes {
         router.get(
             '/:id',
             this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             verifyUserIdFromParamsMiddleware,
             this.userController.findOne,
@@ -116,6 +125,7 @@ export class UserRoutes {
         router.get(
             '/',
             this.apiLimiterMiddleware.middleware(RateLimiter.relaxed),
+            this.authMiddleware.middleware(),
             this.rolesMiddleware.middleware(UserRole.READONLY),
             this.userController.findAll,
         );

@@ -70,6 +70,7 @@ export class AppRoutes {
 
     private buildUserRoutes(): Router {
         const userRoutes = new UserRoutes(
+            this.middlewares.authMiddleware,
             this.middlewares.rateLimiterMiddleware,
             this.middlewares.rolesMiddleware,
             this.middlewares.validateIdMiddleware,
@@ -80,6 +81,7 @@ export class AppRoutes {
 
     private buildTasksRoutes(): Router {
         const tasksRoutes = new TasksRoutes(
+            this.middlewares.authMiddleware,
             this.middlewares.rateLimiterMiddleware,
             this.middlewares.rolesMiddleware,
             this.middlewares.validateIdMiddleware,
