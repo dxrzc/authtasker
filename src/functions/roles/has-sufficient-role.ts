@@ -1,14 +1,15 @@
 import { UserRole } from 'src/enums/user-role.enum';
 
-const sortedRoles: UserRole[] = [UserRole.READONLY, UserRole.EDITOR, UserRole.ADMIN];
+const RoleWeight: Record<UserRole, number> = {
+    [UserRole.READONLY]: 0,
+    [UserRole.EDITOR]: 1,
+    [UserRole.ADMIN]: 2,
+};
 
 export function hasSufficientRole(minRoleRequired: UserRole, userRole: UserRole): boolean {
-    const userRoleIndex = sortedRoles.indexOf(userRole);
-    const minRoleIndex = sortedRoles.indexOf(minRoleRequired);
-    if (userRoleIndex === -1 || minRoleIndex === -1) {
-        throw new Error(
-            `Invalid role(s): userRole="${userRole}", minRoleRequired="${minRoleRequired}"`,
-        );
-    }
-    return userRoleIndex >= minRoleIndex;
+    const userWeight = RoleWeight[userRole];
+    const minWeight = RoleWeight[minRoleRequired];
+    if (userWeight === undefined || minWeight === undefined)
+        throw new Error(`Invalid role comparison: ${userRole} vs ${minRoleRequired}`);
+    return userWeight >= minWeight;
 }
